@@ -130,6 +130,19 @@ def finalize_scan(scan_id: str):
         except Exception:
             logger.exception("Profile aggregation failed for target %s", scan.target_id)
 
+        # Run intelligence analysis pipeline
+        try:
+            from api.services.layer4.analysis_pipeline import AnalysisPipeline
+            pipeline = AnalysisPipeline()
+            intel_count = pipeline.run(scan.target_id, scan.workspace_id, scan_id, session)
+            if intel_count:
+                logger.info("Intelligence pipeline created %d findings for target %s", intel_count, scan.target_id)
+                # Update scan findings count with intelligence findings
+                scan.findings_count = (scan.findings_count or 0) + intel_count
+                session.commit()
+        except Exception:
+            logger.exception("Intelligence pipeline failed for target %s", scan.target_id)
+
     except Exception:
         session.rollback()
         logger.exception("finalize_scan failed for %s", scan_id)

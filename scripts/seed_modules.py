@@ -423,6 +423,19 @@ MODULES = [
         "supported_regions": ["*"],
         "version": "1.0.0",
     },
+    # Layer 4 — Intelligence engine (always enabled, virtual module)
+    {
+        "id": "intelligence",
+        "display_name": "Intelligence Engine",
+        "description": "Automated analysis: IP deep dive, domain security, username correlation, breach cross-ref, risk assessment",
+        "layer": 4,
+        "category": "intelligence",
+        "enabled": True,
+        "requires_auth": False,
+        "rate_limit": {"rpm": 100, "cooldown_sec": 0},
+        "supported_regions": ["*"],
+        "version": "1.0.0",
+    },
 ]
 
 

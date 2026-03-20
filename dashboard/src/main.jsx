@@ -11,6 +11,7 @@ import TargetDetail from './pages/TargetDetail'
 import Settings from './pages/Settings'
 import System from './pages/System'
 import Organization from './pages/Organization'
+import Landing from './pages/Landing'
 import { AuthProvider, useAuth } from './lib/auth'
 import { ToastProvider } from './components/Toast'
 
@@ -26,6 +27,7 @@ function App() {
       <ToastProvider>
       <BrowserRouter>
         <Routes>
+          <Route path="/welcome" element={<Landing />} />
           <Route path="/login" element={<Login />} />
           <Route path="/setup" element={<Setup />} />
           <Route path="/" element={<ProtectedRoute><Layout /></ProtectedRoute>}>

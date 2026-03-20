@@ -3,6 +3,7 @@ import { useParams } from 'react-router-dom'
 import { Radar, ChevronDown, ChevronRight, ExternalLink, Lock, CheckCircle, Filter, Shield, AlertTriangle, Globe, Link2, Unlink } from 'lucide-react'
 import { getTarget, getFindings, getScans, createScan, getModules, getScan, getGraph, patchFinding, getTargetSources, getAccounts, startOAuth, auditAccount, disconnectAccount } from '../lib/api'
 import IdentityGraph from '../components/IdentityGraph'
+import PlatformIcon, { getRemediationLink } from '../components/PlatformIcon'
 import IOCTimeline from '../components/IOCTimeline'
 import ProfileHeader from '../components/ProfileHeader'
 import LocationMap from '../components/LocationMap'
@@ -205,6 +206,9 @@ export default function TargetDetail() {
   const breachFindings = findings.filter(f => f.category === 'breach')
   const socialFindings = findings.filter(f => f.category === 'social_account')
   const geoFindings = findings.filter(f => f.category === 'geolocation')
+  const intelFindings = findings.filter(f => f.module === 'intelligence')
+  const riskAssessment = intelFindings.find(f => f.title?.startsWith('Risk Assessment:'))
+  const remediations = riskAssessment?.data?.remediations || []
   const criticalCount = findings.filter(f => f.severity === 'critical' || f.severity === 'high').length
 
   return (
@@ -220,6 +224,41 @@ export default function TargetDetail() {
         </button>
       </div>
 
+      {/* Live scan progress */}
+      {scans.some(s => s.status === 'running' || s.status === 'queued') && (() => {
+        const runningScan = scans.find(s => s.status === 'running' || s.status === 'queued')
+        const progress = runningScan?.module_progress || {}
+        const total = Object.keys(progress).length
+        const completed = Object.values(progress).filter(s => s === 'completed' || s === 'failed' || s === 'skipped').length
+        const pct = total > 0 ? Math.round((completed / total) * 100) : 0
+        return (
+          <div className="bg-[#12121a] border border-[#00ff88]/20 rounded-xl p-4 animate-pulse-subtle">
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center gap-2">
+                <div className="w-2 h-2 rounded-full bg-[#00ff88] animate-pulse" />
+                <span className="text-sm font-medium">Scanning {target.email}...</span>
+                <span className="text-xs text-gray-500">{completed}/{total} modules</span>
+              </div>
+              <span className="text-xs font-mono text-[#00ff88]">{pct}%</span>
+            </div>
+            <div className="h-1.5 bg-[#0a0a0f] rounded-full overflow-hidden mb-3">
+              <div className="h-full rounded-full bg-[#00ff88] transition-all duration-500" style={{ width: `${pct}%` }} />
+            </div>
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-1.5">
+              {Object.entries(progress).map(([mod, status]) => (
+                <div key={mod} className="flex items-center gap-1.5 text-xs font-mono px-2 py-1 rounded bg-[#0a0a0f]">
+                  {status === 'completed' ? <CheckCircle className="w-3 h-3 text-[#00ff88]" /> :
+                   status === 'running' ? <Radar className="w-3 h-3 text-[#ffcc00] animate-spin" /> :
+                   status === 'failed' ? <AlertTriangle className="w-3 h-3 text-[#ff2244]" /> :
+                   <div className="w-3 h-3 rounded-full border border-gray-600" />}
+                  <span className="truncate text-gray-400">{mod}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )
+      })()}
+
       {/* Tabs */}
       <div className="flex gap-1 border-b border-[#1e1e2e]">
         {['overview', 'findings', 'graph', 'timeline', 'locations', 'accounts', 'scans'].map(tab => (
@@ -233,8 +272,97 @@ export default function TargetDetail() {
       {/* Overview Tab */}
       {activeTab === 'overview' && (
         <div className="space-y-4">
-          {/* Critical alerts */}
-          {criticalCount > 0 && (
+          {/* Risk Dashboard */}
+          {riskAssessment && (
+            <div className={`rounded-xl p-5 border ${
+              riskAssessment.data?.risk_level === 'CRITICAL' ? 'bg-[#ff2244]/10 border-[#ff2244]/30' :
+              riskAssessment.data?.risk_level === 'HIGH' ? 'bg-[#ff8800]/10 border-[#ff8800]/30' :
+              riskAssessment.data?.risk_level === 'MODERATE' ? 'bg-[#ffcc00]/10 border-[#ffcc00]/30' :
+              'bg-[#00ff88]/10 border-[#00ff88]/30'
+            }`}>
+              <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center gap-3">
+                  <Shield className={`w-6 h-6 ${
+                    riskAssessment.data?.risk_level === 'CRITICAL' ? 'text-[#ff2244]' :
+                    riskAssessment.data?.risk_level === 'HIGH' ? 'text-[#ff8800]' :
+                    riskAssessment.data?.risk_level === 'MODERATE' ? 'text-[#ffcc00]' :
+                    'text-[#00ff88]'
+                  }`} />
+                  <div>
+                    <h3 className="text-sm font-semibold">RISK LEVEL: {riskAssessment.data?.risk_level}</h3>
+                    <p className="text-xs text-gray-400">{riskAssessment.data?.summary}</p>
+                  </div>
+                </div>
+                <div className="text-right">
+                  <div className="text-2xl font-mono font-bold" style={{ color: scoreColor(target.exposure_score) }}>
+                    {target.exposure_score ?? '-'}
+                  </div>
+                  <div className="text-[10px] text-gray-500 uppercase">Score</div>
+                </div>
+              </div>
+              {/* Progress bar */}
+              <div className="h-2 bg-[#0a0a0f] rounded-full overflow-hidden mb-4">
+                <div className="h-full rounded-full transition-all duration-1000"
+                  style={{ width: `${target.exposure_score || 0}%`, backgroundColor: scoreColor(target.exposure_score) }} />
+              </div>
+              {/* Stat pills */}
+              <div className="flex gap-3 mb-4">
+                {[
+                  { label: 'Accounts', value: socialFindings.length, color: '#3388ff' },
+                  { label: 'Breaches', value: breachFindings.length, color: '#ff2244' },
+                  { label: 'Findings', value: findings.length, color: '#ffcc00' },
+                  { label: 'Sources', value: sourcesData?.sources?.length || 0, color: '#666688' },
+                ].map(s => (
+                  <div key={s.label} className="flex-1 bg-[#0a0a0f] rounded-lg p-3 text-center">
+                    <div className="text-lg font-mono font-bold" style={{ color: s.color }}>{s.value}</div>
+                    <div className="text-[10px] text-gray-500 uppercase">{s.label}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Remediation Actions */}
+          {remediations.length > 0 && (
+            <div>
+              <h3 className="text-xs font-semibold uppercase tracking-wider text-gray-500 mb-3">
+                Top Actions Required ({remediations.length})
+              </h3>
+              <div className="space-y-2">
+                {remediations.slice(0, 7).map((r, i) => (
+                  <div key={i} className="bg-[#12121a] border border-[#1e1e2e] rounded-lg p-3 hover:border-[#00ff88]/20 transition-colors">
+                    <div className="flex items-start gap-3">
+                      <span className={`inline-block text-[10px] font-bold px-1.5 py-0.5 rounded-full mt-0.5 ${
+                        r.priority === 'critical' ? 'bg-[#ff2244]/20 text-[#ff2244]' :
+                        r.priority === 'high' ? 'bg-[#ff8800]/20 text-[#ff8800]' :
+                        'bg-[#ffcc00]/20 text-[#ffcc00]'
+                      }`}>{i + 1}</span>
+                      <div className="flex-1 min-w-0">
+                        <div className="text-sm font-medium">{r.action}</div>
+                        {r.finding && <p className="text-[10px] text-gray-500 mt-0.5">{r.finding}</p>}
+                        {r.steps && (
+                          <div className="flex flex-wrap gap-1 mt-1.5">
+                            {r.steps.slice(0, 3).map((step, j) => (
+                              <span key={j} className="text-[10px] px-1.5 py-0.5 rounded bg-[#1e1e2e] text-gray-400">{step}</span>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                      {r.link && (
+                        <a href={r.link} target="_blank" rel="noreferrer"
+                           className="text-[10px] px-2 py-1 rounded bg-[#00ff88]/10 text-[#00ff88] hover:bg-[#00ff88]/20 shrink-0">
+                          Secure
+                        </a>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Critical alerts (fallback when no risk assessment yet) */}
+          {!riskAssessment && criticalCount > 0 && (
             <div className="bg-[#ff2244]/10 border border-[#ff2244]/30 rounded-xl p-4 flex items-start gap-3">
               <AlertTriangle className="w-5 h-5 text-[#ff2244] shrink-0 mt-0.5" />
               <div>
@@ -278,25 +406,23 @@ export default function TargetDetail() {
             </div>
           )}
 
-          {/* Social accounts */}
+          {/* Social accounts with PlatformIcon */}
           {socialFindings.length > 0 && (
             <div>
               <h3 className="text-xs font-semibold uppercase tracking-wider text-gray-500 mb-3">Accounts ({socialFindings.length})</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-                {socialFindings.slice(0, 9).map(f => (
-                  <div key={f.id} className="bg-[#12121a] border border-[#1e1e2e] rounded-lg p-3 hover:border-[#3388ff]/30 transition-colors">
-                    <div className="flex items-center gap-2">
-                      {f.data?.avatar_url && <img src={f.data.avatar_url} alt="" className="w-6 h-6 rounded-full" />}
-                      <span className="text-sm font-medium truncate">{f.title}</span>
-                    </div>
-                    <p className="text-xs text-gray-400 mt-1 line-clamp-1">{f.description}</p>
-                    {f.url && (
-                      <a href={f.url} target="_blank" rel="noreferrer" className="text-[10px] text-[#3388ff] hover:underline mt-1 inline-flex items-center gap-1">
-                        {f.url.replace(/https?:\/\//, '').substring(0, 40)} <ExternalLink className="w-2.5 h-2.5" />
-                      </a>
-                    )}
-                  </div>
-                ))}
+              <div className="flex flex-wrap gap-2">
+                {socialFindings.slice(0, 15).map(f => {
+                  const platform = f.data?.platform || f.data?.network || f.data?.service || f.title?.split(' on ')?.[1] || f.module
+                  const username = f.data?.username || f.data?.handle || f.data?.login || ''
+                  return (
+                    <PlatformIcon key={f.id} platform={platform} username={username} url={f.url} />
+                  )
+                })}
+                {socialFindings.length > 15 && (
+                  <button onClick={() => setActiveTab('findings')} className="text-xs text-gray-500 self-center ml-1">
+                    +{socialFindings.length - 15} more
+                  </button>
+                )}
               </div>
             </div>
           )}

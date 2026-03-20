@@ -30,8 +30,10 @@ class GoogleConnector(BaseConnector):
     CATEGORY = "app_permission"
     PROVIDER = "google"
     REQUIRED_SCOPES = [
+        "openid",
         "https://www.googleapis.com/auth/userinfo.email",
         "https://www.googleapis.com/auth/userinfo.profile",
+        "https://www.googleapis.com/auth/drive.metadata.readonly",
     ]
 
     GOOGLE_AUTH_URL = "https://accounts.google.com/o/oauth2/v2/auth"
@@ -122,6 +124,14 @@ class GoogleConnector(BaseConnector):
             connections = await self._get_connections(client)
             if connections:
                 results.extend(self._connections_findings(connections))
+
+            # 4. Drive — publicly shared files
+            drive_results = await self._audit_drive(client)
+            results.extend(drive_results)
+
+            # 5. Gmail — forwarding rules (data exfiltration risk)
+            gmail_results = await self._audit_gmail_filters(client)
+            results.extend(gmail_results)
 
         # Summary
         if results:
@@ -258,6 +268,145 @@ class GoogleConnector(BaseConnector):
                 },
                 verified=True,
             ))
+
+        return results
+
+    async def _audit_drive(self, client: httpx.AsyncClient) -> list[ScanResult]:
+        """Audit Google Drive for publicly shared files."""
+        results = []
+        try:
+            resp = await client.get(
+                "https://www.googleapis.com/drive/v3/files",
+                params={
+                    "q": "visibility='anyoneWithLink' or visibility='anyoneCanFind'",
+                    "fields": "files(id,name,mimeType,webViewLink,shared,permissions)",
+                    "pageSize": 100,
+                },
+            )
+            if resp.status_code != 200:
+                logger.info("Drive API returned %d (scope may not be granted)", resp.status_code)
+                return results
+
+            files = resp.json().get("files", [])
+
+            if files:
+                results.append(ScanResult(
+                    module=self.MODULE_ID,
+                    layer=self.LAYER,
+                    category="saas_audit",
+                    severity="high" if len(files) > 5 else "medium",
+                    title=f"{len(files)} Google Drive files shared publicly",
+                    description="These files are accessible to anyone with the link. Review and restrict access.",
+                    data={
+                        "total_public_files": len(files),
+                        "files": [
+                            {
+                                "name": f["name"],
+                                "url": f.get("webViewLink"),
+                                "type": f["mimeType"],
+                            }
+                            for f in files[:20]
+                        ],
+                    },
+                    verified=True,
+                ))
+
+                # Per-file findings for sensitive document types
+                sensitive_types = ["spreadsheet", "document", "presentation", "pdf"]
+                for f_item in files[:10]:
+                    if any(t in f_item.get("mimeType", "").lower() for t in sensitive_types):
+                        results.append(ScanResult(
+                            module=self.MODULE_ID,
+                            layer=self.LAYER,
+                            category="saas_audit",
+                            severity="medium",
+                            title=f"Publicly shared: {f_item['name']}",
+                            description=f"Type: {f_item['mimeType']}. Accessible to anyone with the link.",
+                            data={
+                                "file_name": f_item["name"],
+                                "url": f_item.get("webViewLink"),
+                                "type": f_item["mimeType"],
+                            },
+                            url=f_item.get("webViewLink"),
+                            verified=True,
+                        ))
+            else:
+                results.append(ScanResult(
+                    module=self.MODULE_ID,
+                    layer=self.LAYER,
+                    category="saas_audit",
+                    severity="info",
+                    title="No publicly shared Drive files found",
+                    description="No Google Drive files are shared with 'anyone with the link'.",
+                    data={"total_public_files": 0},
+                    verified=True,
+                ))
+
+        except Exception:
+            logger.info("Drive audit failed (scope may not be granted)")
+
+        return results
+
+    async def _audit_gmail_filters(self, client: httpx.AsyncClient) -> list[ScanResult]:
+        """Check Gmail forwarding rules — potential data exfiltration."""
+        results = []
+        try:
+            # Check forwarding addresses
+            resp = await client.get(
+                "https://gmail.googleapis.com/gmail/v1/users/me/settings/forwardingAddresses",
+            )
+            if resp.status_code == 200:
+                addresses = resp.json().get("forwardingAddresses", [])
+                if addresses:
+                    for addr in addresses:
+                        email = addr.get("forwardingEmail", "unknown")
+                        status = addr.get("verificationStatus", "unknown")
+                        results.append(ScanResult(
+                            module=self.MODULE_ID,
+                            layer=self.LAYER,
+                            category="saas_audit",
+                            severity="high",
+                            title=f"Gmail forwarding active: {email}",
+                            description=f"Email is being forwarded to {email} (status: {status}). This could be a data exfiltration risk.",
+                            data={
+                                "forwarding_email": email,
+                                "verification_status": status,
+                                "risk": "data_exfiltration",
+                            },
+                            indicator_value=email,
+                            indicator_type="email",
+                            verified=True,
+                        ))
+
+            # Check filters
+            resp2 = await client.get(
+                "https://gmail.googleapis.com/gmail/v1/users/me/settings/filters",
+            )
+            if resp2.status_code == 200:
+                filters = resp2.json().get("filter", [])
+                forward_filters = [
+                    f for f in filters
+                    if f.get("action", {}).get("forward")
+                ]
+                if forward_filters:
+                    results.append(ScanResult(
+                        module=self.MODULE_ID,
+                        layer=self.LAYER,
+                        category="saas_audit",
+                        severity="medium",
+                        title=f"{len(forward_filters)} Gmail filters with forwarding rules",
+                        description="Some Gmail filters automatically forward emails to external addresses.",
+                        data={
+                            "filter_count": len(forward_filters),
+                            "forward_targets": [
+                                f.get("action", {}).get("forward") for f in forward_filters
+                            ],
+                        },
+                        verified=True,
+                    ))
+
+        except Exception:
+            logger.info("Gmail audit failed (scope may not be granted)")
 
         return results
 

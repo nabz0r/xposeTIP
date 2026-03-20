@@ -190,9 +190,45 @@ def aggregate_profile(target_id, workspace_id, session: Session) -> dict:
     profile["data_sources"] = sorted(sources)
     profile["breach_summary"]["sources"] = profile["breach_summary"]["sources"][:20]
 
-    # Pick primary name and avatar
-    profile["primary_name"] = profile["names"][0]["value"] if profile["names"] else None
-    profile["primary_avatar"] = profile["avatars"][0]["url"] if profile["avatars"] else None
+    # Pick primary name with priority:
+    # 1. Google OAuth, 2. FullContact, 3. GitHub, 4. Gravatar, 5. EmailRep, 6. Others
+    NAME_PRIORITY = ["google_audit", "fullcontact", "github_deep", "social_enricher", "gravatar", "epieos", "emailrep"]
+    primary_name = None
+    for source_prio in NAME_PRIORITY:
+        for n in profile["names"]:
+            if n.get("source") == source_prio and len(n["value"]) > 1:
+                # Reject names that look like platform names or finding titles
+                val = n["value"].lower()
+                platform_keywords = ["spotify", "amazon", "github", "reddit", "steam", "keybase", "account", "found"]
+                if not any(kw == val for kw in platform_keywords):
+                    primary_name = n["value"]
+                    break
+        if primary_name:
+            break
+    if not primary_name and profile["names"]:
+        # Fallback: first name that doesn't look like a platform
+        for n in profile["names"]:
+            val = n["value"].lower()
+            platform_keywords = ["spotify", "amazon", "github", "reddit", "steam", "keybase", "account", "found"]
+            if not any(kw == val for kw in platform_keywords):
+                primary_name = n["value"]
+                break
+    profile["primary_name"] = primary_name
+
+    # Pick primary avatar with priority:
+    # 1. Google OAuth, 2. Gravatar (non-default), 3. GitHub, 4. FullContact, 5. Others
+    AVATAR_PRIORITY = ["google_audit", "gravatar", "github_deep", "social_enricher", "fullcontact", "epieos"]
+    primary_avatar = None
+    for source_prio in AVATAR_PRIORITY:
+        for a in profile["avatars"]:
+            if a.get("source") == source_prio:
+                primary_avatar = a["url"]
+                break
+        if primary_avatar:
+            break
+    if not primary_avatar and profile["avatars"]:
+        primary_avatar = profile["avatars"][0]["url"]
+    profile["primary_avatar"] = primary_avatar
 
     # Store on target
     target = session.execute(

@@ -54,6 +54,9 @@ SOURCE_RELIABILITY = {
     # Layer 3 — SaaS connectors (OAuth, high reliability)
     "google_audit": 0.95,      # Direct from Google API with OAuth
     "microsoft_audit": 0.95,   # Direct from Microsoft Graph with OAuth
+
+    # Layer 4 — Intelligence engine
+    "intelligence": 0.90,      # Auto-generated cross-referencing, high quality
 }
 
 # Default reliability for unknown/new modules

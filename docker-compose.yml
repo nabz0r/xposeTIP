@@ -55,17 +55,19 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+    restart: unless-stopped
     networks:
       - xpose-net
 
   worker:
     build: .
     container_name: xpose-worker
-    command: celery -A api.tasks worker -l info -c 4 -Q celery,scans,modules
+    command: celery -A api.tasks worker -l info -c 4 -Q celery,scans,modules --max-tasks-per-child=100 -O fair
     volumes:
       - .:/app
     environment:
       - PYTHONPATH=/app
+      - CELERY_PREFETCH_MULTIPLIER=1
     env_file:
       - .env
     depends_on:
@@ -73,6 +75,11 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
+    deploy:
+      resources:
+        limits:
+          memory: 2G
+    restart: unless-stopped
     networks:
       - xpose-net
 
@@ -91,6 +98,7 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
+    restart: unless-stopped
     networks:
       - xpose-net
 

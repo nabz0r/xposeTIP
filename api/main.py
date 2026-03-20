@@ -42,6 +42,72 @@ app.include_router(workspaces.router, prefix="/api/v1/workspaces", tags=["worksp
 app.include_router(accounts.router, prefix="/api/v1/accounts", tags=["accounts"])
 
 
+@app.post("/api/v1/scan/quick")
+async def quick_scan(request_body: dict):
+    """Quick scan endpoint — no auth required, limited modules, rate limited.
+
+    For the landing page demo. Runs only fast, free scanners.
+    Returns results inline (not async).
+    """
+    import asyncio
+    from datetime import datetime, timezone, timedelta
+
+    email = request_body.get("email", "").strip()
+    if not email or "@" not in email:
+        from fastapi import HTTPException
+        raise HTTPException(status_code=400, detail="Valid email required")
+
+    # Rate limit: check Redis for IP-based limiting
+    try:
+        import redis as r
+        rc = r.from_url(settings.REDIS_URL)
+        # Simple rate limit: 5 scans per hour per email
+        key = f"quickscan:{email}"
+        count = rc.incr(key)
+        if count == 1:
+            rc.expire(key, 3600)
+        if count > 5:
+            from fastapi import HTTPException
+            raise HTTPException(status_code=429, detail="Rate limit: max 5 quick scans per email per hour")
+        rc.close()
+    except Exception:
+        pass  # If Redis fails, allow the scan
+
+    # Run only fast, free modules synchronously
+    quick_modules = ["email_validator", "dns_deep", "geoip"]
+    all_findings = []
+
+    for module_id in quick_modules:
+        try:
+            from api.tasks.module_tasks import _get_scanner
+            scanner = _get_scanner(module_id)
+            if not scanner:
+                continue
+            loop = asyncio.new_event_loop()
+            try:
+                results = loop.run_until_complete(scanner.scan(email))
+            finally:
+                loop.close()
+            for result in results:
+                all_findings.append({
+                    "module": result.module,
+                    "severity": result.severity,
+                    "title": result.title,
+                    "description": result.description,
+                    "category": result.category,
+                })
+        except Exception:
+            pass
+
+    return {
+        "email": email,
+        "findings": all_findings,
+        "total": len(all_findings),
+        "modules_run": quick_modules,
+        "note": "Quick scan — sign up for full 25-module analysis",
+    }
+
+
 @app.get("/health")
 async def health():
     db_ok = False
@@ -58,6 +124,90 @@ async def health():
         rc = r.from_url(settings.REDIS_URL)
         rc.ping()
         redis_ok = True
+        rc.close()
     except Exception:
         pass
     return {"status": "ok" if (db_ok and redis_ok) else "degraded", "db": db_ok, "redis": redis_ok}
+
+
+@app.get("/health/detailed")
+async def health_detailed():
+    """Detailed health check — infrastructure, workers, queue depth."""
+    import time
+    start = time.time()
+    checks = {}
+
+    # PostgreSQL
+    try:
+        from api.database import async_session
+        async with async_session() as session:
+            result = await session.execute(text("SELECT version()"))
+            version = result.scalar()
+            pool = engine.pool
+            checks["postgresql"] = {
+                "status": "healthy",
+                "version": version,
+                "pool_size": pool.size(),
+                "checked_in": pool.checkedin(),
+                "checked_out": pool.checkedout(),
+                "overflow": pool.overflow(),
+            }
+    except Exception as e:
+        checks["postgresql"] = {"status": "unhealthy", "error": str(e)}
+
+    # Redis
+    try:
+        import redis as r
+        rc = r.from_url(settings.REDIS_URL)
+        rc.ping()
+        info = rc.info("server")
+        memory = rc.info("memory")
+        checks["redis"] = {
+            "status": "healthy",
+            "version": info.get("redis_version"),
+            "used_memory_human": memory.get("used_memory_human"),
+            "connected_clients": rc.info("clients").get("connected_clients", 0),
+        }
+        rc.close()
+    except Exception as e:
+        checks["redis"] = {"status": "unhealthy", "error": str(e)}
+
+    # Celery workers
+    try:
+        from api.tasks import celery_app
+        inspector = celery_app.control.inspect(timeout=2.0)
+        active = inspector.active() or {}
+        reserved = inspector.reserved() or {}
+        stats = inspector.stats() or {}
+        worker_names = list(stats.keys())
+        checks["celery"] = {
+            "status": "healthy" if worker_names else "unhealthy",
+            "workers": len(worker_names),
+            "active_tasks": sum(len(t) for t in active.values()),
+            "reserved_tasks": sum(len(t) for t in reserved.values()),
+        }
+    except Exception as e:
+        checks["celery"] = {"status": "unhealthy", "error": str(e)}
+
+    # Queue depth
+    try:
+        import redis as r
+        rc = r.from_url(settings.REDIS_URL)
+        queue_depth = rc.llen("celery")
+        checks["queue"] = {"celery": queue_depth}
+        rc.close()
+    except Exception:
+        checks["queue"] = {"celery": -1}
+
+    elapsed = round((time.time() - start) * 1000, 1)
+    all_healthy = all(
+        c.get("status") == "healthy"
+        for c in checks.values()
+        if isinstance(c, dict) and "status" in c
+    )
+
+    return {
+        "status": "ok" if all_healthy else "degraded",
+        "checks": checks,
+        "response_time_ms": elapsed,
+    }
