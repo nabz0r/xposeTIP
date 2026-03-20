@@ -42,19 +42,16 @@ def launch_scan(self, scan_id: str):
             session.commit()
             return {"status": "no modules"}
 
-        # Update progress to queued for all modules
         scan.module_progress = {mod: "queued" for mod in modules}
         session.commit()
 
-        # Late import to avoid circular dependency
         from api.tasks.module_tasks import run_module
-        # Launch each module task, then finalize
         module_tasks = [run_module.s(scan_id, mod, email) for mod in modules]
         callback = finalize_scan.si(scan_id)
         chord(module_tasks)(callback)
 
         return {"status": "launched", "modules": modules}
-    except Exception as e:
+    except Exception:
         session.rollback()
         logger.exception("launch_scan failed for %s", scan_id)
         raise
@@ -97,14 +94,20 @@ def finalize_scan(scan_id: str):
 
         session.commit()
 
-        # Compute exposure score
+        # Compute exposure score (separate transaction so scan status is visible)
         try:
             from api.services.layer4.score_engine import compute_score
-            compute_score(scan.target_id, session)
+            score, breakdown = compute_score(scan.target_id, session)
+            logger.info("Score for target %s: %d", scan.target_id, score)
         except Exception:
             logger.exception("Score computation failed for target %s", scan.target_id)
+            # Ensure score is at least 0 on failure
+            if target:
+                target.exposure_score = target.exposure_score or 0
+                target.score_breakdown = target.score_breakdown or {}
+                session.commit()
 
-        # Build identity graph
+        # Build identity graph (separate transaction)
         try:
             from api.services.layer4.graph_builder import build_graph
             build_graph(scan.target_id, scan.workspace_id, session)

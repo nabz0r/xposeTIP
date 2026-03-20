@@ -27,3 +27,12 @@ body {
 ::-webkit-scrollbar-track { background: #0a0a0f; }
 ::-webkit-scrollbar-thumb { background: #1e1e2e; border-radius: 3px; }
 ::-webkit-scrollbar-thumb:hover { background: #2e2e3e; }
+
+/* Slide-in animation for quick view panel */
+@keyframes slide-in {
+  from { transform: translateX(100%); }
+  to { transform: translateX(0); }
+}
+.animate-slide-in {
+  animation: slide-in 0.2s ease-out;
+}

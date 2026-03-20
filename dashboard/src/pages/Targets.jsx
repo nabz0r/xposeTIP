@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Plus, Trash2, Search } from 'lucide-react'
+import { Plus, Trash2, Search, Eye } from 'lucide-react'
 import { getTargets, createTarget, deleteTarget } from '../lib/api'
+import TargetQuickView from '../components/TargetQuickView'
 
 const FLAG = (code) => {
   if (!code) return ''
@@ -25,6 +26,7 @@ export default function Targets() {
   const [newEmail, setNewEmail] = useState('')
   const [newCountry, setNewCountry] = useState('')
   const [loading, setLoading] = useState(false)
+  const [quickViewId, setQuickViewId] = useState(null)
   const navigate = useNavigate()
 
   useEffect(() => {
@@ -133,7 +135,10 @@ export default function Targets() {
                 <td className="px-5 py-3 text-gray-400">
                   {t.last_scanned ? new Date(t.last_scanned).toLocaleDateString() : 'Never'}
                 </td>
-                <td className="px-5 py-3">
+                <td className="px-5 py-3 flex items-center gap-2">
+                  <button onClick={(e) => { e.stopPropagation(); setQuickViewId(t.id) }} className="text-gray-500 hover:text-[#00ff88]" title="Quick view">
+                    <Eye className="w-4 h-4" />
+                  </button>
                   <button onClick={(e) => handleDelete(e, t.id)} className="text-gray-500 hover:text-[#ff2244]">
                     <Trash2 className="w-4 h-4" />
                   </button>
@@ -146,6 +151,9 @@ export default function Targets() {
           </tbody>
         </table>
       </div>
+
+      {/* Quick View */}
+      {quickViewId && <TargetQuickView targetId={quickViewId} onClose={() => setQuickViewId(null)} />}
 
       {/* Add Target Modal */}
       {showAdd && (

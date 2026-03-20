@@ -1,12 +1,13 @@
 import { useEffect } from 'react'
 import { Outlet, NavLink, useNavigate } from 'react-router-dom'
-import { LayoutDashboard, Crosshair, Settings, LogOut, Shield } from 'lucide-react'
+import { LayoutDashboard, Crosshair, Settings, LogOut, Shield, ServerCog } from 'lucide-react'
 import { useAuth } from '../lib/auth'
 import { getMe } from '../lib/api'
 
 const navItems = [
   { to: '/', icon: LayoutDashboard, label: 'Dashboard' },
   { to: '/targets', icon: Crosshair, label: 'Targets' },
+  { to: '/system', icon: ServerCog, label: 'System' },
   { to: '/settings', icon: Settings, label: 'Settings' },
 ]
 

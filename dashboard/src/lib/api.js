@@ -73,3 +73,6 @@ export const patchModule = (id, data) => request(`/modules/${id}`, { method: 'PA
 
 // Graph
 export const getGraph = (targetId) => request(`/graph/${targetId}`)
+
+// System
+export const getSystemStats = () => request('/system/stats')
