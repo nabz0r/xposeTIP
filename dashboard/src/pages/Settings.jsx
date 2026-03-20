@@ -109,76 +109,101 @@ function ApiKeysTab() {
     finally { setCustomSaving(false) }
   }
 
-  // Separate module keys and custom keys
-  const moduleKeys = keys.filter(k => !k.custom)
+  // Group keys: active scanners, future integrations, custom
+  const activeKeys = keys.filter(k => !k.custom && k.has_module)
+  const futureKeys = keys.filter(k => !k.custom && !k.has_module)
   const customKeys = keys.filter(k => k.custom)
+
+  function KeyCard({ k }) {
+    return (
+      <div className="bg-[#12121a] border border-[#1e1e2e] rounded-xl p-5">
+        <div className="flex items-center justify-between mb-3">
+          <div>
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className="text-sm font-semibold">{k.service_name || k.key_name}</span>
+              {k.configured && k.valid === true && <CheckCircle className="w-4 h-4 text-[#00ff88]" />}
+              {k.configured && k.valid === false && <XCircle className="w-4 h-4 text-[#ff2244]" />}
+              {k.configured && k.valid == null && <span className="text-[10px] text-[#ffcc00]">Not validated</span>}
+              {!k.configured && <span className="text-[10px] text-gray-500">Not configured</span>}
+              {k.free === true && <span className="text-[10px] bg-[#00ff88]/15 text-[#00ff88] px-1.5 py-0.5 rounded-full">Free</span>}
+              {k.free === false && <span className="text-[10px] bg-[#ff8800]/15 text-[#ff8800] px-1.5 py-0.5 rounded-full">Paid</span>}
+            </div>
+            <p className="text-xs text-gray-500 mt-0.5">{k.description}</p>
+            <div className="flex items-center gap-3 mt-1">
+              {k.module_id && (
+                <span className="text-[10px] text-gray-600 inline-flex items-center gap-1">
+                  <Cpu className="w-3 h-3" /> Powers: {k.module_id}
+                </span>
+              )}
+              {!k.has_module && !k.custom && (
+                <span className="text-[10px] text-gray-600">No module yet — coming soon</span>
+              )}
+              {k.url && (
+                <a href={k.url} target="_blank" rel="noreferrer" className="text-[10px] text-[#3388ff] hover:underline">
+                  Get key &rarr;
+                </a>
+              )}
+            </div>
+          </div>
+          <div className="flex items-center gap-2 shrink-0">
+            {k.source === 'env' && <span className="text-xs bg-[#3388ff]/15 text-[#3388ff] px-2 py-0.5 rounded">ENV</span>}
+          </div>
+        </div>
+
+        <div className="flex gap-2">
+          <input type="password" value={inputs[k.key_name] || ''}
+            onChange={e => setInputs(i => ({ ...i, [k.key_name]: e.target.value }))}
+            placeholder={k.masked || 'Enter API key...'}
+            className="flex-1 bg-[#0a0a0f] border border-[#1e1e2e] rounded-lg px-3 py-2 text-sm font-mono focus:outline-none focus:border-[#00ff88]/50" />
+          <button onClick={() => handleSave(k.key_name)} disabled={!inputs[k.key_name] || saving[k.key_name]}
+            className="bg-[#00ff88] text-black font-semibold rounded-lg px-4 py-2 text-sm hover:bg-[#00ff88]/90 disabled:opacity-50">
+            {saving[k.key_name] ? '...' : 'Save'}
+          </button>
+          {k.has_module && (
+            <button onClick={() => handleValidate(k.key_name)} disabled={validating[k.key_name]}
+              className="border border-[#1e1e2e] rounded-lg px-4 py-2 text-sm text-gray-300 hover:bg-white/5 disabled:opacity-50">
+              {validating[k.key_name] ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Validate'}
+            </button>
+          )}
+          {k.configured && k.source !== 'env' && (
+            <button onClick={() => handleDelete(k.key_name)} className="text-gray-500 hover:text-[#ff2244] px-2">
+              <Trash2 className="w-4 h-4" />
+            </button>
+          )}
+        </div>
+
+        {k.last_validated && (
+          <p className="text-[10px] text-gray-600 mt-2">Validated: {new Date(k.last_validated).toLocaleString()}</p>
+        )}
+      </div>
+    )
+  }
 
   return (
     <div className="space-y-6">
-      {/* Module API Keys */}
+      {/* Active Scanner Keys */}
       <div>
-        <h3 className="text-xs font-semibold uppercase tracking-wider text-gray-500 mb-3">Module API Keys</h3>
+        <h3 className="text-xs font-semibold uppercase tracking-wider text-gray-500 mb-3">
+          Active Scanners ({activeKeys.filter(k => k.configured).length}/{activeKeys.length} configured)
+        </h3>
         <div className="space-y-3">
-          {moduleKeys.map(k => (
-            <div key={k.key_name} className="bg-[#12121a] border border-[#1e1e2e] rounded-xl p-5">
-              <div className="flex items-center justify-between mb-3">
-                <div>
-                  <div className="flex items-center gap-2">
-                    <span className="font-mono text-sm font-semibold">{k.key_name}</span>
-                    {k.valid === true && <CheckCircle className="w-4 h-4 text-[#00ff88]" />}
-                    {k.valid === false && <XCircle className="w-4 h-4 text-[#ff2244]" />}
-                    {k.valid == null && k.masked && <span className="text-xs text-[#ffcc00]">? Not validated</span>}
-                    {!k.masked && <span className="text-xs text-gray-500">Not configured</span>}
-                  </div>
-                  <p className="text-xs text-gray-500 mt-0.5">{k.description}</p>
-                  {k.module_name && (
-                    <span className="text-[10px] text-gray-600 mt-0.5 inline-flex items-center gap-1">
-                      <Cpu className="w-3 h-3" /> {k.module_name}
-                    </span>
-                  )}
-                </div>
-                <div className="flex items-center gap-2">
-                  {k.source === 'env' && <span className="text-xs bg-[#3388ff]/15 text-[#3388ff] px-2 py-0.5 rounded">From ENV</span>}
-                </div>
-              </div>
-
-              <div className="flex gap-2">
-                <input
-                  type="password"
-                  value={inputs[k.key_name] || ''}
-                  onChange={e => setInputs(i => ({ ...i, [k.key_name]: e.target.value }))}
-                  placeholder={k.masked || 'Enter API key...'}
-                  className="flex-1 bg-[#0a0a0f] border border-[#1e1e2e] rounded-lg px-3 py-2 text-sm font-mono focus:outline-none focus:border-[#00ff88]/50"
-                />
-                <button onClick={() => handleSave(k.key_name)} disabled={!inputs[k.key_name] || saving[k.key_name]}
-                  className="bg-[#00ff88] text-black font-semibold rounded-lg px-4 py-2 text-sm hover:bg-[#00ff88]/90 disabled:opacity-50">
-                  {saving[k.key_name] ? 'Saving...' : 'Save'}
-                </button>
-                <button onClick={() => handleValidate(k.key_name)} disabled={validating[k.key_name]}
-                  className="border border-[#1e1e2e] rounded-lg px-4 py-2 text-sm text-gray-300 hover:bg-white/5 disabled:opacity-50">
-                  {validating[k.key_name] ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Validate'}
-                </button>
-                {k.masked && k.source !== 'env' && (
-                  <button onClick={() => handleDelete(k.key_name)} className="text-gray-500 hover:text-[#ff2244] px-2">
-                    <Trash2 className="w-4 h-4" />
-                  </button>
-                )}
-              </div>
-
-              {k.last_validated && (
-                <p className="text-[10px] text-gray-600 mt-2">Last validated: {new Date(k.last_validated).toLocaleString()}</p>
-              )}
-            </div>
-          ))}
-          {moduleKeys.length === 0 && (
-            <div className="text-center py-6 text-gray-500 text-sm bg-[#12121a] border border-[#1e1e2e] rounded-xl">
-              No modules require API keys. Enable auth-required modules in Scanner Modules.
-            </div>
-          )}
+          {activeKeys.map(k => <KeyCard key={k.key_name} k={k} />)}
         </div>
       </div>
 
-      {/* Custom API Keys */}
+      {/* Future Integration Keys */}
+      {futureKeys.length > 0 && (
+        <div>
+          <h3 className="text-xs font-semibold uppercase tracking-wider text-gray-500 mb-3">
+            Future Integrations — configure now, use when scanners ship
+          </h3>
+          <div className="space-y-3">
+            {futureKeys.map(k => <KeyCard key={k.key_name} k={k} />)}
+          </div>
+        </div>
+      )}
+
+      {/* Custom Keys */}
       <div>
         <div className="flex items-center justify-between mb-3">
           <h3 className="text-xs font-semibold uppercase tracking-wider text-gray-500">Custom API Keys</h3>
@@ -187,38 +212,8 @@ function ApiKeysTab() {
             <Plus className="w-3 h-3" /> Add custom key
           </button>
         </div>
-
         <div className="space-y-3">
-          {customKeys.map(k => (
-            <div key={k.key_name} className="bg-[#12121a] border border-[#1e1e2e] rounded-xl p-5">
-              <div className="flex items-center justify-between mb-3">
-                <div>
-                  <div className="flex items-center gap-2">
-                    <span className="font-mono text-sm font-semibold">{k.key_name}</span>
-                    <span className="text-[10px] bg-[#1e1e2e] text-gray-400 px-1.5 py-0.5 rounded">Custom</span>
-                    {k.valid === true && <CheckCircle className="w-4 h-4 text-[#00ff88]" />}
-                  </div>
-                  <p className="text-xs text-gray-500 mt-0.5">{k.description}</p>
-                </div>
-              </div>
-              <div className="flex gap-2">
-                <input
-                  type="password"
-                  value={inputs[k.key_name] || ''}
-                  onChange={e => setInputs(i => ({ ...i, [k.key_name]: e.target.value }))}
-                  placeholder={k.masked || 'Enter API key...'}
-                  className="flex-1 bg-[#0a0a0f] border border-[#1e1e2e] rounded-lg px-3 py-2 text-sm font-mono focus:outline-none focus:border-[#00ff88]/50"
-                />
-                <button onClick={() => handleSave(k.key_name)} disabled={!inputs[k.key_name] || saving[k.key_name]}
-                  className="bg-[#00ff88] text-black font-semibold rounded-lg px-4 py-2 text-sm hover:bg-[#00ff88]/90 disabled:opacity-50">
-                  {saving[k.key_name] ? 'Saving...' : 'Update'}
-                </button>
-                <button onClick={() => handleDelete(k.key_name)} className="text-gray-500 hover:text-[#ff2244] px-2">
-                  <Trash2 className="w-4 h-4" />
-                </button>
-              </div>
-            </div>
-          ))}
+          {customKeys.map(k => <KeyCard key={k.key_name} k={k} />)}
           {customKeys.length === 0 && !showCustom && (
             <p className="text-xs text-gray-600">No custom keys. Add keys for community plugins or external services.</p>
           )}

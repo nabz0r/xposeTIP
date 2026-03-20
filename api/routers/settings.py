@@ -107,72 +107,74 @@ async def list_api_keys(
     workspace_id=Depends(get_current_workspace),
     db: AsyncSession = Depends(get_db),
 ):
+    from api.config import ALL_API_SERVICES
+
     workspace = await db.execute(select(Workspace).where(Workspace.id == workspace_id))
     ws = workspace.scalar_one_or_none()
     if not ws:
         raise HTTPException(status_code=404, detail="Workspace not found")
 
-    # Get all modules that require auth
-    modules_result = await db.execute(
-        select(Module).where(Module.requires_auth == True).order_by(Module.layer, Module.id)
-    )
-    auth_modules = modules_result.scalars().all()
-
     api_keys = (ws.settings or {}).get("api_keys", {})
     result = []
-
-    # Build entries from modules that require auth
     seen_keys = set()
-    for mod in auth_modules:
-        auth_config = mod.auth_config or {}
-        key_name = auth_config.get("api_key_env")
-        if not key_name:
-            continue
-        if key_name in seen_keys:
-            continue
-        seen_keys.add(key_name)
 
+    # Build entries from ALL_API_SERVICES master list
+    for svc in ALL_API_SERVICES:
+        key_name = svc["key"]
+        seen_keys.add(key_name)
         entry = api_keys.get(key_name)
-        description = KEY_DESCRIPTIONS.get(key_name, f"API key for {mod.display_name}")
 
         if entry:
             result.append({
                 "key_name": key_name,
-                "module_id": mod.id,
-                "module_name": mod.display_name,
-                "description": description,
+                "service_name": svc["name"],
+                "module_id": svc["module"],
+                "description": svc["description"],
+                "url": svc["url"],
+                "free": svc["free"],
                 "masked": entry.get("masked", "****"),
                 "valid": entry.get("valid"),
                 "last_validated": entry.get("last_validated"),
+                "configured": True,
+                "has_module": svc["module"] is not None,
                 "custom": False,
             })
         else:
             env_val = os.environ.get(key_name, "")
             result.append({
                 "key_name": key_name,
-                "module_id": mod.id,
-                "module_name": mod.display_name,
-                "description": description,
+                "service_name": svc["name"],
+                "module_id": svc["module"],
+                "description": svc["description"],
+                "url": svc["url"],
+                "free": svc["free"],
                 "masked": _mask(env_val) if env_val else None,
                 "valid": None,
                 "last_validated": None,
+                "configured": bool(env_val),
                 "source": "env" if env_val else None,
+                "has_module": svc["module"] is not None,
                 "custom": False,
             })
 
-    # Add custom keys (stored in workspace.settings but not tied to a module)
+    # Add custom keys (stored in workspace.settings but not tied to a service)
     custom_keys = (ws.settings or {}).get("custom_api_keys", {})
     for key_name, entry in custom_keys.items():
-        result.append({
-            "key_name": key_name,
-            "module_id": None,
-            "module_name": None,
-            "description": entry.get("description", "Custom API key"),
-            "masked": entry.get("masked", "****"),
-            "valid": entry.get("valid"),
-            "last_validated": entry.get("last_validated"),
-            "custom": True,
-        })
+        if key_name not in seen_keys:
+            result.append({
+                "key_name": key_name,
+                "service_name": None,
+                "module_id": None,
+                "description": entry.get("description", "Custom API key"),
+                "url": None,
+                "free": None,
+                "masked": entry.get("masked", "****"),
+                "valid": entry.get("valid"),
+                "last_validated": entry.get("last_validated"),
+                "configured": True,
+                "has_module": False,
+                "custom": True,
+            })
 
     return result
 
@@ -270,6 +272,28 @@ async def validate_api_key(
                 elif resp.status_code in (200, 404, 422):
                     valid = True
                     message = "API key is valid"
+                else:
+                    valid = False
+                    message = f"Unexpected response: {resp.status_code}"
+        except Exception as e:
+            valid = False
+            message = f"Connection error: {str(e)}"
+
+    elif key_name == "GITHUB_TOKEN":
+        try:
+            async with httpx.AsyncClient(timeout=10) as client:
+                resp = await client.get(
+                    "https://api.github.com/rate_limit",
+                    headers={"Authorization": f"Bearer {api_key}", "User-Agent": "xpose-tip"},
+                )
+                if resp.status_code == 200:
+                    data = resp.json()
+                    remaining = data.get("rate", {}).get("remaining", 0)
+                    valid = True
+                    message = f"Valid. Rate limit: {remaining} remaining"
+                elif resp.status_code == 401:
+                    valid = False
+                    message = "Invalid token (401 Unauthorized)"
                 else:
                     valid = False
                     message = f"Unexpected response: {resp.status_code}"

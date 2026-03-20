@@ -21,3 +21,90 @@ class Settings(BaseSettings):
 
 
 settings = Settings()
+
+# Master list of all configurable API services
+# module=None means the integration doesn't have a scanner yet
+ALL_API_SERVICES = [
+    # Existing modules
+    {
+        "key": "HIBP_API_KEY",
+        "name": "Have I Been Pwned",
+        "description": "Breach + paste detection ($3.50/mo)",
+        "url": "https://haveibeenpwned.com/API/Key",
+        "free": False,
+        "module": "hibp",
+    },
+    {
+        "key": "MAXMIND_LICENSE",
+        "name": "MaxMind GeoLite2",
+        "description": "IP geolocation database (free tier)",
+        "url": "https://www.maxmind.com/en/geolite2/signup",
+        "free": True,
+        "module": "maxmind_geo",
+    },
+    {
+        "key": "FULLCONTACT_API_KEY",
+        "name": "FullContact",
+        "description": "Person enrichment — name, age, social, company (100 free/mo)",
+        "url": "https://www.fullcontact.com/developer/",
+        "free": True,
+        "module": "fullcontact",
+    },
+    # New services
+    {
+        "key": "GITHUB_TOKEN",
+        "name": "GitHub Personal Token",
+        "description": "Increases API rate from 60 to 5000 req/hr (free)",
+        "url": "https://github.com/settings/tokens",
+        "free": True,
+        "module": "github_deep",
+    },
+    {
+        "key": "SHODAN_API_KEY",
+        "name": "Shodan",
+        "description": "Internet-connected device search (free tier)",
+        "url": "https://account.shodan.io/",
+        "free": True,
+        "module": None,
+    },
+    {
+        "key": "VIRUSTOTAL_API_KEY",
+        "name": "VirusTotal",
+        "description": "URL/domain reputation (free tier: 4 req/min)",
+        "url": "https://www.virustotal.com/gui/my-apikey",
+        "free": True,
+        "module": None,
+    },
+    {
+        "key": "INTELX_API_KEY",
+        "name": "Intelligence X",
+        "description": "Darkweb, paste, breach search (free tier)",
+        "url": "https://intelx.io/account?tab=developer",
+        "free": True,
+        "module": None,
+    },
+    {
+        "key": "DEHASHED_API_KEY",
+        "name": "Dehashed",
+        "description": "Breach credential search ($5/mo)",
+        "url": "https://dehashed.com/",
+        "free": False,
+        "module": None,
+    },
+    {
+        "key": "HUNTER_API_KEY",
+        "name": "Hunter.io",
+        "description": "Email finder + domain search (25 free/mo)",
+        "url": "https://hunter.io/api",
+        "free": True,
+        "module": None,
+    },
+    {
+        "key": "PIMEYES_API_KEY",
+        "name": "PimEyes",
+        "description": "Reverse face search (paid)",
+        "url": "https://pimeyes.com/en",
+        "free": False,
+        "module": None,
+    },
+]

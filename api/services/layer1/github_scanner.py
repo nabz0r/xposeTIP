@@ -16,6 +16,10 @@ class GitHubDeepScanner(BaseScanner):
     async def scan(self, email: str, **kwargs) -> list[ScanResult]:
         results = []
         headers = {"User-Agent": "xpose-tip", "Accept": "application/vnd.github.v3+json"}
+        # Use GitHub token if available (60 req/hr -> 5000 req/hr)
+        api_key = kwargs.get("api_key")
+        if api_key:
+            headers["Authorization"] = f"Bearer {api_key}"
 
         async with httpx.AsyncClient(timeout=15) as client:
             # Search for user by email
