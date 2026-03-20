@@ -30,6 +30,12 @@ SCANNER_REGISTRY = {
     "username_hunter": "api.services.layer1.username_scanner:UsernameScannerPlugin",
     "leaked_domains": "api.services.layer2.leaked_scanner:LeakedScanner",
     "dns_deep": "api.services.layer2.dns_scanner:DNSDeepScanner",
+    # Layer 2 — Premium (requires API keys)
+    "virustotal": "api.services.layer2.virustotal_scanner:VirusTotalScanner",
+    "shodan": "api.services.layer2.shodan_scanner:ShodanScanner",
+    "intelx": "api.services.layer2.intelx_scanner:IntelXScanner",
+    "hunter": "api.services.layer2.hunter_scanner:HunterScanner",
+    "dehashed": "api.services.layer2.dehashed_scanner:DehashedScanner",
 }
 
 
@@ -97,6 +103,31 @@ def run_module(self, scan_id: str, module_id: str, email: str):
         elif module_id in ("github_deep",):
             from api.routers.settings import get_workspace_api_key
             key = get_workspace_api_key(scan.workspace_id, "GITHUB_TOKEN", session)
+            if key:
+                scanner_kwargs["api_key"] = key
+        elif module_id in ("virustotal",):
+            from api.routers.settings import get_workspace_api_key
+            key = get_workspace_api_key(scan.workspace_id, "VIRUSTOTAL_API_KEY", session)
+            if key:
+                scanner_kwargs["api_key"] = key
+        elif module_id in ("shodan",):
+            from api.routers.settings import get_workspace_api_key
+            key = get_workspace_api_key(scan.workspace_id, "SHODAN_API_KEY", session)
+            if key:
+                scanner_kwargs["api_key"] = key
+        elif module_id in ("intelx",):
+            from api.routers.settings import get_workspace_api_key
+            key = get_workspace_api_key(scan.workspace_id, "INTELX_API_KEY", session)
+            if key:
+                scanner_kwargs["api_key"] = key
+        elif module_id in ("hunter",):
+            from api.routers.settings import get_workspace_api_key
+            key = get_workspace_api_key(scan.workspace_id, "HUNTER_API_KEY", session)
+            if key:
+                scanner_kwargs["api_key"] = key
+        elif module_id in ("dehashed",):
+            from api.routers.settings import get_workspace_api_key
+            key = get_workspace_api_key(scan.workspace_id, "DEHASHED_API_KEY", session)
             if key:
                 scanner_kwargs["api_key"] = key
 

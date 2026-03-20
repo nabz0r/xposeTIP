@@ -40,6 +40,13 @@ SOURCE_RELIABILITY = {
     "social_enricher": 0.65,   # Depends on public profile availability
     "leaked_domains": 0.75,    # XposedOrNot is less curated than HIBP
     "maxmind_geo": 0.70,       # Local DB, accurate but mail server != user
+
+    # Layer 2 — Premium APIs
+    "virustotal": 0.90,        # VirusTotal is authoritative for domain/malware data
+    "shodan": 0.90,            # Shodan is authoritative for port/service data
+    "intelx": 0.80,            # Intelligence X — darkweb/paste, variable quality
+    "hunter": 0.75,            # Hunter.io — email discovery, can be outdated
+    "dehashed": 0.85,          # Dehashed — breach data, reliable but aggregated
 }
 
 # Default reliability for unknown/new modules

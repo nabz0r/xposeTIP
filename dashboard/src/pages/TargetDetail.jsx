@@ -25,6 +25,7 @@ const SCAN_TIMES = {
   gravatar: '~3s', social_enricher: '~5s', google_profile: '~5s',
   emailrep: '~3s', epieos: '~5s', fullcontact: '~3s', github_deep: '~10s',
   username_hunter: '~30s', leaked_domains: '~5s', dns_deep: '~8s',
+  virustotal: '~10s', shodan: '~15s', intelx: '~15s', hunter: '~10s', dehashed: '~8s',
 }
 
 export default function TargetDetail() {
