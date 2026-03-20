@@ -10,6 +10,7 @@ import Targets from './pages/Targets'
 import TargetDetail from './pages/TargetDetail'
 import Settings from './pages/Settings'
 import System from './pages/System'
+import Organization from './pages/Organization'
 import { AuthProvider, useAuth } from './lib/auth'
 
 function ProtectedRoute({ children }) {
@@ -29,6 +30,7 @@ function App() {
             <Route index element={<Dashboard />} />
             <Route path="targets" element={<Targets />} />
             <Route path="targets/:id" element={<TargetDetail />} />
+            <Route path="organization" element={<Organization />} />
             <Route path="system" element={<System />} />
             <Route path="settings" element={<Settings />} />
           </Route>

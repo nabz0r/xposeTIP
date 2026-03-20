@@ -61,10 +61,23 @@ def run_module(self, scan_id: str, module_id: str, email: str):
             _update_progress(session, scan_id, module_id, "skipped")
             return {"module": module_id, "skipped": True, "reason": "no scanner implemented"}
 
+        # Load workspace API keys for scanners that need them
+        scanner_kwargs = {}
+        if module_id in ("hibp",):
+            from api.routers.settings import get_workspace_api_key
+            key = get_workspace_api_key(scan.workspace_id, "HIBP_API_KEY", session)
+            if key:
+                scanner_kwargs["api_key"] = key
+        elif module_id in ("maxmind_geo",):
+            from api.routers.settings import get_workspace_api_key
+            key = get_workspace_api_key(scan.workspace_id, "MAXMIND_LICENSE", session)
+            if key:
+                scanner_kwargs["license_key"] = key
+
         # Run async scanner in sync context
         loop = asyncio.new_event_loop()
         try:
-            results = loop.run_until_complete(scanner.scan(email))
+            results = loop.run_until_complete(scanner.scan(email, **scanner_kwargs))
         finally:
             loop.close()
 

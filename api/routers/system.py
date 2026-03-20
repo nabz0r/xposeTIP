@@ -124,3 +124,34 @@ async def system_stats(
         "modules": module_health,
         "recent_scans": recent,
     }
+
+
+@router.post("/recalculate-scores")
+async def recalculate_scores(
+    role: str = Depends(require_role("superadmin", "admin")),
+    workspace_id=Depends(get_current_workspace),
+    db: AsyncSession = Depends(get_db),
+):
+    """Re-run score engine for all targets in this workspace."""
+    from api.tasks.utils import get_sync_session
+    from api.services.layer4.score_engine import compute_score
+
+    targets_result = await db.execute(
+        select(Target).where(Target.workspace_id == workspace_id)
+    )
+    targets = targets_result.scalars().all()
+
+    sync_session = get_sync_session()
+    updated = 0
+    try:
+        for t in targets:
+            try:
+                score, breakdown = compute_score(t.id, sync_session)
+                updated += 1
+            except Exception:
+                logger.exception("Failed to recompute score for target %s", t.id)
+        sync_session.commit()
+    finally:
+        sync_session.close()
+
+    return {"recalculated": updated, "total": len(targets)}

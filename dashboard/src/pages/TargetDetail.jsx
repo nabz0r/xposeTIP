@@ -34,6 +34,7 @@ export default function TargetDetail() {
   const [selectedModules, setSelectedModules] = useState([])
   const [scanning, setScanning] = useState(false)
   const [activeTab, setActiveTab] = useState('findings')
+  const [toast, setToast] = useState(null)
   // Filters
   const [sevFilter, setSevFilter] = useState('all')
   const [modFilter, setModFilter] = useState('all')
@@ -88,7 +89,20 @@ export default function TargetDetail() {
         }))
         if (done) {
           clearInterval(pollRef.current)
-          load() // Full refresh when complete
+          // Auto-refresh findings, target, and score
+          const [t, f] = await Promise.all([getTarget(id), getFindings(`target_id=${id}`)])
+          setTarget(t)
+          const newFindings = f.items || []
+          const newCount = newFindings.length - findings.length
+          setFindings(newFindings)
+          // Show completion toast
+          const failed = updated.filter(s => s.status === 'failed')
+          if (failed.length > 0) {
+            setToast({ type: 'error', message: `Scan failed: ${failed[0].error_log || 'Unknown error'}` })
+          } else {
+            setToast({ type: 'success', message: `Scan completed — ${newCount > 0 ? newCount : 0} new findings` })
+          }
+          setTimeout(() => setToast(null), 5000)
         }
       } catch {}
     }, 3000)
@@ -362,6 +376,15 @@ export default function TargetDetail() {
             </div>
           ))}
           {scans.length === 0 && <div className="text-center py-8 text-gray-500">No scans yet</div>}
+        </div>
+      )}
+
+      {/* Toast */}
+      {toast && (
+        <div className={`fixed bottom-6 right-6 z-50 px-4 py-3 rounded-lg text-sm shadow-lg border ${
+          toast.type === 'success' ? 'bg-[#00ff88]/10 border-[#00ff88]/30 text-[#00ff88]' : 'bg-[#ff2244]/10 border-[#ff2244]/30 text-[#ff2244]'
+        }`}>
+          {toast.message}
         </div>
       )}
 

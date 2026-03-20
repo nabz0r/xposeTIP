@@ -76,3 +76,27 @@ export const getGraph = (targetId) => request(`/graph/${targetId}`)
 
 // System
 export const getSystemStats = () => request('/system/stats')
+export const recalculateScores = () => request('/system/recalculate-scores', { method: 'POST' })
+
+// Settings
+export const getApiKeys = () => request('/settings/apikeys')
+export const saveApiKey = (key_name, key_value) => request('/settings/apikeys', { method: 'POST', body: JSON.stringify({ key_name, key_value }) })
+export const validateApiKey = (key_name) => request(`/settings/apikeys/${key_name}/validate`, { method: 'POST' })
+export const deleteApiKey = (key_name) => request(`/settings/apikeys/${key_name}`, { method: 'DELETE' })
+export const getDefaults = () => request('/settings/defaults')
+export const updateDefaults = (data) => request('/settings/defaults', { method: 'PUT', body: JSON.stringify(data) })
+
+// Workspaces
+export const getWorkspaces = () => request('/workspaces')
+export const createWorkspace = (data) => request('/workspaces', { method: 'POST', body: JSON.stringify(data) })
+export const updateWorkspace = (id, data) => request(`/workspaces/${id}`, { method: 'PATCH', body: JSON.stringify(data) })
+export const deleteWorkspace = (id) => request(`/workspaces/${id}`, { method: 'DELETE' })
+export const getWorkspaceMembers = (id) => request(`/workspaces/${id}/members`)
+export const inviteMember = (id, data) => request(`/workspaces/${id}/invite`, { method: 'POST', body: JSON.stringify(data) })
+export const updateMemberRole = (wsId, userId, data) => request(`/workspaces/${wsId}/members/${userId}`, { method: 'PATCH', body: JSON.stringify(data) })
+export const removeMember = (wsId, userId) => request(`/workspaces/${wsId}/members/${userId}`, { method: 'DELETE' })
+export const switchWorkspace = (workspace_id) => request('/auth/switch-workspace', { method: 'POST', body: JSON.stringify({ workspace_id }) })
+
+// User profile
+export const updateProfile = (data) => request('/auth/profile', { method: 'PATCH', body: JSON.stringify(data) })
+export const changePassword = (data) => request('/auth/password', { method: 'POST', body: JSON.stringify(data) })

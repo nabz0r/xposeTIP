@@ -6,7 +6,7 @@ from api.services.base import BaseScanner, ScanResult
 
 logger = logging.getLogger(__name__)
 
-MAXMIND_DB_PATH = os.environ.get("MAXMIND_DB_PATH", "data/maxmind/GeoLite2-City.mmdb")
+DEFAULT_MAXMIND_DB_PATH = os.environ.get("MAXMIND_DB_PATH", "data/maxmind/GeoLite2-City.mmdb")
 
 
 class MaxmindScanner(BaseScanner):
@@ -22,8 +22,9 @@ class MaxmindScanner(BaseScanner):
             logger.warning("geoip2 not installed — skipping GeoIP lookup")
             return []
 
-        if not os.path.exists(MAXMIND_DB_PATH):
-            logger.warning("MaxMind DB not found at %s — skipping GeoIP lookup", MAXMIND_DB_PATH)
+        db_path = kwargs.get("db_path") or DEFAULT_MAXMIND_DB_PATH
+        if not os.path.exists(db_path):
+            logger.warning("MaxMind DB not found at %s — skipping GeoIP lookup", db_path)
             return []
 
         domain = email.split("@")[1].lower() if "@" in email else ""
@@ -54,7 +55,7 @@ class MaxmindScanner(BaseScanner):
             return []
 
         try:
-            reader = geoip2.database.Reader(MAXMIND_DB_PATH)
+            reader = geoip2.database.Reader(db_path)
         except Exception:
             logger.exception("Failed to open MaxMind DB")
             return []
@@ -98,9 +99,10 @@ class MaxmindScanner(BaseScanner):
         logger.info("MaxMind scan complete for %s: %d findings", domain, len(results))
         return results
 
-    async def health_check(self) -> bool:
+    async def health_check(self, **kwargs) -> bool:
         try:
             import geoip2.database
-            return os.path.exists(MAXMIND_DB_PATH)
+            db_path = kwargs.get("db_path") or DEFAULT_MAXMIND_DB_PATH
+            return os.path.exists(db_path)
         except ImportError:
             return False

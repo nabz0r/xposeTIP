@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Crosshair, Radar, AlertTriangle, ShieldAlert, Search } from 'lucide-react'
-import { getTargets, getScans, getFindingsStats, getFindings, createTarget, createScan } from '../lib/api'
+import { getTargets, getScans, getFindingsStats, getFindings, createTarget, createScan, getDefaults } from '../lib/api'
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, AreaChart, Area } from 'recharts'
 import WorldHeatmap from '../components/WorldHeatmap'
 
@@ -41,9 +41,17 @@ export default function Dashboard() {
   const [geoFindings, setGeoFindings] = useState([])
   const [quickEmail, setQuickEmail] = useState('')
   const [loading, setLoading] = useState(false)
+  const [defaultModules, setDefaultModules] = useState(['email_validator', 'holehe'])
   const navigate = useNavigate()
 
-  useEffect(() => { loadData() }, [])
+  useEffect(() => { loadData(); loadDefaults() }, [])
+
+  async function loadDefaults() {
+    try {
+      const defs = await getDefaults()
+      if (defs.default_modules?.length) setDefaultModules(defs.default_modules)
+    } catch {}
+  }
 
   async function loadData() {
     try {
@@ -93,7 +101,7 @@ export default function Dashboard() {
     setLoading(true)
     try {
       const target = await createTarget({ email: quickEmail })
-      await createScan({ target_id: target.id, modules: ['email_validator', 'holehe'] })
+      await createScan({ target_id: target.id, modules: defaultModules })
       navigate(`/targets/${target.id}`)
     } catch (err) {
       alert(err.message)
@@ -181,7 +189,7 @@ export default function Dashboard() {
       )}
 
       {/* World Heatmap */}
-      <WorldHeatmap findings={geoFindings} />
+      <WorldHeatmap key={geoFindings.length} findings={geoFindings} />
 
       {/* Recent Scans */}
       {recentScans.length > 0 && (
@@ -201,7 +209,8 @@ export default function Dashboard() {
             </thead>
             <tbody>
               {recentScans.map((scan, i) => (
-                <tr key={scan.id} className={`border-t border-[#1e1e2e] ${i % 2 === 1 ? 'bg-white/[0.02]' : ''}`}>
+                <tr key={scan.id} onClick={() => scan.target_id && navigate(`/targets/${scan.target_id}`)}
+                  className={`border-t border-[#1e1e2e] cursor-pointer hover:bg-white/[0.03] ${i % 2 === 1 ? 'bg-white/[0.02]' : ''}`}>
                   <td className="px-5 py-3">
                     <span className="inline-flex items-center gap-1.5 text-xs font-medium px-2 py-0.5 rounded-full"
                       style={{ backgroundColor: statusColors[scan.status] + '26', color: statusColors[scan.status] }}>

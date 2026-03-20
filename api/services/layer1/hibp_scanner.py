@@ -18,10 +18,20 @@ class HIBPScanner(BaseScanner):
     CATEGORY = "breach"
 
     async def scan(self, email: str, **kwargs) -> list[ScanResult]:
-        api_key = os.environ.get("HIBP_API_KEY", "")
+        api_key = kwargs.get("api_key") or os.environ.get("HIBP_API_KEY", "")
         if not api_key:
-            logger.warning("HIBP_API_KEY not set — skipping breach check")
-            return []
+            logger.warning("HIBP_API_KEY not set — returning info finding")
+            return [ScanResult(
+                module=self.MODULE_ID,
+                layer=self.LAYER,
+                category="metadata",
+                severity="info",
+                title="HIBP API key not configured",
+                description="Configure your HaveIBeenPwned API key in Settings to enable breach checking",
+                data={"reason": "missing_api_key"},
+                indicator_value=email,
+                indicator_type="email",
+            )]
 
         results = []
         headers = {
@@ -103,6 +113,6 @@ class HIBPScanner(BaseScanner):
 
         return results
 
-    async def health_check(self) -> bool:
-        api_key = os.environ.get("HIBP_API_KEY", "")
+    async def health_check(self, **kwargs) -> bool:
+        api_key = kwargs.get("api_key") or os.environ.get("HIBP_API_KEY", "")
         return bool(api_key)

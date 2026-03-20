@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { RefreshCw, Database, Server, Cpu, Wifi, CheckCircle, XCircle, AlertCircle } from 'lucide-react'
-import { getSystemStats } from '../lib/api'
+import { getSystemStats, recalculateScores } from '../lib/api'
 
 const statusIcon = (status) => {
   if (status === 'healthy') return <CheckCircle className="w-4 h-4 text-[#00ff88]" />
@@ -74,6 +74,7 @@ export default function System() {
   const [stats, setStats] = useState(null)
   const [loading, setLoading] = useState(true)
   const [refreshing, setRefreshing] = useState(false)
+  const [recalculating, setRecalculating] = useState(false)
 
   useEffect(() => { loadStats() }, [])
 
@@ -116,10 +117,17 @@ export default function System() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold">System</h1>
-        <button onClick={handleRefresh} disabled={refreshing}
-          className="flex items-center gap-2 text-sm text-gray-400 hover:text-white disabled:opacity-50">
-          <RefreshCw className={`w-4 h-4 ${refreshing ? 'animate-spin' : ''}`} /> Refresh
-        </button>
+        <div className="flex items-center gap-3">
+          <button onClick={async () => { setRecalculating(true); try { const r = await recalculateScores(); alert(`Recalculated ${r.recalculated}/${r.total} targets`) } catch (e) { alert(e.message) } finally { setRecalculating(false) } }}
+            disabled={recalculating}
+            className="flex items-center gap-2 text-sm text-gray-400 hover:text-[#00ff88] disabled:opacity-50 border border-[#1e1e2e] rounded-lg px-3 py-1.5">
+            {recalculating ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Database className="w-4 h-4" />} Recalculate Scores
+          </button>
+          <button onClick={handleRefresh} disabled={refreshing}
+            className="flex items-center gap-2 text-sm text-gray-400 hover:text-white disabled:opacity-50">
+            <RefreshCw className={`w-4 h-4 ${refreshing ? 'animate-spin' : ''}`} /> Refresh
+          </button>
+        </div>
       </div>
 
       {/* Infrastructure Health */}

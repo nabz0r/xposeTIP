@@ -84,7 +84,9 @@ export default function WorldHeatmap({ findings }) {
       <h3 className="text-sm font-semibold mb-3">Geographic Exposure</h3>
       {!hasData && (
         <div className="text-center py-6 text-gray-500 text-sm">
-          Enable MaxMind GeoIP module for geographic exposure data.
+          Geographic exposure mapping requires the MaxMind GeoIP module.
+          <br />
+          <span className="text-xs text-gray-600">Configure your MaxMind license key in Settings &rarr; API Keys.</span>
         </div>
       )}
       <div className="relative">

@@ -132,6 +132,44 @@ async def refresh(body: RefreshRequest, db: AsyncSession = Depends(get_db)):
     )
 
 
+class PasswordChangeRequest(BaseModel):
+    current_password: str
+    new_password: str
+
+
+class SwitchWorkspaceRequest(BaseModel):
+    workspace_id: str
+
+
+@router.post("/password")
+async def change_password(body: PasswordChangeRequest, current_user: User = Depends(get_current_user), db: AsyncSession = Depends(get_db)):
+    if not current_user.password_hash or not verify_password(body.current_password, current_user.password_hash):
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Current password is incorrect")
+    if len(body.new_password) < 8:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Password must be at least 8 characters")
+    current_user.password_hash = hash_password(body.new_password)
+    await db.commit()
+    return {"message": "Password changed successfully"}
+
+
+@router.post("/switch-workspace", response_model=TokenResponse)
+async def switch_workspace(body: SwitchWorkspaceRequest, current_user: User = Depends(get_current_user), db: AsyncSession = Depends(get_db)):
+    workspace_id = uuid.UUID(body.workspace_id)
+    result = await db.execute(
+        select(UserWorkspace).where(
+            UserWorkspace.user_id == current_user.id,
+            UserWorkspace.workspace_id == workspace_id,
+        )
+    )
+    membership = result.scalar_one_or_none()
+    if not membership:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not a member of this workspace")
+    return TokenResponse(
+        access_token=create_access_token(current_user.id, workspace_id, membership.role),
+        refresh_token=create_refresh_token(current_user.id),
+    )
+
+
 @router.get("/me")
 async def me(current_user: User = Depends(get_current_user), db: AsyncSession = Depends(get_db)):
     result = await db.execute(
