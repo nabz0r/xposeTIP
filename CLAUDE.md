@@ -39,23 +39,29 @@ The exposure score for a US target will naturally be higher (more public data av
 than for an EU target (GDPR reduces public exposure). That's a feature, not a bug —
 it proves the point about digital exposure varying by jurisdiction.
 
+## Current version: v0.5.0
+
+Sprint 5 complete. 17 scanners implemented, profile aggregation, SVG world map,
+toast notifications, health check system, admin polish.
+
 ## Tech stack (locked)
 
 - **Backend**: FastAPI + SQLAlchemy 2.0 (async, mapped_column) + Alembic
 - **Queue**: Celery + Redis broker
 - **Database**: PostgreSQL 16 + pgvector
-- **Frontend**: React 18 + Vite + Tailwind CSS
-- **Auth**: Phase 1 = JWT (PyJWT + bcrypt). Phase 2 = +SSO (Authlib). Phase 3 = +MFA (pyotp)
-- **UI**: Dark cyber theme. Inter font (UI), JetBrains Mono (data). Neon green accent.
-- **Charts**: Recharts
-- **Graph**: D3.js force-directed
-- **Reports**: WeasyPrint (HTML→PDF)
-- **OSINT**: Holehe, Maigret, GHunt, Sherlock, h8mail (Python wrappers)
-- **Breach**: HIBP API ($3.50/mo)
-- **Geolocation**: MaxMind GeoLite2 (free, local DB)
-- **App trackers**: Exodus Privacy DB (CC-BY-SA)
-- **Containers**: Docker Compose
-- **Reverse proxy**: Caddy (auto HTTPS in prod)
+- **Frontend**: React 18 + Vite + Tailwind CSS 4
+- **Auth**: JWT (PyJWT + bcrypt) — SSO and MFA planned for later phases
+- **UI**: Dark cyber theme. Inter font (UI), JetBrains Mono (data). Neon green accent #00ff88.
+- **Charts**: Recharts (bar, donut)
+- **Graph**: D3.js force-directed (identity graph) + D3 geo (world heatmap)
+- **Map**: SVG world map with Mercator projection (replaced Leaflet in v0.5.0)
+- **Reports**: WeasyPrint (HTML→PDF) — planned
+- **OSINT**: Holehe, Sherlock (Python wrappers), plus 15 custom scanners
+- **Breach**: HIBP API ($3.50/mo) + XposedOrNot (free)
+- **Geolocation**: ip-api.com (free) + MaxMind GeoLite2 (free, local DB)
+- **Encryption**: Fernet (AES-256) for API keys at rest
+- **Containers**: Docker Compose (5 services)
+- **Notifications**: Toast system (ToastProvider context, auto-dismiss 4s, stackable)
 
 ## Architecture concepts
 
@@ -74,449 +80,55 @@ Every scanner inherits BaseScanner, implements scan() and health_check().
 Phase 2+: community modules via Python entry_points (pip install, restart, done).
 
 ### 4 Layers
-- Layer 1: Passive recon (email → accounts, breaches, Google metadata)
-- Layer 2: Public databases (geoloc, WHOIS, data brokers, pastes, DNS history)
+- Layer 1: Passive recon (email → accounts, breaches, Google metadata, reputation)
+- Layer 2: Public databases (geoloc, WHOIS, DNS security, data brokers, pastes)
 - Layer 3: Voluntary audit (OAuth account linking, app trackers, browser)
-- Layer 4: Intelligence engine (score, graph, patterns, remediation)
+- Layer 4: Intelligence engine (score, graph, profile aggregation, remediation)
 
-## Database schema
+## Scanner registry (api/tasks/module_tasks.py)
 
-All tables: UUID PKs (gen_random_uuid), created_at/updated_at TIMESTAMPTZ.
-All queries scoped to workspace_id.
-
-### workspaces
-```sql
-id              UUID PK
-name            VARCHAR(100) NOT NULL
-slug            VARCHAR(100) UNIQUE NOT NULL
-owner_id        UUID FK → users.id
-plan            VARCHAR(20) DEFAULT 'free'  -- free|pro|consultant|enterprise
-settings        JSONB DEFAULT '{}'
-created_at      TIMESTAMPTZ DEFAULT NOW()
-updated_at      TIMESTAMPTZ DEFAULT NOW()
-```
-
-### users
-```sql
-id              UUID PK
-email           VARCHAR(255) UNIQUE NOT NULL
-password_hash   VARCHAR(255)          -- NULL if OAuth-only
-display_name    VARCHAR(255)
-avatar_url      VARCHAR(1024)
-auth_provider   VARCHAR(20) DEFAULT 'local'  -- local|google|microsoft|github
-auth_provider_id VARCHAR(255)
-mfa_secret      TEXT                  -- encrypted, NULL if not enabled
-mfa_enabled     BOOLEAN DEFAULT false
-is_active       BOOLEAN DEFAULT true
-last_login      TIMESTAMPTZ
-created_at      TIMESTAMPTZ DEFAULT NOW()
-updated_at      TIMESTAMPTZ DEFAULT NOW()
-```
-
-### user_workspaces
-```sql
-user_id         UUID FK → users.id ON DELETE CASCADE
-workspace_id    UUID FK → workspaces.id ON DELETE CASCADE
-role            VARCHAR(20) NOT NULL  -- superadmin|admin|consultant|client|user
-joined_at       TIMESTAMPTZ DEFAULT NOW()
-PRIMARY KEY (user_id, workspace_id)
-```
-
-### targets
-```sql
-id              UUID PK
-workspace_id    UUID FK → workspaces.id ON DELETE CASCADE
-email           VARCHAR(255) NOT NULL
-display_name    VARCHAR(255)
-avatar_url      VARCHAR(1024)
-country_code    VARCHAR(2)            -- ISO 3166-1 alpha-2, for region-specific modules
-status          VARCHAR(20) DEFAULT 'pending'
-                -- pending|scanning|completed|error
-exposure_score  INTEGER               -- 0-100
-score_breakdown JSONB                 -- {breach:30, social:20, tracking:15, geo:10, ...}
-first_scanned   TIMESTAMPTZ
-last_scanned    TIMESTAMPTZ
-tags            TEXT[]
-notes           TEXT
-created_at      TIMESTAMPTZ DEFAULT NOW()
-updated_at      TIMESTAMPTZ DEFAULT NOW()
-
-UNIQUE(workspace_id, email)
-INDEX idx_targets_workspace ON targets(workspace_id)
-INDEX idx_targets_score ON targets(exposure_score DESC)
-```
-
-### scans
-```sql
-id              UUID PK
-workspace_id    UUID FK → workspaces.id ON DELETE CASCADE
-target_id       UUID FK → targets.id ON DELETE CASCADE
-status          VARCHAR(20) DEFAULT 'queued'
-                -- queued|running|completed|partial|failed|cancelled
-layer           INTEGER DEFAULT 1
-modules         JSONB                 -- ["holehe","maigret","hibp"]
-module_progress JSONB                 -- {"holehe":"completed","maigret":"running"}
-started_at      TIMESTAMPTZ
-completed_at    TIMESTAMPTZ
-duration_ms     INTEGER
-findings_count  INTEGER DEFAULT 0
-new_findings    INTEGER DEFAULT 0     -- findings not in previous scan
-error_log       TEXT
-celery_task_id  VARCHAR(255)
-created_at      TIMESTAMPTZ DEFAULT NOW()
-
-INDEX idx_scans_workspace ON scans(workspace_id)
-INDEX idx_scans_target ON scans(target_id)
-```
-
-### findings
-```sql
-id              UUID PK
-workspace_id    UUID FK → workspaces.id ON DELETE CASCADE
-scan_id         UUID FK → scans.id ON DELETE CASCADE
-target_id       UUID FK → targets.id ON DELETE CASCADE
-module          VARCHAR(50) NOT NULL
-layer           INTEGER NOT NULL
-category        VARCHAR(30) NOT NULL
-                -- social_account|breach|credential|metadata|tracking|
-                -- geolocation|device|data_broker|paste|app_permission|
-                -- dns_record|domain_registration|browser_data|public_record
-severity        VARCHAR(10) NOT NULL  -- info|low|medium|high|critical
-title           VARCHAR(255) NOT NULL
-description     TEXT
-data            JSONB                 -- raw module output (forensic archive, never delete)
-url             VARCHAR(1024)
-indicator_value VARCHAR(500)
-indicator_type  VARCHAR(30)           -- email|username|ip|phone|domain|device_id|address
-verified        BOOLEAN DEFAULT false
-status          VARCHAR(20) DEFAULT 'active'
-                -- active|resolved|false_positive|monitoring
-first_seen      TIMESTAMPTZ DEFAULT NOW()
-last_seen       TIMESTAMPTZ DEFAULT NOW()
-created_at      TIMESTAMPTZ DEFAULT NOW()
-
--- Partition by workspace_id for large-scale deployments
-INDEX idx_findings_workspace ON findings(workspace_id)
-INDEX idx_findings_target ON findings(target_id)
-INDEX idx_findings_module ON findings(module)
-INDEX idx_findings_severity ON findings(severity)
-INDEX idx_findings_category ON findings(category)
-INDEX idx_findings_indicator ON findings(indicator_value)
-```
-
-### identities
-```sql
-id              UUID PK
-workspace_id    UUID FK → workspaces.id ON DELETE CASCADE
-target_id       UUID FK → targets.id ON DELETE CASCADE
-type            VARCHAR(20) NOT NULL
-                -- email|username|phone|full_name|ip|domain|
-                -- device_id|social_url|avatar_hash|address
-value           VARCHAR(500) NOT NULL
-platform        VARCHAR(100)
-source_module   VARCHAR(50)
-source_finding  UUID FK → findings.id
-confidence      FLOAT DEFAULT 1.0
-metadata        JSONB
-created_at      TIMESTAMPTZ DEFAULT NOW()
-
-UNIQUE(workspace_id, target_id, type, value)
-```
-
-### identity_links
-```sql
-id              UUID PK
-workspace_id    UUID FK → workspaces.id ON DELETE CASCADE
-source_id       UUID FK → identities.id ON DELETE CASCADE
-dest_id         UUID FK → identities.id ON DELETE CASCADE
-link_type       VARCHAR(30) NOT NULL
-                -- same_person|registered_with|mentioned_together|
-                -- resolves_to|logged_from|linked_account|shares_password_hash
-confidence      FLOAT DEFAULT 1.0
-source_module   VARCHAR(50)
-evidence        JSONB
-created_at      TIMESTAMPTZ DEFAULT NOW()
-
-UNIQUE(workspace_id, source_id, dest_id, link_type)
-```
-
-### modules
-```sql
-id              VARCHAR(50) PK
-display_name    VARCHAR(100) NOT NULL
-description     TEXT
-layer           INTEGER NOT NULL
-category        VARCHAR(50)
-enabled         BOOLEAN DEFAULT true
-requires_auth   BOOLEAN DEFAULT false
-auth_config     JSONB                 -- {"api_key_env":"HIBP_API_KEY"}
-rate_limit      JSONB                 -- {"rpm":30,"cooldown_sec":2}
-supported_regions JSONB               -- ["US","EU","*"] — "*" = global
-version         VARCHAR(20)
-health_status   VARCHAR(20) DEFAULT 'unknown'
-last_health     TIMESTAMPTZ
-```
-
-### accounts
-```sql
-id              UUID PK
-workspace_id    UUID FK → workspaces.id ON DELETE CASCADE
-target_id       UUID FK → targets.id ON DELETE CASCADE
-provider        VARCHAR(30) NOT NULL  -- google|apple|facebook|github
-provider_uid    VARCHAR(255)
-email           VARCHAR(255)
-display_name    VARCHAR(255)
-access_token    TEXT                  -- AES-256 encrypted (Fernet)
-refresh_token   TEXT                  -- AES-256 encrypted (Fernet)
-token_expires   TIMESTAMPTZ
-scopes          Text[]
-last_audited    TIMESTAMPTZ
-audit_summary   JSONB
-created_at      TIMESTAMPTZ DEFAULT NOW()
-updated_at      TIMESTAMPTZ DEFAULT NOW()
-```
-
-### alerts
-```sql
-id              UUID PK
-workspace_id    UUID FK → workspaces.id ON DELETE CASCADE
-target_id       UUID FK → targets.id ON DELETE CASCADE
-type            VARCHAR(30) NOT NULL
-                -- new_breach|score_change|new_paste|new_account|
-                -- data_broker_found|scheduled_rescan
-config          JSONB
-last_triggered  TIMESTAMPTZ
-trigger_count   INTEGER DEFAULT 0
-enabled         BOOLEAN DEFAULT true
-created_at      TIMESTAMPTZ DEFAULT NOW()
-```
-
-### reports
-```sql
-id              UUID PK
-workspace_id    UUID FK → workspaces.id ON DELETE CASCADE
-target_id       UUID FK → targets.id ON DELETE CASCADE
-type            VARCHAR(20) DEFAULT 'standard'  -- standard|whitelabel
-file_path       VARCHAR(500)
-file_size       INTEGER
-sections        JSONB                 -- which sections to include
-generated_at    TIMESTAMPTZ DEFAULT NOW()
-```
-
-### audit_log
-```sql
-id              UUID PK
-workspace_id    UUID FK → workspaces.id
-user_id         UUID FK → users.id
-action          VARCHAR(50) NOT NULL  -- target.create|scan.launch|finding.resolve|...
-resource_type   VARCHAR(30)
-resource_id     UUID
-metadata        JSONB
-ip_address      VARCHAR(45)
-created_at      TIMESTAMPTZ DEFAULT NOW()
-
--- Append-only, never deleted
-INDEX idx_audit_workspace ON audit_log(workspace_id, created_at DESC)
-```
-
-## API design
-
-All endpoints prefixed with `/api/v1/`. All require auth (JWT Bearer) except health.
-All scoped to workspace via middleware (extracts workspace_id from JWT claims).
-
-### Auth
-```
-POST /api/v1/auth/register        -- Phase 1: admin setup. Phase 3: public signup
-POST /api/v1/auth/login           -- email + password → JWT pair
-POST /api/v1/auth/refresh         -- refresh token → new access token
-POST /api/v1/auth/logout          -- blacklist refresh token
-GET  /api/v1/auth/me              -- current user + workspaces + roles
-POST /api/v1/auth/oauth/{provider} -- Phase 2: SSO initiation
-GET  /api/v1/auth/oauth/callback  -- SSO callback
-POST /api/v1/auth/mfa/setup       -- Phase 3: generate TOTP secret + QR
-POST /api/v1/auth/mfa/verify      -- verify TOTP code
-```
-
-### Targets
-```
-GET    /api/v1/targets                    -- list (paginated, ?search, ?status, ?min_score, ?tags)
-POST   /api/v1/targets                    -- create {email, country_code?, tags?, notes?}
-GET    /api/v1/targets/{id}               -- detail + latest scan + score
-PATCH  /api/v1/targets/{id}               -- update tags, notes, country_code
-DELETE /api/v1/targets/{id}               -- cascade delete all data (GDPR)
-GET    /api/v1/targets/{id}/graph         -- identity graph nodes + edges
-GET    /api/v1/targets/{id}/timeline      -- findings timeline
-GET    /api/v1/targets/{id}/export        -- full data export (JSON)
-```
-
-### Scans
-```
-POST   /api/v1/scans                      -- launch {target_id, modules[]}
-GET    /api/v1/scans                      -- list (?target_id, ?status)
-GET    /api/v1/scans/{id}                 -- detail + module_progress
-POST   /api/v1/scans/{id}/cancel          -- revoke celery task
-WS     /api/v1/scans/{id}/ws             -- WebSocket for live progress
-```
-
-### Findings
-```
-GET    /api/v1/findings                   -- list (?target_id, ?module, ?severity, ?category, ?status)
-GET    /api/v1/findings/{id}              -- detail + raw data
-PATCH  /api/v1/findings/{id}              -- update status (resolved, false_positive)
-GET    /api/v1/findings/stats             -- aggregates (by severity, category, module)
-```
-
-### Modules
-```
-GET    /api/v1/modules                    -- list all + health
-PATCH  /api/v1/modules/{id}               -- enable/disable, update config
-POST   /api/v1/modules/{id}/health        -- trigger health check
-```
-
-### Workspaces (Phase 2)
-```
-GET    /api/v1/workspaces                 -- list user's workspaces
-POST   /api/v1/workspaces                 -- create workspace
-PATCH  /api/v1/workspaces/{id}            -- update settings
-POST   /api/v1/workspaces/{id}/invite     -- invite user by email
-```
-
-### Reports (Phase 2)
-```
-POST   /api/v1/reports                    -- generate {target_id, type, sections[]}
-GET    /api/v1/reports                    -- list
-GET    /api/v1/reports/{id}/download       -- download PDF
-```
-
-### Alerts (Phase 2)
-```
-GET    /api/v1/alerts                     -- list
-POST   /api/v1/alerts                     -- create rule
-PATCH  /api/v1/alerts/{id}                -- update/toggle
-DELETE /api/v1/alerts/{id}                -- remove
-```
-
-## Scanner interface
+Complete SCANNER_REGISTRY with all 17 implemented scanners:
 
 ```python
-from dataclasses import dataclass, field
-from typing import Optional
-
-@dataclass
-class ScanResult:
-    module: str
-    layer: int
-    category: str
-    severity: str          # info|low|medium|high|critical
-    title: str
-    description: str
-    data: dict             # raw output — forensic archive
-    url: Optional[str] = None
-    indicator_value: Optional[str] = None
-    indicator_type: Optional[str] = None
-    verified: bool = False
-
-class BaseScanner:
-    MODULE_ID: str
-    LAYER: int
-    CATEGORY: str
-    SUPPORTED_REGIONS: list[str] = ["*"]  # "*" = global
-
-    async def scan(self, email: str, **kwargs) -> list[ScanResult]:
-        raise NotImplementedError
-
-    async def health_check(self) -> bool:
-        raise NotImplementedError
-```
-
-## Exposure score computation
-
-```python
-SCORE_WEIGHTS = {
-    "breach":       0.25,
-    "social":       0.20,
-    "tracking":     0.15,
-    "geo":          0.12,
-    "data_broker":  0.10,
-    "metadata":     0.08,
-    "device":       0.05,
-    "public_record": 0.05,
-}
-
-SEVERITY_MULTIPLIER = {
-    "critical": 5, "high": 4, "medium": 3, "low": 2, "info": 1
+SCANNER_REGISTRY = {
+    # Layer 1 — Passive Recon (12 scanners)
+    "email_validator": "api.services.layer1.email_validator:EmailValidatorScanner",
+    "holehe":          "api.services.layer1.holehe_scanner:HoleheScanner",
+    "hibp":            "api.services.layer1.hibp_scanner:HIBPScanner",
+    "sherlock":        "api.services.layer1.sherlock_scanner:SherlockScanner",
+    "gravatar":        "api.services.layer1.gravatar_scanner:GravatarScanner",
+    "social_enricher": "api.services.layer1.social_enricher:SocialEnricherScanner",
+    "google_profile":  "api.services.layer1.google_scanner:GoogleScanner",
+    "emailrep":        "api.services.layer1.emailrep_scanner:EmailRepScanner",
+    "epieos":          "api.services.layer1.epieos_scanner:EpieosScanner",
+    "fullcontact":     "api.services.layer1.fullcontact_scanner:FullContactScanner",
+    "github_deep":     "api.services.layer1.github_scanner:GitHubDeepScanner",
+    "username_hunter": "api.services.layer1.username_scanner:UsernameScannerPlugin",
+    # Layer 2 — Public Databases (5 scanners)
+    "whois_lookup":    "api.services.layer2.whois_scanner:WhoisScanner",
+    "maxmind_geo":     "api.services.layer2.maxmind_scanner:MaxmindScanner",
+    "geoip":           "api.services.layer2.geoip_scanner:GeoIPScanner",
+    "leaked_domains":  "api.services.layer2.leaked_scanner:LeakedScanner",
+    "dns_deep":        "api.services.layer2.dns_scanner:DNSDeepScanner",
 }
 ```
 
-Per-category score = sum(findings × severity_multiplier), normalized 0-100.
-Final score = weighted sum across categories.
-US targets will naturally score higher (more public data) — that's correct behavior.
+Seeded modules (25 total in `scripts/seed_modules.py`): 17 implemented + 8 placeholder
+(maigret, ghunt, h8mail, databroker_check, paste_monitor, google_auditor, exodus_tracker, browser_auditor).
 
-## Frontend pages
-
-### Dashboard (/)
-Stats cards: total targets, active scans, total findings, critical count.
-Recent scans with status. Top 5 exposed targets. Module health. Quick scan form.
-
-### Targets (/targets)
-Table: email, country, status, score, last scanned, findings count.
-Search + filter. "Add target" button → modal. Click row → detail.
-
-### Target detail (/targets/:id)
-Header: email, score donut, country flag, status.
-Tabs: Findings | Graph | Timeline | Scans | Report.
-Findings tab: filterable table with severity badges.
-Graph tab: D3 force-directed identity map.
-"Launch scan" button with module checkboxes.
-
-### Settings (/settings)
-Module toggles + health. API key config. Default modules. User profile.
-
-## UI rules
-- Background: #0a0a0f. Cards: #12121a, border #1e1e2e
-- Accent: #00ff88 (green), #ff2244 (critical), #ff8800 (high), #ffcc00 (medium), #3388ff (low), #666688 (info)
-- Monospace for all data values. Sans-serif for UI.
-- Cards with subtle glow on hover (box-shadow with accent at 0.1 opacity)
-- Severity badge: pill-shaped, colored bg at 0.15 opacity, text full color
-- Tables: dark rows, sticky header, zebra #ffffff05 alternate
-
-## Dev priority (Sprint 1 = v0.1.0)
-
-1. Docker Compose
-2. All DB models + Alembic (full schema, all tables)
-3. JWT auth (register + login + me + middleware)
-4. Seed modules
-5. Target CRUD + workspace scoping
-6. Holehe scanner wrapper
-7. Scan orchestrator (Celery)
-8. Findings API
-9. React dashboard (dark theme, targets, scan, results)
-10. Commit v0.1.0
-
-## Sprint 2 (v0.2.0) — completed
-
-### New scanners (Layer 1 + Layer 2)
-
-| Module ID        | Scanner class                                      | Layer | Status      | Notes |
-|------------------|----------------------------------------------------|-------|-------------|-------|
-| `email_validator`| `api.services.layer1.email_validator:EmailValidatorScanner` | 1 | implemented | Format, DNS, disposable check |
-| `holehe`         | `api.services.layer1.holehe_scanner:HoleheScanner`  | 1 | implemented | 121 sites via `holehe.core.get_functions()` |
-| `hibp`           | `api.services.layer1.hibp_scanner:HIBPScanner`      | 1 | implemented | Breaches + pastes. Needs `HIBP_API_KEY` env var |
-| `sherlock`       | `api.services.layer1.sherlock_scanner:SherlockScanner` | 1 | implemented | Username enum via subprocess. Needs `sherlock` CLI |
-| `whois_lookup`   | `api.services.layer2.whois_scanner:WhoisScanner`    | 2 | implemented | Domain WHOIS + registrant email match |
-| `maxmind_geo`    | `api.services.layer2.maxmind_scanner:MaxmindScanner`| 2 | implemented | GeoIP on MX/A IPs. Needs GeoLite2-City.mmdb at `data/maxmind/` |
-
-### Scanner registry (api/tasks/module_tasks.py)
-
-All scanners registered in `SCANNER_REGISTRY` dict. Format: `"module_id": "python.module.path:ClassName"`.
 Lazy-loaded via `importlib` — missing deps don't crash the worker.
 Modules without a registered scanner are marked `implemented: false` in the API response
 and silently excluded from scan dispatch.
 
-To add a new scanner:
+### Adding a new scanner
+
 1. Create scanner class inheriting `BaseScanner` (in `api/services/layerN/`)
 2. Add entry to `SCANNER_REGISTRY` in `api/tasks/module_tasks.py`
-3. Add module row to DB via seed script
+3. Add module row to `MODULES` list in `scripts/seed_modules.py`
+4. If scanner needs an API key, add to `run_module()` key loading block
+5. Re-seed: `python scripts/seed_modules.py`
+
+## Layer 4 services
 
 ### Exposure score engine (api/services/layer4/score_engine.py)
 
@@ -539,41 +151,190 @@ Total = weighted sum across categories.
 
 Called automatically in `finalize_scan` after score computation.
 Extracts identity nodes and links from findings:
-- Social account finding → `Identity(type="social_url")` + `IdentityLink(type="registered_with")`
-- Breach finding → `Identity(type="breach")` + `IdentityLink(type="exposed_in")`
-- Username finding → `IdentityLink(type="same_person")` back to email
+- Social account → `Identity(type="social_url")` + `IdentityLink(type="registered_with")`
+- Breach → `Identity(type="breach")` + `IdentityLink(type="exposed_in")`
+- Username → `IdentityLink(type="same_person")` back to email
 
-### New API endpoints
+### Profile aggregator (api/services/layer4/profile_aggregator.py)
 
+Called automatically in `finalize_scan` after graph building.
+Merges all findings into a unified profile stored in `target.profile_data` (JSONB).
+Extracts: name, location, social profiles, breach count, credential status, reputation.
+
+**Important**: Excludes `geoip`/`maxmind_geo` modules from location extraction — those
+are mail server locations, not user locations.
+
+## API design
+
+All endpoints prefixed with `/api/v1/`. All require auth (JWT Bearer) except health.
+All scoped to workspace via middleware (extracts workspace_id from JWT claims).
+
+### Auth
 ```
-GET /api/v1/graph/{target_id}     -- identity graph nodes + edges + stats
-GET /api/v1/modules               -- now includes "implemented" boolean field
+POST /api/v1/auth/register
+POST /api/v1/auth/login
+POST /api/v1/auth/refresh
+POST /api/v1/auth/logout
+GET  /api/v1/auth/me
+PATCH /api/v1/auth/profile      -- update display_name
 ```
 
-### Frontend components (Sprint 2)
+### Targets
+```
+GET    /api/v1/targets
+POST   /api/v1/targets
+GET    /api/v1/targets/{id}
+PATCH  /api/v1/targets/{id}
+DELETE /api/v1/targets/{id}
+GET    /api/v1/targets/{id}/profile   -- aggregated profile data
+```
 
-- `IdentityGraph.jsx` — D3 force-directed graph with zoom, drag, hover highlight, click detail panel
-- `IOCTimeline.jsx` — Vertical timeline grouped by date (today/yesterday/week/older)
-- `WorldHeatmap.jsx` — D3 geo choropleth from geolocation findings
-- Dashboard: Recharts severity bar chart + module donut chart
-- TargetDetail: animated score donut, category breakdown bars, findings filters (severity/module/status), "Mark as resolved" button, Graph/Timeline tabs
-- Module selector: grouped by layer, "Select all Layer N", lock icon for auth-required, scan time estimates
+### Scans
+```
+POST   /api/v1/scans
+GET    /api/v1/scans
+GET    /api/v1/scans/{id}
+POST   /api/v1/scans/{id}/cancel
+```
 
-### Celery worker queues
+### Findings
+```
+GET    /api/v1/findings
+GET    /api/v1/findings/{id}
+PATCH  /api/v1/findings/{id}          -- update status (resolved, false_positive)
+GET    /api/v1/findings/stats
+```
+
+### Graph
+```
+GET    /api/v1/graph/{target_id}      -- identity graph nodes + edges + stats
+```
+
+### Modules
+```
+GET    /api/v1/modules                -- list all + health + implemented flag
+PATCH  /api/v1/modules/{id}           -- enable/disable
+POST   /api/v1/modules/{id}/health    -- single health check
+POST   /api/v1/modules/health-all     -- bulk health check
+```
+
+### Settings
+```
+GET    /api/v1/settings/apikeys       -- list configured API keys (masked)
+POST   /api/v1/settings/apikeys       -- save API key (Fernet encrypted)
+POST   /api/v1/settings/apikeys/custom -- save custom key
+POST   /api/v1/settings/apikeys/{key_name}/validate
+DELETE /api/v1/settings/apikeys/{key_name}
+GET    /api/v1/settings/defaults      -- scan default modules
+PUT    /api/v1/settings/defaults      -- update scan defaults
+```
+
+## Database schema
+
+All tables: UUID PKs (gen_random_uuid), created_at/updated_at TIMESTAMPTZ.
+All queries scoped to workspace_id. Key tables:
+
+- **workspaces** — multi-tenant isolation, settings JSONB (stores encrypted API keys)
+- **users** — auth, display_name, avatar
+- **user_workspaces** — RBAC junction (role per workspace)
+- **targets** — email, exposure_score, score_breakdown, profile_data (JSONB)
+- **scans** — status, modules JSONB, module_progress JSONB, celery_task_id
+- **findings** — the big table. module, layer, category, severity, data JSONB (forensic archive)
+- **identities** — identity nodes (email, username, social_url, etc.)
+- **identity_links** — edges between identity nodes
+- **modules** — scanner metadata, health_status, auth_config
+
+Notable column added in v0.5.0: `targets.profile_data` (JSONB) — aggregated profile.
+Migration: `alembic/versions/002_add_profile_data.py`.
+
+## Frontend pages
+
+### Dashboard (/)
+Stats cards: total targets, active scans, total findings, HIGH count, most exposed target.
+Recharts severity bar chart + module donut chart. Quick scan form with 7 default modules.
+
+### Targets (/targets)
+Table: email, country, status, score, last scanned, findings count.
+Search + filter. "Add target" modal. Click row → detail.
+
+### Target detail (/targets/:id)
+ProfileHeader: social profiles strip, credentials leaked status, email security badge,
+reputation indicator, data sources count.
+Tabs: Overview | Findings | Graph | Timeline | Locations | Scans.
+- Overview: critical alerts, breach cards, social accounts, mail server locations
+- Findings: filterable table (severity/module/status), expandable rows with FindingDataCard
+  (enriched cards per scanner type: breach, social, emailrep, github, dns, geo)
+- Graph: D3 force-directed identity map
+- Timeline: IOC timeline grouped by date
+- Locations: SVG world map with Mercator projection, animated pulse rings, labels
+- Scans: scan history with module progress badges
+Module selector: grouped by layer, "Select all Layer N", lock icon for auth-required, scan time estimates.
+Toast notifications on scan completion.
+
+### Settings (/settings)
+Tabs: Modules (toggle + health) | API Keys (add/validate/delete, Fernet encrypted) |
+Scan Defaults | Profile (display_name edit).
+
+## Frontend components
+
+- `ProfileHeader.jsx` — uses `/profile` API, shows social strip + stats
+- `IdentityGraph.jsx` — D3 force-directed with zoom, drag, hover highlight
+- `IOCTimeline.jsx` — vertical timeline grouped by date
+- `LocationMap.jsx` — pure SVG world map (Mercator projection, animated dots)
+- `WorldHeatmap.jsx` — D3 geo choropleth (dashboard)
+- `Toast.jsx` — ToastProvider context, auto-dismiss 4s, stackable, top-right
+
+## UI rules
+
+- Background: #0a0a0f. Cards: #12121a, border #1e1e2e
+- Accent: #00ff88 (green), #ff2244 (critical), #ff8800 (high), #ffcc00 (medium), #3388ff (low), #666688 (info)
+- Monospace (JetBrains Mono) for all data values. Sans-serif (Inter) for UI.
+- Cards with subtle glow on hover (box-shadow with accent at 0.1 opacity)
+- Severity badge: pill-shaped, colored bg at 0.15 opacity, text full color
+- Tables: dark rows, sticky header, zebra #ffffff05 alternate
+
+## Celery worker
 
 Worker command: `celery -A api.tasks worker -l info -c 4 -Q celery,scans,modules`
-- `scans` queue: scan_orchestrator tasks (launch_scan, finalize_scan)
-- `modules` queue: module_tasks (run_module)
-- `celery` queue: default fallback
+- Chord-based scan orchestration: launch_scan → [run_module × N] → finalize_scan
+- finalize_scan pipeline: count findings → update target → compute score → build graph → aggregate profile
+- API keys loaded per-module in run_module (hibp, maxmind_geo, fullcontact)
 
-### Dependencies added (Sprint 2)
+## Default scan modules
 
-- `psycopg2-binary` — sync SQLAlchemy engine for Celery workers
-- `python-whois` — WHOIS domain lookups
-- `geoip2` — MaxMind GeoLite2 reader
-- `email-validator` — email format validation
-- `d3` (npm) — force-directed graph + geo projections
-- `recharts` (npm) — dashboard charts
+Backend fallback (when workspace has no custom defaults):
+`["email_validator", "holehe", "emailrep", "gravatar", "epieos", "github_deep", "dns_deep"]`
+
+Frontend pre-selects: all enabled+implemented L1 + recommended L2 (dns_deep, leaked_domains, geoip).
+
+## Sprint history
+
+| Sprint | Version | Key deliverables |
+|--------|---------|-----------------|
+| 1 | v0.1.0 | Docker, DB models, JWT auth, Holehe, email_validator, Celery, React dashboard |
+| 2 | v0.2.0 | HIBP, Sherlock, WHOIS, MaxMind, score engine, identity graph, IOC timeline, world heatmap |
+| 3 | v0.3.0 | Gravatar, Social Enricher, Google Profile, Free GeoIP, settings UI |
+| 4 | v0.4.0 | Dynamic API keys (Fernet), key validation, location mapping, scan defaults |
+| 5 | v0.5.0 | 7 new scanners, profile aggregation, health checks, SVG world map, toast system |
+
+## Bugs fixed (v0.5.x)
+
+- Scanner activation: DB needed re-seeding after adding new modules
+- Leaflet black screen: replaced entirely with SVG world map (Mercator projection)
+- GeoIP labeling: profile aggregator now excludes geoip/maxmind_geo from user location
+- Health checks: added POST /modules/{id}/health and /modules/health-all endpoints
+- Default modules: backend fallback updated from 3 to 7 free scanners
+
+## Known issues
+
+- **emailrep.io rate limiting from Docker**: Cloud/Docker IPs get rate-limited more aggressively.
+  Works better from residential IPs. Not a code bug.
+- **Sherlock IP ban risk**: Aggressive rate limiting configured (5 rpm). Still risky on shared IPs.
+- **GHunt not implemented**: Needs DroidGuard patched credentials. Scanner class not yet built.
+- **Maigret not implemented**: Pure Python but heavy dependencies. Planned for v0.6.
+- **WorldHeatmap CDN dependency**: Fetches world-atlas TopoJSON from jsdelivr CDN at runtime.
+  If CDN is unreachable, heatmap silently fails.
+- **No WebSocket**: Scan progress uses 3s polling, not WebSocket. Good enough for now.
 
 ## Critical rules
 
@@ -581,11 +342,12 @@ Worker command: `celery -A api.tasks worker -l info -c 4 -Q celery,scans,modules
 - Rate limit every external call — config in modules.rate_limit
 - Raw tool output in findings.data JSONB forever
 - NEVER store plaintext passwords — breach names + hash prefixes only
-- OAuth tokens AES-256 encrypted at rest (Fernet, key in env)
+- API keys AES-256 encrypted at rest (Fernet, key derived from SECRET_KEY)
 - Every DB query scoped to workspace_id (prepare for RLS in Phase 2)
 - findings is the biggest table — design indexes and queries accordingly
 - US targets = more data available = higher scores. This is correct.
 - GHunt needs DroidGuard patch (already built by dev)
 - HIBP API key $3.50/mo, required for breach depth
-- Holehe + Maigret = pure Python, zero external deps
+- Holehe = pure Python, zero external deps
 - Sherlock needs aggressive rate limiting (IP ban risk)
+- GeoIP findings = mail server location, NOT user location. Always label accordingly.
