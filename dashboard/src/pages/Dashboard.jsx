@@ -42,7 +42,7 @@ export default function Dashboard() {
   const [topTarget, setTopTarget] = useState(null)
   const [quickEmail, setQuickEmail] = useState('')
   const [loading, setLoading] = useState(false)
-  const [defaultModules, setDefaultModules] = useState(['email_validator', 'holehe'])
+  const [defaultModules, setDefaultModules] = useState(['email_validator', 'holehe', 'emailrep', 'gravatar', 'epieos', 'github_deep', 'dns_deep'])
   const navigate = useNavigate()
 
   useEffect(() => { loadData(); loadDefaults() }, [])

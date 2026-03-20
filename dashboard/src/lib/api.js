@@ -72,6 +72,8 @@ export const patchFinding = (id, data) => request(`/findings/${id}`, { method: '
 // Modules
 export const getModules = () => request('/modules')
 export const patchModule = (id, data) => request(`/modules/${id}`, { method: 'PATCH', body: JSON.stringify(data) })
+export const checkModuleHealth = (id) => request(`/modules/${id}/health`, { method: 'POST' })
+export const checkAllModulesHealth = () => request('/modules/health-all', { method: 'POST' })
 
 // Graph
 export const getGraph = (targetId) => request(`/graph/${targetId}`)

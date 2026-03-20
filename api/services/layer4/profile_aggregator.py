@@ -79,10 +79,12 @@ def aggregate_profile(target_id, workspace_id, session: Session) -> dict:
                 profile["bio"] = bio[:500]
 
         # --- Location ---
-        for loc_key in ("location", "currentLocation", "city"):
-            loc = data.get(loc_key, "")
-            if loc and not profile["location"]:
-                profile["location"] = loc
+        # ONLY use profile-sourced locations, NOT geoip (server locations)
+        if f.module not in ("geoip", "maxmind_geo") and f.category != "geolocation":
+            for loc_key in ("location", "currentLocation"):
+                loc = data.get(loc_key, "")
+                if loc and not profile["location"]:
+                    profile["location"] = loc
 
         # --- Company/Title ---
         if data.get("company") and not profile["company"]:

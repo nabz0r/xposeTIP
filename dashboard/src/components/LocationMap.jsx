@@ -23,7 +23,7 @@ export default function LocationMap({ findings }) {
   if (geoFindings.length === 0) {
     return (
       <div className="bg-[#12121a] border border-[#1e1e2e] rounded-xl p-8 text-center">
-        <p className="text-gray-500 text-sm">No geolocation data available. Run the GeoIP module to map server locations.</p>
+        <p className="text-gray-500 text-sm">No geolocation data available. Run the GeoIP or DNS Intelligence module to map mail server locations.</p>
       </div>
     )
   }
@@ -34,12 +34,12 @@ export default function LocationMap({ findings }) {
 
   return (
     <div className="bg-[#12121a] border border-[#1e1e2e] rounded-xl overflow-hidden">
-      <div className="h-[400px]">
+      <div style={{ height: '500px', minHeight: '500px' }}>
         <MapContainer
           center={[avgLat, avgLon]}
           zoom={3}
           className="h-full w-full"
-          style={{ background: '#0a0a0f' }}
+          style={{ background: '#0a0a0f', height: '100%', minHeight: '500px' }}
         >
           <TileLayer
             url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
@@ -50,9 +50,11 @@ export default function LocationMap({ findings }) {
               <Popup>
                 <div className="text-xs">
                   <strong>{f.data.city}, {f.data.country}</strong>
+                  <br /><span style={{ color: '#ff8800' }}>Mail server location</span>
                   <br />IP: {f.data.ip}
                   {f.data.isp && <><br />ISP: {f.data.isp}</>}
                   {f.data.org && <><br />Org: {f.data.org}</>}
+                  {f.data.domain && <><br />Domain: {f.data.domain}</>}
                 </div>
               </Popup>
             </Marker>

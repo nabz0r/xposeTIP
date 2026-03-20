@@ -124,7 +124,9 @@ export default function TargetDetail() {
   useEffect(() => {
     getModules().then(m => {
       setModules(m)
-      setSelectedModules(m.filter(mod => mod.enabled && mod.implemented && mod.layer === 1).map(mod => mod.id))
+      // Pre-select all enabled+implemented Layer 1 + recommended Layer 2 modules
+      const recommended = ['dns_deep', 'leaked_domains', 'geoip']
+      setSelectedModules(m.filter(mod => mod.enabled && mod.implemented && (mod.layer === 1 || recommended.includes(mod.id))).map(mod => mod.id))
     }).catch(() => {})
   }, [])
 
@@ -283,7 +285,8 @@ export default function TargetDetail() {
           {/* Geo summary */}
           {geoFindings.length > 0 && (
             <div>
-              <h3 className="text-xs font-semibold uppercase tracking-wider text-gray-500 mb-3">Locations</h3>
+              <h3 className="text-xs font-semibold uppercase tracking-wider text-gray-500 mb-3">Mail Server Locations</h3>
+              <p className="text-[10px] text-gray-600 mb-2">These are mail server locations, not the user's physical location.</p>
               <div className="flex flex-wrap gap-2">
                 {geoFindings.map(f => (
                   <span key={f.id} className="inline-flex items-center gap-1.5 text-xs px-2.5 py-1.5 rounded-lg bg-[#12121a] border border-[#1e1e2e]">

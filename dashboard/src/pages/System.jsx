@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { RefreshCw, Database, Server, Cpu, Wifi, CheckCircle, XCircle, AlertCircle } from 'lucide-react'
-import { getSystemStats, recalculateScores } from '../lib/api'
+import { getSystemStats, recalculateScores, checkAllModulesHealth } from '../lib/api'
 
 const statusIcon = (status) => {
   if (status === 'healthy') return <CheckCircle className="w-4 h-4 text-[#00ff88]" />
@@ -75,6 +75,7 @@ export default function System() {
   const [loading, setLoading] = useState(true)
   const [refreshing, setRefreshing] = useState(false)
   const [recalculating, setRecalculating] = useState(false)
+  const [healthChecking, setHealthChecking] = useState(false)
 
   useEffect(() => { loadStats() }, [])
 
@@ -118,6 +119,20 @@ export default function System() {
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold">System</h1>
         <div className="flex items-center gap-3">
+          <button onClick={async () => {
+              setHealthChecking(true)
+              try {
+                const r = await checkAllModulesHealth()
+                const healthy = r.results.filter(m => m.health_status === 'healthy').length
+                alert(`Health checks done: ${healthy}/${r.total} healthy`)
+                loadStats()
+              } catch (e) { alert(e.message) }
+              finally { setHealthChecking(false) }
+            }}
+            disabled={healthChecking}
+            className="flex items-center gap-2 text-sm text-gray-400 hover:text-[#00ff88] disabled:opacity-50 border border-[#1e1e2e] rounded-lg px-3 py-1.5">
+            {healthChecking ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Cpu className="w-4 h-4" />} Run Health Checks
+          </button>
           <button onClick={async () => { setRecalculating(true); try { const r = await recalculateScores(); alert(`Recalculated ${r.recalculated}/${r.total} targets`) } catch (e) { alert(e.message) } finally { setRecalculating(false) } }}
             disabled={recalculating}
             className="flex items-center gap-2 text-sm text-gray-400 hover:text-[#00ff88] disabled:opacity-50 border border-[#1e1e2e] rounded-lg px-3 py-1.5">

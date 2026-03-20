@@ -141,6 +141,18 @@ class SwitchWorkspaceRequest(BaseModel):
     workspace_id: str
 
 
+class ProfileUpdateRequest(BaseModel):
+    display_name: str | None = None
+
+
+@router.patch("/profile")
+async def update_profile(body: ProfileUpdateRequest, current_user: User = Depends(get_current_user), db: AsyncSession = Depends(get_db)):
+    if body.display_name is not None:
+        current_user.display_name = body.display_name
+    await db.commit()
+    return {"message": "Profile updated", "display_name": current_user.display_name}
+
+
 @router.post("/password")
 async def change_password(body: PasswordChangeRequest, current_user: User = Depends(get_current_user), db: AsyncSession = Depends(get_db)):
     if not current_user.password_hash or not verify_password(body.current_password, current_user.password_hash):
