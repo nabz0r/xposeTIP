@@ -61,7 +61,7 @@ services:
   worker:
     build: .
     container_name: xpose-worker
-    command: celery -A api.tasks worker -l info -c 4
+    command: celery -A api.tasks worker -l info -c 4 -Q celery,scans,modules
     volumes:
       - .:/app
     environment:

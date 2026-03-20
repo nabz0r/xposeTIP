@@ -63,8 +63,9 @@ async def create_scan(
         task = launch_scan.delay(str(scan.id))
         scan.celery_task_id = task.id
         await db.commit()
-    except Exception:
-        pass  # Celery may not be available in dev
+    except Exception as e:
+        import logging
+        logging.error(f"Failed to dispatch scan task: {e}", exc_info=True)
 
     return _scan_dict(scan)
 
