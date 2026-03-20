@@ -145,6 +145,7 @@ def _finding_dict(f: Finding, include_data: bool = False) -> dict:
         "indicator_value": f.indicator_value,
         "indicator_type": f.indicator_type,
         "verified": f.verified,
+        "confidence": f.confidence,
         "status": f.status,
         "first_seen": f.first_seen.isoformat() if f.first_seen else None,
         "last_seen": f.last_seen.isoformat() if f.last_seen else None,

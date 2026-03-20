@@ -144,6 +144,33 @@ async def get_target(
     return data
 
 
+@router.get("/{target_id}/sources")
+async def get_target_sources(
+    target_id: uuid.UUID,
+    workspace_id: uuid.UUID = Depends(get_current_workspace),
+    user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """Get per-source scoring and confidence data for a target."""
+    await _get_target(db, target_id, workspace_id)
+
+    # source_scoring uses sync session, run in executor
+    from api.services.layer4.source_scoring import compute_source_scores
+    from api.tasks.utils import get_sync_session
+    import asyncio
+
+    def _compute():
+        session = get_sync_session()
+        try:
+            return compute_source_scores(target_id, session)
+        finally:
+            session.close()
+
+    loop = asyncio.get_event_loop()
+    result = await loop.run_in_executor(None, _compute)
+    return result
+
+
 @router.get("/{target_id}/profile")
 async def get_target_profile(
     target_id: uuid.UUID,

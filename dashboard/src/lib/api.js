@@ -57,6 +57,7 @@ export const createTarget = (data) => request('/targets', { method: 'POST', body
 export const getTarget = (id) => request(`/targets/${id}`)
 export const deleteTarget = (id) => request(`/targets/${id}?confirm=true`, { method: 'DELETE' })
 export const getTargetProfile = (id) => request(`/targets/${id}/profile`)
+export const getTargetSources = (id) => request(`/targets/${id}/sources`)
 export const bulkImportTargets = (data) => request('/targets/bulk', { method: 'POST', body: JSON.stringify(data) })
 
 // Scans

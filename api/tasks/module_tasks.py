@@ -133,6 +133,9 @@ def run_module(self, scan_id: str, module_id: str, email: str):
                     indicator_type=result.indicator_type,
                     verified=result.verified,
                 )
+                # Compute confidence based on source reliability
+                from api.services.layer4.source_scoring import compute_finding_confidence
+                finding.confidence = compute_finding_confidence(finding)
                 session.add(finding)
                 session.flush()
                 created += 1

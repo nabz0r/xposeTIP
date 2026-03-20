@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useCallback, useRef, Fragment } from 'react'
 import { useParams } from 'react-router-dom'
 import { Radar, ChevronDown, ChevronRight, ExternalLink, Lock, CheckCircle, Filter, Shield, AlertTriangle, Globe } from 'lucide-react'
-import { getTarget, getFindings, getScans, createScan, getModules, getScan, getGraph, patchFinding } from '../lib/api'
+import { getTarget, getFindings, getScans, createScan, getModules, getScan, getGraph, patchFinding, getTargetSources } from '../lib/api'
 import IdentityGraph from '../components/IdentityGraph'
 import IOCTimeline from '../components/IOCTimeline'
 import ProfileHeader from '../components/ProfileHeader'
@@ -34,6 +34,7 @@ export default function TargetDetail() {
   const [scans, setScans] = useState([])
   const [modules, setModules] = useState([])
   const [graphData, setGraphData] = useState(null)
+  const [sourcesData, setSourcesData] = useState(null)
   const [expanded, setExpanded] = useState(null)
   const [showScanModal, setShowScanModal] = useState(false)
   const [selectedModules, setSelectedModules] = useState([])
@@ -120,6 +121,13 @@ export default function TargetDetail() {
       getGraph(id).then(setGraphData).catch(() => {})
     }
   }, [activeTab, id])
+
+  // Load sources data
+  useEffect(() => {
+    if (findings.length > 0) {
+      getTargetSources(id).then(setSourcesData).catch(() => {})
+    }
+  }, [findings.length, id])
 
   useEffect(() => {
     getModules().then(m => {
@@ -299,6 +307,48 @@ export default function TargetDetail() {
             </div>
           )}
 
+          {/* Source reliability */}
+          {sourcesData?.sources?.length > 0 && (
+            <div>
+              <h3 className="text-xs font-semibold uppercase tracking-wider text-gray-500 mb-3">
+                Sources ({sourcesData.sources.length})
+                {sourcesData.overall_confidence > 0 && (
+                  <span className="ml-2 text-[10px] font-normal normal-case text-gray-600">
+                    Overall confidence: {Math.round(sourcesData.overall_confidence * 100)}%
+                    {sourcesData.cross_verified_count > 0 && ` | ${sourcesData.cross_verified_count} cross-verified`}
+                  </span>
+                )}
+              </h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
+                {sourcesData.sources.map(s => {
+                  const relColor = s.reliability >= 0.8 ? '#00ff88' : s.reliability >= 0.6 ? '#ffcc00' : '#ff8800'
+                  const pct = Math.round(s.reliability * 100)
+                  return (
+                    <div key={s.module} className="bg-[#12121a] border border-[#1e1e2e] rounded-lg p-3 flex items-center gap-3">
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2">
+                          <span className="text-xs font-mono font-medium truncate">{s.module}</span>
+                          <span className="text-[10px] px-1.5 py-0.5 rounded-full font-mono"
+                            style={{ backgroundColor: relColor + '20', color: relColor }}>
+                            {pct}%
+                          </span>
+                        </div>
+                        <div className="mt-1.5 h-1.5 rounded-full bg-[#0a0a0f] overflow-hidden">
+                          <div className="h-full rounded-full transition-all" style={{ width: `${pct}%`, backgroundColor: relColor }} />
+                        </div>
+                        <div className="flex gap-3 mt-1 text-[10px] text-gray-500">
+                          <span>{s.findings_count} findings</span>
+                          <span>{s.verified_count} verified</span>
+                          <span>avg {Math.round(s.avg_confidence * 100)}%</span>
+                        </div>
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+            </div>
+          )}
+
           {/* Empty state */}
           {findings.length === 0 && (
             <div className="bg-[#12121a] border border-[#1e1e2e] rounded-xl p-12 text-center">
@@ -347,6 +397,7 @@ export default function TargetDetail() {
                   <th className="text-left px-4 py-3">Module</th>
                   <th className="text-left px-4 py-3">Title</th>
                   <th className="text-left px-4 py-3">Category</th>
+                  <th className="text-left px-4 py-3">Confidence</th>
                   <th className="text-left px-4 py-3">Status</th>
                   <th className="text-left px-4 py-3">Date</th>
                 </tr>
@@ -370,6 +421,17 @@ export default function TargetDetail() {
                       <td className="px-4 py-3">{f.title}</td>
                       <td className="px-4 py-3 text-gray-400 text-xs">{f.category}</td>
                       <td className="px-4 py-3">
+                        {f.confidence != null && (
+                          <span className="inline-block text-[10px] font-mono px-1.5 py-0.5 rounded"
+                            style={{
+                              backgroundColor: (f.confidence >= 0.8 ? '#00ff88' : f.confidence >= 0.6 ? '#ffcc00' : '#ff8800') + '20',
+                              color: f.confidence >= 0.8 ? '#00ff88' : f.confidence >= 0.6 ? '#ffcc00' : '#ff8800',
+                            }}>
+                            {Math.round(f.confidence * 100)}%
+                          </span>
+                        )}
+                      </td>
+                      <td className="px-4 py-3">
                         <span className={`text-xs ${f.status === 'resolved' ? 'text-[#00ff88]' : f.status === 'false_positive' ? 'text-gray-500' : 'text-gray-400'}`}>
                           {f.status}
                         </span>
@@ -378,7 +440,7 @@ export default function TargetDetail() {
                     </tr>
                     {expanded === f.id && (
                       <tr className="bg-[#0a0a0f]">
-                        <td colSpan={7} className="px-6 py-4">
+                        <td colSpan={8} className="px-6 py-4">
                           <div className="space-y-3">
                             <p className="text-sm text-gray-300">{f.description}</p>
                             <div className="flex items-center gap-4 text-xs text-gray-400">
@@ -410,7 +472,7 @@ export default function TargetDetail() {
                   </Fragment>
                 ))}
                 {filteredFindings.length === 0 && (
-                  <tr><td colSpan={7} className="px-5 py-8 text-center text-gray-500">
+                  <tr><td colSpan={8} className="px-5 py-8 text-center text-gray-500">
                     {findings.length === 0 ? 'No findings yet. Launch a scan to discover exposure.' : 'No findings match the current filters.'}
                   </td></tr>
                 )}

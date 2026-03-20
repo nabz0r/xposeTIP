@@ -94,6 +94,15 @@ def finalize_scan(scan_id: str):
 
         session.commit()
 
+        # Cross-verify findings from multiple sources (boosts confidence)
+        try:
+            from api.services.layer4.source_scoring import cross_verify_findings
+            cv_count = cross_verify_findings(scan.target_id, session)
+            if cv_count:
+                logger.info("Cross-verified %d findings for target %s", cv_count, scan.target_id)
+        except Exception:
+            logger.exception("Cross-verification failed for target %s", scan.target_id)
+
         # Compute exposure score (separate transaction so scan status is visible)
         try:
             from api.services.layer4.score_engine import compute_score
