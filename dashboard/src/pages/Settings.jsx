@@ -391,10 +391,23 @@ function DefaultsTab() {
 
 // ===================== Profile Tab =====================
 function ProfileTab({ user }) {
+  const [displayName, setDisplayName] = useState(user?.display_name || '')
+  const [savingProfile, setSavingProfile] = useState(false)
   const [currentPw, setCurrentPw] = useState('')
   const [newPw, setNewPw] = useState('')
   const [confirmPw, setConfirmPw] = useState('')
   const [saving, setSaving] = useState(false)
+
+  async function handleSaveProfile(e) {
+    e.preventDefault()
+    setSavingProfile(true)
+    try {
+      const { updateProfile } = await import('../lib/api')
+      await updateProfile({ display_name: displayName })
+      alert('Profile updated')
+    } catch (err) { alert(err.message) }
+    finally { setSavingProfile(false) }
+  }
 
   async function handleChangePassword(e) {
     e.preventDefault()
@@ -413,20 +426,26 @@ function ProfileTab({ user }) {
     <div className="space-y-5">
       <div className="bg-[#12121a] border border-[#1e1e2e] rounded-xl p-5">
         <h3 className="text-sm font-semibold mb-4">Profile</h3>
-        <div className="space-y-3 text-sm">
-          <div className="flex justify-between">
-            <span className="text-gray-400">Email</span>
-            <span className="font-mono">{user?.email || '-'}</span>
+        <form onSubmit={handleSaveProfile} className="space-y-3 max-w-sm">
+          <div>
+            <label className="text-xs text-gray-400 mb-1 block">Email</label>
+            <input type="text" value={user?.email || ''} disabled
+              className="w-full bg-[#0a0a0f] border border-[#1e1e2e] rounded-lg px-3 py-2 text-sm font-mono text-gray-500 cursor-not-allowed" />
           </div>
-          <div className="flex justify-between">
-            <span className="text-gray-400">Display Name</span>
-            <span>{user?.display_name || '-'}</span>
+          <div>
+            <label className="text-xs text-gray-400 mb-1 block">Display Name</label>
+            <input type="text" value={displayName} onChange={e => setDisplayName(e.target.value)}
+              placeholder="Your display name"
+              className="w-full bg-[#0a0a0f] border border-[#1e1e2e] rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[#00ff88]/50" />
           </div>
-          <div className="flex justify-between">
-            <span className="text-gray-400">Role</span>
-            <span className="text-[#00ff88]">{user?.workspaces?.[0]?.role || '-'}</span>
+          <div className="flex justify-between items-center">
+            <div className="text-xs text-gray-500">Role: <span className="text-[#00ff88]">{user?.workspaces?.[0]?.role || '-'}</span></div>
+            <button type="submit" disabled={savingProfile}
+              className="bg-[#00ff88] text-black font-semibold rounded-lg px-4 py-2 text-sm hover:bg-[#00ff88]/90 disabled:opacity-50">
+              {savingProfile ? 'Saving...' : 'Save Profile'}
+            </button>
           </div>
-        </div>
+        </form>
       </div>
 
       <div className="bg-[#12121a] border border-[#1e1e2e] rounded-xl p-5">

@@ -34,11 +34,12 @@ const CustomTooltip = ({ active, payload, label }) => {
 }
 
 export default function Dashboard() {
-  const [stats, setStats] = useState({ targets: 0, scans: 0, findings: 0, critical: 0 })
+  const [stats, setStats] = useState({ targets: 0, scans: 0, findings: 0, critical: 0, high: 0 })
   const [recentScans, setRecentScans] = useState([])
   const [severityData, setSeverityData] = useState([])
   const [moduleData, setModuleData] = useState([])
   const [geoFindings, setGeoFindings] = useState([])
+  const [topTarget, setTopTarget] = useState(null)
   const [quickEmail, setQuickEmail] = useState('')
   const [loading, setLoading] = useState(false)
   const [defaultModules, setDefaultModules] = useState(['email_validator', 'holehe'])
@@ -69,7 +70,12 @@ export default function Dashboard() {
         scans: scansData.items?.length || 0,
         findings: Object.values(bySev).reduce((a, b) => a + b, 0),
         critical: bySev.critical || 0,
+        high: bySev.high || 0,
       })
+
+      // Find most exposed target
+      const sortedTargets = (targetsData.items || []).filter(t => t.exposure_score != null).sort((a, b) => b.exposure_score - a.exposure_score)
+      if (sortedTargets.length > 0) setTopTarget(sortedTargets[0])
       setRecentScans(scansData.items?.slice(0, 10) || [])
 
       // Severity chart data
@@ -118,12 +124,35 @@ export default function Dashboard() {
     <div className="space-y-6">
       <h1 className="text-2xl font-bold">Dashboard</h1>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
         <StatCard icon={Crosshair} label="Targets" value={stats.targets} color="#00ff88" />
         <StatCard icon={Radar} label="Scans" value={stats.scans} color="#3388ff" />
         <StatCard icon={AlertTriangle} label="Findings" value={stats.findings} color="#ffcc00" />
         <StatCard icon={ShieldAlert} label="Critical" value={stats.critical} color="#ff2244" />
+        <StatCard icon={ShieldAlert} label="High" value={stats.high} color="#ff8800" />
       </div>
+
+      {/* Most exposed target */}
+      {topTarget && (
+        <div className="bg-[#12121a] border border-[#1e1e2e] rounded-xl p-4 cursor-pointer hover:border-[#ff2244]/30 transition-colors"
+             onClick={() => navigate(`/targets/${topTarget.id}`)}>
+          <div className="flex items-center justify-between">
+            <div>
+              <span className="text-xs text-gray-500 uppercase tracking-wider">Most Exposed Target</span>
+              <div className="flex items-center gap-3 mt-1">
+                <span className="font-mono text-sm">{topTarget.email}</span>
+                {topTarget.display_name && <span className="text-xs text-gray-400">({topTarget.display_name})</span>}
+              </div>
+            </div>
+            <div className="text-right">
+              <div className="text-2xl font-bold font-mono" style={{
+                color: topTarget.exposure_score >= 61 ? '#ff2244' : topTarget.exposure_score >= 31 ? '#ff8800' : '#00ff88'
+              }}>{topTarget.exposure_score}</div>
+              <span className="text-[10px] text-gray-500 uppercase">Score</span>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Quick Scan */}
       <div className="bg-[#12121a] border border-[#1e1e2e] rounded-xl p-5">

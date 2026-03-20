@@ -23,6 +23,7 @@ class Target(UUIDMixin, TimestampMixin, Base):
     last_scanned: Mapped[datetime | None] = mapped_column(TIMESTAMP(timezone=True))
     tags: Mapped[list | None] = mapped_column(ARRAY(Text))
     notes: Mapped[str | None] = mapped_column(Text)
+    profile_data: Mapped[dict | None] = mapped_column(JSONB)
 
     workspace = relationship("Workspace", back_populates="targets")
     scans = relationship("Scan", back_populates="target", cascade="all, delete-orphan")

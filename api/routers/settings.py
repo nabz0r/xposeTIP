@@ -51,6 +51,7 @@ def _mask(value: str) -> str:
 KEY_DESCRIPTIONS = {
     "HIBP_API_KEY": "HaveIBeenPwned — breach + paste detection ($3.50/mo)",
     "MAXMIND_LICENSE": "MaxMind GeoLite2 — IP geolocation database (free tier)",
+    "FULLCONTACT_API_KEY": "FullContact — person enrichment, social profiles, demographics",
 }
 
 
@@ -246,6 +247,27 @@ async def validate_api_key(
                     valid = False
                     message = "Invalid API key (401 Unauthorized)"
                 elif resp.status_code in (200, 404):
+                    valid = True
+                    message = "API key is valid"
+                else:
+                    valid = False
+                    message = f"Unexpected response: {resp.status_code}"
+        except Exception as e:
+            valid = False
+            message = f"Connection error: {str(e)}"
+
+    elif key_name == "FULLCONTACT_API_KEY":
+        try:
+            async with httpx.AsyncClient(timeout=10) as client:
+                resp = await client.post(
+                    "https://api.fullcontact.com/v3/person.enrich",
+                    headers={"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"},
+                    json={"email": "test@example.com"},
+                )
+                if resp.status_code == 401 or resp.status_code == 403:
+                    valid = False
+                    message = "Invalid API key"
+                elif resp.status_code in (200, 404, 422):
                     valid = True
                     message = "API key is valid"
                 else:

@@ -23,6 +23,13 @@ SCANNER_REGISTRY = {
     "whois_lookup": "api.services.layer2.whois_scanner:WhoisScanner",
     "maxmind_geo": "api.services.layer2.maxmind_scanner:MaxmindScanner",
     "geoip": "api.services.layer2.geoip_scanner:GeoIPScanner",
+    "emailrep": "api.services.layer1.emailrep_scanner:EmailRepScanner",
+    "epieos": "api.services.layer1.epieos_scanner:EpieosScanner",
+    "fullcontact": "api.services.layer1.fullcontact_scanner:FullContactScanner",
+    "github_deep": "api.services.layer1.github_scanner:GitHubDeepScanner",
+    "username_hunter": "api.services.layer1.username_scanner:UsernameScannerPlugin",
+    "leaked_domains": "api.services.layer2.leaked_scanner:LeakedScanner",
+    "dns_deep": "api.services.layer2.dns_scanner:DNSDeepScanner",
 }
 
 
@@ -82,6 +89,11 @@ def run_module(self, scan_id: str, module_id: str, email: str):
             key = get_workspace_api_key(scan.workspace_id, "MAXMIND_LICENSE", session)
             if key:
                 scanner_kwargs["license_key"] = key
+        elif module_id in ("fullcontact",):
+            from api.routers.settings import get_workspace_api_key
+            key = get_workspace_api_key(scan.workspace_id, "FULLCONTACT_API_KEY", session)
+            if key:
+                scanner_kwargs["api_key"] = key
 
         # Run async scanner in sync context
         loop = asyncio.new_event_loop()

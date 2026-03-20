@@ -56,6 +56,7 @@ export const getTargets = (params = '') => request(`/targets${params ? '?' + par
 export const createTarget = (data) => request('/targets', { method: 'POST', body: JSON.stringify(data) })
 export const getTarget = (id) => request(`/targets/${id}`)
 export const deleteTarget = (id) => request(`/targets/${id}?confirm=true`, { method: 'DELETE' })
+export const getTargetProfile = (id) => request(`/targets/${id}/profile`)
 export const bulkImportTargets = (data) => request('/targets/bulk', { method: 'POST', body: JSON.stringify(data) })
 
 // Scans

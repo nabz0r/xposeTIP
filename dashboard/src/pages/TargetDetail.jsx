@@ -23,6 +23,8 @@ const SCAN_TIMES = {
   email_validator: '~5s', holehe: '~2min', hibp: '~5s', sherlock: '~60s',
   whois_lookup: '~10s', maxmind_geo: '~3s', geoip: '~10s',
   gravatar: '~3s', social_enricher: '~5s', google_profile: '~5s',
+  emailrep: '~3s', epieos: '~5s', fullcontact: '~3s', github_deep: '~10s',
+  username_hunter: '~30s', leaked_domains: '~5s', dns_deep: '~8s',
 }
 
 export default function TargetDetail() {
@@ -382,6 +384,8 @@ export default function TargetDetail() {
                                 Open link <ExternalLink className="w-3 h-3" />
                               </a>}
                             </div>
+                            {/* Enriched data cards per scanner */}
+                            {f.data && <FindingDataCard finding={f} />}
                             {f.data && (
                               <details className="text-xs">
                                 <summary className="text-gray-500 cursor-pointer hover:text-gray-300">Raw data</summary>
@@ -530,5 +534,112 @@ export default function TargetDetail() {
       )}
     </div>
   )
+}
+
+function FindingDataCard({ finding }) {
+  const d = finding.data || {}
+  const mod = finding.module
+
+  // Breach findings (HIBP, leaked_domains)
+  if (finding.category === 'breach' && (d.Name || d.breach_name)) {
+    const name = d.Name || d.breach_name
+    const date = d.BreachDate || d.date || ''
+    const dataClasses = d.DataClasses || d.data_classes || []
+    const count = d.PwnCount || d.records || ''
+    return (
+      <div className="bg-[#12121a] rounded-lg p-3 border border-[#ff2244]/20">
+        <div className="flex items-center gap-2 mb-2">
+          <Shield className="w-4 h-4 text-[#ff2244]" />
+          <span className="font-semibold text-sm">{name}</span>
+          {date && <span className="text-xs text-gray-500">{date}</span>}
+        </div>
+        {count && <p className="text-xs text-gray-400 mb-2">{typeof count === 'number' ? count.toLocaleString() : count} records exposed</p>}
+        {dataClasses.length > 0 && (
+          <div className="flex flex-wrap gap-1">
+            {dataClasses.slice(0, 10).map(dc => (
+              <span key={dc} className="text-[10px] px-1.5 py-0.5 rounded bg-[#ff2244]/10 text-[#ff8800]">{dc}</span>
+            ))}
+            {dataClasses.length > 10 && <span className="text-[10px] text-gray-500">+{dataClasses.length - 10}</span>}
+          </div>
+        )}
+      </div>
+    )
+  }
+
+  // Social account findings
+  if (finding.category === 'social_account' && (d.platform || d.network || d.service)) {
+    const platform = d.platform || d.network || d.service || ''
+    const username = d.username || d.handle || d.login || ''
+    const url = finding.url || d.url || ''
+    return (
+      <div className="bg-[#12121a] rounded-lg p-3 border border-[#3388ff]/20 flex items-center gap-3">
+        {d.avatar_url && <img src={d.avatar_url} alt="" className="w-8 h-8 rounded-full" />}
+        <div>
+          <span className="text-sm font-medium">{platform}</span>
+          {username && <span className="text-xs text-gray-400 ml-2">@{username}</span>}
+          {url && <a href={url} target="_blank" rel="noreferrer" className="block text-[10px] text-[#3388ff] hover:underline mt-0.5">{url.replace(/https?:\/\//, '').substring(0, 50)}</a>}
+        </div>
+      </div>
+    )
+  }
+
+  // EmailRep reputation
+  if (mod === 'emailrep' && d.reputation) {
+    const repColor = d.reputation === 'high' ? '#00ff88' : d.reputation === 'medium' ? '#ffcc00' : '#ff8800'
+    return (
+      <div className="bg-[#12121a] rounded-lg p-3 border border-[#1e1e2e] grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
+        <div><span className="text-gray-500">Reputation</span><div className="font-mono font-semibold" style={{ color: repColor }}>{d.reputation}</div></div>
+        <div><span className="text-gray-500">Suspicious</span><div className="font-mono">{d.suspicious ? 'Yes' : 'No'}</div></div>
+        {d.first_seen && <div><span className="text-gray-500">First seen</span><div className="font-mono">{d.first_seen}</div></div>}
+        {d.domain_age_days != null && <div><span className="text-gray-500">Domain age</span><div className="font-mono">{d.domain_age_days}d</div></div>}
+      </div>
+    )
+  }
+
+  // GitHub deep
+  if (mod === 'github_deep' && d.login) {
+    return (
+      <div className="bg-[#12121a] rounded-lg p-3 border border-[#1e1e2e] flex items-start gap-3">
+        {d.avatar_url && <img src={d.avatar_url} alt="" className="w-10 h-10 rounded-full" />}
+        <div className="text-xs space-y-1">
+          <div className="font-semibold text-sm">{d.name || d.login}</div>
+          {d.bio && <p className="text-gray-400 line-clamp-2">{d.bio}</p>}
+          <div className="flex gap-3 text-gray-500">
+            {d.public_repos != null && <span>{d.public_repos} repos</span>}
+            {d.followers != null && <span>{d.followers} followers</span>}
+            {d.company && <span>{d.company}</span>}
+            {d.location && <span>{d.location}</span>}
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  // DNS findings
+  if (mod === 'dns_deep' && (d.spf_record !== undefined || d.security_score !== undefined)) {
+    if (d.security_score !== undefined) {
+      return (
+        <div className="bg-[#12121a] rounded-lg p-3 border border-[#1e1e2e] grid grid-cols-3 gap-3 text-xs">
+          <div><span className="text-gray-500">SPF</span><div className={d.has_spf ? 'text-[#00ff88]' : 'text-[#ff2244]'}>{d.has_spf ? 'Yes' : 'Missing'}</div></div>
+          <div><span className="text-gray-500">DMARC</span><div className={d.has_dmarc ? 'text-[#00ff88]' : 'text-[#ff2244]'}>{d.has_dmarc ? 'Yes' : 'Missing'}</div></div>
+          <div><span className="text-gray-500">DKIM</span><div className={d.has_dkim ? 'text-[#00ff88]' : 'text-[#ffcc00]'}>{d.has_dkim ? 'Yes' : 'Not found'}</div></div>
+        </div>
+      )
+    }
+  }
+
+  // Geolocation
+  if (finding.category === 'geolocation' && (d.lat || d.latitude)) {
+    return (
+      <div className="bg-[#12121a] rounded-lg p-3 border border-[#1e1e2e] grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
+        {d.city && <div><span className="text-gray-500">City</span><div className="font-mono">{d.city}</div></div>}
+        {d.country && <div><span className="text-gray-500">Country</span><div className="font-mono">{d.country}</div></div>}
+        {d.isp && <div><span className="text-gray-500">ISP</span><div className="font-mono">{d.isp}</div></div>}
+        {d.org && <div><span className="text-gray-500">Org</span><div className="font-mono">{d.org}</div></div>}
+      </div>
+    )
+  }
+
+  return null
 }
 

@@ -144,6 +144,34 @@ async def get_target(
     return data
 
 
+@router.get("/{target_id}/profile")
+async def get_target_profile(
+    target_id: uuid.UUID,
+    workspace_id: uuid.UUID = Depends(get_current_workspace),
+    user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    target = await _get_target(db, target_id, workspace_id)
+    profile = target.profile_data or {}
+
+    # Enrich with live data from target model
+    profile["email"] = target.email
+    profile["exposure_score"] = target.exposure_score
+    profile["score_breakdown"] = target.score_breakdown
+    profile["status"] = target.status
+    profile["country_code"] = target.country_code
+    profile["last_scanned"] = target.last_scanned.isoformat() if target.last_scanned else None
+    profile["first_scanned"] = target.first_scanned.isoformat() if target.first_scanned else None
+
+    # Fallback for name/avatar
+    if not profile.get("primary_name"):
+        profile["primary_name"] = target.display_name
+    if not profile.get("primary_avatar"):
+        profile["primary_avatar"] = target.avatar_url
+
+    return profile
+
+
 @router.patch("/{target_id}")
 async def update_target(
     target_id: uuid.UUID,

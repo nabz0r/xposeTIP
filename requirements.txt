@@ -21,3 +21,4 @@ email-validator
 python-whois
 geoip2
 cryptography
+dnspython

@@ -114,6 +114,13 @@ def finalize_scan(scan_id: str):
         except Exception:
             logger.exception("Graph build failed for target %s", scan.target_id)
 
+        # Aggregate profile data
+        try:
+            from api.services.layer4.profile_aggregator import aggregate_profile
+            aggregate_profile(scan.target_id, scan.workspace_id, session)
+        except Exception:
+            logger.exception("Profile aggregation failed for target %s", scan.target_id)
+
     except Exception:
         session.rollback()
         logger.exception("finalize_scan failed for %s", scan_id)

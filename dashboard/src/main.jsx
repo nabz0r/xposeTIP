@@ -12,6 +12,7 @@ import Settings from './pages/Settings'
 import System from './pages/System'
 import Organization from './pages/Organization'
 import { AuthProvider, useAuth } from './lib/auth'
+import { ToastProvider } from './components/Toast'
 
 function ProtectedRoute({ children }) {
   const { token } = useAuth()
@@ -22,6 +23,7 @@ function ProtectedRoute({ children }) {
 function App() {
   return (
     <AuthProvider>
+      <ToastProvider>
       <BrowserRouter>
         <Routes>
           <Route path="/login" element={<Login />} />
@@ -36,6 +38,7 @@ function App() {
           </Route>
         </Routes>
       </BrowserRouter>
+      </ToastProvider>
     </AuthProvider>
   )
 }
