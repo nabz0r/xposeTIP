@@ -66,18 +66,16 @@ open http://localhost:3000
 
 ## Roadmap
 
-| Version | Milestone |
-|---------|-----------|
-| **v0.1** | Admin portal + Holehe scan + dark dashboard |
-| **v0.2** | HIBP + Maigret + findings filtering |
-| **v0.3** | GHunt + identity graph + exposure score |
-| **v0.4** | MaxMind geoloc + WHOIS + data brokers |
-| **v0.5** | PDF reports + scan diffing |
-| **v0.6** | Multi-tenant + SSO + consultant workspaces |
-| **v0.7** | Module marketplace + community plugins |
-| **v0.8** | Pattern detection + remediation playbook |
-| **v0.9** | Consumer self-service + MFA |
-| **v1.0** | Public SaaS beta + Stripe billing |
+| Version | Milestone | Status |
+|---------|-----------|--------|
+| **v0.1.0** | Admin portal, JWT auth, Holehe + email_validator scanners, Celery orchestrator, React dark dashboard, Docker Compose | Done |
+| **v0.2.0** | HIBP breach checker, Sherlock username enum, WHOIS domain intel, MaxMind GeoIP, exposure score engine, identity graph (D3), IOC timeline, Recharts dashboard, world heatmap, scanner registry with lazy loading | Done |
+| **v0.3.0** | GHunt integration, Maigret deep scan, PDF reports (WeasyPrint), scan diffing, data broker detection | Next |
+| **v0.4** | Multi-tenant workspaces, SSO (Authlib), consultant mode |  |
+| **v0.5** | Module marketplace, community plugins via entry_points |  |
+| **v0.6** | Pattern detection, remediation playbook, alert system |  |
+| **v0.7** | Consumer self-service, MFA (pyotp), Stripe billing |  |
+| **v1.0** | Public SaaS beta |  |
 
 ---
 

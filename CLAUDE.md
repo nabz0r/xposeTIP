@@ -493,6 +493,88 @@ Module toggles + health. API key config. Default modules. User profile.
 9. React dashboard (dark theme, targets, scan, results)
 10. Commit v0.1.0
 
+## Sprint 2 (v0.2.0) — completed
+
+### New scanners (Layer 1 + Layer 2)
+
+| Module ID        | Scanner class                                      | Layer | Status      | Notes |
+|------------------|----------------------------------------------------|-------|-------------|-------|
+| `email_validator`| `api.services.layer1.email_validator:EmailValidatorScanner` | 1 | implemented | Format, DNS, disposable check |
+| `holehe`         | `api.services.layer1.holehe_scanner:HoleheScanner`  | 1 | implemented | 121 sites via `holehe.core.get_functions()` |
+| `hibp`           | `api.services.layer1.hibp_scanner:HIBPScanner`      | 1 | implemented | Breaches + pastes. Needs `HIBP_API_KEY` env var |
+| `sherlock`       | `api.services.layer1.sherlock_scanner:SherlockScanner` | 1 | implemented | Username enum via subprocess. Needs `sherlock` CLI |
+| `whois_lookup`   | `api.services.layer2.whois_scanner:WhoisScanner`    | 2 | implemented | Domain WHOIS + registrant email match |
+| `maxmind_geo`    | `api.services.layer2.maxmind_scanner:MaxmindScanner`| 2 | implemented | GeoIP on MX/A IPs. Needs GeoLite2-City.mmdb at `data/maxmind/` |
+
+### Scanner registry (api/tasks/module_tasks.py)
+
+All scanners registered in `SCANNER_REGISTRY` dict. Format: `"module_id": "python.module.path:ClassName"`.
+Lazy-loaded via `importlib` — missing deps don't crash the worker.
+Modules without a registered scanner are marked `implemented: false` in the API response
+and silently excluded from scan dispatch.
+
+To add a new scanner:
+1. Create scanner class inheriting `BaseScanner` (in `api/services/layerN/`)
+2. Add entry to `SCANNER_REGISTRY` in `api/tasks/module_tasks.py`
+3. Add module row to DB via seed script
+
+### Exposure score engine (api/services/layer4/score_engine.py)
+
+Called automatically in `finalize_scan` after every scan completion.
+Updates `target.exposure_score` (0-100) and `target.score_breakdown` (JSONB).
+
+```python
+SCORE_WEIGHTS = {
+    "breach": 0.25, "social_account": 0.20, "tracking": 0.15,
+    "geolocation": 0.12, "data_broker": 0.10, "metadata": 0.08,
+    "domain_registration": 0.05, "paste": 0.05,
+}
+SEVERITY_MULTIPLIER = {"critical": 5, "high": 4, "medium": 3, "low": 2, "info": 1}
+```
+
+Per-category: sum(severity_multiplier per finding), capped at 100.
+Total = weighted sum across categories.
+
+### Identity graph builder (api/services/layer4/graph_builder.py)
+
+Called automatically in `finalize_scan` after score computation.
+Extracts identity nodes and links from findings:
+- Social account finding → `Identity(type="social_url")` + `IdentityLink(type="registered_with")`
+- Breach finding → `Identity(type="breach")` + `IdentityLink(type="exposed_in")`
+- Username finding → `IdentityLink(type="same_person")` back to email
+
+### New API endpoints
+
+```
+GET /api/v1/graph/{target_id}     -- identity graph nodes + edges + stats
+GET /api/v1/modules               -- now includes "implemented" boolean field
+```
+
+### Frontend components (Sprint 2)
+
+- `IdentityGraph.jsx` — D3 force-directed graph with zoom, drag, hover highlight, click detail panel
+- `IOCTimeline.jsx` — Vertical timeline grouped by date (today/yesterday/week/older)
+- `WorldHeatmap.jsx` — D3 geo choropleth from geolocation findings
+- Dashboard: Recharts severity bar chart + module donut chart
+- TargetDetail: animated score donut, category breakdown bars, findings filters (severity/module/status), "Mark as resolved" button, Graph/Timeline tabs
+- Module selector: grouped by layer, "Select all Layer N", lock icon for auth-required, scan time estimates
+
+### Celery worker queues
+
+Worker command: `celery -A api.tasks worker -l info -c 4 -Q celery,scans,modules`
+- `scans` queue: scan_orchestrator tasks (launch_scan, finalize_scan)
+- `modules` queue: module_tasks (run_module)
+- `celery` queue: default fallback
+
+### Dependencies added (Sprint 2)
+
+- `psycopg2-binary` — sync SQLAlchemy engine for Celery workers
+- `python-whois` — WHOIS domain lookups
+- `geoip2` — MaxMind GeoLite2 reader
+- `email-validator` — email format validation
+- `d3` (npm) — force-directed graph + geo projections
+- `recharts` (npm) — dashboard charts
+
 ## Critical rules
 
 - All OSINT tools in Celery workers, NEVER in API process
