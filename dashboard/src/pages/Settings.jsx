@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
-import { Key, Cpu, SlidersHorizontal, User, Database, CheckCircle, XCircle, Loader2, Lock, Trash2, AlertTriangle } from 'lucide-react'
-import { getModules, patchModule, getApiKeys, saveApiKey, validateApiKey, deleteApiKey, getDefaults, updateDefaults, getTargets, changePassword } from '../lib/api'
+import { Key, Cpu, SlidersHorizontal, User, Database, CheckCircle, XCircle, Loader2, Lock, Trash2, AlertTriangle, Plus } from 'lucide-react'
+import { getModules, patchModule, getApiKeys, saveApiKey, validateApiKey, deleteApiKey, saveCustomKey, getDefaults, updateDefaults, getTargets, changePassword } from '../lib/api'
 import { useAuth } from '../lib/auth'
 
 const tabs = [
@@ -51,6 +51,11 @@ function ApiKeysTab() {
   const [inputs, setInputs] = useState({})
   const [validating, setValidating] = useState({})
   const [saving, setSaving] = useState({})
+  const [showCustom, setShowCustom] = useState(false)
+  const [customName, setCustomName] = useState('')
+  const [customValue, setCustomValue] = useState('')
+  const [customDesc, setCustomDesc] = useState('')
+  const [customSaving, setCustomSaving] = useState(false)
 
   useEffect(() => { loadKeys() }, [])
 
@@ -77,7 +82,6 @@ function ApiKeysTab() {
     setValidating(v => ({ ...v, [keyName]: true }))
     try {
       const result = await validateApiKey(keyName)
-      // Reload to get updated validation status
       loadKeys()
       alert(result.message)
     } catch (err) { alert(err.message) }
@@ -92,60 +96,169 @@ function ApiKeysTab() {
     } catch (err) { alert(err.message) }
   }
 
-  const keyDescriptions = {
-    HIBP_API_KEY: 'HaveIBeenPwned — breach + paste detection ($3.50/mo)',
-    MAXMIND_LICENSE: 'MaxMind GeoLite2 — IP geolocation (free)',
+  async function handleSaveCustom(e) {
+    e.preventDefault()
+    if (!customName || !customValue) return
+    setCustomSaving(true)
+    try {
+      await saveCustomKey({ key_name: customName.toUpperCase().replace(/[^A-Z0-9_]/g, '_'), key_value: customValue, description: customDesc })
+      setCustomName(''); setCustomValue(''); setCustomDesc('')
+      setShowCustom(false)
+      loadKeys()
+    } catch (err) { alert(err.message) }
+    finally { setCustomSaving(false) }
   }
 
+  // Separate module keys and custom keys
+  const moduleKeys = keys.filter(k => !k.custom)
+  const customKeys = keys.filter(k => k.custom)
+
   return (
-    <div className="space-y-4">
-      {keys.map(k => (
-        <div key={k.key_name} className="bg-[#12121a] border border-[#1e1e2e] rounded-xl p-5">
-          <div className="flex items-center justify-between mb-3">
-            <div>
-              <div className="flex items-center gap-2">
-                <span className="font-mono text-sm font-semibold">{k.key_name}</span>
-                {k.valid === true && <CheckCircle className="w-4 h-4 text-[#00ff88]" />}
-                {k.valid === false && <XCircle className="w-4 h-4 text-[#ff2244]" />}
-                {k.valid == null && k.masked && <span className="text-xs text-[#ffcc00]">? Not validated</span>}
-                {!k.masked && <span className="text-xs text-gray-500">Not configured</span>}
+    <div className="space-y-6">
+      {/* Module API Keys */}
+      <div>
+        <h3 className="text-xs font-semibold uppercase tracking-wider text-gray-500 mb-3">Module API Keys</h3>
+        <div className="space-y-3">
+          {moduleKeys.map(k => (
+            <div key={k.key_name} className="bg-[#12121a] border border-[#1e1e2e] rounded-xl p-5">
+              <div className="flex items-center justify-between mb-3">
+                <div>
+                  <div className="flex items-center gap-2">
+                    <span className="font-mono text-sm font-semibold">{k.key_name}</span>
+                    {k.valid === true && <CheckCircle className="w-4 h-4 text-[#00ff88]" />}
+                    {k.valid === false && <XCircle className="w-4 h-4 text-[#ff2244]" />}
+                    {k.valid == null && k.masked && <span className="text-xs text-[#ffcc00]">? Not validated</span>}
+                    {!k.masked && <span className="text-xs text-gray-500">Not configured</span>}
+                  </div>
+                  <p className="text-xs text-gray-500 mt-0.5">{k.description}</p>
+                  {k.module_name && (
+                    <span className="text-[10px] text-gray-600 mt-0.5 inline-flex items-center gap-1">
+                      <Cpu className="w-3 h-3" /> {k.module_name}
+                    </span>
+                  )}
+                </div>
+                <div className="flex items-center gap-2">
+                  {k.source === 'env' && <span className="text-xs bg-[#3388ff]/15 text-[#3388ff] px-2 py-0.5 rounded">From ENV</span>}
+                </div>
               </div>
-              <p className="text-xs text-gray-500 mt-0.5">{keyDescriptions[k.key_name] || ''}</p>
+
+              <div className="flex gap-2">
+                <input
+                  type="password"
+                  value={inputs[k.key_name] || ''}
+                  onChange={e => setInputs(i => ({ ...i, [k.key_name]: e.target.value }))}
+                  placeholder={k.masked || 'Enter API key...'}
+                  className="flex-1 bg-[#0a0a0f] border border-[#1e1e2e] rounded-lg px-3 py-2 text-sm font-mono focus:outline-none focus:border-[#00ff88]/50"
+                />
+                <button onClick={() => handleSave(k.key_name)} disabled={!inputs[k.key_name] || saving[k.key_name]}
+                  className="bg-[#00ff88] text-black font-semibold rounded-lg px-4 py-2 text-sm hover:bg-[#00ff88]/90 disabled:opacity-50">
+                  {saving[k.key_name] ? 'Saving...' : 'Save'}
+                </button>
+                <button onClick={() => handleValidate(k.key_name)} disabled={validating[k.key_name]}
+                  className="border border-[#1e1e2e] rounded-lg px-4 py-2 text-sm text-gray-300 hover:bg-white/5 disabled:opacity-50">
+                  {validating[k.key_name] ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Validate'}
+                </button>
+                {k.masked && k.source !== 'env' && (
+                  <button onClick={() => handleDelete(k.key_name)} className="text-gray-500 hover:text-[#ff2244] px-2">
+                    <Trash2 className="w-4 h-4" />
+                  </button>
+                )}
+              </div>
+
+              {k.last_validated && (
+                <p className="text-[10px] text-gray-600 mt-2">Last validated: {new Date(k.last_validated).toLocaleString()}</p>
+              )}
             </div>
-            {k.source === 'env' && <span className="text-xs bg-[#3388ff]/15 text-[#3388ff] px-2 py-0.5 rounded">From ENV</span>}
-          </div>
-
-          <div className="flex gap-2">
-            <input
-              type="password"
-              value={inputs[k.key_name] || ''}
-              onChange={e => setInputs(i => ({ ...i, [k.key_name]: e.target.value }))}
-              placeholder={k.masked || 'Enter API key...'}
-              className="flex-1 bg-[#0a0a0f] border border-[#1e1e2e] rounded-lg px-3 py-2 text-sm font-mono focus:outline-none focus:border-[#00ff88]/50"
-            />
-            <button onClick={() => handleSave(k.key_name)} disabled={!inputs[k.key_name] || saving[k.key_name]}
-              className="bg-[#00ff88] text-black font-semibold rounded-lg px-4 py-2 text-sm hover:bg-[#00ff88]/90 disabled:opacity-50">
-              {saving[k.key_name] ? 'Saving...' : 'Save'}
-            </button>
-            <button onClick={() => handleValidate(k.key_name)} disabled={validating[k.key_name]}
-              className="border border-[#1e1e2e] rounded-lg px-4 py-2 text-sm text-gray-300 hover:bg-white/5 disabled:opacity-50">
-              {validating[k.key_name] ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Validate'}
-            </button>
-            {k.masked && k.source !== 'env' && (
-              <button onClick={() => handleDelete(k.key_name)} className="text-gray-500 hover:text-[#ff2244] px-2">
-                <Trash2 className="w-4 h-4" />
-              </button>
-            )}
-          </div>
-
-          {k.last_validated && (
-            <p className="text-[10px] text-gray-600 mt-2">Last validated: {new Date(k.last_validated).toLocaleString()}</p>
+          ))}
+          {moduleKeys.length === 0 && (
+            <div className="text-center py-6 text-gray-500 text-sm bg-[#12121a] border border-[#1e1e2e] rounded-xl">
+              No modules require API keys. Enable auth-required modules in Scanner Modules.
+            </div>
           )}
         </div>
-      ))}
+      </div>
 
-      {keys.length === 0 && (
-        <div className="text-center py-8 text-gray-500 text-sm">Loading API keys...</div>
+      {/* Custom API Keys */}
+      <div>
+        <div className="flex items-center justify-between mb-3">
+          <h3 className="text-xs font-semibold uppercase tracking-wider text-gray-500">Custom API Keys</h3>
+          <button onClick={() => setShowCustom(true)}
+            className="flex items-center gap-1.5 text-xs text-[#00ff88] hover:underline">
+            <Plus className="w-3 h-3" /> Add custom key
+          </button>
+        </div>
+
+        <div className="space-y-3">
+          {customKeys.map(k => (
+            <div key={k.key_name} className="bg-[#12121a] border border-[#1e1e2e] rounded-xl p-5">
+              <div className="flex items-center justify-between mb-3">
+                <div>
+                  <div className="flex items-center gap-2">
+                    <span className="font-mono text-sm font-semibold">{k.key_name}</span>
+                    <span className="text-[10px] bg-[#1e1e2e] text-gray-400 px-1.5 py-0.5 rounded">Custom</span>
+                    {k.valid === true && <CheckCircle className="w-4 h-4 text-[#00ff88]" />}
+                  </div>
+                  <p className="text-xs text-gray-500 mt-0.5">{k.description}</p>
+                </div>
+              </div>
+              <div className="flex gap-2">
+                <input
+                  type="password"
+                  value={inputs[k.key_name] || ''}
+                  onChange={e => setInputs(i => ({ ...i, [k.key_name]: e.target.value }))}
+                  placeholder={k.masked || 'Enter API key...'}
+                  className="flex-1 bg-[#0a0a0f] border border-[#1e1e2e] rounded-lg px-3 py-2 text-sm font-mono focus:outline-none focus:border-[#00ff88]/50"
+                />
+                <button onClick={() => handleSave(k.key_name)} disabled={!inputs[k.key_name] || saving[k.key_name]}
+                  className="bg-[#00ff88] text-black font-semibold rounded-lg px-4 py-2 text-sm hover:bg-[#00ff88]/90 disabled:opacity-50">
+                  {saving[k.key_name] ? 'Saving...' : 'Update'}
+                </button>
+                <button onClick={() => handleDelete(k.key_name)} className="text-gray-500 hover:text-[#ff2244] px-2">
+                  <Trash2 className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
+          ))}
+          {customKeys.length === 0 && !showCustom && (
+            <p className="text-xs text-gray-600">No custom keys. Add keys for community plugins or external services.</p>
+          )}
+        </div>
+      </div>
+
+      {/* Add Custom Key Modal */}
+      {showCustom && (
+        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50" onClick={() => setShowCustom(false)}>
+          <div className="bg-[#12121a] border border-[#1e1e2e] rounded-xl p-6 w-full max-w-md" onClick={e => e.stopPropagation()}>
+            <h2 className="text-lg font-semibold mb-4">Add Custom API Key</h2>
+            <form onSubmit={handleSaveCustom} className="space-y-4">
+              <div>
+                <label className="text-xs text-gray-400 mb-1 block">Key Name</label>
+                <input type="text" value={customName} onChange={e => setCustomName(e.target.value)} required
+                  placeholder="e.g. SHODAN_API_KEY"
+                  className="w-full bg-[#0a0a0f] border border-[#1e1e2e] rounded-lg px-3 py-2 text-sm font-mono focus:outline-none focus:border-[#00ff88]/50 uppercase" />
+              </div>
+              <div>
+                <label className="text-xs text-gray-400 mb-1 block">Description</label>
+                <input type="text" value={customDesc} onChange={e => setCustomDesc(e.target.value)}
+                  placeholder="What is this key used for?"
+                  className="w-full bg-[#0a0a0f] border border-[#1e1e2e] rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[#00ff88]/50" />
+              </div>
+              <div>
+                <label className="text-xs text-gray-400 mb-1 block">API Key Value</label>
+                <input type="password" value={customValue} onChange={e => setCustomValue(e.target.value)} required
+                  placeholder="Enter API key..."
+                  className="w-full bg-[#0a0a0f] border border-[#1e1e2e] rounded-lg px-3 py-2 text-sm font-mono focus:outline-none focus:border-[#00ff88]/50" />
+              </div>
+              <div className="flex gap-3 justify-end">
+                <button type="button" onClick={() => setShowCustom(false)} className="px-4 py-2 text-sm text-gray-400 hover:text-white">Cancel</button>
+                <button type="submit" disabled={customSaving || !customName || !customValue}
+                  className="bg-[#00ff88] text-black font-semibold rounded-lg px-6 py-2 text-sm hover:bg-[#00ff88]/90 disabled:opacity-50">
+                  {customSaving ? 'Saving...' : 'Save Key'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
       )}
     </div>
   )

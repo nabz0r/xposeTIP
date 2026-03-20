@@ -84,6 +84,7 @@ export const getApiKeys = () => request('/settings/apikeys')
 export const saveApiKey = (key_name, key_value) => request('/settings/apikeys', { method: 'POST', body: JSON.stringify({ key_name, key_value }) })
 export const validateApiKey = (key_name) => request(`/settings/apikeys/${key_name}/validate`, { method: 'POST' })
 export const deleteApiKey = (key_name) => request(`/settings/apikeys/${key_name}`, { method: 'DELETE' })
+export const saveCustomKey = (data) => request('/settings/apikeys/custom', { method: 'POST', body: JSON.stringify(data) })
 export const getDefaults = () => request('/settings/defaults')
 export const updateDefaults = (data) => request('/settings/defaults', { method: 'PUT', body: JSON.stringify(data) })
 

@@ -11,6 +11,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from api.auth.dependencies import get_current_user, get_current_workspace, require_role
 from api.database import get_db
+from api.models.module import Module
 from api.models.user import User
 from api.models.workspace import Workspace
 
@@ -46,12 +47,23 @@ def _mask(value: str) -> str:
     return "****" + value[-4:]
 
 
-KNOWN_KEYS = ["HIBP_API_KEY", "MAXMIND_LICENSE"]
+# Key descriptions for known keys
+KEY_DESCRIPTIONS = {
+    "HIBP_API_KEY": "HaveIBeenPwned — breach + paste detection ($3.50/mo)",
+    "MAXMIND_LICENSE": "MaxMind GeoLite2 — IP geolocation database (free tier)",
+}
 
 
 class ApiKeyRequest(BaseModel):
     key_name: str
     key_value: str
+    description: str | None = None
+
+
+class CustomKeyRequest(BaseModel):
+    key_name: str
+    key_value: str
+    description: str = ""
 
 
 class DefaultsRequest(BaseModel):
@@ -68,9 +80,6 @@ async def save_api_key(
     workspace_id=Depends(get_current_workspace),
     db: AsyncSession = Depends(get_db),
 ):
-    if body.key_name not in KNOWN_KEYS:
-        raise HTTPException(status_code=400, detail=f"Unknown key: {body.key_name}")
-
     workspace = await db.execute(select(Workspace).where(Workspace.id == workspace_id))
     ws = workspace.scalar_one_or_none()
     if not ws:
@@ -82,6 +91,8 @@ async def save_api_key(
         "encrypted": _encrypt(body.key_value),
         "masked": _mask(body.key_value),
     }
+    if body.description:
+        api_keys[body.key_name]["description"] = body.description
     settings_data["api_keys"] = api_keys
     ws.settings = settings_data
     await db.commit()
@@ -100,28 +111,95 @@ async def list_api_keys(
     if not ws:
         raise HTTPException(status_code=404, detail="Workspace not found")
 
+    # Get all modules that require auth
+    modules_result = await db.execute(
+        select(Module).where(Module.requires_auth == True).order_by(Module.layer, Module.id)
+    )
+    auth_modules = modules_result.scalars().all()
+
     api_keys = (ws.settings or {}).get("api_keys", {})
     result = []
-    for key_name in KNOWN_KEYS:
+
+    # Build entries from modules that require auth
+    seen_keys = set()
+    for mod in auth_modules:
+        auth_config = mod.auth_config or {}
+        key_name = auth_config.get("api_key_env")
+        if not key_name:
+            continue
+        if key_name in seen_keys:
+            continue
+        seen_keys.add(key_name)
+
         entry = api_keys.get(key_name)
+        description = KEY_DESCRIPTIONS.get(key_name, f"API key for {mod.display_name}")
+
         if entry:
             result.append({
                 "key_name": key_name,
+                "module_id": mod.id,
+                "module_name": mod.display_name,
+                "description": description,
                 "masked": entry.get("masked", "****"),
                 "valid": entry.get("valid"),
                 "last_validated": entry.get("last_validated"),
+                "custom": False,
             })
         else:
-            # Check env var fallback
             env_val = os.environ.get(key_name, "")
             result.append({
                 "key_name": key_name,
+                "module_id": mod.id,
+                "module_name": mod.display_name,
+                "description": description,
                 "masked": _mask(env_val) if env_val else None,
                 "valid": None,
                 "last_validated": None,
                 "source": "env" if env_val else None,
+                "custom": False,
             })
+
+    # Add custom keys (stored in workspace.settings but not tied to a module)
+    custom_keys = (ws.settings or {}).get("custom_api_keys", {})
+    for key_name, entry in custom_keys.items():
+        result.append({
+            "key_name": key_name,
+            "module_id": None,
+            "module_name": None,
+            "description": entry.get("description", "Custom API key"),
+            "masked": entry.get("masked", "****"),
+            "valid": entry.get("valid"),
+            "last_validated": entry.get("last_validated"),
+            "custom": True,
+        })
+
     return result
+
+
+@router.post("/apikeys/custom")
+async def save_custom_key(
+    body: CustomKeyRequest,
+    role: str = Depends(require_role("superadmin", "admin")),
+    workspace_id=Depends(get_current_workspace),
+    db: AsyncSession = Depends(get_db),
+):
+    workspace = await db.execute(select(Workspace).where(Workspace.id == workspace_id))
+    ws = workspace.scalar_one_or_none()
+    if not ws:
+        raise HTTPException(status_code=404, detail="Workspace not found")
+
+    settings_data = dict(ws.settings or {})
+    custom_keys = dict(settings_data.get("custom_api_keys", {}))
+    custom_keys[body.key_name] = {
+        "encrypted": _encrypt(body.key_value),
+        "masked": _mask(body.key_value),
+        "description": body.description,
+    }
+    settings_data["custom_api_keys"] = custom_keys
+    ws.settings = settings_data
+    await db.commit()
+
+    return {"key_name": body.key_name, "masked": _mask(body.key_value), "custom": True}
 
 
 @router.post("/apikeys/{key_name}/validate")
@@ -131,17 +209,17 @@ async def validate_api_key(
     workspace_id=Depends(get_current_workspace),
     db: AsyncSession = Depends(get_db),
 ):
-    if key_name not in KNOWN_KEYS:
-        raise HTTPException(status_code=400, detail=f"Unknown key: {key_name}")
-
     workspace = await db.execute(select(Workspace).where(Workspace.id == workspace_id))
     ws = workspace.scalar_one_or_none()
     if not ws:
         raise HTTPException(status_code=404, detail="Workspace not found")
 
-    # Get actual key value
+    # Get actual key value — check both standard and custom keys
     api_keys = (ws.settings or {}).get("api_keys", {})
-    entry = api_keys.get(key_name)
+    custom_keys = (ws.settings or {}).get("custom_api_keys", {})
+    entry = api_keys.get(key_name) or custom_keys.get(key_name)
+    is_custom = key_name in custom_keys
+
     if entry:
         try:
             api_key = _decrypt(entry["encrypted"])
@@ -154,7 +232,7 @@ async def validate_api_key(
         return {"valid": False, "message": "Key not configured"}
 
     valid = False
-    message = "Unknown key type"
+    message = "Validation not available for this key type"
 
     if key_name == "HIBP_API_KEY":
         try:
@@ -164,7 +242,6 @@ async def validate_api_key(
                     headers={"hibp-api-key": api_key, "user-agent": "xpose-tip"},
                     params={"truncateResponse": "true"},
                 )
-                # 401 = invalid key, 404 = valid key (no breaches for test email)
                 if resp.status_code == 401:
                     valid = False
                     message = "Invalid API key (401 Unauthorized)"
@@ -179,7 +256,6 @@ async def validate_api_key(
             message = f"Connection error: {str(e)}"
 
     elif key_name == "MAXMIND_LICENSE":
-        # Check if DB file exists
         db_path = os.environ.get("MAXMIND_DB_PATH", "data/maxmind/GeoLite2-City.mmdb")
         if os.path.exists(db_path):
             valid = True
@@ -188,14 +264,20 @@ async def validate_api_key(
             valid = False
             message = f"GeoLite2 database not found at {db_path}. Download it with your license key."
 
+    elif is_custom:
+        # Custom keys: just check it's non-empty
+        valid = bool(api_key)
+        message = "Key is stored" if valid else "Key is empty"
+
     # Store validation result
     from datetime import datetime, timezone
     settings_data = dict(ws.settings or {})
-    api_keys_data = dict(settings_data.get("api_keys", {}))
-    if key_name in api_keys_data:
-        api_keys_data[key_name]["valid"] = valid
-        api_keys_data[key_name]["last_validated"] = datetime.now(timezone.utc).isoformat()
-        settings_data["api_keys"] = api_keys_data
+    store_key = "custom_api_keys" if is_custom else "api_keys"
+    keys_data = dict(settings_data.get(store_key, {}))
+    if key_name in keys_data:
+        keys_data[key_name]["valid"] = valid
+        keys_data[key_name]["last_validated"] = datetime.now(timezone.utc).isoformat()
+        settings_data[store_key] = keys_data
         ws.settings = settings_data
         await db.commit()
 
@@ -215,12 +297,20 @@ async def delete_api_key(
         raise HTTPException(status_code=404, detail="Workspace not found")
 
     settings_data = dict(ws.settings or {})
+
+    # Check both standard and custom keys
     api_keys = dict(settings_data.get("api_keys", {}))
+    custom_keys = dict(settings_data.get("custom_api_keys", {}))
+
     if key_name in api_keys:
         del api_keys[key_name]
         settings_data["api_keys"] = api_keys
-        ws.settings = settings_data
-        await db.commit()
+    elif key_name in custom_keys:
+        del custom_keys[key_name]
+        settings_data["custom_api_keys"] = custom_keys
+
+    ws.settings = settings_data
+    await db.commit()
 
     return {"deleted": True}
 
@@ -276,6 +366,7 @@ def get_workspace_api_key(workspace_id, key_name: str, session) -> Optional[str]
     if not workspace:
         return None
 
+    # Check standard api_keys first
     api_keys = (workspace.settings or {}).get("api_keys", {})
     entry = api_keys.get(key_name)
     if entry and "encrypted" in entry:
@@ -283,7 +374,15 @@ def get_workspace_api_key(workspace_id, key_name: str, session) -> Optional[str]
             return _decrypt(entry["encrypted"])
         except Exception:
             logger.warning("Failed to decrypt %s for workspace %s", key_name, workspace_id)
-            return None
+
+    # Check custom_api_keys
+    custom_keys = (workspace.settings or {}).get("custom_api_keys", {})
+    entry = custom_keys.get(key_name)
+    if entry and "encrypted" in entry:
+        try:
+            return _decrypt(entry["encrypted"])
+        except Exception:
+            logger.warning("Failed to decrypt custom %s for workspace %s", key_name, workspace_id)
 
     # Fallback to env var
     return os.environ.get(key_name, "") or None
