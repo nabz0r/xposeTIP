@@ -1,4 +1,6 @@
 import asyncio
+import importlib
+import logging
 import uuid
 from datetime import datetime, timezone
 
@@ -8,20 +10,30 @@ from sqlalchemy.orm import Session
 from api.tasks import celery_app
 from api.tasks.utils import get_sync_session
 
-SCANNER_MAP = {
-    "holehe": "api.services.layer1.holehe_scanner.HoleheScanner",
-    "email_validator": "api.services.layer1.email_validator.EmailValidatorScanner",
+logger = logging.getLogger(__name__)
+
+SCANNER_REGISTRY = {
+    "email_validator": "api.services.layer1.email_validator:EmailValidatorScanner",
+    "holehe": "api.services.layer1.holehe_scanner:HoleheScanner",
+    "hibp": "api.services.layer1.hibp_scanner:HIBPScanner",
+    "sherlock": "api.services.layer1.sherlock_scanner:SherlockScanner",
+    "whois_lookup": "api.services.layer2.whois_scanner:WhoisScanner",
+    "maxmind_geo": "api.services.layer2.maxmind_scanner:MaxmindScanner",
 }
 
 
 def _get_scanner(module_id: str):
-    path = SCANNER_MAP.get(module_id)
+    path = SCANNER_REGISTRY.get(module_id)
     if not path:
+        logger.info("No scanner implemented for %s", module_id)
         return None
-    module_path, class_name = path.rsplit(".", 1)
-    import importlib
-    mod = importlib.import_module(module_path)
-    return getattr(mod, class_name)()
+    module_path, class_name = path.split(":")
+    try:
+        mod = importlib.import_module(module_path)
+        return getattr(mod, class_name)()
+    except Exception:
+        logger.exception("Failed to load scanner %s from %s", class_name, module_path)
+        return None
 
 
 def _update_progress(session, scan_id: str, module_id: str, status: str):
@@ -46,8 +58,8 @@ def run_module(self, scan_id: str, module_id: str, email: str):
 
         scanner = _get_scanner(module_id)
         if not scanner:
-            _update_progress(session, scan_id, module_id, "failed")
-            return {"error": f"No scanner for module {module_id}"}
+            _update_progress(session, scan_id, module_id, "skipped")
+            return {"module": module_id, "skipped": True, "reason": "no scanner implemented"}
 
         # Run async scanner in sync context
         loop = asyncio.new_event_loop()
@@ -125,6 +137,7 @@ def run_module(self, scan_id: str, module_id: str, email: str):
 
     except Exception as e:
         session.rollback()
+        logger.exception("Module %s failed for scan %s", module_id, scan_id)
         _update_progress(session, scan_id, module_id, "failed")
         return {"error": str(e)}
     finally:

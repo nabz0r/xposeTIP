@@ -49,7 +49,7 @@ async def list_findings(
     result = await db.execute(q)
     findings = result.scalars().all()
 
-    return {"items": [_finding_dict(f) for f in findings], "total": total, "page": page, "per_page": per_page}
+    return {"items": [_finding_dict(f, include_data=True) for f in findings], "total": total, "page": page, "per_page": per_page}
 
 
 @router.get("/stats")

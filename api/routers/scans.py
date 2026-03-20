@@ -11,6 +11,7 @@ from api.models.module import Module
 from api.models.scan import Scan
 from api.models.target import Target
 from api.models.user import User
+from api.tasks.module_tasks import SCANNER_REGISTRY
 
 router = APIRouter()
 
@@ -35,7 +36,8 @@ async def create_scan(
     if not target:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Target not found")
 
-    # Validate modules
+    # Validate modules — only keep enabled + implemented ones
+    valid_modules = []
     for mod_id in body.modules:
         result = await db.execute(select(Module).where(Module.id == mod_id, Module.enabled.is_(True)))
         if not result.scalar_one_or_none():
@@ -43,12 +45,20 @@ async def create_scan(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail=f"Module '{mod_id}' not found or disabled",
             )
+        if mod_id in SCANNER_REGISTRY:
+            valid_modules.append(mod_id)
+
+    if not valid_modules:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="No implemented scanners selected",
+        )
 
     scan = Scan(
         workspace_id=workspace_id,
         target_id=body.target_id,
-        modules=body.modules,
-        module_progress={mod: "queued" for mod in body.modules},
+        modules=valid_modules,
+        module_progress={mod: "queued" for mod in valid_modules},
     )
     db.add(scan)
 

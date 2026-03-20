@@ -1,3 +1,4 @@
+import logging
 import uuid
 from datetime import datetime, timezone
 
@@ -6,6 +7,8 @@ from sqlalchemy import select
 
 from api.tasks import celery_app
 from api.tasks.utils import get_sync_session
+
+logger = logging.getLogger(__name__)
 
 
 @celery_app.task(name="api.tasks.scan_orchestrator.launch_scan", bind=True)
@@ -53,6 +56,7 @@ def launch_scan(self, scan_id: str):
         return {"status": "launched", "modules": modules}
     except Exception as e:
         session.rollback()
+        logger.exception("launch_scan failed for %s", scan_id)
         raise
     finally:
         session.close()
@@ -92,8 +96,24 @@ def finalize_scan(scan_id: str):
                 target.first_scanned = datetime.now(timezone.utc)
 
         session.commit()
+
+        # Compute exposure score
+        try:
+            from api.services.layer4.score_engine import compute_score
+            compute_score(scan.target_id, session)
+        except Exception:
+            logger.exception("Score computation failed for target %s", scan.target_id)
+
+        # Build identity graph
+        try:
+            from api.services.layer4.graph_builder import build_graph
+            build_graph(scan.target_id, scan.workspace_id, session)
+        except Exception:
+            logger.exception("Graph build failed for target %s", scan.target_id)
+
     except Exception:
         session.rollback()
+        logger.exception("finalize_scan failed for %s", scan_id)
         raise
     finally:
         session.close()

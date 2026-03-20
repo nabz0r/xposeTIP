@@ -7,6 +7,7 @@ from api.auth.dependencies import get_current_user
 from api.database import get_db
 from api.models.module import Module
 from api.models.user import User
+from api.tasks.module_tasks import SCANNER_REGISTRY
 
 router = APIRouter()
 
@@ -57,4 +58,5 @@ def _module_dict(m: Module) -> dict:
         "version": m.version,
         "health_status": m.health_status,
         "last_health": m.last_health.isoformat() if m.last_health else None,
+        "implemented": m.id in SCANNER_REGISTRY,
     }

@@ -65,7 +65,11 @@ export const getScan = (id) => request(`/scans/${id}`)
 // Findings
 export const getFindings = (params = '') => request(`/findings${params ? '?' + params : ''}`)
 export const getFindingsStats = (params = '') => request(`/findings/stats${params ? '?' + params : ''}`)
+export const patchFinding = (id, data) => request(`/findings/${id}`, { method: 'PATCH', body: JSON.stringify(data) })
 
 // Modules
 export const getModules = () => request('/modules')
 export const patchModule = (id, data) => request(`/modules/${id}`, { method: 'PATCH', body: JSON.stringify(data) })
+
+// Graph
+export const getGraph = (targetId) => request(`/graph/${targetId}`)

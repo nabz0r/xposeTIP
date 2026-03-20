@@ -6,7 +6,7 @@ from sqlalchemy import text
 
 from api.config import settings
 from api.database import engine
-from api.routers import auth, targets, scans, findings, modules
+from api.routers import auth, targets, scans, findings, modules, graph
 
 
 @asynccontextmanager
@@ -35,6 +35,7 @@ app.include_router(targets.router, prefix="/api/v1/targets", tags=["targets"])
 app.include_router(scans.router, prefix="/api/v1/scans", tags=["scans"])
 app.include_router(findings.router, prefix="/api/v1/findings", tags=["findings"])
 app.include_router(modules.router, prefix="/api/v1/modules", tags=["modules"])
+app.include_router(graph.router, prefix="/api/v1/graph", tags=["graph"])
 
 
 @app.get("/health")

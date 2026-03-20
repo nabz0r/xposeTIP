@@ -1,7 +1,13 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Crosshair, Radar, AlertTriangle, ShieldAlert, Search } from 'lucide-react'
-import { getTargets, getScans, getFindingsStats, createTarget, createScan } from '../lib/api'
+import { getTargets, getScans, getFindingsStats, getFindings, createTarget, createScan } from '../lib/api'
+import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, AreaChart, Area } from 'recharts'
+import WorldHeatmap from '../components/WorldHeatmap'
+
+const severityColors = {
+  critical: '#ff2244', high: '#ff8800', medium: '#ffcc00', low: '#3388ff', info: '#666688',
+}
 
 function StatCard({ icon: Icon, label, value, color }) {
   return (
@@ -15,16 +21,29 @@ function StatCard({ icon: Icon, label, value, color }) {
   )
 }
 
+const CustomTooltip = ({ active, payload, label }) => {
+  if (!active || !payload?.length) return null
+  return (
+    <div className="bg-[#12121a] border border-[#1e1e2e] rounded-lg px-3 py-2 text-xs">
+      <div className="text-gray-400">{label}</div>
+      {payload.map((p, i) => (
+        <div key={i} style={{ color: p.color }} className="font-mono">{p.value}</div>
+      ))}
+    </div>
+  )
+}
+
 export default function Dashboard() {
   const [stats, setStats] = useState({ targets: 0, scans: 0, findings: 0, critical: 0 })
   const [recentScans, setRecentScans] = useState([])
+  const [severityData, setSeverityData] = useState([])
+  const [moduleData, setModuleData] = useState([])
+  const [geoFindings, setGeoFindings] = useState([])
   const [quickEmail, setQuickEmail] = useState('')
   const [loading, setLoading] = useState(false)
   const navigate = useNavigate()
 
-  useEffect(() => {
-    loadData()
-  }, [])
+  useEffect(() => { loadData() }, [])
 
   async function loadData() {
     try {
@@ -33,13 +52,38 @@ export default function Dashboard() {
         getScans(),
         getFindingsStats(),
       ])
+
+      const bySev = findingsData.by_severity || {}
+      const byMod = findingsData.by_module || {}
+
       setStats({
         targets: targetsData.total || 0,
         scans: scansData.items?.length || 0,
-        findings: Object.values(findingsData.by_severity || {}).reduce((a, b) => a + b, 0),
-        critical: findingsData.by_severity?.critical || 0,
+        findings: Object.values(bySev).reduce((a, b) => a + b, 0),
+        critical: bySev.critical || 0,
       })
       setRecentScans(scansData.items?.slice(0, 10) || [])
+
+      // Severity chart data
+      setSeverityData(
+        ['critical', 'high', 'medium', 'low', 'info']
+          .map(s => ({ name: s, count: bySev[s] || 0, fill: severityColors[s] }))
+          .filter(d => d.count > 0)
+      )
+
+      // Module chart data
+      const moduleColors = ['#00ff88', '#3388ff', '#ff8800', '#ffcc00', '#aa55ff', '#ff2244', '#666688']
+      setModuleData(
+        Object.entries(byMod)
+          .map(([name, count], i) => ({ name, value: count, fill: moduleColors[i % moduleColors.length] }))
+          .filter(d => d.value > 0)
+      )
+
+      // Geo findings
+      try {
+        const allFindings = await getFindings('category=geolocation')
+        setGeoFindings(allFindings.items || [])
+      } catch {}
     } catch {}
   }
 
@@ -79,23 +123,65 @@ export default function Dashboard() {
         <form onSubmit={handleQuickScan} className="flex gap-3">
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
-            <input
-              type="email"
-              value={quickEmail}
-              onChange={(e) => setQuickEmail(e.target.value)}
+            <input type="email" value={quickEmail} onChange={(e) => setQuickEmail(e.target.value)}
               placeholder="Enter email to scan..."
-              className="w-full bg-[#0a0a0f] border border-[#1e1e2e] rounded-lg pl-10 pr-3 py-2.5 text-sm font-mono focus:outline-none focus:border-[#00ff88]/50"
-            />
+              className="w-full bg-[#0a0a0f] border border-[#1e1e2e] rounded-lg pl-10 pr-3 py-2.5 text-sm font-mono focus:outline-none focus:border-[#00ff88]/50" />
           </div>
-          <button
-            type="submit"
-            disabled={loading}
-            className="bg-[#00ff88] text-black font-semibold rounded-lg px-6 py-2.5 text-sm hover:bg-[#00ff88]/90 transition-colors disabled:opacity-50"
-          >
+          <button type="submit" disabled={loading}
+            className="bg-[#00ff88] text-black font-semibold rounded-lg px-6 py-2.5 text-sm hover:bg-[#00ff88]/90 transition-colors disabled:opacity-50">
             {loading ? 'Scanning...' : 'Scan'}
           </button>
         </form>
       </div>
+
+      {/* Charts */}
+      {stats.findings > 0 && (
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          {/* Severity bar chart */}
+          {severityData.length > 0 && (
+            <div className="bg-[#12121a] border border-[#1e1e2e] rounded-xl p-5">
+              <h3 className="text-sm font-semibold mb-4">Findings by Severity</h3>
+              <ResponsiveContainer width="100%" height={200}>
+                <BarChart data={severityData} layout="vertical">
+                  <XAxis type="number" tick={{ fill: '#666688', fontSize: 11 }} axisLine={false} tickLine={false} />
+                  <YAxis type="category" dataKey="name" tick={{ fill: '#999', fontSize: 11 }} axisLine={false} tickLine={false} width={60} />
+                  <Tooltip content={<CustomTooltip />} cursor={false} />
+                  <Bar dataKey="count" radius={[0, 4, 4, 0]}>
+                    {severityData.map((entry, i) => <Cell key={i} fill={entry.fill} />)}
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          )}
+
+          {/* Module donut */}
+          {moduleData.length > 0 && (
+            <div className="bg-[#12121a] border border-[#1e1e2e] rounded-xl p-5">
+              <h3 className="text-sm font-semibold mb-4">Findings by Module</h3>
+              <ResponsiveContainer width="100%" height={200}>
+                <PieChart>
+                  <Pie data={moduleData} cx="50%" cy="50%" innerRadius={50} outerRadius={80}
+                    dataKey="value" nameKey="name" stroke="none">
+                    {moduleData.map((entry, i) => <Cell key={i} fill={entry.fill} />)}
+                  </Pie>
+                  <Tooltip content={<CustomTooltip />} />
+                </PieChart>
+              </ResponsiveContainer>
+              <div className="flex flex-wrap gap-3 mt-2 justify-center">
+                {moduleData.map(d => (
+                  <div key={d.name} className="flex items-center gap-1.5 text-xs text-gray-400">
+                    <span className="w-2 h-2 rounded-full" style={{ backgroundColor: d.fill }} />
+                    {d.name} ({d.value})
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* World Heatmap */}
+      <WorldHeatmap findings={geoFindings} />
 
       {/* Recent Scans */}
       {recentScans.length > 0 && (
@@ -117,24 +203,16 @@ export default function Dashboard() {
               {recentScans.map((scan, i) => (
                 <tr key={scan.id} className={`border-t border-[#1e1e2e] ${i % 2 === 1 ? 'bg-white/[0.02]' : ''}`}>
                   <td className="px-5 py-3">
-                    <span
-                      className="inline-flex items-center gap-1.5 text-xs font-medium px-2 py-0.5 rounded-full"
-                      style={{ backgroundColor: statusColors[scan.status] + '26', color: statusColors[scan.status] }}
-                    >
+                    <span className="inline-flex items-center gap-1.5 text-xs font-medium px-2 py-0.5 rounded-full"
+                      style={{ backgroundColor: statusColors[scan.status] + '26', color: statusColors[scan.status] }}>
                       <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: statusColors[scan.status] }} />
                       {scan.status}
                     </span>
                   </td>
-                  <td className="px-5 py-3 font-mono text-xs text-gray-400">
-                    {(scan.modules || []).join(', ')}
-                  </td>
+                  <td className="px-5 py-3 font-mono text-xs text-gray-400">{(scan.modules || []).join(', ')}</td>
                   <td className="px-5 py-3 font-mono">{scan.findings_count}</td>
-                  <td className="px-5 py-3 font-mono text-gray-400">
-                    {scan.duration_ms ? `${(scan.duration_ms / 1000).toFixed(1)}s` : '-'}
-                  </td>
-                  <td className="px-5 py-3 text-gray-400">
-                    {scan.created_at ? new Date(scan.created_at).toLocaleDateString() : '-'}
-                  </td>
+                  <td className="px-5 py-3 font-mono text-gray-400">{scan.duration_ms ? `${(scan.duration_ms / 1000).toFixed(1)}s` : '-'}</td>
+                  <td className="px-5 py-3 text-gray-400">{scan.created_at ? new Date(scan.created_at).toLocaleDateString() : '-'}</td>
                 </tr>
               ))}
             </tbody>
