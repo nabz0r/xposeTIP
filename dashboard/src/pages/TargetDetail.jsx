@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useCallback, useRef, Fragment } from 'react'
 import { useParams } from 'react-router-dom'
-import { Radar, ChevronDown, ChevronRight, ExternalLink, Lock, CheckCircle, Filter, Shield, AlertTriangle, Globe } from 'lucide-react'
-import { getTarget, getFindings, getScans, createScan, getModules, getScan, getGraph, patchFinding, getTargetSources } from '../lib/api'
+import { Radar, ChevronDown, ChevronRight, ExternalLink, Lock, CheckCircle, Filter, Shield, AlertTriangle, Globe, Link2, Unlink } from 'lucide-react'
+import { getTarget, getFindings, getScans, createScan, getModules, getScan, getGraph, patchFinding, getTargetSources, getAccounts, startOAuth, auditAccount, disconnectAccount } from '../lib/api'
 import IdentityGraph from '../components/IdentityGraph'
 import IOCTimeline from '../components/IOCTimeline'
 import ProfileHeader from '../components/ProfileHeader'
@@ -26,6 +26,7 @@ const SCAN_TIMES = {
   emailrep: '~3s', epieos: '~5s', fullcontact: '~3s', github_deep: '~10s',
   username_hunter: '~30s', leaked_domains: '~5s', dns_deep: '~8s',
   virustotal: '~10s', shodan: '~15s', intelx: '~15s', hunter: '~10s', dehashed: '~8s',
+  reverse_image: '~15s', google_audit: '~10s', microsoft_audit: '~10s',
 }
 
 export default function TargetDetail() {
@@ -42,6 +43,8 @@ export default function TargetDetail() {
   const [scanning, setScanning] = useState(false)
   const [activeTab, setActiveTab] = useState('overview')
   const [toast, setToast] = useState(null)
+  const [accounts, setAccounts] = useState([])
+  const [auditingAccount, setAuditingAccount] = useState(null)
   // Filters
   const [sevFilter, setSevFilter] = useState('all')
   const [modFilter, setModFilter] = useState('all')
@@ -130,6 +133,13 @@ export default function TargetDetail() {
     }
   }, [findings.length, id])
 
+  // Load connected accounts
+  useEffect(() => {
+    if (activeTab === 'accounts' || activeTab === 'overview') {
+      getAccounts(id).then(d => setAccounts(d.items || [])).catch(() => {})
+    }
+  }, [activeTab, id])
+
   useEffect(() => {
     getModules().then(m => {
       setModules(m)
@@ -212,10 +222,10 @@ export default function TargetDetail() {
 
       {/* Tabs */}
       <div className="flex gap-1 border-b border-[#1e1e2e]">
-        {['overview', 'findings', 'graph', 'timeline', 'locations', 'scans'].map(tab => (
+        {['overview', 'findings', 'graph', 'timeline', 'locations', 'accounts', 'scans'].map(tab => (
           <button key={tab} onClick={() => setActiveTab(tab)}
             className={`px-4 py-2 text-sm capitalize transition-colors ${activeTab === tab ? 'text-[#00ff88] border-b-2 border-[#00ff88]' : 'text-gray-400 hover:text-white'}`}>
-            {tab} {tab === 'findings' ? `(${findings.length})` : tab === 'scans' ? `(${scans.length})` : ''}
+            {tab} {tab === 'findings' ? `(${findings.length})` : tab === 'scans' ? `(${scans.length})` : tab === 'accounts' ? `(${accounts.length})` : ''}
           </button>
         ))}
       </div>
@@ -491,6 +501,96 @@ export default function TargetDetail() {
 
       {/* Locations Tab */}
       {activeTab === 'locations' && <LocationMap findings={findings} />}
+
+      {/* Accounts Tab */}
+      {activeTab === 'accounts' && (
+        <div className="space-y-4">
+          <div className="flex items-center justify-between">
+            <h3 className="text-sm font-semibold text-gray-300">Connected Accounts</h3>
+            <div className="flex gap-2">
+              {['google', 'microsoft'].map(provider => (
+                <button
+                  key={provider}
+                  onClick={async () => {
+                    try {
+                      const redirectUri = `${window.location.origin}/oauth/callback`
+                      const res = await startOAuth({ provider, target_id: id, redirect_uri: redirectUri })
+                      window.open(res.auth_url, '_blank', 'width=500,height=600')
+                    } catch (err) {
+                      setToast({ type: 'error', message: err.message })
+                      setTimeout(() => setToast(null), 5000)
+                    }
+                  }}
+                  className="inline-flex items-center gap-2 text-xs px-3 py-1.5 rounded-lg bg-[#12121a] border border-[#1e1e2e] hover:border-[#00ff88]/30 text-gray-300 hover:text-white transition-colors"
+                >
+                  <Link2 className="w-3 h-3" />
+                  Connect {provider.charAt(0).toUpperCase() + provider.slice(1)}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {accounts.length === 0 ? (
+            <div className="bg-[#12121a] border border-[#1e1e2e] rounded-xl p-12 text-center">
+              <Link2 className="w-12 h-12 text-gray-600 mx-auto mb-3" />
+              <h3 className="text-lg font-medium text-gray-300">No connected accounts</h3>
+              <p className="text-sm text-gray-500 mt-1 mb-4">
+                Connect Google or Microsoft accounts to audit third-party app access, login devices, and permissions.
+              </p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              {accounts.map(acc => (
+                <div key={acc.id} className="bg-[#12121a] border border-[#1e1e2e] rounded-xl p-4 hover:border-[#00ff88]/20 transition-colors">
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm font-semibold capitalize">{acc.provider}</span>
+                      {acc.email && <span className="text-xs text-gray-400 font-mono">{acc.email}</span>}
+                    </div>
+                    <button
+                      onClick={async () => {
+                        if (confirm('Disconnect this account?')) {
+                          await disconnectAccount(acc.id)
+                          setAccounts(prev => prev.filter(a => a.id !== acc.id))
+                        }
+                      }}
+                      className="text-gray-500 hover:text-[#ff2244] transition-colors"
+                    >
+                      <Unlink className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                  <div className="flex items-center gap-3 text-xs text-gray-500 mb-3">
+                    {acc.scopes?.length > 0 && <span>{acc.scopes.length} scopes</span>}
+                    {acc.last_audited && <span>Last audit: {new Date(acc.last_audited).toLocaleDateString()}</span>}
+                    <span>Connected: {new Date(acc.created_at).toLocaleDateString()}</span>
+                  </div>
+                  <button
+                    onClick={async () => {
+                      setAuditingAccount(acc.id)
+                      try {
+                        const res = await auditAccount(acc.id)
+                        setToast({ type: 'success', message: `Audit completed — ${res.findings_count} findings` })
+                        setTimeout(() => setToast(null), 5000)
+                        load()
+                      } catch (err) {
+                        setToast({ type: 'error', message: err.message })
+                        setTimeout(() => setToast(null), 5000)
+                      } finally {
+                        setAuditingAccount(null)
+                      }
+                    }}
+                    disabled={auditingAccount === acc.id}
+                    className="inline-flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg bg-[#00ff88]/10 text-[#00ff88] hover:bg-[#00ff88]/20 transition-colors disabled:opacity-50"
+                  >
+                    <Radar className="w-3 h-3" />
+                    {auditingAccount === acc.id ? 'Auditing...' : 'Run Audit'}
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Scans Tab */}
       {activeTab === 'scans' && (

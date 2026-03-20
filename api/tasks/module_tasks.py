@@ -36,6 +36,11 @@ SCANNER_REGISTRY = {
     "intelx": "api.services.layer2.intelx_scanner:IntelXScanner",
     "hunter": "api.services.layer2.hunter_scanner:HunterScanner",
     "dehashed": "api.services.layer2.dehashed_scanner:DehashedScanner",
+    # Layer 1 — Reverse image
+    "reverse_image": "api.services.layer1.reverse_image_scanner:ReverseImageScanner",
+    # Layer 3 — SaaS connectors (OAuth-based)
+    "google_audit": "api.services.layer3.google_connector:GoogleConnector",
+    "microsoft_audit": "api.services.layer3.microsoft_connector:MicrosoftConnector",
 }
 
 
@@ -128,6 +133,11 @@ def run_module(self, scan_id: str, module_id: str, email: str):
         elif module_id in ("dehashed",):
             from api.routers.settings import get_workspace_api_key
             key = get_workspace_api_key(scan.workspace_id, "DEHASHED_API_KEY", session)
+            if key:
+                scanner_kwargs["api_key"] = key
+        elif module_id in ("reverse_image",):
+            from api.routers.settings import get_workspace_api_key
+            key = get_workspace_api_key(scan.workspace_id, "PIMEYES_API_KEY", session)
             if key:
                 scanner_kwargs["api_key"] = key
 

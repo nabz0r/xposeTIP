@@ -106,6 +106,13 @@ export const getWorkspaceTargets = (id) => request(`/workspaces/${id}/targets`)
 export const shareTarget = (wsId, data) => request(`/workspaces/${wsId}/targets`, { method: 'POST', body: JSON.stringify(data) })
 export const unshareTarget = (wsId, targetId) => request(`/workspaces/${wsId}/targets/${targetId}`, { method: 'DELETE' })
 
+// Connected Accounts (OAuth)
+export const getAccounts = (targetId) => request(`/accounts${targetId ? '?target_id=' + targetId : ''}`)
+export const startOAuth = (data) => request('/accounts/oauth/start', { method: 'POST', body: JSON.stringify(data) })
+export const oauthCallback = (data) => request('/accounts/oauth/callback', { method: 'POST', body: JSON.stringify(data) })
+export const auditAccount = (accountId) => request(`/accounts/${accountId}/audit`, { method: 'POST' })
+export const disconnectAccount = (accountId) => request(`/accounts/${accountId}`, { method: 'DELETE' })
+
 // User profile
 export const updateProfile = (data) => request('/auth/profile', { method: 'PATCH', body: JSON.stringify(data) })
 export const changePassword = (data) => request('/auth/password', { method: 'POST', body: JSON.stringify(data) })

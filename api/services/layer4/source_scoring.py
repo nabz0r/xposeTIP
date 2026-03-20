@@ -47,6 +47,13 @@ SOURCE_RELIABILITY = {
     "intelx": 0.80,            # Intelligence X — darkweb/paste, variable quality
     "hunter": 0.75,            # Hunter.io — email discovery, can be outdated
     "dehashed": 0.85,          # Dehashed — breach data, reliable but aggregated
+
+    # Layer 1 — Reverse image
+    "reverse_image": 0.70,     # Face matching is probabilistic
+
+    # Layer 3 — SaaS connectors (OAuth, high reliability)
+    "google_audit": 0.95,      # Direct from Google API with OAuth
+    "microsoft_audit": 0.95,   # Direct from Microsoft Graph with OAuth
 }
 
 # Default reliability for unknown/new modules
