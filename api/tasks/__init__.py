@@ -20,4 +20,7 @@ celery_app.conf.update(
     },
 )
 
-celery_app.autodiscover_tasks(["api.tasks"])
+# Explicit imports so Celery registers all tasks at worker startup
+# (autodiscover_tasks alone doesn't reliably find them in this package layout)
+import api.tasks.scan_orchestrator  # noqa: E402, F401
+import api.tasks.module_tasks  # noqa: E402, F401

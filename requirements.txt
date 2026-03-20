@@ -15,4 +15,5 @@ httpx==0.28.1
 holehe==1.61
 aiohttp>=3.9.0
 arabic-reshaper>=2.1.4
-maigret>=0.4.4
+maigret
+email-validator

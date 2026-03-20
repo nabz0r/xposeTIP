@@ -41,6 +41,8 @@ services:
       - "8000:8000"
     volumes:
       - .:/app
+    environment:
+      - PYTHONPATH=/app
     env_file:
       - .env
     depends_on:
@@ -62,6 +64,8 @@ services:
     command: celery -A api.tasks worker -l info -c 4
     volumes:
       - .:/app
+    environment:
+      - PYTHONPATH=/app
     env_file:
       - .env
     depends_on:
@@ -78,6 +82,8 @@ services:
     command: celery -A api.tasks beat -l info
     volumes:
       - .:/app
+    environment:
+      - PYTHONPATH=/app
     env_file:
       - .env
     depends_on:
