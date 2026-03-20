@@ -1,8 +1,9 @@
 import React, { useEffect, useState, useCallback, useRef, Fragment } from 'react'
 import { useParams } from 'react-router-dom'
 import { Radar, ChevronDown, ChevronRight, ExternalLink, Lock, CheckCircle, Filter, Shield, AlertTriangle, Globe, Link2, Unlink } from 'lucide-react'
-import { getTarget, getFindings, getScans, createScan, getModules, getScan, getGraph, patchFinding, getTargetSources, getAccounts, startOAuth, auditAccount, disconnectAccount } from '../lib/api'
+import { getTarget, getFindings, getScans, createScan, getModules, getScan, getGraph, patchFinding, getTargetSources, getAccounts, startOAuth, auditAccount, disconnectAccount, getFingerprint, getFingerprintHistory } from '../lib/api'
 import IdentityGraph from '../components/IdentityGraph'
+import FingerprintRadar, { FingerprintTimeline } from '../components/FingerprintRadar'
 import PlatformIcon, { getRemediationLink } from '../components/PlatformIcon'
 import IOCTimeline from '../components/IOCTimeline'
 import ProfileHeader from '../components/ProfileHeader'
@@ -46,6 +47,8 @@ export default function TargetDetail() {
   const [toast, setToast] = useState(null)
   const [accounts, setAccounts] = useState([])
   const [auditingAccount, setAuditingAccount] = useState(null)
+  const [fingerprint, setFingerprint] = useState(null)
+  const [fpHistory, setFpHistory] = useState([])
   // Filters
   const [sevFilter, setSevFilter] = useState('all')
   const [modFilter, setModFilter] = useState('all')
@@ -98,14 +101,20 @@ export default function TargetDetail() {
           const u = updated.find(x => x.id === s.id)
           return u || s
         }))
+        // Live fingerprint update during scan
+        getFingerprint(id).then(setFingerprint).catch(() => {})
+
         if (done) {
           clearInterval(pollRef.current)
-          // Auto-refresh findings, target, and score
+          // Auto-refresh findings, target, score, and fingerprint
           const [t, f] = await Promise.all([getTarget(id), getFindings(`target_id=${id}`)])
           setTarget(t)
           const newFindings = f.items || []
           const newCount = newFindings.length - findings.length
           setFindings(newFindings)
+          // Final fingerprint + history refresh
+          getFingerprint(id).then(setFingerprint).catch(() => {})
+          getFingerprintHistory(id).then(d => setFpHistory(d.snapshots || [])).catch(() => {})
           // Show completion toast
           const failed = updated.filter(s => s.status === 'failed')
           if (failed.length > 0) {
@@ -127,10 +136,12 @@ export default function TargetDetail() {
     }
   }, [activeTab, id])
 
-  // Load sources data
+  // Load sources data + fingerprint
   useEffect(() => {
     if (findings.length > 0) {
       getTargetSources(id).then(setSourcesData).catch(() => {})
+      getFingerprint(id).then(setFingerprint).catch(() => {})
+      getFingerprintHistory(id).then(d => setFpHistory(d.snapshots || [])).catch(() => {})
     }
   }, [findings.length, id])
 
@@ -319,6 +330,43 @@ export default function TargetDetail() {
                   </div>
                 ))}
               </div>
+            </div>
+          )}
+
+          {/* Digital Fingerprint */}
+          {fingerprint && (
+            <div className="bg-[#12121a] border border-[#1e1e2e] rounded-xl p-5">
+              <h3 className="text-xs font-semibold uppercase tracking-wider text-gray-500 mb-4">Digital Fingerprint</h3>
+              <div className="flex flex-col lg:flex-row items-center gap-6">
+                <div className="flex-1 flex justify-center">
+                  <FingerprintRadar fingerprint={fingerprint} size="large" animate={true} />
+                </div>
+                <div className="w-full lg:w-64 space-y-2">
+                  {Object.entries(fingerprint.axes || {}).map(([key, val]) => {
+                    const rawKey = key === 'email_age' ? 'email_age_years' : key === 'security' ? 'security_weak' : key
+                    const rawVal = fingerprint.raw_values?.[rawKey] ?? 0
+                    return (
+                      <div key={key} className="space-y-0.5">
+                        <div className="flex justify-between text-[10px]">
+                          <span className="text-gray-400">{key.replace(/_/g, ' ')}</span>
+                          <span className="font-mono" style={{ color: fingerprint.color }}>{rawVal}</span>
+                        </div>
+                        <div className="h-1.5 bg-[#0a0a0f] rounded-full overflow-hidden">
+                          <div className="h-full rounded-full transition-all duration-700"
+                            style={{ width: `${(val * 100).toFixed(0)}%`, backgroundColor: fingerprint.color }} />
+                        </div>
+                      </div>
+                    )
+                  })}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Fingerprint Evolution */}
+          {fpHistory.length > 1 && (
+            <div className="bg-[#12121a] border border-[#1e1e2e] rounded-xl p-5">
+              <FingerprintTimeline snapshots={fpHistory} />
             </div>
           )}
 

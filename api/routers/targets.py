@@ -244,7 +244,83 @@ async def _get_target(db: AsyncSession, target_id: uuid.UUID, workspace_id: uuid
     return target
 
 
+@router.get("/{target_id}/fingerprint")
+async def get_fingerprint(
+    target_id: uuid.UUID,
+    workspace_id: uuid.UUID = Depends(get_current_workspace),
+    user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """Return current fingerprint computed from findings."""
+    target = await _get_target(db, target_id, workspace_id)
+
+    import asyncio
+    from api.tasks.utils import get_sync_session
+    from api.services.layer4.fingerprint_engine import FingerprintEngine
+
+    def _compute():
+        session = get_sync_session()
+        try:
+            from api.models.finding import Finding as F
+            from api.models.identity import Identity as I
+            findings = session.execute(
+                select(F).where(F.target_id == target_id, F.workspace_id == workspace_id)
+            ).scalars().all()
+            identities = session.execute(
+                select(I).where(I.target_id == target_id, I.workspace_id == workspace_id)
+            ).scalars().all()
+            engine = FingerprintEngine()
+            return engine.compute(findings, identities, target.profile_data, target.email)
+        finally:
+            session.close()
+
+    loop = asyncio.get_event_loop()
+    return await loop.run_in_executor(None, _compute)
+
+
+@router.get("/{target_id}/fingerprint/history")
+async def get_fingerprint_history(
+    target_id: uuid.UUID,
+    workspace_id: uuid.UUID = Depends(get_current_workspace),
+    user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """Return fingerprint snapshots over time."""
+    target = await _get_target(db, target_id, workspace_id)
+    return {"snapshots": target.fingerprint_history or []}
+
+
+@router.get("/{target_id}/fingerprint/compare")
+async def compare_fingerprints(
+    target_id: uuid.UUID,
+    with_target: uuid.UUID = Query(..., alias="with"),
+    workspace_id: uuid.UUID = Depends(get_current_workspace),
+    user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """Compare fingerprints of two targets side by side."""
+    target_a = await _get_target(db, target_id, workspace_id)
+    target_b = await _get_target(db, with_target, workspace_id)
+
+    fp_a = (target_a.profile_data or {}).get("fingerprint")
+    fp_b = (target_b.profile_data or {}).get("fingerprint")
+
+    diff = {}
+    if fp_a and fp_b:
+        axes_a = fp_a.get("axes", {})
+        axes_b = fp_b.get("axes", {})
+        for key in set(list(axes_a.keys()) + list(axes_b.keys())):
+            diff[key] = round((axes_a.get(key, 0) or 0) - (axes_b.get(key, 0) or 0), 3)
+
+    return {
+        "target_a": {"id": str(target_id), "email": target_a.email, "fingerprint": fp_a},
+        "target_b": {"id": str(with_target), "email": target_b.email, "fingerprint": fp_b},
+        "diff": diff,
+    }
+
+
 def _target_dict(t: Target) -> dict:
+    fp = (t.profile_data or {}).get("fingerprint") if t.profile_data else None
     return {
         "id": str(t.id),
         "email": t.email,
@@ -258,4 +334,7 @@ def _target_dict(t: Target) -> dict:
         "tags": t.tags,
         "notes": t.notes,
         "created_at": t.created_at.isoformat() if t.created_at else None,
+        "fingerprint_hash": fp.get("hash") if fp else None,
+        "fingerprint_score": fp.get("score") if fp else None,
+        "fingerprint_risk": fp.get("risk_level") if fp else None,
     }

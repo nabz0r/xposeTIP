@@ -24,6 +24,7 @@ class Target(UUIDMixin, TimestampMixin, Base):
     tags: Mapped[list | None] = mapped_column(ARRAY(Text))
     notes: Mapped[str | None] = mapped_column(Text)
     profile_data: Mapped[dict | None] = mapped_column(JSONB)
+    fingerprint_history: Mapped[list | None] = mapped_column(JSONB, default=list)
 
     workspace = relationship("Workspace", back_populates="targets")
     scans = relationship("Scan", back_populates="target", cascade="all, delete-orphan")

@@ -143,6 +143,53 @@ def finalize_scan(scan_id: str):
         except Exception:
             logger.exception("Intelligence pipeline failed for target %s", scan.target_id)
 
+        # Compute digital fingerprint
+        try:
+            from api.services.layer4.fingerprint_engine import FingerprintEngine
+            from api.models.identity import Identity
+
+            all_findings = session.execute(
+                select(Finding).where(Finding.target_id == scan.target_id)
+            ).scalars().all()
+            all_identities = session.execute(
+                select(Identity).where(Identity.target_id == scan.target_id)
+            ).scalars().all()
+
+            fp_engine = FingerprintEngine()
+            fingerprint = fp_engine.compute(
+                all_findings, all_identities, target.profile_data, target.email
+            )
+
+            # Save snapshot to history
+            snapshot = {
+                "hash": fingerprint["hash"],
+                "score": fingerprint["score"],
+                "risk_level": fingerprint["risk_level"],
+                "axes": fingerprint["axes"],
+                "raw_values": fingerprint["raw_values"],
+                "label": fingerprint.get("label", ""),
+                "scan_id": str(scan_id),
+                "computed_at": fingerprint["computed_at"],
+                "findings_count": len(all_findings),
+            }
+            history = list(target.fingerprint_history or [])
+            history.append(snapshot)
+            target.fingerprint_history = history[-50:]
+
+            # Save current fingerprint in profile_data
+            profile = dict(target.profile_data or {})
+            profile["fingerprint"] = fingerprint
+            target.profile_data = profile
+
+            session.commit()
+            logger.info(
+                "Fingerprint %s (score=%d, %s) for target %s",
+                fingerprint["hash"], fingerprint["score"],
+                fingerprint["risk_level"], scan.target_id,
+            )
+        except Exception:
+            logger.exception("Fingerprint computation failed for target %s", scan.target_id)
+
     except Exception:
         session.rollback()
         logger.exception("finalize_scan failed for %s", scan_id)

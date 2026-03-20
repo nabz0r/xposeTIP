@@ -59,6 +59,9 @@ export const deleteTarget = (id) => request(`/targets/${id}?confirm=true`, { met
 export const getTargetProfile = (id) => request(`/targets/${id}/profile`)
 export const getTargetSources = (id) => request(`/targets/${id}/sources`)
 export const bulkImportTargets = (data) => request('/targets/bulk', { method: 'POST', body: JSON.stringify(data) })
+export const getFingerprint = (id) => request(`/targets/${id}/fingerprint`)
+export const getFingerprintHistory = (id) => request(`/targets/${id}/fingerprint/history`)
+export const compareFingerprints = (id, withId) => request(`/targets/${id}/fingerprint/compare?with=${withId}`)
 
 // Scans
 export const createScan = (data) => request('/scans', { method: 'POST', body: JSON.stringify(data) })

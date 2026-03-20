@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Globe, MapPin, Building2, Github, ExternalLink, Shield, AlertTriangle, Link2 } from 'lucide-react'
-import { getTargetProfile } from '../lib/api'
+import { getTargetProfile, getFingerprint } from '../lib/api'
+import FingerprintRadar from './FingerprintRadar'
 
 const scoreColor = (score) => {
   if (score == null) return '#666688'
@@ -17,10 +18,12 @@ const repColor = (level) => {
 
 export default function ProfileHeader({ target, findings, animScore }) {
   const [profile, setProfile] = useState(null)
+  const [fingerprint, setFingerprint] = useState(null)
 
   useEffect(() => {
     if (target?.id) {
       getTargetProfile(target.id).then(setProfile).catch(() => setProfile(null))
+      getFingerprint(target.id).then(setFingerprint).catch(() => setFingerprint(null))
     }
   }, [target?.id, target?.last_scanned])
 
@@ -88,25 +91,31 @@ export default function ProfileHeader({ target, findings, animScore }) {
               </div>
             </div>
 
-            {/* Score donut */}
-            <div className="flex flex-col items-center gap-1 shrink-0">
-              <div className="relative w-20 h-20">
-                <svg viewBox="0 0 36 36" className="w-full h-full -rotate-90">
-                  <circle cx="18" cy="18" r="15.5" fill="none" stroke="#1e1e2e" strokeWidth="3" />
-                  <circle cx="18" cy="18" r="15.5" fill="none"
-                    stroke={scoreColor(target.exposure_score)}
-                    strokeWidth="3"
-                    strokeDasharray={`${animScore} 100`}
-                    strokeLinecap="round"
-                    style={{ transition: 'stroke-dasharray 0.3s ease' }} />
-                </svg>
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <span className="text-lg font-mono font-bold" style={{ color: scoreColor(target.exposure_score) }}>
-                    {target.exposure_score ?? '-'}
-                  </span>
+            {/* Fingerprint radar (replaces score donut) */}
+            <div className="shrink-0">
+              {fingerprint ? (
+                <FingerprintRadar fingerprint={fingerprint} size="small" animate={true} />
+              ) : (
+                <div className="flex flex-col items-center gap-1">
+                  <div className="relative w-20 h-20">
+                    <svg viewBox="0 0 36 36" className="w-full h-full -rotate-90">
+                      <circle cx="18" cy="18" r="15.5" fill="none" stroke="#1e1e2e" strokeWidth="3" />
+                      <circle cx="18" cy="18" r="15.5" fill="none"
+                        stroke={scoreColor(target.exposure_score)}
+                        strokeWidth="3"
+                        strokeDasharray={`${animScore} 100`}
+                        strokeLinecap="round"
+                        style={{ transition: 'stroke-dasharray 0.3s ease' }} />
+                    </svg>
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <span className="text-lg font-mono font-bold" style={{ color: scoreColor(target.exposure_score) }}>
+                        {target.exposure_score ?? '-'}
+                      </span>
+                    </div>
+                  </div>
+                  <span className="text-[10px] text-gray-500 uppercase tracking-wider">Exposure</span>
                 </div>
-              </div>
-              <span className="text-[10px] text-gray-500 uppercase tracking-wider">Exposure</span>
+              )}
             </div>
           </div>
         </div>

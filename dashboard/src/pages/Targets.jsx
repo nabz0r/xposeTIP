@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Plus, Trash2, Search, Eye, Upload } from 'lucide-react'
-import { getTargets, createTarget, deleteTarget, bulkImportTargets } from '../lib/api'
+import { getTargets, createTarget, deleteTarget, bulkImportTargets, getFingerprint } from '../lib/api'
 import TargetQuickView from '../components/TargetQuickView'
+import FingerprintRadar from '../components/FingerprintRadar'
 
 const FLAG = (code) => {
   if (!code) return ''
@@ -31,11 +32,23 @@ export default function Targets() {
   const [bulkResult, setBulkResult] = useState(null)
   const [loading, setLoading] = useState(false)
   const [quickViewId, setQuickViewId] = useState(null)
+  const [fingerprints, setFingerprints] = useState({})
   const navigate = useNavigate()
 
   useEffect(() => {
     loadTargets()
   }, [search])
+
+  // Load fingerprints for targets that have been scanned
+  useEffect(() => {
+    const scannedTargets = targets.filter(t => t.exposure_score != null && !fingerprints[t.id])
+    if (scannedTargets.length === 0) return
+    scannedTargets.slice(0, 20).forEach(t => {
+      getFingerprint(t.id).then(fp => {
+        setFingerprints(prev => ({ ...prev, [t.id]: fp }))
+      }).catch(() => {})
+    })
+  }, [targets])
 
   async function loadTargets() {
     try {
@@ -131,6 +144,7 @@ export default function Targets() {
               <th className="text-left px-5 py-3">Email</th>
               <th className="text-left px-5 py-3">Country</th>
               <th className="text-left px-5 py-3">Status</th>
+              <th className="text-left px-5 py-3">Fingerprint</th>
               <th className="text-left px-5 py-3">Score</th>
               <th className="text-left px-5 py-3">Last Scanned</th>
               <th className="text-left px-5 py-3"></th>
@@ -155,6 +169,15 @@ export default function Targets() {
                   </span>
                 </td>
                 <td className="px-5 py-3">
+                  {fingerprints[t.id] ? (
+                    <FingerprintRadar fingerprint={fingerprints[t.id]} size="small" animate={false} />
+                  ) : (
+                    <div className="w-[120px] h-[120px] flex items-center justify-center">
+                      <div className="w-8 h-8 rounded-full border border-[#1e1e2e]" />
+                    </div>
+                  )}
+                </td>
+                <td className="px-5 py-3">
                   {t.exposure_score != null ? (
                     <span className="font-mono font-bold" style={{ color: scoreColor(t.exposure_score) }}>
                       {t.exposure_score}
@@ -175,7 +198,7 @@ export default function Targets() {
               </tr>
             ))}
             {targets.length === 0 && (
-              <tr><td colSpan={6} className="px-5 py-8 text-center text-gray-500">No targets found</td></tr>
+              <tr><td colSpan={7} className="px-5 py-8 text-center text-gray-500">No targets found</td></tr>
             )}
           </tbody>
         </table>

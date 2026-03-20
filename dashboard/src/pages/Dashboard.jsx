@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Crosshair, Radar, AlertTriangle, ShieldAlert, Search } from 'lucide-react'
-import { getTargets, getScans, getFindingsStats, getFindings, createTarget, createScan, getDefaults } from '../lib/api'
+import { getTargets, getScans, getFindingsStats, getFindings, createTarget, createScan, getDefaults, getFingerprint } from '../lib/api'
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, AreaChart, Area } from 'recharts'
 import WorldHeatmap from '../components/WorldHeatmap'
+import FingerprintRadar from '../components/FingerprintRadar'
 
 const severityColors = {
   critical: '#ff2244', high: '#ff8800', medium: '#ffcc00', low: '#3388ff', info: '#666688',
@@ -40,6 +41,7 @@ export default function Dashboard() {
   const [moduleData, setModuleData] = useState([])
   const [geoFindings, setGeoFindings] = useState([])
   const [topTarget, setTopTarget] = useState(null)
+  const [topFingerprint, setTopFingerprint] = useState(null)
   const [quickEmail, setQuickEmail] = useState('')
   const [loading, setLoading] = useState(false)
   const [defaultModules, setDefaultModules] = useState(['email_validator', 'holehe', 'emailrep', 'gravatar', 'epieos', 'github_deep', 'dns_deep'])
@@ -75,7 +77,10 @@ export default function Dashboard() {
 
       // Find most exposed target
       const sortedTargets = (targetsData.items || []).filter(t => t.exposure_score != null).sort((a, b) => b.exposure_score - a.exposure_score)
-      if (sortedTargets.length > 0) setTopTarget(sortedTargets[0])
+      if (sortedTargets.length > 0) {
+        setTopTarget(sortedTargets[0])
+        getFingerprint(sortedTargets[0].id).then(setTopFingerprint).catch(() => {})
+      }
       setRecentScans(scansData.items?.slice(0, 10) || [])
 
       // Severity chart data
@@ -144,11 +149,17 @@ export default function Dashboard() {
                 {topTarget.display_name && <span className="text-xs text-gray-400">({topTarget.display_name})</span>}
               </div>
             </div>
-            <div className="text-right">
-              <div className="text-2xl font-bold font-mono" style={{
-                color: topTarget.exposure_score >= 61 ? '#ff2244' : topTarget.exposure_score >= 31 ? '#ff8800' : '#00ff88'
-              }}>{topTarget.exposure_score}</div>
-              <span className="text-[10px] text-gray-500 uppercase">Score</span>
+            <div className="flex items-center gap-3">
+              {topFingerprint ? (
+                <FingerprintRadar fingerprint={topFingerprint} size="small" animate={true} />
+              ) : (
+                <div className="text-right">
+                  <div className="text-2xl font-bold font-mono" style={{
+                    color: topTarget.exposure_score >= 61 ? '#ff2244' : topTarget.exposure_score >= 31 ? '#ff8800' : '#00ff88'
+                  }}>{topTarget.exposure_score}</div>
+                  <span className="text-[10px] text-gray-500 uppercase">Score</span>
+                </div>
+              )}
             </div>
           </div>
         </div>

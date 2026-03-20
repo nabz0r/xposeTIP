@@ -2,6 +2,7 @@ import React, { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../lib/auth'
 import { Shield, Radar, Lock, Globe, Zap, ChevronRight } from 'lucide-react'
+import FingerprintRadar from '../components/FingerprintRadar'
 
 const STATS = [
   { value: '25+', label: 'Scanners', desc: 'Intelligence modules' },
@@ -113,47 +114,77 @@ export default function Landing() {
             In 30 seconds, discover your digital exposure
           </p>
 
-          {/* Quick result preview */}
-          {quickResult && (
-            <div className="bg-[#12121a] border border-[#1e1e2e] rounded-xl p-6 text-left max-w-lg mx-auto mb-8">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-sm font-semibold">Quick Scan Results</h3>
-                <span className="text-xs font-mono text-gray-500">{quickResult.findings?.length || 0} findings</span>
-              </div>
-              <div className="space-y-2">
-                {(quickResult.findings || []).slice(0, 5).map((f, i) => (
-                  <div key={i} className="flex items-center gap-2 text-sm">
-                    <span className="inline-block text-[10px] font-medium px-1.5 py-0.5 rounded-full"
-                      style={{
-                        backgroundColor: (f.severity === 'critical' ? '#ff2244' : f.severity === 'high' ? '#ff8800' : f.severity === 'medium' ? '#ffcc00' : '#3388ff') + '26',
-                        color: f.severity === 'critical' ? '#ff2244' : f.severity === 'high' ? '#ff8800' : f.severity === 'medium' ? '#ffcc00' : '#3388ff',
-                      }}>
-                      {f.severity}
-                    </span>
-                    <span className="text-gray-300 truncate">{f.title}</span>
-                  </div>
-                ))}
-                {(quickResult.findings?.length || 0) > 5 && (
-                  <div className="relative">
-                    <div className="space-y-2 blur-sm">
-                      {quickResult.findings.slice(5, 8).map((f, i) => (
-                        <div key={i} className="flex items-center gap-2 text-sm">
-                          <span className="inline-block text-[10px] px-1.5 py-0.5 rounded-full bg-gray-800 text-gray-500">{f.severity}</span>
-                          <span className="text-gray-500 truncate">{f.title}</span>
-                        </div>
-                      ))}
+          {/* Quick result preview with fingerprint */}
+          {quickResult && (() => {
+            // Build lightweight fingerprint from quick scan findings
+            const findings = quickResult.findings || []
+            const breaches = findings.filter(f => f.category === 'breach').length
+            const social = findings.filter(f => f.category === 'social_account' || f.category === 'social').length
+            const security = findings.filter(f => (f.title || '').toLowerCase().includes('no spf') || (f.title || '').toLowerCase().includes('no dmarc')).length
+            const dataTypes = new Set()
+            findings.forEach(f => { if (f.data?.data_classes) f.data.data_classes.forEach(d => dataTypes.add(d)); if (f.data?.DataClasses) f.data.DataClasses.forEach(d => dataTypes.add(d)) })
+            const maxA = 15, maxP = 10, maxB = 5, maxD = 8, maxS = 4
+            const quickFp = {
+              axes: {
+                accounts: Math.min(1, social / maxA),
+                platforms: Math.min(1, social / maxP),
+                username_reuse: 0,
+                breaches: Math.min(1, breaches / maxB),
+                geo_spread: Math.min(1, findings.filter(f => f.data?.country).length / 5),
+                data_leaked: Math.min(1, dataTypes.size / maxD),
+                email_age: 0,
+                security: Math.min(1, security / maxS),
+              },
+              color: findings.length > 10 ? '#E24B4A' : findings.length > 5 ? '#D85A30' : findings.length > 2 ? '#EF9F27' : '#1D9E75',
+              fill_color: findings.length > 5 ? 'rgba(225,50,50,0.08)' : 'rgba(29,158,117,0.12)',
+              hash: '--------',
+              score: Math.min(100, Math.round(findings.length * 5)),
+              risk_level: findings.length > 10 ? 'HIGH' : findings.length > 5 ? 'MODERATE' : 'LOW',
+              scars: [],
+              raw_values: { accounts: social, platforms: social, username_reuse: 0, breaches, geo_spread: 0, data_leaked: dataTypes.size, email_age_years: 0, security_weak: security },
+            }
+            return (
+              <div className="bg-[#12121a] border border-[#1e1e2e] rounded-xl p-6 max-w-lg mx-auto mb-8">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-sm font-semibold">Your Digital Fingerprint</h3>
+                  <span className="text-xs font-mono text-gray-500">{findings.length} findings</span>
+                </div>
+                <FingerprintRadar fingerprint={quickFp} size="large" animate={true} />
+                <div className="space-y-2 mt-4 text-left">
+                  {findings.slice(0, 5).map((f, i) => (
+                    <div key={i} className="flex items-center gap-2 text-sm">
+                      <span className="inline-block text-[10px] font-medium px-1.5 py-0.5 rounded-full"
+                        style={{
+                          backgroundColor: (f.severity === 'critical' ? '#ff2244' : f.severity === 'high' ? '#ff8800' : f.severity === 'medium' ? '#ffcc00' : '#3388ff') + '26',
+                          color: f.severity === 'critical' ? '#ff2244' : f.severity === 'high' ? '#ff8800' : f.severity === 'medium' ? '#ffcc00' : '#3388ff',
+                        }}>
+                        {f.severity}
+                      </span>
+                      <span className="text-gray-300 truncate">{f.title}</span>
                     </div>
-                    <div className="absolute inset-0 flex items-center justify-center">
-                      <a href={`/setup?email=${encodeURIComponent(email)}`}
-                         className="bg-[#00ff88] text-black font-semibold rounded-lg px-4 py-2 text-xs hover:bg-[#00ff88]/90">
-                        Sign up to see all results
-                      </a>
+                  ))}
+                  {findings.length > 5 && (
+                    <div className="relative">
+                      <div className="space-y-2 blur-sm">
+                        {findings.slice(5, 8).map((f, i) => (
+                          <div key={i} className="flex items-center gap-2 text-sm">
+                            <span className="inline-block text-[10px] px-1.5 py-0.5 rounded-full bg-gray-800 text-gray-500">{f.severity}</span>
+                            <span className="text-gray-500 truncate">{f.title}</span>
+                          </div>
+                        ))}
+                      </div>
+                      <div className="absolute inset-0 flex items-center justify-center">
+                        <a href={`/setup?email=${encodeURIComponent(email)}`}
+                           className="bg-[#00ff88] text-black font-semibold rounded-lg px-4 py-2 text-xs hover:bg-[#00ff88]/90">
+                          Sign up to see full audit
+                        </a>
+                      </div>
                     </div>
-                  </div>
-                )}
+                  )}
+                </div>
               </div>
-            </div>
-          )}
+            )
+          })()}
 
           {/* Stats */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 max-w-lg mx-auto mb-16">
