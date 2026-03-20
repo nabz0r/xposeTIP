@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Plus, Trash2, Search, Eye } from 'lucide-react'
-import { getTargets, createTarget, deleteTarget } from '../lib/api'
+import { Plus, Trash2, Search, Eye, Upload } from 'lucide-react'
+import { getTargets, createTarget, deleteTarget, bulkImportTargets } from '../lib/api'
 import TargetQuickView from '../components/TargetQuickView'
 
 const FLAG = (code) => {
@@ -23,8 +23,12 @@ export default function Targets() {
   const [total, setTotal] = useState(0)
   const [search, setSearch] = useState('')
   const [showAdd, setShowAdd] = useState(false)
+  const [showBulk, setShowBulk] = useState(false)
   const [newEmail, setNewEmail] = useState('')
   const [newCountry, setNewCountry] = useState('')
+  const [bulkText, setBulkText] = useState('')
+  const [bulkCountry, setBulkCountry] = useState('')
+  const [bulkResult, setBulkResult] = useState(null)
   const [loading, setLoading] = useState(false)
   const [quickViewId, setQuickViewId] = useState(null)
   const navigate = useNavigate()
@@ -58,6 +62,26 @@ export default function Targets() {
     }
   }
 
+  async function handleBulkImport(e) {
+    e.preventDefault()
+    setLoading(true)
+    setBulkResult(null)
+    try {
+      const emails = bulkText
+        .split(/[\n,;]+/)
+        .map(e => e.trim().toLowerCase())
+        .filter(e => e && e.includes('@'))
+      if (emails.length === 0) { alert('No valid emails found'); return }
+      const result = await bulkImportTargets({ emails, country_code: bulkCountry || null })
+      setBulkResult(result)
+      loadTargets()
+    } catch (err) {
+      alert(err.message)
+    } finally {
+      setLoading(false)
+    }
+  }
+
   async function handleDelete(e, id) {
     e.stopPropagation()
     if (!confirm('Delete this target and all associated data?')) return
@@ -77,9 +101,14 @@ export default function Targets() {
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold">Targets <span className="text-sm text-gray-500 font-normal ml-2">{total}</span></h1>
-        <button onClick={() => setShowAdd(true)} className="flex items-center gap-2 bg-[#00ff88] text-black font-semibold rounded-lg px-4 py-2 text-sm hover:bg-[#00ff88]/90">
-          <Plus className="w-4 h-4" /> Add Target
-        </button>
+        <div className="flex gap-2">
+          <button onClick={() => setShowBulk(true)} className="flex items-center gap-2 bg-[#12121a] border border-[#1e1e2e] text-gray-300 font-medium rounded-lg px-4 py-2 text-sm hover:border-[#00ff88]/50">
+            <Upload className="w-4 h-4" /> Bulk Import
+          </button>
+          <button onClick={() => setShowAdd(true)} className="flex items-center gap-2 bg-[#00ff88] text-black font-semibold rounded-lg px-4 py-2 text-sm hover:bg-[#00ff88]/90">
+            <Plus className="w-4 h-4" /> Add Target
+          </button>
+        </div>
       </div>
 
       {/* Search */}
@@ -154,6 +183,39 @@ export default function Targets() {
 
       {/* Quick View */}
       {quickViewId && <TargetQuickView targetId={quickViewId} onClose={() => setQuickViewId(null)} />}
+
+      {/* Bulk Import Modal */}
+      {showBulk && (
+        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50" onClick={() => { setShowBulk(false); setBulkResult(null) }}>
+          <div className="bg-[#12121a] border border-[#1e1e2e] rounded-xl p-6 w-full max-w-lg" onClick={e => e.stopPropagation()}>
+            <h2 className="text-lg font-semibold mb-4">Bulk Import Targets</h2>
+            <form onSubmit={handleBulkImport} className="space-y-4">
+              <div>
+                <label className="text-xs text-gray-400 mb-1 block">Emails (one per line, or comma/semicolon separated)</label>
+                <textarea value={bulkText} onChange={e => setBulkText(e.target.value)} rows={8} placeholder={"user1@example.com\nuser2@example.com\nuser3@example.com"}
+                  className="w-full bg-[#0a0a0f] border border-[#1e1e2e] rounded-lg px-3 py-2 text-sm font-mono focus:outline-none focus:border-[#00ff88]/50 resize-none" />
+              </div>
+              <div>
+                <label className="text-xs text-gray-400 mb-1 block">Country Code (optional, applies to all)</label>
+                <input type="text" value={bulkCountry} onChange={e => setBulkCountry(e.target.value)} maxLength={2} placeholder="US"
+                  className="w-full bg-[#0a0a0f] border border-[#1e1e2e] rounded-lg px-3 py-2 text-sm font-mono focus:outline-none focus:border-[#00ff88]/50 uppercase" />
+              </div>
+              {bulkResult && (
+                <div className="bg-[#0a0a0f] border border-[#1e1e2e] rounded-lg p-3 text-sm">
+                  <p className="text-[#00ff88]">{bulkResult.created} targets created</p>
+                  {bulkResult.skipped > 0 && <p className="text-[#ffcc00]">{bulkResult.skipped} duplicates skipped</p>}
+                </div>
+              )}
+              <div className="flex gap-3 justify-end">
+                <button type="button" onClick={() => { setShowBulk(false); setBulkResult(null) }} className="px-4 py-2 text-sm text-gray-400 hover:text-white">Cancel</button>
+                <button type="submit" disabled={loading} className="bg-[#00ff88] text-black font-semibold rounded-lg px-6 py-2 text-sm hover:bg-[#00ff88]/90 disabled:opacity-50">
+                  {loading ? 'Importing...' : 'Import'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
 
       {/* Add Target Modal */}
       {showAdd && (

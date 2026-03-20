@@ -17,8 +17,12 @@ SCANNER_REGISTRY = {
     "holehe": "api.services.layer1.holehe_scanner:HoleheScanner",
     "hibp": "api.services.layer1.hibp_scanner:HIBPScanner",
     "sherlock": "api.services.layer1.sherlock_scanner:SherlockScanner",
+    "gravatar": "api.services.layer1.gravatar_scanner:GravatarScanner",
+    "social_enricher": "api.services.layer1.social_enricher:SocialEnricherScanner",
+    "google_profile": "api.services.layer1.google_scanner:GoogleScanner",
     "whois_lookup": "api.services.layer2.whois_scanner:WhoisScanner",
     "maxmind_geo": "api.services.layer2.maxmind_scanner:MaxmindScanner",
+    "geoip": "api.services.layer2.geoip_scanner:GeoIPScanner",
 }
 
 
@@ -61,6 +65,11 @@ def run_module(self, scan_id: str, module_id: str, email: str):
             _update_progress(session, scan_id, module_id, "skipped")
             return {"module": module_id, "skipped": True, "reason": "no scanner implemented"}
 
+        # Fetch scan record first (needed for workspace_id)
+        scan = session.execute(select(Scan).where(Scan.id == uuid.UUID(scan_id))).scalar_one_or_none()
+        if not scan:
+            return {"error": "Scan not found"}
+
         # Load workspace API keys for scanners that need them
         scanner_kwargs = {}
         if module_id in ("hibp",):
@@ -80,10 +89,6 @@ def run_module(self, scan_id: str, module_id: str, email: str):
             results = loop.run_until_complete(scanner.scan(email, **scanner_kwargs))
         finally:
             loop.close()
-
-        scan = session.execute(select(Scan).where(Scan.id == uuid.UUID(scan_id))).scalar_one_or_none()
-        if not scan:
-            return {"error": "Scan not found"}
 
         created = 0
         for result in results:

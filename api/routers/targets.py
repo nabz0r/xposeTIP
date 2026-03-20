@@ -27,6 +27,12 @@ class TargetUpdate(BaseModel):
     notes: str | None = None
 
 
+class BulkImport(BaseModel):
+    emails: list[EmailStr]
+    country_code: str | None = None
+    tags: list[str] | None = None
+
+
 @router.post("", status_code=status.HTTP_201_CREATED)
 async def create_target(
     body: TargetCreate,
@@ -51,6 +57,38 @@ async def create_target(
     await db.commit()
     await db.refresh(target)
     return _target_dict(target)
+
+
+@router.post("/bulk", status_code=status.HTTP_201_CREATED)
+async def bulk_import_targets(
+    body: BulkImport,
+    workspace_id: uuid.UUID = Depends(get_current_workspace),
+    user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    if len(body.emails) > 500:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Maximum 500 emails per import")
+
+    created = []
+    skipped = []
+    for email in body.emails:
+        existing = await db.execute(
+            select(Target).where(Target.workspace_id == workspace_id, Target.email == email)
+        )
+        if existing.scalar_one_or_none():
+            skipped.append(email)
+            continue
+        target = Target(
+            workspace_id=workspace_id,
+            email=email,
+            country_code=body.country_code,
+            tags=body.tags,
+        )
+        db.add(target)
+        created.append(email)
+
+    await db.commit()
+    return {"created": len(created), "skipped": len(skipped), "skipped_emails": skipped}
 
 
 @router.get("")

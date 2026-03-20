@@ -1,9 +1,11 @@
 import React, { useEffect, useState, useCallback, useRef, Fragment } from 'react'
 import { useParams } from 'react-router-dom'
-import { Radar, ChevronDown, ChevronRight, ExternalLink, Lock, CheckCircle, Filter } from 'lucide-react'
+import { Radar, ChevronDown, ChevronRight, ExternalLink, Lock, CheckCircle, Filter, Shield, AlertTriangle, Globe } from 'lucide-react'
 import { getTarget, getFindings, getScans, createScan, getModules, getScan, getGraph, patchFinding } from '../lib/api'
 import IdentityGraph from '../components/IdentityGraph'
 import IOCTimeline from '../components/IOCTimeline'
+import ProfileHeader from '../components/ProfileHeader'
+import LocationMap from '../components/LocationMap'
 
 const severityColors = {
   critical: '#ff2244', high: '#ff8800', medium: '#ffcc00', low: '#3388ff', info: '#666688',
@@ -19,7 +21,8 @@ const scoreColor = (score) => {
 
 const SCAN_TIMES = {
   email_validator: '~5s', holehe: '~2min', hibp: '~5s', sherlock: '~60s',
-  whois_lookup: '~10s', maxmind_geo: '~3s',
+  whois_lookup: '~10s', maxmind_geo: '~3s', geoip: '~10s',
+  gravatar: '~3s', social_enricher: '~5s', google_profile: '~5s',
 }
 
 export default function TargetDetail() {
@@ -33,7 +36,7 @@ export default function TargetDetail() {
   const [showScanModal, setShowScanModal] = useState(false)
   const [selectedModules, setSelectedModules] = useState([])
   const [scanning, setScanning] = useState(false)
-  const [activeTab, setActiveTab] = useState('findings')
+  const [activeTab, setActiveTab] = useState('overview')
   const [toast, setToast] = useState(null)
   // Filters
   const [sevFilter, setSevFilter] = useState('all')
@@ -146,7 +149,20 @@ export default function TargetDetail() {
     }
   }
 
-  if (!target) return <div className="text-gray-500">Loading...</div>
+  if (!target) return (
+    <div className="space-y-4">
+      <div className="bg-[#12121a] border border-[#1e1e2e] rounded-xl p-6 animate-pulse">
+        <div className="flex gap-6">
+          <div className="w-20 h-20 rounded-full bg-[#1e1e2e]" />
+          <div className="flex-1 space-y-3">
+            <div className="h-5 w-48 bg-[#1e1e2e] rounded" />
+            <div className="h-4 w-64 bg-[#1e1e2e] rounded" />
+            <div className="h-3 w-32 bg-[#1e1e2e] rounded" />
+          </div>
+        </div>
+      </div>
+    </div>
+  )
 
   // Filtered findings
   const filteredFindings = findings.filter(f => {
@@ -162,81 +178,136 @@ export default function TargetDetail() {
   const implementedModules = modules.filter(m => m.enabled && m.implemented)
   const layers = [...new Set(implementedModules.map(m => m.layer))].sort()
 
-  const breakdown = target.score_breakdown || {}
+  // Overview data
+  const breachFindings = findings.filter(f => f.category === 'breach')
+  const socialFindings = findings.filter(f => f.category === 'social_account')
+  const geoFindings = findings.filter(f => f.category === 'geolocation')
+  const criticalCount = findings.filter(f => f.severity === 'critical' || f.severity === 'high').length
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-start justify-between">
-        <div>
-          <h1 className="text-2xl font-mono font-bold">{target.email}</h1>
-          <div className="flex items-center gap-4 mt-2 text-sm text-gray-400">
-            <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-xs font-medium"
-              style={{ backgroundColor: (target.status === 'completed' ? '#00ff88' : target.status === 'scanning' ? '#ffcc00' : '#666688') + '26',
-                       color: target.status === 'completed' ? '#00ff88' : target.status === 'scanning' ? '#ffcc00' : '#666688' }}>
-              {target.status}
-            </span>
-            {target.country_code && <span>{target.country_code}</span>}
-            {target.last_scanned && <span>Last scanned: {new Date(target.last_scanned).toLocaleString()}</span>}
-          </div>
+      {/* Profile Header */}
+      <div className="flex items-start gap-4">
+        <div className="flex-1">
+          <ProfileHeader target={target} findings={findings} animScore={animScore} />
         </div>
-        <div className="flex items-center gap-4">
-          {/* Score donut */}
-          <div className="flex flex-col items-center gap-1">
-            <div className="relative w-20 h-20">
-              <svg viewBox="0 0 36 36" className="w-full h-full -rotate-90">
-                <circle cx="18" cy="18" r="15.5" fill="none" stroke="#1e1e2e" strokeWidth="3" />
-                <circle cx="18" cy="18" r="15.5" fill="none"
-                  stroke={scoreColor(target.exposure_score)}
-                  strokeWidth="3"
-                  strokeDasharray={`${animScore} 100`}
-                  strokeLinecap="round"
-                  style={{ transition: 'stroke-dasharray 0.3s ease' }} />
-              </svg>
-              <div className="absolute inset-0 flex items-center justify-center">
-                <span className="text-lg font-mono font-bold" style={{ color: scoreColor(target.exposure_score) }}>
-                  {target.exposure_score ?? '-'}
-                </span>
-              </div>
-            </div>
-          </div>
-          <button onClick={() => setShowScanModal(true)}
-            className="flex items-center gap-2 bg-[#00ff88] text-black font-semibold rounded-lg px-4 py-2 text-sm hover:bg-[#00ff88]/90">
-            <Radar className="w-4 h-4" /> New Scan
-          </button>
-        </div>
+        <button onClick={() => setShowScanModal(true)}
+          className="shrink-0 flex items-center gap-2 bg-[#00ff88] text-black font-semibold rounded-lg px-4 py-2.5 text-sm hover:bg-[#00ff88]/90 mt-2">
+          <Radar className="w-4 h-4" /> New Scan
+        </button>
       </div>
-
-      {/* Score breakdown */}
-      {Object.keys(breakdown).length > 0 && (
-        <div className="bg-[#12121a] border border-[#1e1e2e] rounded-xl p-4">
-          <h3 className="text-xs font-semibold uppercase tracking-wider text-gray-500 mb-3">Score Breakdown</h3>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-            {Object.entries(breakdown).sort((a, b) => b[1] - a[1]).map(([cat, score]) => (
-              <div key={cat} className="space-y-1">
-                <div className="flex justify-between text-xs">
-                  <span className="text-gray-400">{cat.replace(/_/g, ' ')}</span>
-                  <span className="font-mono text-gray-300">{score}</span>
-                </div>
-                <div className="h-1.5 bg-[#1e1e2e] rounded-full overflow-hidden">
-                  <div className="h-full rounded-full transition-all duration-500"
-                    style={{ width: `${score}%`, backgroundColor: score >= 60 ? '#ff2244' : score >= 30 ? '#ff8800' : '#00ff88' }} />
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
 
       {/* Tabs */}
       <div className="flex gap-1 border-b border-[#1e1e2e]">
-        {['findings', 'graph', 'timeline', 'scans'].map(tab => (
+        {['overview', 'findings', 'graph', 'timeline', 'locations', 'scans'].map(tab => (
           <button key={tab} onClick={() => setActiveTab(tab)}
             className={`px-4 py-2 text-sm capitalize transition-colors ${activeTab === tab ? 'text-[#00ff88] border-b-2 border-[#00ff88]' : 'text-gray-400 hover:text-white'}`}>
             {tab} {tab === 'findings' ? `(${findings.length})` : tab === 'scans' ? `(${scans.length})` : ''}
           </button>
         ))}
       </div>
+
+      {/* Overview Tab */}
+      {activeTab === 'overview' && (
+        <div className="space-y-4">
+          {/* Critical alerts */}
+          {criticalCount > 0 && (
+            <div className="bg-[#ff2244]/10 border border-[#ff2244]/30 rounded-xl p-4 flex items-start gap-3">
+              <AlertTriangle className="w-5 h-5 text-[#ff2244] shrink-0 mt-0.5" />
+              <div>
+                <h3 className="text-sm font-semibold text-[#ff2244]">{criticalCount} Critical/High findings</h3>
+                <p className="text-xs text-gray-400 mt-1">This identity has severe exposure requiring immediate attention.</p>
+              </div>
+            </div>
+          )}
+
+          {/* Breach summary cards */}
+          {breachFindings.length > 0 && (
+            <div>
+              <h3 className="text-xs font-semibold uppercase tracking-wider text-gray-500 mb-3">Breaches ({breachFindings.length})</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                {breachFindings.slice(0, 6).map(f => (
+                  <div key={f.id} className="bg-[#12121a] border border-[#1e1e2e] rounded-lg p-3 hover:border-[#ff2244]/30 transition-colors">
+                    <div className="flex items-center gap-2 mb-1">
+                      <span className="inline-block text-[10px] font-medium px-1.5 py-0.5 rounded-full"
+                        style={{ backgroundColor: (severityColors[f.severity] || '#666688') + '26', color: severityColors[f.severity] }}>
+                        {f.severity}
+                      </span>
+                      <span className="text-sm font-medium truncate">{f.title}</span>
+                    </div>
+                    <p className="text-xs text-gray-400 line-clamp-2">{f.description}</p>
+                    {f.data?.DataClasses && (
+                      <div className="flex flex-wrap gap-1 mt-2">
+                        {f.data.DataClasses.slice(0, 4).map(dc => (
+                          <span key={dc} className="text-[10px] px-1.5 py-0.5 rounded bg-[#ff2244]/10 text-[#ff8800]">{dc}</span>
+                        ))}
+                        {f.data.DataClasses.length > 4 && <span className="text-[10px] text-gray-500">+{f.data.DataClasses.length - 4}</span>}
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+              {breachFindings.length > 6 && (
+                <button onClick={() => setActiveTab('findings')} className="text-xs text-[#3388ff] hover:underline mt-2">
+                  View all {breachFindings.length} breaches
+                </button>
+              )}
+            </div>
+          )}
+
+          {/* Social accounts */}
+          {socialFindings.length > 0 && (
+            <div>
+              <h3 className="text-xs font-semibold uppercase tracking-wider text-gray-500 mb-3">Accounts ({socialFindings.length})</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                {socialFindings.slice(0, 9).map(f => (
+                  <div key={f.id} className="bg-[#12121a] border border-[#1e1e2e] rounded-lg p-3 hover:border-[#3388ff]/30 transition-colors">
+                    <div className="flex items-center gap-2">
+                      {f.data?.avatar_url && <img src={f.data.avatar_url} alt="" className="w-6 h-6 rounded-full" />}
+                      <span className="text-sm font-medium truncate">{f.title}</span>
+                    </div>
+                    <p className="text-xs text-gray-400 mt-1 line-clamp-1">{f.description}</p>
+                    {f.url && (
+                      <a href={f.url} target="_blank" rel="noreferrer" className="text-[10px] text-[#3388ff] hover:underline mt-1 inline-flex items-center gap-1">
+                        {f.url.replace(/https?:\/\//, '').substring(0, 40)} <ExternalLink className="w-2.5 h-2.5" />
+                      </a>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Geo summary */}
+          {geoFindings.length > 0 && (
+            <div>
+              <h3 className="text-xs font-semibold uppercase tracking-wider text-gray-500 mb-3">Locations</h3>
+              <div className="flex flex-wrap gap-2">
+                {geoFindings.map(f => (
+                  <span key={f.id} className="inline-flex items-center gap-1.5 text-xs px-2.5 py-1.5 rounded-lg bg-[#12121a] border border-[#1e1e2e]">
+                    <Globe className="w-3 h-3 text-[#3388ff]" />
+                    {f.data?.city}, {f.data?.country}
+                    <span className="text-gray-500">({f.data?.ip})</span>
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Empty state */}
+          {findings.length === 0 && (
+            <div className="bg-[#12121a] border border-[#1e1e2e] rounded-xl p-12 text-center">
+              <Shield className="w-12 h-12 text-gray-600 mx-auto mb-3" />
+              <h3 className="text-lg font-medium text-gray-300">No intelligence yet</h3>
+              <p className="text-sm text-gray-500 mt-1 mb-4">Launch a scan to discover this identity's digital exposure.</p>
+              <button onClick={() => setShowScanModal(true)}
+                className="inline-flex items-center gap-2 bg-[#00ff88] text-black font-semibold rounded-lg px-6 py-2.5 text-sm hover:bg-[#00ff88]/90">
+                <Radar className="w-4 h-4" /> Launch First Scan
+              </button>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Findings Tab */}
       {activeTab === 'findings' && (
@@ -347,6 +418,9 @@ export default function TargetDetail() {
 
       {/* Timeline Tab */}
       {activeTab === 'timeline' && <IOCTimeline findings={findings} />}
+
+      {/* Locations Tab */}
+      {activeTab === 'locations' && <LocationMap findings={findings} />}
 
       {/* Scans Tab */}
       {activeTab === 'scans' && (

@@ -15,6 +15,7 @@ from api.models.scan import Scan
 from api.models.target import Target
 from api.models.user import User, UserWorkspace
 from api.models.workspace import Workspace
+from api.models.workspace_target import WorkspaceTarget
 
 router = APIRouter()
 logger = logging.getLogger(__name__)
@@ -41,6 +42,11 @@ class InviteRequest(BaseModel):
 
 class UpdateRoleRequest(BaseModel):
     role: str
+
+
+class ShareTargetRequest(BaseModel):
+    target_id: str
+    role: str = "viewer"  # viewer|editor
 
 
 # ---- Workspace CRUD ----
@@ -324,3 +330,143 @@ async def remove_member(
     await db.commit()
 
     return {"removed": True}
+
+
+# ---- Shared Targets ----
+
+@router.get("/{workspace_id}/targets")
+async def list_shared_targets(
+    workspace_id: str,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    ws_id = uuid.UUID(workspace_id)
+    # Verify caller is a member
+    result = await db.execute(
+        select(UserWorkspace).where(
+            UserWorkspace.user_id == current_user.id,
+            UserWorkspace.workspace_id == ws_id,
+        )
+    )
+    if not result.scalar_one_or_none():
+        raise HTTPException(status_code=403, detail="Not a member of this workspace")
+
+    # Get shared targets (via workspace_targets) + owned targets
+    owned = await db.execute(select(Target).where(Target.workspace_id == ws_id))
+    owned_targets = owned.scalars().all()
+
+    shared = await db.execute(
+        select(WorkspaceTarget, Target)
+        .join(Target, WorkspaceTarget.target_id == Target.id)
+        .where(WorkspaceTarget.workspace_id == ws_id)
+    )
+    shared_items = []
+    for wt, t in shared.all():
+        shared_items.append({
+            "id": str(t.id),
+            "email": t.email,
+            "display_name": t.display_name,
+            "exposure_score": t.exposure_score,
+            "status": t.status,
+            "shared": True,
+            "role": wt.role,
+            "home_workspace_id": str(t.workspace_id),
+        })
+
+    owned_items = [{
+        "id": str(t.id),
+        "email": t.email,
+        "display_name": t.display_name,
+        "exposure_score": t.exposure_score,
+        "status": t.status,
+        "shared": False,
+        "role": "owner",
+    } for t in owned_targets]
+
+    return {"owned": owned_items, "shared": shared_items}
+
+
+@router.post("/{workspace_id}/targets")
+async def share_target(
+    workspace_id: str,
+    body: ShareTargetRequest,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    ws_id = uuid.UUID(workspace_id)
+    target_id = uuid.UUID(body.target_id)
+
+    # Check caller is admin of destination workspace
+    result = await db.execute(
+        select(UserWorkspace).where(
+            UserWorkspace.user_id == current_user.id,
+            UserWorkspace.workspace_id == ws_id,
+        )
+    )
+    membership = result.scalar_one_or_none()
+    if not membership or membership.role not in ("superadmin", "admin", "consultant"):
+        raise HTTPException(status_code=403, detail="Must be admin or consultant to share targets")
+
+    # Check target exists
+    result = await db.execute(select(Target).where(Target.id == target_id))
+    target = result.scalar_one_or_none()
+    if not target:
+        raise HTTPException(status_code=404, detail="Target not found")
+
+    # Check not already shared
+    existing = await db.execute(
+        select(WorkspaceTarget).where(
+            WorkspaceTarget.workspace_id == ws_id,
+            WorkspaceTarget.target_id == target_id,
+        )
+    )
+    if existing.scalar_one_or_none():
+        raise HTTPException(status_code=400, detail="Target already shared to this workspace")
+
+    wt = WorkspaceTarget(
+        workspace_id=ws_id,
+        target_id=target_id,
+        added_by=current_user.id,
+        role=body.role,
+    )
+    db.add(wt)
+    await db.commit()
+
+    return {"shared": True, "target_id": str(target_id), "workspace_id": str(ws_id)}
+
+
+@router.delete("/{workspace_id}/targets/{target_id}")
+async def unshare_target(
+    workspace_id: str,
+    target_id: str,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    ws_id = uuid.UUID(workspace_id)
+    tid = uuid.UUID(target_id)
+
+    # Check caller is admin
+    result = await db.execute(
+        select(UserWorkspace).where(
+            UserWorkspace.user_id == current_user.id,
+            UserWorkspace.workspace_id == ws_id,
+        )
+    )
+    membership = result.scalar_one_or_none()
+    if not membership or membership.role not in ("superadmin", "admin", "consultant"):
+        raise HTTPException(status_code=403, detail="Must be admin or consultant")
+
+    result = await db.execute(
+        select(WorkspaceTarget).where(
+            WorkspaceTarget.workspace_id == ws_id,
+            WorkspaceTarget.target_id == tid,
+        )
+    )
+    wt = result.scalar_one_or_none()
+    if not wt:
+        raise HTTPException(status_code=404, detail="Shared target not found")
+
+    await db.delete(wt)
+    await db.commit()
+
+    return {"unshared": True}

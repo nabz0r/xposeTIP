@@ -56,6 +56,7 @@ export const getTargets = (params = '') => request(`/targets${params ? '?' + par
 export const createTarget = (data) => request('/targets', { method: 'POST', body: JSON.stringify(data) })
 export const getTarget = (id) => request(`/targets/${id}`)
 export const deleteTarget = (id) => request(`/targets/${id}?confirm=true`, { method: 'DELETE' })
+export const bulkImportTargets = (data) => request('/targets/bulk', { method: 'POST', body: JSON.stringify(data) })
 
 // Scans
 export const createScan = (data) => request('/scans', { method: 'POST', body: JSON.stringify(data) })
@@ -96,6 +97,9 @@ export const inviteMember = (id, data) => request(`/workspaces/${id}/invite`, { 
 export const updateMemberRole = (wsId, userId, data) => request(`/workspaces/${wsId}/members/${userId}`, { method: 'PATCH', body: JSON.stringify(data) })
 export const removeMember = (wsId, userId) => request(`/workspaces/${wsId}/members/${userId}`, { method: 'DELETE' })
 export const switchWorkspace = (workspace_id) => request('/auth/switch-workspace', { method: 'POST', body: JSON.stringify({ workspace_id }) })
+export const getWorkspaceTargets = (id) => request(`/workspaces/${id}/targets`)
+export const shareTarget = (wsId, data) => request(`/workspaces/${wsId}/targets`, { method: 'POST', body: JSON.stringify(data) })
+export const unshareTarget = (wsId, targetId) => request(`/workspaces/${wsId}/targets/${targetId}`, { method: 'DELETE' })
 
 // User profile
 export const updateProfile = (data) => request('/auth/profile', { method: 'PATCH', body: JSON.stringify(data) })

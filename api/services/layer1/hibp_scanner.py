@@ -10,6 +10,20 @@ logger = logging.getLogger(__name__)
 
 HIBP_BASE = "https://haveibeenpwned.com/api/v3"
 PASSWORD_DATA_CLASSES = {"Passwords", "Password hints", "Plaintext Passwords"}
+FINANCIAL_DATA_CLASSES = {
+    "Credit cards", "Bank account numbers", "Credit card CVV",
+    "Credit status information", "Financial investments", "Financial transactions",
+    "Partial credit card data", "Payment histories", "Payment methods",
+}
+PII_DATA_CLASSES = {
+    "Social security numbers", "Government issued IDs", "Passport numbers",
+    "National IDs", "Tax file numbers", "Driver's licenses",
+    "Physical addresses", "Dates of birth",
+}
+HEALTH_DATA_CLASSES = {
+    "Health insurance information", "Medical conditions",
+    "Medical records", "Medical treatments",
+}
 
 
 class HIBPScanner(BaseScanner):
@@ -51,10 +65,46 @@ class HIBPScanner(BaseScanner):
                     for breach in breaches:
                         name = breach.get("Name", "Unknown")
                         date = breach.get("BreachDate", "unknown date")
-                        desc = breach.get("Description", "")[:500]
                         data_classes = set(breach.get("DataClasses", []))
+                        pwned_count = breach.get("PwnedCount", 0)
+                        is_verified = breach.get("IsVerified", False)
+                        is_sensitive = breach.get("IsSensitive", False)
+
+                        # Severity based on exposed data types
                         has_passwords = bool(data_classes & PASSWORD_DATA_CLASSES)
-                        severity = "high" if has_passwords else "medium"
+                        has_financial = bool(data_classes & FINANCIAL_DATA_CLASSES)
+                        has_pii = bool(data_classes & PII_DATA_CLASSES)
+                        has_health = bool(data_classes & HEALTH_DATA_CLASSES)
+
+                        if has_passwords and (has_financial or has_pii):
+                            severity = "critical"
+                        elif has_passwords or has_financial or has_pii or has_health:
+                            severity = "high"
+                        elif is_sensitive:
+                            severity = "high"
+                        elif len(data_classes) >= 3:
+                            severity = "medium"
+                        else:
+                            severity = "low"
+
+                        # Rich description
+                        desc_parts = [f"Breach date: {date}"]
+                        if pwned_count:
+                            desc_parts.append(f"{pwned_count:,} accounts affected")
+                        if data_classes:
+                            desc_parts.append(f"Exposed: {', '.join(sorted(data_classes))}")
+                        if is_sensitive:
+                            desc_parts.append("⚠ Sensitive breach")
+                        description = ". ".join(desc_parts)
+
+                        # Enrich data payload
+                        breach["_severity_reason"] = {
+                            "has_passwords": has_passwords,
+                            "has_financial": has_financial,
+                            "has_pii": has_pii,
+                            "has_health": has_health,
+                            "data_class_count": len(data_classes),
+                        }
 
                         results.append(ScanResult(
                             module=self.MODULE_ID,
@@ -62,12 +112,12 @@ class HIBPScanner(BaseScanner):
                             category="breach",
                             severity=severity,
                             title=f"Found in {name} breach ({date})",
-                            description=f"{name}: {desc}",
+                            description=description,
                             data=breach,
                             url=f"https://haveibeenpwned.com/PwnedWebsites#{name}",
                             indicator_value=email,
                             indicator_type="email",
-                            verified=breach.get("IsVerified", False),
+                            verified=is_verified,
                         ))
                     logger.info("HIBP found %d breaches for %s", len(breaches), email)
                 elif resp.status_code == 404:
