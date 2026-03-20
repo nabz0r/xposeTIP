@@ -3,20 +3,9 @@ from datetime import datetime, timezone
 
 from celery import chord
 from sqlalchemy import select
-from sqlalchemy.orm import Session
-from sqlalchemy import create_engine
 
-from api.config import settings
 from api.tasks import celery_app
-from api.tasks.module_tasks import run_module
-
-sync_engine = create_engine(settings.DATABASE_URL_SYNC)
-
-
-def get_sync_session():
-    from sqlalchemy.orm import sessionmaker
-    SessionLocal = sessionmaker(bind=sync_engine)
-    return SessionLocal()
+from api.tasks.utils import get_sync_session
 
 
 @celery_app.task(name="api.tasks.scan_orchestrator.launch_scan", bind=True)
@@ -54,6 +43,8 @@ def launch_scan(self, scan_id: str):
         scan.module_progress = {mod: "queued" for mod in modules}
         session.commit()
 
+        # Late import to avoid circular dependency
+        from api.tasks.module_tasks import run_module
         # Launch each module task, then finalize
         module_tasks = [run_module.s(scan_id, mod, email) for mod in modules]
         callback = finalize_scan.si(scan_id)

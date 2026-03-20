@@ -6,7 +6,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from api.tasks import celery_app
-from api.tasks.scan_orchestrator import get_sync_session
+from api.tasks.utils import get_sync_session
 
 SCANNER_MAP = {
     "holehe": "api.services.layer1.holehe_scanner.HoleheScanner",
