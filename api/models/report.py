@@ -1,7 +1,7 @@
 import uuid
 from datetime import datetime
 
-from sqlalchemy import ForeignKey, Integer, String, func
+from sqlalchemy import TIMESTAMP, ForeignKey, Integer, String, func
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column
 
@@ -17,4 +17,4 @@ class Report(UUIDMixin, Base):
     file_path: Mapped[str | None] = mapped_column(String(500))
     file_size: Mapped[int | None] = mapped_column(Integer)
     sections: Mapped[dict | None] = mapped_column(JSONB)
-    generated_at: Mapped[datetime] = mapped_column(default=func.now())
+    generated_at: Mapped[datetime] = mapped_column(TIMESTAMP(timezone=True), default=func.now())

@@ -1,7 +1,7 @@
 import uuid
 from datetime import datetime
 
-from sqlalchemy import ForeignKey, String, Text, func
+from sqlalchemy import TIMESTAMP, ForeignKey, String, Text, func
 from sqlalchemy.dialects.postgresql import ARRAY, JSONB
 from sqlalchemy.orm import Mapped, mapped_column
 
@@ -19,7 +19,7 @@ class Account(UUIDMixin, TimestampMixin, Base):
     display_name: Mapped[str | None] = mapped_column(String(255))
     access_token: Mapped[str | None] = mapped_column(Text)
     refresh_token: Mapped[str | None] = mapped_column(Text)
-    token_expires: Mapped[datetime | None] = mapped_column()
+    token_expires: Mapped[datetime | None] = mapped_column(TIMESTAMP(timezone=True))
     scopes: Mapped[list | None] = mapped_column(ARRAY(Text))
-    last_audited: Mapped[datetime | None] = mapped_column()
+    last_audited: Mapped[datetime | None] = mapped_column(TIMESTAMP(timezone=True))
     audit_summary: Mapped[dict | None] = mapped_column(JSONB)

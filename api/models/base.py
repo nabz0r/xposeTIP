@@ -1,8 +1,10 @@
 import uuid
 from datetime import datetime
 
-from sqlalchemy import func
+from sqlalchemy import TIMESTAMP, func
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
+
+TZDateTime = TIMESTAMP(timezone=True)
 
 
 class Base(DeclarativeBase):
@@ -10,8 +12,8 @@ class Base(DeclarativeBase):
 
 
 class TimestampMixin:
-    created_at: Mapped[datetime] = mapped_column(default=func.now())
-    updated_at: Mapped[datetime | None] = mapped_column(default=func.now(), onupdate=func.now())
+    created_at: Mapped[datetime] = mapped_column(TZDateTime, default=func.now())
+    updated_at: Mapped[datetime | None] = mapped_column(TZDateTime, default=func.now(), onupdate=func.now())
 
 
 class UUIDMixin:

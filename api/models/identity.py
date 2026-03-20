@@ -1,7 +1,7 @@
 import uuid
 from datetime import datetime
 
-from sqlalchemy import Float, ForeignKey, Index, String, func
+from sqlalchemy import TIMESTAMP, Float, ForeignKey, Index, String, func
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -20,7 +20,7 @@ class Identity(UUIDMixin, Base):
     source_finding: Mapped[uuid.UUID | None] = mapped_column(ForeignKey("findings.id"))
     confidence: Mapped[float] = mapped_column(Float, default=1.0)
     metadata_: Mapped[dict | None] = mapped_column("metadata", JSONB)
-    created_at: Mapped[datetime] = mapped_column(default=func.now())
+    created_at: Mapped[datetime] = mapped_column(TIMESTAMP(timezone=True), default=func.now())
 
     target = relationship("Target", back_populates="identities")
 
@@ -39,7 +39,7 @@ class IdentityLink(UUIDMixin, Base):
     confidence: Mapped[float] = mapped_column(Float, default=1.0)
     source_module: Mapped[str | None] = mapped_column(String(50))
     evidence: Mapped[dict | None] = mapped_column(JSONB)
-    created_at: Mapped[datetime] = mapped_column(default=func.now())
+    created_at: Mapped[datetime] = mapped_column(TIMESTAMP(timezone=True), default=func.now())
 
     source = relationship("Identity", foreign_keys=[source_id])
     dest = relationship("Identity", foreign_keys=[dest_id])

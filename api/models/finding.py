@@ -1,7 +1,7 @@
 import uuid
 from datetime import datetime
 
-from sqlalchemy import Boolean, ForeignKey, Index, Integer, String, Text, func
+from sqlalchemy import TIMESTAMP, Boolean, ForeignKey, Index, Integer, String, Text, func
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -26,9 +26,9 @@ class Finding(UUIDMixin, Base):
     indicator_type: Mapped[str | None] = mapped_column(String(30))
     verified: Mapped[bool] = mapped_column(Boolean, default=False)
     status: Mapped[str] = mapped_column(String(20), default="active")
-    first_seen: Mapped[datetime] = mapped_column(default=func.now())
-    last_seen: Mapped[datetime] = mapped_column(default=func.now())
-    created_at: Mapped[datetime] = mapped_column(default=func.now())
+    first_seen: Mapped[datetime] = mapped_column(TIMESTAMP(timezone=True), default=func.now())
+    last_seen: Mapped[datetime] = mapped_column(TIMESTAMP(timezone=True), default=func.now())
+    created_at: Mapped[datetime] = mapped_column(TIMESTAMP(timezone=True), default=func.now())
 
     workspace = relationship("Workspace", back_populates="findings")
     scan = relationship("Scan", back_populates="findings")

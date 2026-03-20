@@ -1,7 +1,7 @@
 import uuid
 from datetime import datetime
 
-from sqlalchemy import ForeignKey, Index, Integer, String, Text, func
+from sqlalchemy import TIMESTAMP, ForeignKey, Index, Integer, String, Text, func
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -17,14 +17,14 @@ class Scan(UUIDMixin, Base):
     layer: Mapped[int] = mapped_column(Integer, default=1)
     modules: Mapped[dict | None] = mapped_column(JSONB)
     module_progress: Mapped[dict | None] = mapped_column(JSONB, default={})
-    started_at: Mapped[datetime | None] = mapped_column()
-    completed_at: Mapped[datetime | None] = mapped_column()
+    started_at: Mapped[datetime | None] = mapped_column(TIMESTAMP(timezone=True))
+    completed_at: Mapped[datetime | None] = mapped_column(TIMESTAMP(timezone=True))
     duration_ms: Mapped[int | None] = mapped_column(Integer)
     findings_count: Mapped[int] = mapped_column(Integer, default=0)
     new_findings: Mapped[int] = mapped_column(Integer, default=0)
     error_log: Mapped[str | None] = mapped_column(Text)
     celery_task_id: Mapped[str | None] = mapped_column(String(255))
-    created_at: Mapped[datetime] = mapped_column(default=func.now())
+    created_at: Mapped[datetime] = mapped_column(TIMESTAMP(timezone=True), default=func.now())
 
     workspace = relationship("Workspace", back_populates="scans")
     target = relationship("Target", back_populates="scans")

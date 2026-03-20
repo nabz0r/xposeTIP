@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from sqlalchemy import Boolean, Integer, String, Text
+from sqlalchemy import TIMESTAMP, Boolean, Integer, String, Text
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column
 
@@ -22,4 +22,4 @@ class Module(Base):
     supported_regions: Mapped[dict | None] = mapped_column(JSONB)
     version: Mapped[str | None] = mapped_column(String(20))
     health_status: Mapped[str] = mapped_column(String(20), default="unknown")
-    last_health: Mapped[datetime | None] = mapped_column()
+    last_health: Mapped[datetime | None] = mapped_column(TIMESTAMP(timezone=True))
