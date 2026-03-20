@@ -352,7 +352,10 @@ async def get_defaults(
 
     settings_data = ws.settings or {}
     return {
-        "default_modules": settings_data.get("default_modules", ["email_validator", "holehe", "hibp"]),
+        "default_modules": settings_data.get("default_modules", [
+            "email_validator", "holehe", "emailrep", "gravatar",
+            "epieos", "github_deep", "dns_deep",
+        ]),
         "rate_limit": settings_data.get("rate_limit", 1.0),
     }
 
