@@ -1,0 +1,96 @@
+version: "3.9"
+
+services:
+  postgres:
+    image: pgvector/pgvector:pg16
+    container_name: xpose-postgres
+    environment:
+      POSTGRES_USER: xpose
+      POSTGRES_PASSWORD: xpose
+      POSTGRES_DB: xpose
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U xpose"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    networks:
+      - xpose-net
+
+  redis:
+    image: redis:7-alpine
+    container_name: xpose-redis
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    networks:
+      - xpose-net
+
+  api:
+    build: .
+    container_name: xpose-api
+    command: uvicorn api.main:app --host 0.0.0.0 --port 8000 --reload
+    ports:
+      - "8000:8000"
+    volumes:
+      - .:/app
+    env_file:
+      - .env
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "python", "-c", "import httpx; httpx.get('http://localhost:8000/health')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - xpose-net
+
+  worker:
+    build: .
+    container_name: xpose-worker
+    command: celery -A api.tasks worker -l info -c 4
+    volumes:
+      - .:/app
+    env_file:
+      - .env
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - xpose-net
+
+  beat:
+    build: .
+    container_name: xpose-beat
+    command: celery -A api.tasks beat -l info
+    volumes:
+      - .:/app
+    env_file:
+      - .env
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - xpose-net
+
+volumes:
+  pgdata:
+
+networks:
+  xpose-net:
+    driver: bridge

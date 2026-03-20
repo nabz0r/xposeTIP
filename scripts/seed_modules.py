@@ -1,0 +1,207 @@
+"""Seed the modules table with all xpose scanner modules."""
+import asyncio
+import sys
+import os
+
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+from sqlalchemy import select
+from api.database import async_session
+from api.models.module import Module
+
+MODULES = [
+    # Layer 1 — Passive recon (enabled)
+    {
+        "id": "email_validator",
+        "display_name": "Email Validator",
+        "description": "Validates email format, checks MX records, detects disposable providers",
+        "layer": 1,
+        "category": "metadata",
+        "enabled": True,
+        "requires_auth": False,
+        "rate_limit": {"rpm": 60, "cooldown_sec": 1},
+        "supported_regions": ["*"],
+        "version": "1.0.0",
+    },
+    {
+        "id": "holehe",
+        "display_name": "Holehe",
+        "description": "Email-to-account enumeration across 120+ services",
+        "layer": 1,
+        "category": "social",
+        "enabled": True,
+        "requires_auth": False,
+        "rate_limit": {"rpm": 30, "cooldown_sec": 2},
+        "supported_regions": ["*"],
+        "version": "1.61",
+    },
+    {
+        "id": "maigret",
+        "display_name": "Maigret",
+        "description": "Username enumeration across 2500+ sites",
+        "layer": 1,
+        "category": "social",
+        "enabled": True,
+        "requires_auth": False,
+        "rate_limit": {"rpm": 10, "cooldown_sec": 5},
+        "supported_regions": ["*"],
+        "version": "0.4.4",
+    },
+    {
+        "id": "sherlock",
+        "display_name": "Sherlock",
+        "description": "Username search across 400+ social networks",
+        "layer": 1,
+        "category": "social",
+        "enabled": True,
+        "requires_auth": False,
+        "rate_limit": {"rpm": 5, "cooldown_sec": 10},
+        "supported_regions": ["*"],
+        "version": "0.14.3",
+    },
+    {
+        "id": "ghunt",
+        "display_name": "GHunt",
+        "description": "Google account metadata extraction (requires DroidGuard patch)",
+        "layer": 1,
+        "category": "metadata",
+        "enabled": True,
+        "requires_auth": True,
+        "auth_config": {"note": "Requires DroidGuard patched credentials"},
+        "rate_limit": {"rpm": 10, "cooldown_sec": 5},
+        "supported_regions": ["*"],
+        "version": "2.0.0",
+    },
+    {
+        "id": "hibp",
+        "display_name": "Have I Been Pwned",
+        "description": "Breach history lookup via HIBP API",
+        "layer": 1,
+        "category": "breach",
+        "enabled": True,
+        "requires_auth": True,
+        "auth_config": {"api_key_env": "HIBP_API_KEY"},
+        "rate_limit": {"rpm": 10, "cooldown_sec": 6},
+        "supported_regions": ["*"],
+        "version": "3.0",
+    },
+    {
+        "id": "h8mail",
+        "display_name": "h8mail",
+        "description": "Email breach and credential leak search",
+        "layer": 1,
+        "category": "breach",
+        "enabled": True,
+        "requires_auth": False,
+        "rate_limit": {"rpm": 10, "cooldown_sec": 5},
+        "supported_regions": ["*"],
+        "version": "2.5.6",
+    },
+    # Layer 2 — Public databases (disabled by default)
+    {
+        "id": "maxmind_geo",
+        "display_name": "MaxMind GeoIP",
+        "description": "IP geolocation via MaxMind GeoLite2 local database",
+        "layer": 2,
+        "category": "geolocation",
+        "enabled": False,
+        "requires_auth": True,
+        "auth_config": {"api_key_env": "MAXMIND_LICENSE"},
+        "rate_limit": {"rpm": 120, "cooldown_sec": 0},
+        "supported_regions": ["*"],
+        "version": "1.0.0",
+    },
+    {
+        "id": "whois_lookup",
+        "display_name": "WHOIS Lookup",
+        "description": "Domain registration and ownership data",
+        "layer": 2,
+        "category": "domain_registration",
+        "enabled": False,
+        "requires_auth": False,
+        "rate_limit": {"rpm": 20, "cooldown_sec": 3},
+        "supported_regions": ["*"],
+        "version": "1.0.0",
+    },
+    {
+        "id": "databroker_check",
+        "display_name": "Data Broker Check",
+        "description": "Check presence on data broker sites (Spokeo, WhitePages, BeenVerified, etc.)",
+        "layer": 2,
+        "category": "data_broker",
+        "enabled": False,
+        "requires_auth": False,
+        "rate_limit": {"rpm": 5, "cooldown_sec": 12},
+        "supported_regions": ["US", "UK", "CA", "AU"],
+        "version": "1.0.0",
+    },
+    {
+        "id": "paste_monitor",
+        "display_name": "Paste Monitor",
+        "description": "Search for email/username in public paste sites",
+        "layer": 2,
+        "category": "paste",
+        "enabled": False,
+        "requires_auth": False,
+        "rate_limit": {"rpm": 10, "cooldown_sec": 5},
+        "supported_regions": ["*"],
+        "version": "1.0.0",
+    },
+    # Layer 3 — Voluntary audit (disabled by default)
+    {
+        "id": "google_auditor",
+        "display_name": "Google Account Auditor",
+        "description": "Audit Google account permissions and connected apps (OAuth required)",
+        "layer": 3,
+        "category": "app_permission",
+        "enabled": False,
+        "requires_auth": True,
+        "auth_config": {"oauth_provider": "google"},
+        "rate_limit": {"rpm": 10, "cooldown_sec": 5},
+        "supported_regions": ["*"],
+        "version": "1.0.0",
+    },
+    {
+        "id": "exodus_tracker",
+        "display_name": "Exodus Tracker Audit",
+        "description": "Check apps for known trackers using Exodus Privacy database",
+        "layer": 3,
+        "category": "tracking",
+        "enabled": False,
+        "requires_auth": False,
+        "rate_limit": {"rpm": 30, "cooldown_sec": 2},
+        "supported_regions": ["*"],
+        "version": "1.0.0",
+    },
+    {
+        "id": "browser_auditor",
+        "display_name": "Browser Audit",
+        "description": "Audit browser extensions, cookies, and tracking exposure",
+        "layer": 3,
+        "category": "browser_data",
+        "enabled": False,
+        "requires_auth": False,
+        "rate_limit": {"rpm": 10, "cooldown_sec": 5},
+        "supported_regions": ["*"],
+        "version": "1.0.0",
+    },
+]
+
+
+async def seed():
+    async with async_session() as session:
+        for mod_data in MODULES:
+            result = await session.execute(select(Module).where(Module.id == mod_data["id"]))
+            existing = result.scalar_one_or_none()
+            if existing:
+                for key, value in mod_data.items():
+                    if key != "id":
+                        setattr(existing, key, value)
+            else:
+                session.add(Module(**mod_data))
+        await session.commit()
+        print(f"Seeded {len(MODULES)} modules.")
+
+
+if __name__ == "__main__":
+    asyncio.run(seed())
