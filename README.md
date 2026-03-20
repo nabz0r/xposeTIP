@@ -1,169 +1,99 @@
-# xpose
-
-**Identity Threat Intelligence for humans.**
-
-Your digital identity is scattered across thousands of services, breaches, data brokers, and tracking networks. Enterprises have CrowdStrike and ThreatConnect. You have nothing.
-
-**xpose** maps, scores, and monitors your digital exposure — treating every leaked email, every exposed account, every tracking cookie as an Identity IOC.
-
-Deep OSINT reconnaissance. Consumer-grade UX. Full transparency.
-
----
-
-## How it works
-
-**Enter an email. See everything the internet knows.**
-
-| Layer | What it does | Depth |
-|-------|-------------|-------|
-| **L1 — Passive recon** | Account enumeration, breach history, reputation, Google footprint, username hunt | 2000+ sites |
-| **L2 — Public databases** | IP geolocation, WHOIS, DNS security, data brokers, paste sites | US = max depth |
-| **L3 — Account audit** | Google/Apple OAuth audit, app trackers, browser hygiene | Voluntary, consent |
-| **L4 — Intelligence** | Identity graph, exposure score 0-100, profile aggregation, remediation | Actionable output |
-
-Every finding is an **Identity IOC** — typed, scored, timestamped, linked to your identity graph.
-
----
-
-## Scanners (17 implemented)
-
-### Layer 1 — Passive Recon
-
-| Module ID | Name | Free? | What it finds |
-|-----------|------|-------|---------------|
-| `email_validator` | Email Validator | Yes | Format validation, MX records, disposable provider detection |
-| `holehe` | Holehe | Yes | Account enumeration across 120+ services from email |
-| `hibp` | Have I Been Pwned | $3.50/mo | Full breach history, paste exposure, data classes leaked |
-| `sherlock` | Sherlock | Yes | Username search across 400+ social networks |
-| `gravatar` | Gravatar | Yes | Avatar, profile data, linked social accounts via email hash |
-| `social_enricher` | Social Enricher | Yes | GitHub profile — name, bio, location, repos, followers |
-| `google_profile` | Google Profile | Yes | Gmail/Workspace detection, YouTube presence |
-| `emailrep` | Email Reputation | Yes | Reputation score, breach status, social profiles, domain security |
-| `epieos` | Epieos Google | Yes | Google account discovery — ID, name, profile photo |
-| `fullcontact` | FullContact | API key | Person enrichment — name, age, gender, social profiles |
-| `github_deep` | GitHub Deep | Yes | Full GitHub profile, events, gists, alternate emails from commits |
-| `username_hunter` | Username Hunter | Yes | Username permutations checked on Reddit, Steam, Keybase, GitLab, Medium, HN, Dev.to |
-
-### Layer 2 — Public Databases
-
-| Module ID | Name | Free? | What it finds |
-|-----------|------|-------|---------------|
-| `geoip` | Free GeoIP | Yes | Mail server IP geolocation via ip-api.com |
-| `maxmind_geo` | MaxMind GeoIP | Free tier | IP geolocation via local GeoLite2 database |
-| `whois_lookup` | WHOIS Lookup | Yes | Domain registration, ownership, registrant email match |
-| `leaked_domains` | Leaked Domains | Yes | Breach check via XposedOrNot — breach history, exposed data types |
-| `dns_deep` | DNS Intelligence | Yes | SPF, DMARC, DKIM, MX, NS analysis — email security posture |
-
-### Not yet implemented (seeded, ready for future sprints)
-
-`maigret`, `ghunt`, `h8mail`, `databroker_check`, `paste_monitor`, `google_auditor`, `exodus_tracker`, `browser_auditor`
-
----
-
-## Screenshots
-
-<!-- TODO: Add screenshots -->
-
-### Dashboard
-<!-- ![Dashboard](docs/screenshots/dashboard.png) -->
-
-### Target Detail — Overview
-<!-- ![Target Detail](docs/screenshots/target-detail.png) -->
-
-### Identity Graph
-<!-- ![Identity Graph](docs/screenshots/identity-graph.png) -->
-
-### SVG World Map
-<!-- ![World Map](docs/screenshots/world-map.png) -->
-
----
-
-## Quick start
-
-```bash
-git clone https://github.com/nabz0r/xposeTIP.git
-cd xposeTIP
-cp .env.example .env
-# Edit .env — set SECRET_KEY, optionally add HIBP_API_KEY
-
-docker compose up -d --build
-docker compose exec api alembic upgrade head
-docker compose exec api python scripts/seed_modules.py
-
-# Register admin
-curl -X POST http://localhost:8000/api/v1/auth/register \
-  -H "Content-Type: application/json" \
-  -d '{"email":"admin@example.com","password":"changeme123"}'
-
-# Start frontend
-cd dashboard && npm install && npm run dev
-# Open http://localhost:5173
+```
+                                 ___
+ __ __  _ __    ___   ___  ___  |__ \
+ \ \/ /| '_ \  / _ \ / __|/ _ \    ) |
+  >  < | |_) || (_) |\__ \  __/   / /
+ /_/\_\| .__/  \___/ |___/\___|  |_|
+       |_|    identity threat intelligence
 ```
 
-See [INSTALL.md](INSTALL.md) for detailed setup instructions and troubleshooting.
+[![Python 3.11+](https://img.shields.io/badge/Python-3.11+-blue?logo=python)](https://python.org)
+[![React 18](https://img.shields.io/badge/React-18-61DAFB?logo=react)](https://react.dev)
+[![Docker](https://img.shields.io/badge/Docker-Compose-2496ED?logo=docker)](https://docker.com)
+[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
+[![Scanners](https://img.shields.io/badge/Scanners-25+-00ff88)](#features)
+
+**Enter an email. See what the internet knows. Fix it.**
+
+xpose is an identity threat intelligence platform that bridges deep OSINT tools (SpiderFoot, Maltego) with consumer-grade UX (Aura, NordProtect). Every finding is an Identity IOC — with actionable remediation.
+
+<!-- Add demo GIF here -->
 
 ---
 
-## Tech stack
+## Features
 
-FastAPI + SQLAlchemy 2.0 + Alembic + PostgreSQL 16 + pgvector + Redis + Celery + React 18 + Vite + Tailwind CSS 4 + D3.js + Recharts + Docker Compose
+| Layer | Category | Scanners | What it finds |
+|:-----:|----------|----------|---------------|
+| **L1** | Passive Recon | Holehe, Sherlock, HIBP, Gravatar, EmailRep, Epieos, FullContact, GitHub Deep, GHunt, Maigret, h8mail, Reverse Image | Account enumeration (120+ sites), breach history, social profiles, Google metadata, avatar matching |
+| **L2** | Public Databases | DNS Deep, WHOIS, GeoIP, MaxMind, VirusTotal, Shodan, Intelligence X, Hunter.io, Dehashed, XposedOrNot | Domain security (SPF/DMARC/DKIM), IP geolocation, darkweb exposure, credential leaks, subdomain discovery |
+| **L3** | Self-Audit | Google OAuth, Microsoft OAuth, Exodus Tracker, Browser Audit | Drive public files, Gmail forwarding rules, OAuth app permissions, app trackers |
+| **L4** | Intelligence | IP Analyzer, Domain Analyzer, Username Correlator, Breach Correlator, Risk Assessor | Cross-reference all findings, exposure score (0-100), identity graph, prioritized remediation |
 
----
+## Architecture
+
+```mermaid
+graph LR
+    U[User] --> R[React Dashboard<br/>Vite + Tailwind]
+    R --> A[FastAPI<br/>JWT Auth]
+    A --> C[Celery Workers<br/>Chord Orchestration]
+    A --> PG[(PostgreSQL 16<br/>pgvector)]
+    A --> RD[(Redis 7<br/>Broker + Cache)]
+    C --> S1[L1 Scanners<br/>Passive Recon]
+    C --> S2[L2 Scanners<br/>Public DBs]
+    C --> S3[L3 Connectors<br/>OAuth Audit]
+    C --> L4[L4 Intelligence<br/>Analysis Pipeline]
+    L4 --> PG
+```
+
+## Quick Start
+
+```bash
+git clone https://github.com/nabz0r/xposeTIP.git && cd xposeTIP
+cp .env.example .env                          # configure API keys
+docker compose up -d                          # start all 5 services
+docker compose exec api python scripts/seed_modules.py
+# Register at http://localhost:5173 → Add target → Scan
+```
+
+> Full setup guide with troubleshooting: [docs/INSTALL.md](docs/INSTALL.md)
+
+## Documentation
+
+| Document | Description |
+|----------|-------------|
+| [INSTALL.md](docs/INSTALL.md) | Full setup, environment variables, troubleshooting |
+| [ARCHITECTURE.md](docs/ARCHITECTURE.md) | System design, DB schema, scan pipeline, queue flow |
+| [SCANNERS.md](docs/SCANNERS.md) | All 25+ scanners with descriptions and requirements |
+| [API.md](docs/API.md) | REST API reference (also available at `/docs` via Swagger) |
+| [CONTRIBUTING.md](docs/CONTRIBUTING.md) | How to add a scanner, code style, PR guidelines |
 
 ## Roadmap
 
-| Version | Milestone | Status |
-|---------|-----------|--------|
-| **v0.1.0** | Docker, DB models, JWT auth, Holehe + email_validator, Celery orchestrator, React dashboard | Done |
-| **v0.2.0** | HIBP, Sherlock, WHOIS, MaxMind GeoIP, score engine, identity graph, IOC timeline, world heatmap, scanner registry | Done |
-| **v0.3.0** | Gravatar, Social Enricher, Google Profile, Free GeoIP, admin polish, settings UI, API key management | Done |
-| **v0.4.0** | Dynamic API keys (Fernet encrypted), key validation, custom keys, location mapping, scan defaults | Done |
-| **v0.5.0** | 7 new scanners (EmailRep, Epieos, FullContact, GitHub Deep, Username Hunter, Leaked Domains, DNS Intel), profile aggregation, health checks, SVG world map, toast system | Done |
-| **v0.6** | GHunt integration, Maigret deep scan, PDF reports, data broker detection | Next |
-| **v0.7** | Multi-tenant workspaces, SSO (Authlib), consultant mode | |
-| **v0.8** | Pattern detection, remediation playbook, alert system | |
-| **v0.9** | Consumer self-service, MFA (pyotp), Stripe billing | |
-| **v1.0** | Public SaaS beta | |
+| Version | Sprint | Status |
+|---------|--------|--------|
+| v0.1.0 | Docker, Auth, Holehe, Celery, React dashboard | Done |
+| v0.2.0 | HIBP, Sherlock, Score engine, Identity graph | Done |
+| v0.3.0 | Gravatar, Social Enricher, GeoIP, Settings UI | Done |
+| v0.4.0 | Dynamic API keys (Fernet), Location mapping | Done |
+| v0.5.0 | 7 new scanners, Profile aggregation, SVG world map | Done |
+| v0.6.0 | Source scoring, Premium scanners, SaaS connectors | Done |
+| **v0.7.0** | **Intelligence engine, Google OAuth audit, Demo flow, Scaling** | **Done** |
+| v0.8.0 | Maigret, GHunt, Data brokers, WebSocket, Reports | Next |
 
----
+> **Nexus 2026 — June 10-11, Luxembourg** &nbsp; Target: Grand Prize
 
-## Plugin system
+## Tech Stack
 
-Every scanner is a Python class with two methods: `scan()` and `health_check()`.
-
-```python
-class MyScanner(BaseScanner):
-    MODULE_ID = "my_scanner"
-    LAYER = 2
-    CATEGORY = "metadata"
-
-    async def scan(self, email, **kwargs) -> list[ScanResult]:
-        # Your logic here
-        ...
-
-    async def health_check(self) -> bool:
-        return True
-```
-
-Add to `SCANNER_REGISTRY` in `api/tasks/module_tasks.py`, seed the module row, done.
-
----
-
-## Legal
-
-xpose is a **defensive** privacy audit tool. We don't create data — we reveal what's already public.
-
-- Self-audit, security assessments with consent, privacy consulting, research
-- Not for: stalking, unauthorized surveillance, doxing
-
-GDPR-compliant. Right to erasure. Data export. Consent-first.
-
----
+`FastAPI` `SQLAlchemy 2.0` `Celery` `PostgreSQL 16` `Redis 7` `React 18` `Vite` `Tailwind CSS 4` `D3.js` `Recharts` `Docker Compose` `Fernet AES-256` `JWT`
 
 ## License
 
-MIT
+MIT License. See [LICENSE](LICENSE).
 
 ---
 
-*"Privacy is not about having something to hide. Privacy is about having something to protect."*
+<p align="center">
+Built in Luxembourg 🇱🇺 &nbsp;|&nbsp; GDPR compliant &nbsp;|&nbsp; MIT License<br/>
+<sub>Your personal SOC for privacy.</sub>
+</p>
