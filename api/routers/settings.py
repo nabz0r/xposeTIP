@@ -168,6 +168,27 @@ async def list_api_keys(
                 "custom": False,
             })
 
+    # Check for inherited keys from primary workspace
+    primary = await db.execute(
+        select(Workspace).order_by(Workspace.created_at.asc()).limit(1)
+    )
+    primary_ws = primary.scalar_one_or_none()
+    has_inherited = False
+    if primary_ws and primary_ws.id != workspace_id:
+        primary_keys = (primary_ws.settings or {}).get("api_keys", {})
+        for svc in ALL_API_SERVICES:
+            kn = svc["key"]
+            if kn not in api_keys and kn in primary_keys:
+                has_inherited = True
+                # Mark inherited keys in result
+                for r in result:
+                    if r["key_name"] == kn:
+                        r["inherited"] = True
+                        r["configured"] = True
+                        r["masked"] = primary_keys[kn].get("masked", "****")
+                        r["source"] = "inherited"
+                        break
+
     # Add custom keys (stored in workspace.settings but not tied to a service)
     custom_keys = (ws.settings or {}).get("custom_api_keys", {})
     for key_name, entry in custom_keys.items():
@@ -428,31 +449,54 @@ async def update_defaults(
 
 # ---- Helpers for scanners to read workspace API keys ----
 
-def get_workspace_api_key(workspace_id, key_name: str, session) -> Optional[str]:
-    """Read an API key from workspace settings (sync, for Celery workers)."""
-    workspace = session.execute(
-        select(Workspace).where(Workspace.id == workspace_id)
-    ).scalar_one_or_none()
-    if not workspace:
-        return None
-
-    # Check standard api_keys first
-    api_keys = (workspace.settings or {}).get("api_keys", {})
+def _extract_key_from_workspace(ws, key_name: str) -> Optional[str]:
+    """Try to extract an API key from a workspace's settings."""
+    # Check standard api_keys
+    api_keys = (ws.settings or {}).get("api_keys", {})
     entry = api_keys.get(key_name)
     if entry and "encrypted" in entry:
         try:
             return _decrypt(entry["encrypted"])
         except Exception:
-            logger.warning("Failed to decrypt %s for workspace %s", key_name, workspace_id)
+            logger.warning("Failed to decrypt %s for workspace %s", key_name, ws.id)
 
     # Check custom_api_keys
-    custom_keys = (workspace.settings or {}).get("custom_api_keys", {})
+    custom_keys = (ws.settings or {}).get("custom_api_keys", {})
     entry = custom_keys.get(key_name)
     if entry and "encrypted" in entry:
         try:
             return _decrypt(entry["encrypted"])
         except Exception:
-            logger.warning("Failed to decrypt custom %s for workspace %s", key_name, workspace_id)
+            logger.warning("Failed to decrypt custom %s for workspace %s", key_name, ws.id)
 
-    # Fallback to env var
+    return None
+
+
+def get_workspace_api_key(workspace_id, key_name: str, session) -> Optional[str]:
+    """Read an API key from workspace settings (sync, for Celery workers).
+
+    Fallback chain: workspace → primary workspace → env var.
+    """
+    workspace = session.execute(
+        select(Workspace).where(Workspace.id == workspace_id)
+    ).scalar_one_or_none()
+    if not workspace:
+        return os.environ.get(key_name, "") or None
+
+    # 1. Try current workspace
+    val = _extract_key_from_workspace(workspace, key_name)
+    if val:
+        return val
+
+    # 2. Fallback to primary workspace (oldest workspace = first registered)
+    primary = session.execute(
+        select(Workspace).order_by(Workspace.created_at.asc()).limit(1)
+    ).scalar_one_or_none()
+    if primary and primary.id != workspace_id:
+        val = _extract_key_from_workspace(primary, key_name)
+        if val:
+            logger.info("Using inherited API key %s from primary workspace for workspace %s", key_name, workspace_id)
+            return val
+
+    # 3. Fallback to env var
     return os.environ.get(key_name, "") or None

@@ -39,9 +39,9 @@ The exposure score for a US target will naturally be higher (more public data av
 than for an EU target (GDPR reduces public exposure). That's a feature, not a bug —
 it proves the point about digital exposure varying by jurisdiction.
 
-## Current version: v0.22.0
+## Current version: v0.23.0
 
-Sprint 23 complete. 25 scanners (17 implemented + 8 placeholder), 43 scrapers
+Sprint 24 complete. 25 scanners (17 implemented + 8 placeholder), 43 scrapers
 across 7 categories (social, breach, metadata, people_search, identity, archive,
 gaming), 5 intelligence analyzers, digital fingerprint (8-axis radar), persona
 clustering engine, dual score (exposure/threat), identity estimation
@@ -51,7 +51,10 @@ with enforcement, open registration, admin panel (users/workspaces management),
 quick scan from targets list, multi-workspace, RBAC, organizations, source
 scoring, Google/Microsoft OAuth framework, DB-driven name blacklist system,
 reworked targets list (avatar, dual score, timestamp), scan metadata with
-log download, target exposure leaderboard on dashboard.
+log download, target exposure leaderboard on dashboard, DNS SaaS blocklist
+(50+ managed domains), executive summary narrative, global API keys fallback,
+remediation toggle (resolved/dismissed/false_positive/monitoring), Plan & Billing
+moved to Organization page, findings CSV export, inherited keys banner.
 
 ## Tech stack (locked)
 
@@ -367,9 +370,11 @@ IdentityCard: photo strip (up to 6 avatars from multiple sources), gender with c
 bar, age estimation, nationality flags with probability bars. Only renders when identity
 data exists.
 Tabs: Overview | Findings | Graph | Timeline | Locations | Scans.
-- Overview: critical alerts, breach cards, social accounts, mail server locations
+- Overview: executive summary narrative, critical alerts, breach cards, social accounts, mail server locations
 - Findings: filterable table (severity/module/status), expandable rows with FindingDataCard
-  (enriched cards per scanner type: breach, social, emailrep, github, dns, geo)
+  (enriched cards per scanner type: breach, social, emailrep, github, dns, geo, managed domain),
+  remediation progress bar, status toggle (active/resolved/dismissed/false_positive/monitoring),
+  CSV export button
 - Graph: D3 force-directed identity map
 - Timeline: IOC timeline grouped by date
 - Locations: SVG world map with Mercator projection, animated pulse rings, labels
@@ -378,13 +383,14 @@ Module selector: grouped by layer, "Select all Layer N", lock icon for auth-requ
 Toast notifications on scan completion.
 
 ### Settings (/settings)
-Tabs: Plan & Billing (usage bars, feature matrix, plan comparison) | Modules (toggle + health) |
-API Keys (add/validate/delete, Fernet encrypted) | Scan Defaults | Profile (display_name edit).
+Tabs: API Keys (add/validate/delete, Fernet encrypted, inherited keys banner) |
+Modules (toggle + health) | Scan Defaults | Profile (display_name edit) | Data Management.
 
 ### Organization (/organization)
 Multi-workspace management. Create/switch workspaces. Plan badge per workspace.
 Member management: invite by email, role assignment, remove.
 Usage bars (targets, scans/month) with plan limits. Superadmin: inline plan change dropdown.
+Plan & Billing section: usage bars, feature matrix, plan comparison cards with upgrade/switch.
 
 ### System (/system) — superadmin only
 Tabs: Stats | Logs | Users | Workspaces.
@@ -463,6 +469,7 @@ Frontend pre-selects: all enabled+implemented L1 + recommended L2 (dns_deep, lea
 | 21 | v0.21.0 | Admin panel (platform users/workspaces), quick scan, invite flow fix |
 | 22 | v0.21.1 | Documentation update (v0.14.0 → v0.21.0) — zero code changes |
 | 23 | v0.22.0 | Name blacklist system, targets rework, quality polish, scan metadata |
+| 24 | v0.23.0 | DNS SaaS blocklist, executive summary, global API keys, remediation toggle, CSV export |
 
 ## Bugs fixed (v0.5.x)
 
@@ -490,6 +497,7 @@ Frontend pre-selects: all enabled+implemented L1 + recommended L2 (dns_deep, lea
 - Raw tool output in findings.data JSONB forever
 - NEVER store plaintext passwords — breach names + hash prefixes only
 - API keys AES-256 encrypted at rest (Fernet, key derived from SECRET_KEY)
+- API key fallback chain: workspace → primary workspace → env var
 - Every DB query scoped to workspace_id (prepare for RLS in Phase 2)
 - findings is the biggest table — design indexes and queries accordingly
 - US targets = more data available = higher scores. This is correct.

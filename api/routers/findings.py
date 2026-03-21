@@ -92,10 +92,21 @@ async def findings_stats(
     cat_counter = Counter(f.category for f in all_findings)
     mod_counter = Counter(f.module for f in all_findings)
 
+    status_counter = Counter(f.status or "active" for f in all_findings)
+    actionable = [f for f in all_findings if f.severity in ("critical", "high", "medium")]
+    resolved_count = sum(1 for f in actionable if (f.status or "active") in ("resolved", "dismissed", "false_positive"))
+    remediation_progress = round(resolved_count / len(actionable) * 100) if actionable else 100
+
     return {
         "by_severity": dict(sev_counter),
         "by_category": dict(cat_counter),
         "by_module": dict(mod_counter),
+        "by_status": dict(status_counter),
+        "remediation": {
+            "total_actionable": len(actionable),
+            "resolved": resolved_count,
+            "progress_pct": remediation_progress,
+        },
     }
 
 
@@ -123,7 +134,7 @@ async def update_finding(
     user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
-    valid_statuses = {"active", "resolved", "false_positive", "monitoring"}
+    valid_statuses = {"active", "resolved", "false_positive", "monitoring", "dismissed"}
     if body.status not in valid_statuses:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"Status must be one of: {valid_statuses}")
 

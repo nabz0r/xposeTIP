@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useCallback, useRef, Fragment } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import { Radar, ChevronDown, ChevronRight, ExternalLink, Lock, CheckCircle, Filter, Shield, AlertTriangle, Globe, Link2, Unlink, XCircle } from 'lucide-react'
-import { getTarget, getFindings, getScans, createScan, getModules, getScan, getGraph, patchFinding, getTargetSources, getAccounts, startOAuth, auditAccount, disconnectAccount, getFingerprint, getFingerprintHistory, getTargetProfile, cancelScan, getLogs } from '../lib/api'
+import { getTarget, getFindings, getScans, createScan, getModules, getScan, getGraph, patchFinding, getTargetSources, getAccounts, startOAuth, auditAccount, disconnectAccount, getFingerprint, getFingerprintHistory, getTargetProfile, cancelScan, getLogs, getFindingsStats } from '../lib/api'
 import IdentityGraph from '../components/IdentityGraph'
 import FingerprintRadar, { FingerprintTimeline } from '../components/FingerprintRadar'
 import PlatformIcon, { getRemediationLink } from '../components/PlatformIcon'
@@ -376,6 +376,13 @@ export default function TargetDetail() {
                   </div>
                 ))}
               </div>
+              {/* Executive Summary */}
+              {riskAssessment?.data?.executive_summary && (
+                <div className="bg-[#0a0a0f] rounded-lg p-4 mt-4">
+                  <h4 className="text-[10px] uppercase tracking-wider text-gray-500 mb-2">Executive Summary</h4>
+                  <p className="text-sm text-gray-300 leading-relaxed">{riskAssessment.data.executive_summary}</p>
+                </div>
+              )}
             </div>
           )}
 
@@ -604,7 +611,26 @@ export default function TargetDetail() {
       {/* Findings Tab */}
       {activeTab === 'findings' && (
         <div>
-          {/* Filters */}
+          {/* Remediation progress bar */}
+          {(() => {
+            const actionable = findings.filter(f => ['critical', 'high', 'medium'].includes(f.severity))
+            const resolved = actionable.filter(f => ['resolved', 'dismissed', 'false_positive'].includes(f.status))
+            const pct = actionable.length > 0 ? Math.round(resolved.length / actionable.length * 100) : 100
+            const barColor = pct >= 80 ? '#00ff88' : pct >= 50 ? '#ffcc00' : '#ff8800'
+            return actionable.length > 0 ? (
+              <div className="bg-[#12121a] border border-[#1e1e2e] rounded-xl p-4 mb-4">
+                <div className="flex items-center justify-between mb-1.5">
+                  <span className="text-xs text-gray-400">Remediation Progress</span>
+                  <span className="text-xs font-mono" style={{ color: barColor }}>{resolved.length}/{actionable.length} resolved ({pct}%)</span>
+                </div>
+                <div className="h-2 bg-[#0a0a0f] rounded-full overflow-hidden">
+                  <div className="h-full rounded-full transition-all duration-500" style={{ width: `${pct}%`, backgroundColor: barColor }} />
+                </div>
+              </div>
+            ) : null
+          })()}
+
+          {/* Filters + CSV export */}
           <div className="flex gap-3 mb-4">
             <select value={sevFilter} onChange={e => setSevFilter(e.target.value)}
               className="bg-[#12121a] border border-[#1e1e2e] rounded-lg px-3 py-1.5 text-xs text-gray-300 focus:outline-none focus:border-[#00ff88]/50">
@@ -621,8 +647,34 @@ export default function TargetDetail() {
               <option value="all">All statuses</option>
               <option value="active">Active</option>
               <option value="resolved">Resolved</option>
+              <option value="dismissed">Dismissed</option>
               <option value="false_positive">False positive</option>
+              <option value="monitoring">Monitoring</option>
             </select>
+            <button
+              onClick={() => {
+                const rows = [['Severity','Module','Title','Category','Status','Confidence','Indicator','Date','Description'].join(',')]
+                filteredFindings.forEach(f => {
+                  const esc = (v) => `"${String(v || '').replace(/"/g, '""')}"`
+                  rows.push([
+                    esc(f.severity), esc(f.module), esc(f.title), esc(f.category),
+                    esc(f.status), f.confidence != null ? Math.round(f.confidence * 100) + '%' : '',
+                    esc(f.indicator_value), f.first_seen ? new Date(f.first_seen).toISOString() : '',
+                    esc(f.description),
+                  ].join(','))
+                })
+                const blob = new Blob([rows.join('\n')], { type: 'text/csv' })
+                const url = URL.createObjectURL(blob)
+                const a = document.createElement('a')
+                a.href = url
+                a.download = `xpose-findings-${target.email}-${new Date().toISOString().slice(0,10)}.csv`
+                a.click()
+                URL.revokeObjectURL(url)
+              }}
+              className="ml-auto text-xs text-gray-400 hover:text-[#00ff88] border border-[#1e1e2e] rounded-lg px-3 py-1.5 hover:border-[#00ff88]/30 transition-colors"
+            >
+              Export CSV
+            </button>
           </div>
 
           <div className="bg-[#12121a] border border-[#1e1e2e] rounded-xl overflow-hidden">
@@ -696,12 +748,27 @@ export default function TargetDetail() {
                                 </pre>
                               </details>
                             )}
-                            {f.status === 'active' && (
-                              <button onClick={(e) => { e.stopPropagation(); markResolved(f.id) }}
-                                className="inline-flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg bg-[#00ff88]/10 text-[#00ff88] hover:bg-[#00ff88]/20 transition-colors">
-                                <CheckCircle className="w-3 h-3" /> Mark as resolved
-                              </button>
-                            )}
+                            <div className="flex items-center gap-2">
+                              <span className="text-[10px] text-gray-500">Status:</span>
+                              <select
+                                value={f.status || 'active'}
+                                onClick={e => e.stopPropagation()}
+                                onChange={async (e) => {
+                                  e.stopPropagation()
+                                  try {
+                                    await patchFinding(f.id, { status: e.target.value })
+                                    load()
+                                  } catch (err) { alert(err.message) }
+                                }}
+                                className="bg-[#0a0a0f] border border-[#1e1e2e] rounded px-2 py-1 text-xs focus:outline-none focus:border-[#00ff88]/50"
+                              >
+                                <option value="active">Active</option>
+                                <option value="resolved">Resolved</option>
+                                <option value="dismissed">Dismissed</option>
+                                <option value="false_positive">False positive</option>
+                                <option value="monitoring">Monitoring</option>
+                              </select>
+                            </div>
                           </div>
                         </td>
                       </tr>
@@ -1106,6 +1173,19 @@ function FindingDataCard({ finding }) {
   }
 
   // DNS findings
+  // Managed domain (from domain_analyzer)
+  if (d.analyzer === 'domain_analyzer' && d.managed) {
+    return (
+      <div className="bg-[#12121a] rounded-lg p-3 border border-[#3388ff]/20">
+        <div className="flex items-center gap-2">
+          <Globe className="w-4 h-4 text-[#3388ff]" />
+          <span className="text-sm font-medium text-[#3388ff]">Managed Domain</span>
+        </div>
+        <p className="text-xs text-gray-400 mt-1">{d.domain} is a SaaS email provider. DNS records are managed by the provider — no user action needed.</p>
+      </div>
+    )
+  }
+
   if (mod === 'dns_deep' && (d.spf_record !== undefined || d.security_score !== undefined)) {
     if (d.security_score !== undefined) {
       return (

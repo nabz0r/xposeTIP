@@ -1,10 +1,9 @@
 import { useEffect, useState } from 'react'
-import { Key, Cpu, SlidersHorizontal, User, Database, CheckCircle, XCircle, Loader2, Lock, Trash2, AlertTriangle, Plus, CreditCard } from 'lucide-react'
-import { getModules, patchModule, getApiKeys, saveApiKey, validateApiKey, deleteApiKey, saveCustomKey, getDefaults, updateDefaults, getTargets, changePassword, getPlans, getWorkspaceUsage, updateWorkspacePlan } from '../lib/api'
+import { Key, Cpu, SlidersHorizontal, User, Database, CheckCircle, XCircle, Loader2, Lock, Trash2, AlertTriangle, Plus } from 'lucide-react'
+import { getModules, patchModule, getApiKeys, saveApiKey, validateApiKey, deleteApiKey, saveCustomKey, getDefaults, updateDefaults, getTargets, changePassword } from '../lib/api'
 import { useAuth } from '../lib/auth'
 
 const tabs = [
-  { id: 'plan', label: 'Plan & Billing', icon: CreditCard },
   { id: 'apikeys', label: 'API Keys', icon: Key },
   { id: 'modules', label: 'Scanner Modules', icon: Cpu },
   { id: 'defaults', label: 'Scan Defaults', icon: SlidersHorizontal },
@@ -15,7 +14,7 @@ const tabs = [
 const healthColors = { healthy: '#00ff88', unhealthy: '#ff2244', unknown: '#666688' }
 
 export default function Settings() {
-  const [activeTab, setActiveTab] = useState('plan')
+  const [activeTab, setActiveTab] = useState('apikeys')
   const { user } = useAuth()
 
   return (
@@ -37,156 +36,11 @@ export default function Settings() {
         })}
       </div>
 
-      {activeTab === 'plan' && <PlanTab />}
       {activeTab === 'apikeys' && <ApiKeysTab />}
       {activeTab === 'modules' && <ModulesTab />}
       {activeTab === 'defaults' && <DefaultsTab />}
       {activeTab === 'profile' && <ProfileTab user={user} />}
       {activeTab === 'data' && <DataTab />}
-    </div>
-  )
-}
-
-// ===================== Plan & Billing Tab =====================
-function PlanTab() {
-  const [plans, setPlans] = useState(null)
-  const [usage, setUsage] = useState(null)
-  const [loading, setLoading] = useState(true)
-  const [upgrading, setUpgrading] = useState(false)
-
-  const wsId = (() => {
-    const token = localStorage.getItem('xpose_token')
-    if (!token) return null
-    try {
-      return JSON.parse(atob(token.split('.')[1])).workspace_id
-    } catch { return null }
-  })()
-
-  const role = (() => {
-    const token = localStorage.getItem('xpose_token')
-    if (!token) return 'user'
-    try {
-      return JSON.parse(atob(token.split('.')[1])).role || 'user'
-    } catch { return 'user' }
-  })()
-
-  useEffect(() => {
-    if (!wsId) return
-    Promise.all([getPlans(), getWorkspaceUsage(wsId)])
-      .then(([p, u]) => { setPlans(p); setUsage(u) })
-      .catch(() => {})
-      .finally(() => setLoading(false))
-  }, [wsId])
-
-  async function handleChangePlan(planName) {
-    if (!wsId) return
-    if (!confirm(`Switch to ${planName} plan?`)) return
-    setUpgrading(true)
-    try {
-      await updateWorkspacePlan(wsId, planName)
-      const u = await getWorkspaceUsage(wsId)
-      setUsage(u)
-    } catch (err) { alert(err.message) }
-    finally { setUpgrading(false) }
-  }
-
-  if (loading) return <div className="text-gray-500 py-8 text-center">Loading plan info...</div>
-  if (!plans || !usage) return <div className="text-gray-500 py-8 text-center">Could not load plan data.</div>
-
-  const currentPlan = usage.plan
-  const planColors = { free: '#666688', consultant: '#3388ff', enterprise: '#00ff88' }
-
-  function UsageBar({ label, current, max }) {
-    const unlimited = max === -1
-    const pct = unlimited ? (current > 0 ? 15 : 0) : Math.min((current / max) * 100, 100)
-    const color = unlimited ? '#00ff88' : pct >= 90 ? '#ff2244' : pct >= 70 ? '#ff8800' : '#00ff88'
-    return (
-      <div className="space-y-1">
-        <div className="flex justify-between text-xs">
-          <span className="text-gray-400">{label}</span>
-          <span className="font-mono text-gray-300">{current} / {unlimited ? '∞' : max}</span>
-        </div>
-        <div className="h-2 bg-[#0a0a0f] rounded-full overflow-hidden">
-          <div className="h-full rounded-full transition-all duration-500" style={{ width: `${unlimited ? 100 : pct}%`, backgroundColor: color, opacity: unlimited ? 0.3 : 1 }} />
-        </div>
-      </div>
-    )
-  }
-
-  return (
-    <div className="space-y-6">
-      {/* Current plan + usage */}
-      <div className="bg-[#12121a] border border-[#1e1e2e] rounded-xl p-5">
-        <div className="flex items-center gap-3 mb-4">
-          <h3 className="text-sm font-semibold">Current Plan</h3>
-          <span className="text-xs font-mono font-bold px-2 py-0.5 rounded-full"
-            style={{ backgroundColor: (planColors[currentPlan] || '#666688') + '26', color: planColors[currentPlan] || '#666688' }}>
-            {usage.plan_label}
-          </span>
-          {role === 'superadmin' && (
-            <span className="text-[10px] bg-[#ff2244]/15 text-[#ff2244] px-1.5 py-0.5 rounded-full">Superadmin — all limits bypassed</span>
-          )}
-        </div>
-        <div className="space-y-3">
-          <UsageBar label="Targets" current={usage.usage.targets} max={usage.limits.max_targets} />
-          <UsageBar label="Scans this month" current={usage.usage.scans_this_month} max={usage.limits.max_scans_per_month} />
-          <UsageBar label="Max modules/scan" current={usage.limits.max_modules_per_scan === -1 ? '∞' : usage.limits.max_modules_per_scan} max={usage.limits.max_modules_per_scan} />
-        </div>
-        <div className="flex gap-4 mt-4 text-xs text-gray-500">
-          <span>Layers: {usage.limits.allowed_layers.map(l => `L${l}`).join(', ')}</span>
-          <span>Members: {usage.usage.members}</span>
-          <span>Findings: {usage.usage.total_findings}</span>
-        </div>
-      </div>
-
-      {/* Feature matrix */}
-      <div className="bg-[#12121a] border border-[#1e1e2e] rounded-xl p-5">
-        <h3 className="text-sm font-semibold mb-3">Features</h3>
-        <div className="grid grid-cols-2 gap-2">
-          {Object.entries(usage.features).map(([feat, enabled]) => (
-            <div key={feat} className="flex items-center gap-2 text-xs">
-              {enabled ? <CheckCircle className="w-3.5 h-3.5 text-[#00ff88]" /> : <XCircle className="w-3.5 h-3.5 text-gray-600" />}
-              <span className={enabled ? 'text-gray-300' : 'text-gray-600'}>{feat.replace(/_/g, ' ')}</span>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* Plan comparison cards */}
-      <div>
-        <h3 className="text-xs font-semibold uppercase tracking-wider text-gray-500 mb-3">Available Plans</h3>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {Object.entries(plans).map(([name, plan]) => {
-            const isCurrent = name === currentPlan
-            const color = planColors[name] || '#666688'
-            return (
-              <div key={name} className={`bg-[#12121a] border rounded-xl p-5 ${isCurrent ? 'border-[' + color + ']/50' : 'border-[#1e1e2e]'}`}>
-                <div className="flex items-center justify-between mb-3">
-                  <span className="text-sm font-bold" style={{ color }}>{plan.label}</span>
-                  <span className="text-lg font-mono font-bold">
-                    {plan.price === 0 ? 'Free' : `€${plan.price}/mo`}
-                  </span>
-                </div>
-                <p className="text-xs text-gray-500 mb-3">{plan.description}</p>
-                <div className="space-y-1.5 text-xs text-gray-400 mb-4">
-                  <div>{plan.max_targets === -1 ? 'Unlimited' : plan.max_targets} targets</div>
-                  <div>{plan.max_scans_per_month === -1 ? 'Unlimited' : plan.max_scans_per_month} scans/month</div>
-                  <div>Layers: {plan.allowed_layers.map(l => `L${l}`).join(', ')}</div>
-                </div>
-                {isCurrent ? (
-                  <span className="block text-center text-xs font-medium py-2 rounded-lg border border-[#1e1e2e] text-gray-500">Current plan</span>
-                ) : (
-                  <button onClick={() => handleChangePlan(name)} disabled={upgrading}
-                    className="w-full text-center text-xs font-semibold py-2 rounded-lg transition-colors disabled:opacity-50"
-                    style={{ backgroundColor: color + '26', color }}>
-                    {upgrading ? '...' : (plans[currentPlan]?.price || 0) < plan.price ? 'Upgrade' : 'Switch'}
-                  </button>
-                )}
-              </div>
-            )
-          })}
-        </div>
-      </div>
     </div>
   )
 }
@@ -259,6 +113,7 @@ function ApiKeysTab() {
   const activeKeys = keys.filter(k => !k.custom && k.has_module)
   const futureKeys = keys.filter(k => !k.custom && !k.has_module)
   const customKeys = keys.filter(k => k.custom)
+  const inheritedKeys = keys.filter(k => k.inherited)
 
   function KeyCard({ k }) {
     return (
@@ -293,6 +148,7 @@ function ApiKeysTab() {
           </div>
           <div className="flex items-center gap-2 shrink-0">
             {k.source === 'env' && <span className="text-xs bg-[#3388ff]/15 text-[#3388ff] px-2 py-0.5 rounded">ENV</span>}
+            {k.inherited && <span className="text-xs bg-[#ffcc00]/15 text-[#ffcc00] px-2 py-0.5 rounded">Inherited</span>}
           </div>
         </div>
 
@@ -327,6 +183,17 @@ function ApiKeysTab() {
 
   return (
     <div className="space-y-6">
+      {/* Inherited keys banner */}
+      {inheritedKeys.length > 0 && (
+        <div className="bg-[#ffcc00]/10 border border-[#ffcc00]/30 rounded-xl p-4 flex items-center gap-3">
+          <span className="text-[#ffcc00] text-sm">&#x1F511;</span>
+          <div>
+            <p className="text-sm text-[#ffcc00]">{inheritedKeys.length} API key{inheritedKeys.length > 1 ? 's' : ''} inherited from primary workspace</p>
+            <p className="text-[10px] text-gray-400">These keys are shared from the organization's primary workspace. Override by saving your own key.</p>
+          </div>
+        </div>
+      )}
+
       {/* Active Scanner Keys */}
       <div>
         <h3 className="text-xs font-semibold uppercase tracking-wider text-gray-500 mb-3">

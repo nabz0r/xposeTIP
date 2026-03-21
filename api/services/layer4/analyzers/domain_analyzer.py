@@ -13,6 +13,9 @@ import httpx
 
 logger = logging.getLogger(__name__)
 
+# Import managed domains set from risk_assessor
+from api.services.layer4.analyzers.risk_assessor import MANAGED_DOMAINS
+
 
 class DomainAnalyzer:
     def analyze(self, findings: list, identities: list) -> list:
@@ -36,6 +39,24 @@ class DomainAnalyzer:
             return results
 
         for domain in list(domains)[:5]:  # Cap at 5 domains
+            # Skip deep analysis for managed/SaaS domains
+            if domain.lower() in MANAGED_DOMAINS:
+                results.append({
+                    "title": f"Managed domain: {domain}",
+                    "description": f"{domain} is a managed SaaS email provider. DNS configuration is controlled by the provider — no user action possible.",
+                    "category": "intelligence",
+                    "severity": "info",
+                    "data": {
+                        "analyzer": "domain_analyzer",
+                        "domain": domain,
+                        "managed": True,
+                        "provider": domain.split(".")[-2] if "." in domain else domain,
+                    },
+                    "indicator_value": domain,
+                    "indicator_type": "domain",
+                })
+                continue
+
             # Subdomain discovery via crt.sh
             subdomains = self._crt_sh_subdomains(domain)
             if subdomains:

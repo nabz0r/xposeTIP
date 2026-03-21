@@ -7,6 +7,40 @@ from datetime import datetime, timezone
 
 logger = logging.getLogger(__name__)
 
+# SaaS/managed email domains — user cannot fix DNS for these
+MANAGED_DOMAINS = {
+    # Google
+    "gmail.com", "googlemail.com", "google.com",
+    # Microsoft
+    "outlook.com", "hotmail.com", "live.com", "msn.com", "outlook.fr",
+    "outlook.de", "outlook.co.uk", "outlook.es", "outlook.it",
+    # Yahoo
+    "yahoo.com", "yahoo.fr", "yahoo.co.uk", "yahoo.de", "yahoo.it",
+    "yahoo.es", "yahoo.co.jp", "ymail.com", "rocketmail.com",
+    # Apple
+    "icloud.com", "me.com", "mac.com",
+    # ProtonMail
+    "protonmail.com", "proton.me", "pm.me", "protonmail.ch",
+    # Tutanota
+    "tutanota.com", "tutanota.de", "tuta.io",
+    # Zoho
+    "zoho.com", "zohomail.com",
+    # FastMail
+    "fastmail.com", "fastmail.fm",
+    # AOL
+    "aol.com", "aim.com",
+    # GMX / Mail.com
+    "gmx.com", "gmx.de", "gmx.fr", "gmx.net", "mail.com",
+    # French ISPs
+    "orange.fr", "wanadoo.fr", "free.fr", "sfr.fr", "laposte.net",
+    "bbox.fr", "numericable.fr",
+    # German ISPs
+    "t-online.de", "web.de",
+    # Other
+    "yandex.com", "yandex.ru", "mail.ru", "inbox.lv",
+    "hey.com", "pm.me", "posteo.de", "mailbox.org",
+}
+
 REMEDIATION_LINKS = {
     "spotify": "https://www.spotify.com/account/security/",
     "amazon": "https://www.amazon.com/gp/css/account/info/view.html",
@@ -57,6 +91,11 @@ class RiskAssessor:
         # Generate remediation priorities
         remediations = self._generate_remediations(findings)
 
+        # Generate executive summary narrative
+        executive_summary = self._generate_executive_summary(
+            findings, risk_level, critical, high, medium, low, info, remediations,
+        )
+
         results.append({
             "title": f"Risk Assessment: {risk_level}",
             "description": summary,
@@ -66,6 +105,7 @@ class RiskAssessor:
                 "analyzer": "risk_assessor",
                 "risk_level": risk_level,
                 "summary": summary,
+                "executive_summary": executive_summary,
                 "stats": {
                     "critical": critical,
                     "high": high,
@@ -167,8 +207,11 @@ class RiskAssessor:
                 "steps": steps,
             }
 
-        # Weak email security
+        # Weak email security — skip if managed domain
         if "dmarc" in title_lower or "spf" in title_lower or "email security" in title_lower:
+            domain = data.get("domain", "")
+            if domain.lower() in MANAGED_DOMAINS:
+                return None  # SaaS domain — user cannot fix DNS
             if finding.severity in ("critical", "high", "medium"):
                 return {
                     "action": "Strengthen email domain security",
@@ -211,4 +254,83 @@ class RiskAssessor:
                 ],
             }
 
-        return None
+        return None  # no remediation for this finding type
+
+    def _generate_executive_summary(
+        self, findings, risk_level, critical, high, medium, low, info, remediations,
+    ) -> str:
+        """Generate a dynamic narrative executive summary from findings."""
+        total = len(findings)
+        parts = []
+
+        # Opening
+        parts.append(f"This identity has {total} data points across the open internet.")
+
+        # Breach summary
+        breaches = [f for f in findings if f.category == "breach"]
+        if breaches:
+            breach_names = []
+            has_passwords = False
+            for b in breaches:
+                breach_names.append(b.title.replace("Breach: ", "").replace("Data breach: ", ""))
+                data_classes = (b.data or {}).get("DataClasses") or (b.data or {}).get("data_classes") or []
+                if any("password" in dc.lower() for dc in data_classes):
+                    has_passwords = True
+            parts.append(
+                f"Found in {len(breaches)} data breach{'es' if len(breaches) > 1 else ''}"
+                f" ({', '.join(breach_names[:3])}{'...' if len(breach_names) > 3 else ''})."
+                + (" Credentials (passwords) were exposed." if has_passwords else "")
+            )
+
+        # Social footprint
+        socials = [f for f in findings if f.category == "social_account"]
+        if socials:
+            platforms = []
+            for s in socials:
+                p = (s.data or {}).get("platform") or (s.data or {}).get("network") or (s.data or {}).get("service") or ""
+                if p:
+                    platforms.append(p.capitalize())
+            if platforms:
+                parts.append(
+                    f"Active on {len(socials)} platform{'s' if len(socials) > 1 else ''}"
+                    f" ({', '.join(platforms[:5])}{'...' if len(platforms) > 5 else ''})."
+                )
+
+        # Email domain
+        email_domains = set()
+        for f in findings:
+            if f.indicator_type == "email" and f.indicator_value and "@" in f.indicator_value:
+                domain = f.indicator_value.split("@")[1].lower()
+                email_domains.add(domain)
+        managed = [d for d in email_domains if d in MANAGED_DOMAINS]
+        custom = [d for d in email_domains if d not in MANAGED_DOMAINS]
+        if managed:
+            parts.append(f"Email hosted on managed provider ({', '.join(managed)}) — DNS is provider-controlled.")
+        if custom:
+            parts.append(f"Custom domain{'s' if len(custom) > 1 else ''} detected: {', '.join(custom)}.")
+
+        # Geolocation
+        geo_findings = [f for f in findings if f.category == "geolocation" and f.module not in ("geoip", "maxmind_geo")]
+        if geo_findings:
+            locations = set()
+            for g in geo_findings:
+                loc = (g.data or {}).get("city") or (g.data or {}).get("country")
+                if loc:
+                    locations.add(loc)
+            if locations:
+                parts.append(f"Geolocation signals from: {', '.join(list(locations)[:3])}.")
+
+        # Risk closing
+        if critical > 0:
+            parts.append(f"{critical} critical finding{'s' if critical > 1 else ''} require{'s' if critical == 1 else ''} immediate attention.")
+        elif high > 0:
+            parts.append(f"{high} high-severity finding{'s' if high > 1 else ''} should be addressed promptly.")
+        elif medium > 0:
+            parts.append(f"{medium} medium-severity finding{'s' if medium > 1 else ''} identified for review.")
+        else:
+            parts.append("No high-severity issues detected.")
+
+        if remediations:
+            parts.append(f"{len(remediations)} remediation action{'s' if len(remediations) > 1 else ''} recommended.")
+
+        return " ".join(parts)

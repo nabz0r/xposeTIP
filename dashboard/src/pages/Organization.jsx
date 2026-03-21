@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
-import { Users, Plus, Trash2, AlertTriangle, Building2 } from 'lucide-react'
+import { Users, Plus, Trash2, AlertTriangle, Building2, CheckCircle, XCircle, CreditCard } from 'lucide-react'
 import { useAuth } from '../lib/auth'
-import { getWorkspaces, createWorkspace, getWorkspaceMembers, inviteMember, updateMemberRole, removeMember, deleteWorkspace, updateWorkspacePlan, getWorkspaceUsage } from '../lib/api'
+import { getWorkspaces, createWorkspace, getWorkspaceMembers, inviteMember, updateMemberRole, removeMember, deleteWorkspace, updateWorkspacePlan, getWorkspaceUsage, getPlans } from '../lib/api'
 
 const roleColors = {
   superadmin: '#ff2244', admin: '#ff8800', consultant: '#3388ff', client: '#00ff88', user: '#666688',
@@ -22,6 +22,8 @@ export default function Organization() {
   const [showDelete, setShowDelete] = useState(false)
   const [loading, setLoading] = useState(false)
   const [usage, setUsage] = useState(null)
+  const [plans, setPlans] = useState(null)
+  const [upgrading, setUpgrading] = useState(false)
 
   // Check if superadmin from JWT
   const isSuperAdmin = (() => {
@@ -32,7 +34,7 @@ export default function Organization() {
     } catch { return false }
   })()
 
-  useEffect(() => { loadWorkspaces() }, [])
+  useEffect(() => { loadWorkspaces(); getPlans().then(setPlans).catch(() => {}) }, [])
 
   async function loadWorkspaces() {
     try {
@@ -304,6 +306,100 @@ export default function Organization() {
               </table>
             </div>
           </div>
+
+          {/* Plan & Billing */}
+          {usage && plans && (
+            <div>
+              <h3 className="text-sm font-semibold text-gray-400 uppercase tracking-wider flex items-center gap-2 mb-3">
+                <CreditCard className="w-4 h-4" /> Plan & Billing
+              </h3>
+              <div className="bg-[#12121a] border border-[#1e1e2e] rounded-xl p-5 space-y-4">
+                {/* Current plan + usage */}
+                <div className="flex items-center gap-3">
+                  <h4 className="text-sm font-semibold">Current Plan</h4>
+                  <span className="text-xs font-mono font-bold px-2 py-0.5 rounded-full"
+                    style={{ backgroundColor: ({ free: '#666688', consultant: '#3388ff', enterprise: '#00ff88' }[usage.plan] || '#666688') + '26', color: { free: '#666688', consultant: '#3388ff', enterprise: '#00ff88' }[usage.plan] || '#666688' }}>
+                    {usage.plan_label}
+                  </span>
+                  {isSuperAdmin && (
+                    <span className="text-[10px] bg-[#ff2244]/15 text-[#ff2244] px-1.5 py-0.5 rounded-full">Superadmin — all limits bypassed</span>
+                  )}
+                </div>
+                <div className="space-y-2">
+                  {[
+                    { label: 'Targets', current: usage.usage.targets, max: usage.limits.max_targets },
+                    { label: 'Scans this month', current: usage.usage.scans_this_month, max: usage.limits.max_scans_per_month },
+                  ].map(({ label, current, max }) => {
+                    const unlimited = max === -1
+                    const pct = unlimited ? (current > 0 ? 15 : 0) : Math.min((current / max) * 100, 100)
+                    const color = unlimited ? '#00ff88' : pct >= 90 ? '#ff2244' : pct >= 70 ? '#ff8800' : '#00ff88'
+                    return (
+                      <div key={label} className="space-y-1">
+                        <div className="flex justify-between text-xs">
+                          <span className="text-gray-400">{label}</span>
+                          <span className="font-mono text-gray-300">{current} / {unlimited ? '∞' : max}</span>
+                        </div>
+                        <div className="h-2 bg-[#0a0a0f] rounded-full overflow-hidden">
+                          <div className="h-full rounded-full transition-all duration-500" style={{ width: `${unlimited ? 100 : pct}%`, backgroundColor: color, opacity: unlimited ? 0.3 : 1 }} />
+                        </div>
+                      </div>
+                    )
+                  })}
+                </div>
+                {/* Features */}
+                {usage.features && (
+                  <div>
+                    <h4 className="text-xs font-semibold text-gray-500 mb-2">Features</h4>
+                    <div className="grid grid-cols-2 gap-1.5">
+                      {Object.entries(usage.features).map(([feat, enabled]) => (
+                        <div key={feat} className="flex items-center gap-2 text-xs">
+                          {enabled ? <CheckCircle className="w-3 h-3 text-[#00ff88]" /> : <XCircle className="w-3 h-3 text-gray-600" />}
+                          <span className={enabled ? 'text-gray-300' : 'text-gray-600'}>{feat.replace(/_/g, ' ')}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                {/* Plan cards */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-3 pt-2">
+                  {Object.entries(plans).map(([name, plan]) => {
+                    const isCurrent = name === usage.plan
+                    const color = { free: '#666688', consultant: '#3388ff', enterprise: '#00ff88' }[name] || '#666688'
+                    return (
+                      <div key={name} className={`bg-[#0a0a0f] border rounded-xl p-4 ${isCurrent ? 'border-[' + color + ']/50' : 'border-[#1e1e2e]'}`}>
+                        <div className="flex items-center justify-between mb-2">
+                          <span className="text-sm font-bold" style={{ color }}>{plan.label}</span>
+                          <span className="text-sm font-mono font-bold">{plan.price === 0 ? 'Free' : `€${plan.price}/mo`}</span>
+                        </div>
+                        <p className="text-[10px] text-gray-500 mb-2">{plan.description}</p>
+                        <div className="text-[10px] text-gray-400 space-y-0.5 mb-3">
+                          <div>{plan.max_targets === -1 ? '∞' : plan.max_targets} targets</div>
+                          <div>{plan.max_scans_per_month === -1 ? '∞' : plan.max_scans_per_month} scans/mo</div>
+                          <div>L{plan.allowed_layers.join('+L')}</div>
+                        </div>
+                        {isCurrent ? (
+                          <span className="block text-center text-[10px] font-medium py-1.5 rounded-lg border border-[#1e1e2e] text-gray-500">Current</span>
+                        ) : isSuperAdmin ? (
+                          <button onClick={async () => {
+                            if (!confirm(`Switch to ${name} plan?`)) return
+                            setUpgrading(true)
+                            try { await updateWorkspacePlan(activeWs.id, name); loadUsage(activeWs.id); loadWorkspaces() } catch (err) { alert(err.message) }
+                            finally { setUpgrading(false) }
+                          }} disabled={upgrading}
+                            className="w-full text-center text-[10px] font-semibold py-1.5 rounded-lg transition-colors disabled:opacity-50"
+                            style={{ backgroundColor: color + '26', color }}>
+                            {upgrading ? '...' : (plans[usage.plan]?.price || 0) < plan.price ? 'Upgrade' : 'Switch'}
+                          </button>
+                        ) : (
+                          <span className="block text-center text-[10px] text-gray-600 py-1.5">Contact admin</span>
+                        )}
+                      </div>
+                    )
+                  })}
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* Danger zone */}
           {currentRole === 'superadmin' && (
