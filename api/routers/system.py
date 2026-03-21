@@ -137,6 +137,7 @@ async def get_system_logs(
     limit: int = 200,
     level: str | None = None,
     container: str | None = None,
+    scan_id: str | None = None,
     role: str = Depends(require_role("superadmin", "admin")),
 ):
     """Read structured logs from the Redis ring buffer."""
@@ -148,6 +149,9 @@ async def get_system_logs(
             level=level,
             container=container,
         )
+        # Filter by scan_id if provided
+        if scan_id:
+            entries = [e for e in entries if e.get("scan_id") == scan_id]
         return {"logs": entries, "count": len(entries)}
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to read logs: {e}")
@@ -300,3 +304,63 @@ async def list_all_workspaces(
         })
 
     return {"items": result, "total": len(result)}
+
+
+# ---- Name Blacklist Management ----
+
+@router.get("/name-blacklist")
+async def list_blacklist(
+    role: str = Depends(require_role("superadmin", "admin")),
+    db: AsyncSession = Depends(get_db),
+):
+    """List all name blacklist entries."""
+    from api.models.name_blacklist import NameBlacklist
+    entries = await db.execute(select(NameBlacklist).order_by(NameBlacklist.id))
+    return {
+        "items": [
+            {"id": e.id, "pattern": e.pattern, "type": e.type, "reason": e.reason}
+            for e in entries.scalars().all()
+        ]
+    }
+
+
+@router.post("/name-blacklist", status_code=201)
+async def add_blacklist(
+    body: dict,
+    role: str = Depends(require_role("superadmin", "admin")),
+    db: AsyncSession = Depends(get_db),
+):
+    """Add a name blacklist entry."""
+    from api.models.name_blacklist import NameBlacklist
+    pattern = body.get("pattern", "").strip()
+    if not pattern:
+        raise HTTPException(status_code=400, detail="Pattern is required")
+    entry = NameBlacklist(
+        pattern=pattern,
+        type=body.get("type", "exact"),
+        reason=body.get("reason"),
+    )
+    db.add(entry)
+    try:
+        await db.commit()
+    except Exception:
+        await db.rollback()
+        raise HTTPException(status_code=409, detail="Pattern already exists")
+    return {"id": entry.id, "pattern": entry.pattern, "type": entry.type}
+
+
+@router.delete("/name-blacklist/{entry_id}")
+async def remove_blacklist(
+    entry_id: int,
+    role: str = Depends(require_role("superadmin", "admin")),
+    db: AsyncSession = Depends(get_db),
+):
+    """Remove a name blacklist entry."""
+    from api.models.name_blacklist import NameBlacklist
+    result = await db.execute(select(NameBlacklist).where(NameBlacklist.id == entry_id))
+    entry = result.scalar_one_or_none()
+    if not entry:
+        raise HTTPException(status_code=404, detail="Entry not found")
+    await db.delete(entry)
+    await db.commit()
+    return {"deleted": True}

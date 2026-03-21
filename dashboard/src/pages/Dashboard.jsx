@@ -41,6 +41,7 @@ export default function Dashboard() {
   const [moduleData, setModuleData] = useState([])
   const [geoFindings, setGeoFindings] = useState([])
   const [topTarget, setTopTarget] = useState(null)
+  const [topTargets, setTopTargets] = useState([])
   const [topFingerprint, setTopFingerprint] = useState(null)
   const [quickEmail, setQuickEmail] = useState('')
   const [loading, setLoading] = useState(false)
@@ -75,10 +76,11 @@ export default function Dashboard() {
         high: bySev.high || 0,
       })
 
-      // Find most exposed target
-      const sortedTargets = (targetsData.items || []).filter(t => t.exposure_score != null).sort((a, b) => b.exposure_score - a.exposure_score)
+      // Find most exposed targets
+      const sortedTargets = (targetsData.items || []).filter(t => t.exposure_score != null).sort((a, b) => (b.exposure_score + (b.threat_score || 0)) - (a.exposure_score + (a.threat_score || 0)))
       if (sortedTargets.length > 0) {
         setTopTarget(sortedTargets[0])
+        setTopTargets(sortedTargets.slice(0, 5))
         getFingerprint(sortedTargets[0].id).then(setTopFingerprint).catch(() => {})
       }
       setRecentScans(scansData.items?.slice(0, 10) || [])
@@ -220,6 +222,40 @@ export default function Dashboard() {
               </div>
             </div>
           )}
+        </div>
+      )}
+
+      {/* Target Exposure Leaderboard */}
+      {topTargets.length > 0 && (
+        <div className="bg-[#12121a] border border-[#1e1e2e] rounded-xl overflow-hidden">
+          <div className="px-5 py-4 border-b border-[#1e1e2e]">
+            <h2 className="text-sm font-semibold">Most Exposed Targets</h2>
+          </div>
+          <div className="divide-y divide-[#1e1e2e]">
+            {topTargets.map(t => {
+              const expColor = t.exposure_score >= 60 ? '#ff2244' : t.exposure_score >= 30 ? '#ff8800' : '#00ff88'
+              const thrColor = (t.threat_score || 0) >= 60 ? '#ff2244' : (t.threat_score || 0) >= 30 ? '#ff8800' : '#00ff88'
+              return (
+                <div key={t.id} onClick={() => navigate(`/targets/${t.id}`)}
+                  className="flex items-center justify-between px-5 py-3 cursor-pointer hover:bg-white/[0.03] transition-colors">
+                  <div className="flex items-center gap-3 min-w-0">
+                    {t.avatar_url ? (
+                      <img src={t.avatar_url} alt="" className="w-7 h-7 rounded-full border border-[#1e1e2e] shrink-0" />
+                    ) : (
+                      <div className="w-7 h-7 rounded-full bg-[#1e1e2e] flex items-center justify-center text-[10px] font-bold text-gray-500 shrink-0">
+                        {(t.email || '?')[0].toUpperCase()}
+                      </div>
+                    )}
+                    <span className="font-mono text-xs text-gray-300 truncate">{t.primary_name || t.display_name || t.email}</span>
+                  </div>
+                  <div className="flex items-center gap-4 text-xs font-mono shrink-0">
+                    <span style={{ color: expColor }}>Exp: {t.exposure_score}</span>
+                    <span style={{ color: thrColor }}>Threat: {t.threat_score ?? '-'}</span>
+                  </div>
+                </div>
+              )
+            })}
+          </div>
         </div>
       )}
 

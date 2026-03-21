@@ -121,6 +121,17 @@ export default function ProfileHeader({ target, findings, animScore, profileData
         <div className="flex-1 min-w-0">
           <div className="flex items-start justify-between">
             <div>
+              {!displayName && !p.identity_estimation?.gender && (
+                <div className="bg-[#1e1e2e]/50 border border-[#1e1e2e] rounded-lg p-3 mb-2">
+                  <p className="text-sm text-gray-400">
+                    <span className="text-[#ffcc00]">Limited digital footprint.</span>
+                    {' '}{socialCount > 0 ? `${socialCount} accounts detected` : 'No social accounts found'}.
+                    {' '}{breachCount > 0 ? `${breachCount} breach(es) identified.` : 'No breaches found.'}
+                    {' '}{emailProvider ? `Email hosted on ${emailProvider}.` : ''}
+                    {' '}Scan more modules or add API keys to increase intelligence depth.
+                  </p>
+                </div>
+              )}
               {displayName && (
                 <div>
                   <div className="flex items-center gap-2">

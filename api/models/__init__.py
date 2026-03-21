@@ -11,6 +11,7 @@ from api.models.alert import Alert
 from api.models.report import Report
 from api.models.audit_log import AuditLog
 from api.models.workspace_target import WorkspaceTarget
+from api.models.name_blacklist import NameBlacklist
 
 __all__ = [
     "Base",
@@ -28,4 +29,5 @@ __all__ = [
     "Report",
     "AuditLog",
     "WorkspaceTarget",
+    "NameBlacklist",
 ]

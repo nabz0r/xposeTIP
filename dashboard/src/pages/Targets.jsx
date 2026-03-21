@@ -1,9 +1,8 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Plus, Trash2, Search, Eye, Upload, Play } from 'lucide-react'
-import { getTargets, createTarget, deleteTarget, bulkImportTargets, getFingerprint, createScan } from '../lib/api'
+import { getTargets, createTarget, deleteTarget, bulkImportTargets, createScan } from '../lib/api'
 import TargetQuickView from '../components/TargetQuickView'
-import FingerprintRadar from '../components/FingerprintRadar'
 
 const FLAG = (code) => {
   if (!code) return ''
@@ -19,6 +18,34 @@ const scoreColor = (score) => {
   return '#00ff88'
 }
 
+const threatColor = (score) => {
+  if (score == null) return '#666688'
+  if (score >= 60) return '#ff2244'
+  if (score >= 40) return '#ff8800'
+  if (score >= 20) return '#ffcc00'
+  return '#00ff88'
+}
+
+function MiniBar({ value, max = 100, color }) {
+  const pct = Math.min(100, Math.max(0, (value / max) * 100))
+  return (
+    <div className="h-1.5 w-16 bg-[#0a0a0f] rounded-full overflow-hidden mt-0.5">
+      <div className="h-full rounded-full transition-all duration-500" style={{ width: `${pct}%`, backgroundColor: color }} />
+    </div>
+  )
+}
+
+function formatTimestamp(iso) {
+  if (!iso) return 'Never'
+  const d = new Date(iso)
+  const dd = String(d.getDate()).padStart(2, '0')
+  const mm = String(d.getMonth() + 1).padStart(2, '0')
+  const hh = String(d.getHours()).padStart(2, '0')
+  const min = String(d.getMinutes()).padStart(2, '0')
+  const ss = String(d.getSeconds()).padStart(2, '0')
+  return `${dd}/${mm} ${hh}:${min}:${ss}`
+}
+
 export default function Targets() {
   const [targets, setTargets] = useState([])
   const [total, setTotal] = useState(0)
@@ -32,23 +59,12 @@ export default function Targets() {
   const [bulkResult, setBulkResult] = useState(null)
   const [loading, setLoading] = useState(false)
   const [quickViewId, setQuickViewId] = useState(null)
-  const [fingerprints, setFingerprints] = useState({})
+  const [scanningIds, setScanningIds] = useState(new Set())
   const navigate = useNavigate()
 
   useEffect(() => {
     loadTargets()
   }, [search])
-
-  // Load fingerprints for targets that have been scanned
-  useEffect(() => {
-    const scannedTargets = targets.filter(t => t.exposure_score != null && !fingerprints[t.id])
-    if (scannedTargets.length === 0) return
-    scannedTargets.slice(0, 20).forEach(t => {
-      getFingerprint(t.id).then(fp => {
-        setFingerprints(prev => ({ ...prev, [t.id]: fp }))
-      }).catch(() => {})
-    })
-  }, [targets])
 
   async function loadTargets() {
     try {
@@ -106,8 +122,21 @@ export default function Targets() {
     }
   }
 
-  const statusColors = {
-    pending: '#666688', scanning: '#ffcc00', completed: '#00ff88', error: '#ff2244',
+  async function handleQuickScan(e, targetId) {
+    e.stopPropagation()
+    setScanningIds(prev => new Set([...prev, targetId]))
+    try {
+      await createScan({ target_id: targetId })
+      loadTargets()
+    } catch (err) {
+      alert(err.message)
+    } finally {
+      setScanningIds(prev => {
+        const next = new Set(prev)
+        next.delete(targetId)
+        return next
+      })
+    }
   }
 
   return (
@@ -141,85 +170,93 @@ export default function Targets() {
         <table className="w-full text-sm">
           <thead>
             <tr className="text-xs text-gray-500 uppercase tracking-wider border-b border-[#1e1e2e]">
-              <th className="text-left px-5 py-3">Email</th>
-              <th className="text-left px-5 py-3">Country</th>
-              <th className="text-left px-5 py-3">Status</th>
-              <th className="text-left px-5 py-3">Fingerprint</th>
-              <th className="text-left px-5 py-3">Score</th>
-              <th className="text-left px-5 py-3">Last Scanned</th>
-              <th className="text-left px-5 py-3"></th>
+              <th className="text-left px-5 py-3">Target</th>
+              <th className="text-left px-3 py-3">Country</th>
+              <th className="text-left px-3 py-3">Exposure</th>
+              <th className="text-left px-3 py-3">Threat</th>
+              <th className="text-left px-3 py-3">Last Scan</th>
+              <th className="text-left px-3 py-3"></th>
             </tr>
           </thead>
           <tbody>
-            {targets.map((t, i) => (
-              <tr
-                key={t.id}
-                onClick={() => navigate(`/targets/${t.id}`)}
-                className={`border-t border-[#1e1e2e] cursor-pointer hover:bg-white/[0.03] ${i % 2 === 1 ? 'bg-white/[0.02]' : ''}`}
-              >
-                <td className="px-5 py-3 font-mono">{t.email}</td>
-                <td className="px-5 py-3">{t.country_code ? `${FLAG(t.country_code)} ${t.country_code}` : '-'}</td>
-                <td className="px-5 py-3">
-                  <span
-                    className="inline-flex items-center gap-1.5 text-xs font-medium px-2 py-0.5 rounded-full"
-                    style={{ backgroundColor: (statusColors[t.status] || '#666688') + '26', color: statusColors[t.status] || '#666688' }}
-                  >
-                    <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: statusColors[t.status] || '#666688' }} />
-                    {t.status}
-                  </span>
-                </td>
-                <td className="px-5 py-3">
-                  {fingerprints[t.id] ? (
-                    <FingerprintRadar fingerprint={fingerprints[t.id]} size="small" animate={false} />
-                  ) : (
-                    <div className="w-[120px] h-[120px] flex items-center justify-center">
-                      <div className="w-8 h-8 rounded-full border border-[#1e1e2e]" />
+            {targets.map((t, i) => {
+              const name = t.primary_name || t.display_name || ''
+              const isScanning = t.status === 'scanning' || scanningIds.has(t.id)
+              return (
+                <tr
+                  key={t.id}
+                  onClick={() => navigate(`/targets/${t.id}`)}
+                  className={`border-t border-[#1e1e2e] cursor-pointer hover:bg-white/[0.03] ${i % 2 === 1 ? 'bg-white/[0.02]' : ''}`}
+                >
+                  <td className="px-5 py-3">
+                    <div className="flex items-center gap-3">
+                      {t.avatar_url ? (
+                        <img src={t.avatar_url} alt="" className="w-8 h-8 rounded-full border border-[#1e1e2e] shrink-0" />
+                      ) : (
+                        <div className="w-8 h-8 rounded-full bg-[#1e1e2e] flex items-center justify-center text-xs font-bold text-gray-500 shrink-0">
+                          {(t.email || '?')[0].toUpperCase()}
+                        </div>
+                      )}
+                      <div className="min-w-0">
+                        {name && <div className="text-sm font-medium truncate">{name}</div>}
+                        <div className="text-xs font-mono text-gray-400 truncate">{t.email}</div>
+                      </div>
                     </div>
-                  )}
-                </td>
-                <td className="px-5 py-3">
-                  {t.exposure_score != null ? (
-                    <span className="font-mono font-bold" style={{ color: scoreColor(t.exposure_score) }}>
-                      {t.exposure_score}
-                    </span>
-                  ) : '-'}
-                </td>
-                <td className="px-5 py-3 text-gray-400">
-                  {t.last_scanned ? new Date(t.last_scanned).toLocaleDateString() : 'Never'}
-                </td>
-                <td className="px-5 py-3">
-                  <div className="flex items-center gap-2">
-                    {t.status !== 'scanning' ? (
-                      <button
-                        onClick={async (e) => {
-                          e.stopPropagation()
-                          try {
-                            await createScan({ target_id: t.id })
-                            loadTargets()
-                          } catch (err) { alert(err.message) }
-                        }}
-                        className="text-[10px] px-2 py-1 rounded bg-[#00ff88]/10 text-[#00ff88] hover:bg-[#00ff88]/20 transition-colors"
-                        title="Quick scan with default modules"
-                      >
-                        <Play className="w-3 h-3 inline mr-0.5" />Scan
+                  </td>
+                  <td className="px-3 py-3 text-xs">
+                    {t.country_code ? `${FLAG(t.country_code)} ${t.country_code}` : <span className="text-gray-600">-</span>}
+                  </td>
+                  <td className="px-3 py-3">
+                    {t.exposure_score != null ? (
+                      <div>
+                        <span className="font-mono font-bold text-sm" style={{ color: scoreColor(t.exposure_score) }}>
+                          {t.exposure_score}
+                        </span>
+                        <MiniBar value={t.exposure_score} color={scoreColor(t.exposure_score)} />
+                      </div>
+                    ) : <span className="text-gray-600">-</span>}
+                  </td>
+                  <td className="px-3 py-3">
+                    {t.threat_score != null ? (
+                      <div>
+                        <span className="font-mono font-bold text-sm" style={{ color: threatColor(t.threat_score) }}>
+                          {t.threat_score}
+                        </span>
+                        <MiniBar value={t.threat_score} color={threatColor(t.threat_score)} />
+                      </div>
+                    ) : <span className="text-gray-600">-</span>}
+                  </td>
+                  <td className="px-3 py-3 text-xs font-mono text-gray-400">
+                    {formatTimestamp(t.last_scanned)}
+                  </td>
+                  <td className="px-3 py-3">
+                    <div className="flex items-center gap-1.5">
+                      {!isScanning ? (
+                        <button
+                          onClick={(e) => handleQuickScan(e, t.id)}
+                          className="text-[10px] px-2 py-1 rounded bg-[#00ff88]/10 text-[#00ff88] hover:bg-[#00ff88]/20 transition-colors"
+                          title="Quick scan with default modules"
+                        >
+                          <Play className="w-3 h-3 inline mr-0.5" />Scan
+                        </button>
+                      ) : (
+                        <span className="text-[10px] px-2 py-1 rounded bg-[#ffcc00]/10 text-[#ffcc00] animate-pulse">
+                          Scanning...
+                        </span>
+                      )}
+                      <button onClick={(e) => { e.stopPropagation(); setQuickViewId(t.id) }} className="text-gray-500 hover:text-[#00ff88] p-1" title="Quick view">
+                        <Eye className="w-3.5 h-3.5" />
                       </button>
-                    ) : (
-                      <span className="text-[10px] px-2 py-1 rounded bg-[#ffcc00]/10 text-[#ffcc00] animate-pulse">
-                        Scanning...
-                      </span>
-                    )}
-                    <button onClick={(e) => { e.stopPropagation(); setQuickViewId(t.id) }} className="text-gray-500 hover:text-[#00ff88]" title="Quick view">
-                      <Eye className="w-4 h-4" />
-                    </button>
-                    <button onClick={(e) => handleDelete(e, t.id)} className="text-gray-500 hover:text-[#ff2244]">
-                      <Trash2 className="w-4 h-4" />
-                    </button>
-                  </div>
-                </td>
-              </tr>
-            ))}
+                      <button onClick={(e) => handleDelete(e, t.id)} className="text-gray-500 hover:text-[#ff2244] p-1" title="Delete">
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              )
+            })}
             {targets.length === 0 && (
-              <tr><td colSpan={7} className="px-5 py-8 text-center text-gray-500">No targets found</td></tr>
+              <tr><td colSpan={6} className="px-5 py-8 text-center text-gray-500">No targets found</td></tr>
             )}
           </tbody>
         </table>

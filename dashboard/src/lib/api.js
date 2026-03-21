@@ -94,6 +94,11 @@ export const adminListUsers = () => request('/system/users')
 export const adminUpdateUser = (userId, data) => request(`/system/users/${userId}`, { method: 'PATCH', body: JSON.stringify(data) })
 export const adminListWorkspaces = () => request('/system/workspaces')
 
+// Name Blacklist
+export const getNameBlacklist = () => request('/system/name-blacklist')
+export const addNameBlacklist = (data) => request('/system/name-blacklist', { method: 'POST', body: JSON.stringify(data) })
+export const removeNameBlacklist = (id) => request(`/system/name-blacklist/${id}`, { method: 'DELETE' })
+
 // Settings
 export const getApiKeys = () => request('/settings/apikeys')
 export const saveApiKey = (key_name, key_value) => request('/settings/apikeys', { method: 'POST', body: JSON.stringify({ key_name, key_value }) })

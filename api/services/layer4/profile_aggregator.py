@@ -1,5 +1,6 @@
 """Profile Aggregator — merge findings into a unified person profile."""
 import logging
+import re
 from collections import defaultdict
 
 from sqlalchemy import select
@@ -9,6 +10,42 @@ from api.models.finding import Finding
 from api.models.target import Target
 
 logger = logging.getLogger(__name__)
+
+
+def _load_blacklist(session):
+    """Load name blacklist from DB. Returns list of dicts."""
+    try:
+        from api.models.name_blacklist import NameBlacklist
+        entries = session.execute(select(NameBlacklist)).scalars().all()
+        return [{"pattern": e.pattern, "type": e.type} for e in entries]
+    except Exception:
+        logger.debug("Could not load name blacklist from DB, using hardcoded fallback")
+        return []
+
+
+def _is_valid_name_db(name_val, blacklist):
+    """Validate name against DB blacklist."""
+    if not name_val or len(name_val.strip()) < 3:
+        return False
+    val = name_val.strip()
+    val_lower = val.lower()
+
+    for entry in blacklist:
+        pattern = entry["pattern"].lower()
+        rule_type = entry["type"]
+
+        if rule_type == "exact" and val_lower == pattern:
+            return False
+        elif rule_type == "contains" and pattern in val_lower:
+            return False
+        elif rule_type == "regex":
+            try:
+                if re.match(entry["pattern"], val, re.IGNORECASE):
+                    return False
+            except re.error:
+                pass
+
+    return True
 
 
 def aggregate_profile(target_id, workspace_id, session: Session) -> dict:
@@ -386,6 +423,9 @@ def aggregate_profile(target_id, workspace_id, session: Session) -> dict:
 
     profile["field_confidence"] = field_confidence
 
+    # Load DB blacklist (falls back to hardcoded if DB empty/unavailable)
+    db_blacklist = _load_blacklist(session)
+
     # Pick primary name with strict validation
     PLATFORM_NAMES = {
         # Social platforms
@@ -421,19 +461,15 @@ def aggregate_profile(target_id, workspace_id, session: Session) -> dict:
         """Validate: must be a real human name, not a platform or finding title."""
         if not name_val or len(name_val.strip()) < 3:
             return False
+        # Check DB blacklist first (if loaded)
+        if db_blacklist and not _is_valid_name_db(name_val, db_blacklist):
+            return False
+        # Hardcoded fallback
         val = name_val.strip().lower()
-        # Reject platform names
         if val in PLATFORM_NAMES:
             return False
-        # Reject finding-title patterns
         if any(p in val for p in REJECT_PATTERNS):
             return False
-        # Reject single words that look like usernames (all lowercase, no spaces)
-        # Real names usually have at least a first+last or a proper cased single name
-        if " " not in val and val == val.lower() and len(val) < 20:
-            # Check if it matches a known platform
-            if val in PLATFORM_NAMES:
-                return False
         return True
 
     NAME_PRIORITY = ["google_audit", "fullcontact", "github_deep", "social_enricher", "gravatar", "epieos", "emailrep", "scraper_engine"]

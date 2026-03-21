@@ -351,10 +351,13 @@ async def compare_fingerprints(
 
 def _target_dict(t: Target) -> dict:
     fp = (t.profile_data or {}).get("fingerprint") if t.profile_data else None
+    profile = t.profile_data or {}
     return {
         "id": str(t.id),
         "email": t.email,
         "display_name": t.display_name,
+        "avatar_url": t.avatar_url,
+        "primary_name": profile.get("primary_name"),
         "country_code": t.country_code,
         "status": t.status,
         "exposure_score": t.exposure_score,

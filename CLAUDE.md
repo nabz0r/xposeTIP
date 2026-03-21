@@ -39,9 +39,9 @@ The exposure score for a US target will naturally be higher (more public data av
 than for an EU target (GDPR reduces public exposure). That's a feature, not a bug —
 it proves the point about digital exposure varying by jurisdiction.
 
-## Current version: v0.21.0
+## Current version: v0.22.0
 
-Sprint 21 complete. 25 scanners (17 implemented + 8 placeholder), 43 scrapers
+Sprint 23 complete. 25 scanners (17 implemented + 8 placeholder), 43 scrapers
 across 7 categories (social, breach, metadata, people_search, identity, archive,
 gaming), 5 intelligence analyzers, digital fingerprint (8-axis radar), persona
 clustering engine, dual score (exposure/threat), identity estimation
@@ -49,7 +49,9 @@ clustering engine, dual score (exposure/threat), identity estimation
 real-time log viewer with Redis ring buffer, plans (Free/Consultant/Enterprise)
 with enforcement, open registration, admin panel (users/workspaces management),
 quick scan from targets list, multi-workspace, RBAC, organizations, source
-scoring, Google/Microsoft OAuth framework.
+scoring, Google/Microsoft OAuth framework, DB-driven name blacklist system,
+reworked targets list (avatar, dual score, timestamp), scan metadata with
+log download, target exposure leaderboard on dashboard.
 
 ## Tech stack (locked)
 
@@ -342,6 +344,7 @@ All queries scoped to workspace_id. Key tables:
 - **identities** — identity nodes (email, username, social_url, etc.)
 - **identity_links** — edges between identity nodes
 - **modules** — scanner metadata, health_status, auth_config
+- **name_blacklist** — name validation rules (exact/contains/regex), manageable from System UI
 
 Notable column added in v0.5.0: `targets.profile_data` (JSONB) — aggregated profile.
 Migration: `alembic/versions/002_add_profile_data.py`.
@@ -458,6 +461,8 @@ Frontend pre-selects: all enabled+implemented L1 + recommended L2 (dns_deep, lea
 | 19 | v0.19.0 | Scraper UI: test runner, toggle, YAML export/import, bulk operations |
 | 20 | v0.20.0 | Plans (Free/Consultant/Enterprise), open registration, plan enforcement, billing UI |
 | 21 | v0.21.0 | Admin panel (platform users/workspaces), quick scan, invite flow fix |
+| 22 | v0.21.1 | Documentation update (v0.14.0 → v0.21.0) — zero code changes |
+| 23 | v0.22.0 | Name blacklist system, targets rework, quality polish, scan metadata |
 
 ## Bugs fixed (v0.5.x)
 

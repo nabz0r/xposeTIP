@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useCallback, useRef, Fragment } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import { Radar, ChevronDown, ChevronRight, ExternalLink, Lock, CheckCircle, Filter, Shield, AlertTriangle, Globe, Link2, Unlink, XCircle } from 'lucide-react'
-import { getTarget, getFindings, getScans, createScan, getModules, getScan, getGraph, patchFinding, getTargetSources, getAccounts, startOAuth, auditAccount, disconnectAccount, getFingerprint, getFingerprintHistory, getTargetProfile, cancelScan } from '../lib/api'
+import { getTarget, getFindings, getScans, createScan, getModules, getScan, getGraph, patchFinding, getTargetSources, getAccounts, startOAuth, auditAccount, disconnectAccount, getFingerprint, getFingerprintHistory, getTargetProfile, cancelScan, getLogs } from '../lib/api'
 import IdentityGraph from '../components/IdentityGraph'
 import FingerprintRadar, { FingerprintTimeline } from '../components/FingerprintRadar'
 import PlatformIcon, { getRemediationLink } from '../components/PlatformIcon'
@@ -827,43 +827,79 @@ export default function TargetDetail() {
       {/* Scans Tab */}
       {activeTab === 'scans' && (
         <div className="space-y-3">
-          {scans.map(scan => (
-            <div key={scan.id} className="bg-[#12121a] border border-[#1e1e2e] rounded-xl p-4">
-              <div className="flex items-center justify-between mb-3">
-                <div className="flex items-center gap-3">
-                  <span className="inline-flex items-center gap-1.5 text-xs font-medium px-2 py-0.5 rounded-full"
-                    style={{ backgroundColor: (scan.status === 'completed' ? '#00ff88' : scan.status === 'running' ? '#ffcc00' : scan.status === 'failed' ? '#ff2244' : '#666688') + '26',
-                             color: scan.status === 'completed' ? '#00ff88' : scan.status === 'running' ? '#ffcc00' : scan.status === 'failed' ? '#ff2244' : '#666688' }}>
-                    {scan.status}
-                  </span>
-                  <span className="text-xs text-gray-400">{scan.created_at ? new Date(scan.created_at).toLocaleString() : ''}</span>
-                </div>
-                <div className="flex items-center gap-3 text-xs text-gray-400">
-                  <span>{scan.findings_count} findings {scan.duration_ms ? `| ${(scan.duration_ms / 1000).toFixed(1)}s` : ''}</span>
-                  {(scan.status === 'running' || scan.status === 'queued') && (
+          {scans.map(scan => {
+            const startedAt = scan.created_at ? new Date(scan.created_at) : null
+            const completedAt = scan.completed_at ? new Date(scan.completed_at) : null
+            const durationMs = scan.duration_ms || (startedAt && completedAt ? completedAt - startedAt : null)
+            const formatDuration = (ms) => {
+              if (!ms) return '-'
+              const secs = Math.floor(ms / 1000)
+              if (secs < 60) return `${secs}s`
+              return `${Math.floor(secs / 60)}m ${secs % 60}s`
+            }
+            const moduleCount = Object.keys(scan.module_progress || {}).length || (scan.modules || []).length
+            const scanStatusColor = scan.status === 'completed' ? '#00ff88' : scan.status === 'running' ? '#ffcc00' : scan.status === 'failed' ? '#ff2244' : '#666688'
+            return (
+              <div key={scan.id} className="bg-[#12121a] border border-[#1e1e2e] rounded-xl p-4">
+                <div className="flex items-center justify-between mb-3">
+                  <div className="flex items-center gap-3">
+                    <span className="inline-flex items-center gap-1.5 text-xs font-medium px-2 py-0.5 rounded-full"
+                      style={{ backgroundColor: scanStatusColor + '26', color: scanStatusColor }}>
+                      {scan.status}
+                    </span>
+                    <span className="text-xs text-gray-400">
+                      {startedAt ? startedAt.toLocaleString() : ''}
+                      {completedAt ? ` → ${completedAt.toLocaleTimeString()}` : ''}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-3 text-xs text-gray-400">
+                    <span className="font-mono">{moduleCount} modules</span>
+                    <span className="font-mono">{scan.findings_count} findings</span>
+                    <span className="font-mono">{formatDuration(durationMs)}</span>
                     <button
                       onClick={async (e) => {
                         e.stopPropagation()
-                        if (window.confirm('Cancel this scan?')) {
-                          try { await cancelScan(scan.id); load() } catch (err) { console.error('Failed to cancel:', err) }
-                        }
+                        try {
+                          const data = await getLogs(`scan_id=${scan.id}&limit=500`)
+                          const blob = new Blob([JSON.stringify(data.logs || [], null, 2)], { type: 'application/json' })
+                          const url = URL.createObjectURL(blob)
+                          const a = document.createElement('a')
+                          a.href = url
+                          a.download = `scan-${scan.id.slice(0, 8)}-logs.json`
+                          a.click()
+                          URL.revokeObjectURL(url)
+                        } catch { alert('No logs available for this scan') }
                       }}
-                      className="text-xs px-2 py-1 rounded bg-[#ff2244]/10 text-[#ff2244] hover:bg-[#ff2244]/20 transition-colors"
+                      className="text-[10px] text-gray-400 hover:text-[#3388ff]"
+                      title="Download scan logs"
                     >
-                      Cancel
+                      Download Logs
                     </button>
-                  )}
+                    {(scan.status === 'running' || scan.status === 'queued') && (
+                      <button
+                        onClick={async (e) => {
+                          e.stopPropagation()
+                          if (window.confirm('Cancel this scan?')) {
+                            try { await cancelScan(scan.id); load() } catch (err) { console.error('Failed to cancel:', err) }
+                          }
+                        }}
+                        className="text-xs px-2 py-1 rounded bg-[#ff2244]/10 text-[#ff2244] hover:bg-[#ff2244]/20 transition-colors"
+                      >
+                        Cancel
+                      </button>
+                    )}
+                  </div>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {Object.entries(scan.module_progress || {}).map(([mod, status]) => (
+                    <span key={mod} className="text-xs font-mono px-2 py-1 rounded bg-[#0a0a0f] border border-[#1e1e2e]">
+                      {mod}: <span style={{ color: status === 'completed' ? '#00ff88' : status === 'running' ? '#ffcc00' : status === 'failed' ? '#ff2244' : status === 'skipped' ? '#666688' : '#666688' }}>{status}</span>
+                    </span>
+                  ))}
                 </div>
               </div>
-              <div className="flex flex-wrap gap-2">
-                {Object.entries(scan.module_progress || {}).map(([mod, status]) => (
-                  <span key={mod} className="text-xs font-mono px-2 py-1 rounded bg-[#0a0a0f] border border-[#1e1e2e]">
-                    {mod}: <span style={{ color: status === 'completed' ? '#00ff88' : status === 'running' ? '#ffcc00' : status === 'failed' ? '#ff2244' : status === 'skipped' ? '#666688' : '#666688' }}>{status}</span>
-                  </span>
-                ))}
-              </div>
-            </div>
-          ))}
+            )
+          })}
           {scans.length === 0 && <div className="text-center py-8 text-gray-500">No scans yet</div>}
         </div>
       )}
