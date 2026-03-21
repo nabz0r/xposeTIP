@@ -105,13 +105,17 @@ async def system_stats(
 
     # Recent activity
     recent_scans = await db.execute(
-        select(Scan).where(Scan.workspace_id == workspace_id)
+        select(Scan, Target.email)
+        .join(Target, Scan.target_id == Target.id, isouter=True)
+        .where(Scan.workspace_id == workspace_id)
         .order_by(Scan.created_at.desc()).limit(5)
     )
     recent = []
-    for s in recent_scans.scalars().all():
+    for s, email in recent_scans.all():
         recent.append({
             "id": str(s.id),
+            "target_id": str(s.target_id),
+            "target_email": email,
             "status": s.status,
             "modules": s.modules,
             "findings_count": s.findings_count,

@@ -68,7 +68,16 @@ export default function Layout() {
   // Close mobile nav on route change
   useEffect(() => { setMobileOpen(false) }, [location.pathname])
 
-  const currentWs = user?.workspaces?.[0]
+  // Identify current workspace from JWT token's workspace_id
+  const currentWsId = (() => {
+    const token = localStorage.getItem('xpose_token')
+    if (!token) return null
+    try {
+      const payload = JSON.parse(atob(token.split('.')[1]))
+      return payload.workspace_id
+    } catch { return null }
+  })()
+  const currentWs = workspaces.find(ws => ws.id === currentWsId) || user?.workspaces?.[0]
 
   async function handleSwitch(wsId) {
     try {

@@ -235,6 +235,7 @@ export default function Dashboard() {
           <table className="w-full text-sm">
             <thead>
               <tr className="text-xs text-gray-500 uppercase tracking-wider">
+                <th className="text-left px-5 py-3">Target</th>
                 <th className="text-left px-5 py-3">Status</th>
                 <th className="text-left px-5 py-3">Modules</th>
                 <th className="text-left px-5 py-3">Findings</th>
@@ -247,6 +248,7 @@ export default function Dashboard() {
               {recentScans.map((scan, i) => (
                 <tr key={scan.id} onClick={() => scan.target_id && navigate(`/targets/${scan.target_id}`)}
                   className={`border-t border-[#1e1e2e] cursor-pointer hover:bg-white/[0.03] ${i % 2 === 1 ? 'bg-white/[0.02]' : ''}`}>
+                  <td className="px-5 py-3 font-mono text-xs text-gray-300 truncate max-w-[200px]">{scan.target_email || '-'}</td>
                   <td className="px-5 py-3">
                     <span className="inline-flex items-center gap-1.5 text-xs font-medium px-2 py-0.5 rounded-full"
                       style={{ backgroundColor: statusColors[scan.status] + '26', color: statusColors[scan.status] }}>
@@ -257,7 +259,7 @@ export default function Dashboard() {
                   <td className="px-5 py-3 font-mono text-xs text-gray-400">{(scan.modules || []).join(', ')}</td>
                   <td className="px-5 py-3 font-mono">{scan.findings_count}</td>
                   <td className="px-5 py-3 font-mono text-gray-400">{scan.duration_ms ? `${(scan.duration_ms / 1000).toFixed(1)}s` : '-'}</td>
-                  <td className="px-5 py-3 text-gray-400">{scan.created_at ? new Date(scan.created_at).toLocaleDateString() : '-'}</td>
+                  <td className="px-5 py-3 text-gray-400 text-xs font-mono">{scan.created_at ? new Date(scan.created_at).toLocaleString() : '-'}</td>
                   <td className="px-5 py-3 text-right">
                     {(scan.status === 'running' || scan.status === 'queued') && (
                       <button

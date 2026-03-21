@@ -34,7 +34,7 @@ export default function ProfileHeader({ target, findings, animScore, profileData
   const p = profile || {}
   // Never show platform names as the display name — only real names from profile data
   const rawName = p.primary_name || target.display_name || ''
-  const PLATFORM_REJECT = /^(spotify|amazon|reddit|steam|keybase|github|twitter|facebook|instagram|freelancer|replit|medium|gitlab|eventbrite)$/i
+  const PLATFORM_REJECT = /^(spotify|amazon|reddit|steam|keybase|github|twitter|facebook|instagram|freelancer|replit|medium|gitlab|eventbrite|lastpass|1password|bitwarden|dashlane|office365|office|unknown|admin|test|null|none|default|anonymous|noreply|support|contact)$/i
   const displayName = rawName && !PLATFORM_REJECT.test(rawName.trim()) ? rawName : ''
   const avatarUrl = p.primary_avatar || target.avatar_url || null
   const bio = p.bio || ''
@@ -54,8 +54,8 @@ export default function ProfileHeader({ target, findings, animScore, profileData
   const socialCount = socialProfiles.length || findings.filter(f => f.category === 'social_account').length
   const credentialsLeaked = p.breach_summary?.credentials_leaked || false
 
-  const threatScore = p.threat_score ?? target.threat_score ?? null
-  const exposureScore = target.exposure_score ?? null
+  const threatScore = p.threat_score ?? target.threat_score ?? 0
+  const exposureScore = target.exposure_score ?? 0
 
   const exposureColor = (s) => {
     if (s == null) return '#666688'
@@ -122,13 +122,34 @@ export default function ProfileHeader({ target, findings, animScore, profileData
           <div className="flex items-start justify-between">
             <div>
               {displayName && (
-                <div className="flex items-center gap-2">
-                  <h2 className="text-xl font-semibold">{displayName}</h2>
-                  {p.confidence && (
-                    <span className="text-[10px] font-mono px-1.5 py-0.5 rounded-full bg-[#00ff88]/10 text-[#00ff88]">
-                      {Math.round(p.confidence.overall * 100)}% confidence
-                      {p.confidence.cross_verified && ' · cross-verified'}
-                    </span>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <h2 className="text-xl font-semibold">{displayName}</h2>
+                    {p.confidence && (
+                      <span className="text-[10px] font-mono px-1.5 py-0.5 rounded-full bg-[#00ff88]/10 text-[#00ff88]">
+                        {Math.round(p.confidence.overall * 100)}% confidence
+                        {p.confidence.cross_verified && ' · cross-verified'}
+                      </span>
+                    )}
+                  </div>
+                  {/* Per-field confidence pills */}
+                  {p.field_confidence && Object.keys(p.field_confidence).length > 0 && (
+                    <div className="flex flex-wrap gap-1.5 mt-1.5">
+                      {Object.entries(p.field_confidence).map(([field, fc]) => (
+                        <span key={field} className="inline-flex items-center gap-1 text-[10px] font-mono px-1.5 py-0.5 rounded bg-[#1e1e2e]"
+                          title={`${fc.sources?.join(', ')} — ${fc.note || ''}`}>
+                          <span className="text-gray-500">{field.replace('_', ' ')}:</span>
+                          <span className="text-gray-300">{fc.value}</span>
+                          <span style={{
+                            color: fc.confidence >= 0.7 ? '#00ff88' :
+                                   fc.confidence >= 0.4 ? '#ffcc00' : '#ff8800'
+                          }}>{Math.round(fc.confidence * 100)}%</span>
+                          {fc.source_count > 1 && (
+                            <span className="text-gray-600">({fc.source_count})</span>
+                          )}
+                        </span>
+                      ))}
+                    </div>
                   )}
                 </div>
               )}
@@ -207,7 +228,7 @@ export default function ProfileHeader({ target, findings, animScore, profileData
           <div className="flex-1">
             <div className="text-[10px] text-gray-500 uppercase tracking-wider mb-1">Exposure</div>
             <div className="flex items-center gap-2 mb-1">
-              <span className="text-2xl font-mono font-bold" style={{ color: exposureColor(exposureScore) }}>{exposureScore ?? '-'}</span>
+              <span className="text-2xl font-mono font-bold" style={{ color: exposureColor(exposureScore) }}>{exposureScore}</span>
               <span className="text-[10px] text-gray-500">{exposureLabel(exposureScore)}</span>
             </div>
             <div className="h-2 bg-[#0a0a0f] rounded-full overflow-hidden">
@@ -217,7 +238,7 @@ export default function ProfileHeader({ target, findings, animScore, profileData
           <div className="flex-1">
             <div className="text-[10px] text-gray-500 uppercase tracking-wider mb-1">Threat</div>
             <div className="flex items-center gap-2 mb-1">
-              <span className="text-2xl font-mono font-bold" style={{ color: threatColor(threatScore) }}>{threatScore ?? '-'}</span>
+              <span className="text-2xl font-mono font-bold" style={{ color: threatColor(threatScore) }}>{threatScore}</span>
               <span className="text-[10px] text-gray-500">{threatLabel(threatScore)}</span>
             </div>
             <div className="h-2 bg-[#0a0a0f] rounded-full overflow-hidden">

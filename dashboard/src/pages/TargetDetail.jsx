@@ -350,8 +350,8 @@ export default function TargetDetail() {
                     <div className="text-[10px] text-gray-500 uppercase">Exposure</div>
                   </div>
                   <div>
-                    <div className="text-2xl font-mono font-bold" style={{ color: target.threat_score >= 61 ? '#ff2244' : target.threat_score >= 31 ? '#ff8800' : '#00ff88' }}>
-                      {target.threat_score ?? '-'}
+                    <div className="text-2xl font-mono font-bold" style={{ color: (target.threat_score ?? 0) >= 61 ? '#ff2244' : (target.threat_score ?? 0) >= 31 ? '#ff8800' : '#00ff88' }}>
+                      {target.threat_score ?? 0}
                     </div>
                     <div className="text-[10px] text-gray-500 uppercase">Threat</div>
                   </div>

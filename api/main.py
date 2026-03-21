@@ -16,7 +16,17 @@ async def lifespan(app: FastAPI):
     setup_logging(redis_url=settings.REDIS_URL, container="api")
 
     import logging as _logging
-    _logging.getLogger("api").info("xpose API started — Redis log handler active, v0.15.0")
+    _logging.getLogger("api").info("xpose API started — Redis log handler active, v0.18.0")
+
+    # Fernet encryption health check
+    try:
+        from api.routers.settings import _get_fernet
+        f = _get_fernet()
+        test = f.encrypt(b"test")
+        f.decrypt(test)
+        _logging.getLogger("api").info("Fernet encryption healthy")
+    except Exception:
+        _logging.getLogger("api").error("Fernet encryption broken — check SECRET_KEY in .env")
 
     # Optional syslog forwarding
     if settings.SYSLOG_HOST:

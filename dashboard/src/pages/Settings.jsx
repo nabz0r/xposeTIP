@@ -267,10 +267,12 @@ function ModulesTab() {
     getModules().then(setModules).catch(() => {})
   }, [])
 
-  async function toggleModule(id, enabled) {
+  async function toggleModule(id, forcedState) {
+    const mod = modules.find(m => m.id === id)
+    const newState = forcedState !== undefined ? forcedState : !mod.enabled
     try {
-      const updated = await patchModule(id, { enabled })
-      setModules(modules.map(m => m.id === id ? updated : m))
+      const updated = await patchModule(id, { enabled: newState })
+      setModules(prev => prev.map(m => m.id === id ? updated : m))
     } catch (err) { alert(err.message) }
   }
 
@@ -280,9 +282,21 @@ function ModulesTab() {
     <div className="space-y-4">
       {layers.map(layer => {
         const layerMods = modules.filter(m => m.layer === layer)
+        const allEnabled = layerMods.filter(m => m.implemented).every(m => m.enabled)
         return (
           <div key={layer}>
-            <h3 className="text-xs font-semibold uppercase tracking-wider text-gray-500 mb-2">Layer {layer}</h3>
+            <div className="flex items-center justify-between mb-2">
+              <h3 className="text-xs font-semibold uppercase tracking-wider text-gray-500">Layer {layer}</h3>
+              <button
+                onClick={() => {
+                  const newEnabled = !allEnabled
+                  layerMods.filter(m => m.implemented).forEach(mod => toggleModule(mod.id, newEnabled))
+                }}
+                className="text-[10px] px-2 py-0.5 rounded border border-[#1e1e2e] text-gray-400 hover:text-[#00ff88] hover:border-[#00ff88]/30 transition-colors"
+              >
+                {allEnabled ? 'Disable All' : 'Enable All'}
+              </button>
+            </div>
             <div className="bg-[#12121a] border border-[#1e1e2e] rounded-xl overflow-hidden divide-y divide-[#1e1e2e]">
               {layerMods.map(mod => (
                 <div key={mod.id} className={`flex items-center justify-between px-5 py-4 ${!mod.implemented ? 'opacity-50' : ''}`}>
@@ -354,15 +368,41 @@ function DefaultsTab() {
       <div className="bg-[#12121a] border border-[#1e1e2e] rounded-xl p-5">
         <h3 className="text-sm font-semibold mb-3">Default Modules for Quick Scan</h3>
         <p className="text-xs text-gray-500 mb-4">These modules are pre-selected when using Quick Scan on the Dashboard.</p>
-        <div className="space-y-1.5">
-          {modules.map(mod => (
-            <label key={mod.id} className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-white/5 cursor-pointer">
-              <input type="checkbox" checked={defaults.default_modules.includes(mod.id)}
-                onChange={() => toggleModule(mod.id)} className="accent-[#00ff88]" />
-              <span className="text-sm">{mod.display_name}</span>
-              <span className="text-[10px] text-gray-500 ml-auto">L{mod.layer} · {mod.category}</span>
-            </label>
-          ))}
+        <div className="space-y-4">
+          {[...new Set(modules.map(m => m.layer))].sort().map(layer => {
+            const layerMods = modules.filter(m => m.layer === layer)
+            const allSelected = layerMods.every(m => defaults.default_modules.includes(m.id))
+            return (
+              <div key={layer}>
+                <div className="flex items-center justify-between mb-2">
+                  <h3 className="text-xs font-semibold uppercase tracking-wider text-gray-500">Layer {layer}</h3>
+                  <button
+                    onClick={() => {
+                      const layerIds = layerMods.map(m => m.id)
+                      if (allSelected) {
+                        setDefaults(d => ({ ...d, default_modules: d.default_modules.filter(id => !layerIds.includes(id)) }))
+                      } else {
+                        setDefaults(d => ({ ...d, default_modules: [...new Set([...d.default_modules, ...layerIds])] }))
+                      }
+                    }}
+                    className="text-[10px] px-2 py-0.5 rounded border border-[#1e1e2e] text-gray-400 hover:text-[#00ff88] hover:border-[#00ff88]/30 transition-colors"
+                  >
+                    {allSelected ? 'Deselect All' : 'Select All'}
+                  </button>
+                </div>
+                <div className="space-y-1.5">
+                  {layerMods.map(mod => (
+                    <label key={mod.id} className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-white/5 cursor-pointer">
+                      <input type="checkbox" checked={defaults.default_modules.includes(mod.id)}
+                        onChange={() => toggleModule(mod.id)} className="accent-[#00ff88]" />
+                      <span className="text-sm">{mod.display_name}</span>
+                      <span className="text-[10px] text-gray-500 ml-auto">{mod.category}</span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+            )
+          })}
         </div>
       </div>
 

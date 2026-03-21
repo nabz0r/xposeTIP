@@ -238,7 +238,7 @@ function DashboardTab() {
             <table className="w-full text-sm">
               <thead>
                 <tr className="text-xs text-gray-500 uppercase tracking-wider border-b border-[#1e1e2e]">
-                  <th className="text-left px-5 py-3">Scan</th>
+                  <th className="text-left px-5 py-3">Target</th>
                   <th className="text-left px-5 py-3">Status</th>
                   <th className="text-left px-5 py-3">Modules</th>
                   <th className="text-right px-5 py-3">Findings</th>
@@ -250,7 +250,7 @@ function DashboardTab() {
                   const statusColors = { queued: '#666688', running: '#ffcc00', completed: '#00ff88', failed: '#ff2244' }
                   return (
                     <tr key={s.id} className={`border-t border-[#1e1e2e] ${i % 2 === 1 ? 'bg-white/[0.02]' : ''}`}>
-                      <td className="px-5 py-3 font-mono text-xs text-gray-400">{s.id.slice(0, 8)}</td>
+                      <td className="px-5 py-3 font-mono text-xs text-gray-300 truncate max-w-[200px]">{s.target_email || s.id.slice(0, 8)}</td>
                       <td className="px-5 py-3">
                         <span className="inline-flex items-center gap-1.5 text-xs font-medium px-2 py-0.5 rounded-full"
                           style={{ backgroundColor: (statusColors[s.status] || '#666688') + '26', color: statusColors[s.status] || '#666688' }}>

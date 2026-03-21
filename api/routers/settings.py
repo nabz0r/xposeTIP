@@ -125,6 +125,16 @@ async def list_api_keys(
         entry = api_keys.get(key_name)
 
         if entry:
+            # Verify the key can still be decrypted (SECRET_KEY may have changed)
+            masked = entry.get("masked", "****")
+            corrupted = False
+            if entry.get("encrypted"):
+                try:
+                    _get_fernet().decrypt(entry["encrypted"].encode())
+                except Exception:
+                    masked = "\u26a0 CORRUPTED \u2014 re-enter key"
+                    corrupted = True
+
             result.append({
                 "key_name": key_name,
                 "service_name": svc["name"],
@@ -132,12 +142,13 @@ async def list_api_keys(
                 "description": svc["description"],
                 "url": svc["url"],
                 "free": svc["free"],
-                "masked": entry.get("masked", "****"),
-                "valid": entry.get("valid"),
+                "masked": masked,
+                "valid": False if corrupted else entry.get("valid"),
                 "last_validated": entry.get("last_validated"),
                 "configured": True,
                 "has_module": svc["module"] is not None,
                 "custom": False,
+                "corrupted": corrupted,
             })
         else:
             env_val = os.environ.get(key_name, "")
@@ -161,6 +172,15 @@ async def list_api_keys(
     custom_keys = (ws.settings or {}).get("custom_api_keys", {})
     for key_name, entry in custom_keys.items():
         if key_name not in seen_keys:
+            masked = entry.get("masked", "****")
+            corrupted = False
+            if entry.get("encrypted"):
+                try:
+                    _get_fernet().decrypt(entry["encrypted"].encode())
+                except Exception:
+                    masked = "\u26a0 CORRUPTED \u2014 re-enter key"
+                    corrupted = True
+
             result.append({
                 "key_name": key_name,
                 "service_name": None,
@@ -168,12 +188,13 @@ async def list_api_keys(
                 "description": entry.get("description", "Custom API key"),
                 "url": None,
                 "free": None,
-                "masked": entry.get("masked", "****"),
-                "valid": entry.get("valid"),
+                "masked": masked,
+                "valid": False if corrupted else entry.get("valid"),
                 "last_validated": entry.get("last_validated"),
                 "configured": True,
                 "has_module": False,
                 "custom": True,
+                "corrupted": corrupted,
             })
 
     return result

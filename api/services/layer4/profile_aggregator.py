@@ -302,8 +302,93 @@ def aggregate_profile(target_id, workspace_id, session: Session) -> dict:
         "cross_verified": most_common_count > 1,
     }
 
+    # --- Per-field confidence ---
+    field_confidence = {}
+
+    # First name confidence
+    first_names = []
+    for n in profile["names"]:
+        parts = n["value"].strip().split()
+        if parts:
+            first_names.append({"value": parts[0], "source": n["source"]})
+
+    if first_names:
+        unique_first = set(fn["value"].lower() for fn in first_names)
+        fn_sources = set(fn["source"] for fn in first_names)
+        most_common = max(unique_first, key=lambda v: sum(1 for fn in first_names if fn["value"].lower() == v))
+        match_count = sum(1 for fn in first_names if fn["value"].lower() == most_common)
+        field_confidence["first_name"] = {
+            "value": next(fn["value"] for fn in first_names if fn["value"].lower() == most_common),
+            "confidence": round(min(1.0, match_count * 0.3 + len(fn_sources) * 0.1), 2),
+            "sources": sorted(fn_sources),
+            "source_count": len(fn_sources),
+        }
+
+    # Last name confidence
+    last_names = []
+    for n in profile["names"]:
+        parts = n["value"].strip().split()
+        if len(parts) >= 2:
+            last_names.append({"value": parts[-1], "source": n["source"]})
+
+    if last_names:
+        unique_last = set(ln["value"].lower() for ln in last_names)
+        ln_sources = set(ln["source"] for ln in last_names)
+        most_common = max(unique_last, key=lambda v: sum(1 for ln in last_names if ln["value"].lower() == v))
+        match_count = sum(1 for ln in last_names if ln["value"].lower() == most_common)
+        field_confidence["last_name"] = {
+            "value": next(ln["value"] for ln in last_names if ln["value"].lower() == most_common),
+            "confidence": round(min(1.0, match_count * 0.3 + len(ln_sources) * 0.1), 2),
+            "sources": sorted(ln_sources),
+            "source_count": len(ln_sources),
+        }
+
+    # Gender confidence (from identity_estimation)
+    est = profile.get("identity_estimation", {})
+    if est.get("gender"):
+        field_confidence["gender"] = {
+            "value": est["gender"],
+            "confidence": round(est.get("gender_probability", 0), 2),
+            "sources": ["genderize.io"],
+            "source_count": 1,
+            "note": "Statistical estimation from first name",
+        }
+
+    # Age confidence
+    if est.get("age"):
+        sample = est.get("age_sample_count", 0) or 0
+        field_confidence["age"] = {
+            "value": f"~{est['age']}",
+            "confidence": round(min(0.6, sample / 100000), 2),
+            "sources": ["agify.io"],
+            "source_count": 1,
+            "note": f"Demographic estimate from {sample:,} samples",
+        }
+
+    # Location confidence
+    if profile.get("location"):
+        loc_sources = set()
+        for f_item in findings:
+            d = f_item.data or {}
+            if "extracted" in d and isinstance(d["extracted"], dict):
+                for k, v in d["extracted"].items():
+                    if k not in d and v is not None:
+                        d[k] = v
+            for loc_key in ("location", "currentLocation"):
+                if d.get(loc_key) == profile["location"]:
+                    loc_sources.add(d.get("source") or d.get("scraper") or f_item.module)
+        field_confidence["location"] = {
+            "value": profile["location"],
+            "confidence": round(min(1.0, len(loc_sources) * 0.35), 2),
+            "sources": sorted(loc_sources),
+            "source_count": len(loc_sources),
+        }
+
+    profile["field_confidence"] = field_confidence
+
     # Pick primary name with strict validation
     PLATFORM_NAMES = {
+        # Social platforms
         "spotify", "amazon", "reddit", "steam", "keybase", "github", "twitter",
         "facebook", "instagram", "tiktok", "freelancer", "replit", "eventbrite",
         "xvideos", "medium", "hackernews", "devto", "gitlab", "pinterest",
@@ -311,8 +396,26 @@ def aggregate_profile(target_id, workspace_id, session: Session) -> dict:
         "telegram", "whatsapp", "signal", "youtube", "netflix", "hulu",
         "apple", "google", "microsoft", "yahoo", "outlook", "protonmail",
         "gravatar", "wordpress", "blogger", "bitbucket", "stackoverflow",
+        # Password managers / security tools
+        "lastpass", "1password", "bitwarden", "dashlane", "nordpass", "keepass",
+        # Email services / providers
+        "office365", "office", "tutanota", "zoho", "mailchimp", "sendgrid",
+        "proton", "icloud", "hotmail", "live", "msn", "aol", "gmx",
+        # Freelance / work platforms
+        "fiverr", "upwork", "toptal", "guru", "peopleperhour",
+        # New scraper platforms
+        "imgur", "disqus", "mastodon", "linktree", "aboutme", "about.me",
+        # Generic words that are never real names
+        "unknown", "user", "admin", "test", "null", "none", "default",
+        "anonymous", "noreply", "info", "support", "contact", "hello",
+        "webmaster", "postmaster", "root", "system", "bot", "service",
     }
-    REJECT_PATTERNS = {"account", "found", "not configured", "api key", "profile"}
+    REJECT_PATTERNS = {
+        "account", "found", "not configured", "api key", "profile",
+        "scraper", "scanner", "module", "error", "failed", "timeout",
+        "not found", "no results", "unavailable", "blocked",
+        "http://", "https://", ".com", ".org", ".net",
+    }
 
     def _is_valid_name(name_val):
         """Validate: must be a real human name, not a platform or finding title."""

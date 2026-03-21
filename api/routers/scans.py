@@ -90,7 +90,7 @@ async def list_scans(
     user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
-    q = select(Scan).where(Scan.workspace_id == workspace_id)
+    q = select(Scan, Target.email).join(Target, Scan.target_id == Target.id, isouter=True).where(Scan.workspace_id == workspace_id)
     if target_id:
         q = q.where(Scan.target_id == target_id)
     if scan_status:
@@ -98,8 +98,8 @@ async def list_scans(
     q = q.order_by(Scan.created_at.desc()).offset((page - 1) * per_page).limit(per_page)
 
     result = await db.execute(q)
-    scans = result.scalars().all()
-    return {"items": [_scan_dict(s) for s in scans], "page": page, "per_page": per_page}
+    items = [_scan_dict(scan, target_email=email) for scan, email in result.all()]
+    return {"items": items, "page": page, "per_page": per_page}
 
 
 @router.get("/{scan_id}")
@@ -144,10 +144,11 @@ async def cancel_scan(
     return _scan_dict(scan)
 
 
-def _scan_dict(s: Scan) -> dict:
+def _scan_dict(s: Scan, target_email: str = None) -> dict:
     return {
         "id": str(s.id),
         "target_id": str(s.target_id),
+        "target_email": target_email,
         "status": s.status,
         "layer": s.layer,
         "modules": s.modules,
