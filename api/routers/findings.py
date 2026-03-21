@@ -2,7 +2,7 @@ import uuid
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from pydantic import BaseModel
-from sqlalchemy import func, select
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from api.auth.dependencies import get_current_user, get_current_workspace
@@ -17,20 +17,18 @@ class FindingUpdate(BaseModel):
     status: str  # resolved, false_positive, monitoring, active
 
 
-def _dedup_subquery(workspace_id, target_id=None):
-    """Subquery: latest finding ID per (target_id, module, title).
+def _dedup_findings(findings):
+    """Deduplicate findings: keep latest per (target_id, module, title).
 
-    This ensures we only show unique findings — if holehe found
-    "Account on Spotify" in scan 1 and scan 5, only show scan 5's result.
+    Uses Python-side dedup instead of SQL — safer across all DB/ORM versions.
     """
-    q = (
-        select(func.max(Finding.id).label("id"))
-        .where(Finding.workspace_id == workspace_id)
-    )
-    if target_id:
-        q = q.where(Finding.target_id == target_id)
-    q = q.group_by(Finding.target_id, Finding.module, Finding.title)
-    return q.subquery()
+    seen = {}
+    for f in findings:
+        key = (str(f.target_id), f.module, f.title)
+        existing = seen.get(key)
+        if existing is None or (f.created_at and (not existing.created_at or f.created_at > existing.created_at)):
+            seen[key] = f
+    return list(seen.values())
 
 
 @router.get("")
@@ -47,14 +45,9 @@ async def list_findings(
     user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
-    if deduplicate:
-        dedup = _dedup_subquery(workspace_id, target_id)
-        q = select(Finding).join(dedup, Finding.id == dedup.c.id)
-    else:
-        q = select(Finding).where(Finding.workspace_id == workspace_id)
-        if target_id:
-            q = q.where(Finding.target_id == target_id)
-
+    q = select(Finding).where(Finding.workspace_id == workspace_id)
+    if target_id:
+        q = q.where(Finding.target_id == target_id)
     if module:
         q = q.where(Finding.module == module)
     if severity:
@@ -64,12 +57,18 @@ async def list_findings(
     if finding_status:
         q = q.where(Finding.status == finding_status)
 
-    count_q = select(func.count()).select_from(q.subquery())
-    total = await db.scalar(count_q)
-
-    q = q.order_by(Finding.created_at.desc()).offset((page - 1) * per_page).limit(per_page)
+    q = q.order_by(Finding.created_at.desc())
     result = await db.execute(q)
-    findings = result.scalars().all()
+    all_findings = result.scalars().all()
+
+    if deduplicate:
+        all_findings = _dedup_findings(all_findings)
+        # Re-sort after dedup
+        all_findings.sort(key=lambda f: f.created_at or "", reverse=True)
+
+    total = len(all_findings)
+    start = (page - 1) * per_page
+    findings = all_findings[start:start + per_page]
 
     return {"items": [_finding_dict(f, include_data=True) for f in findings], "total": total, "page": page, "per_page": per_page}
 
@@ -81,30 +80,22 @@ async def findings_stats(
     user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
-    # Use deduplicated findings for accurate stats
-    dedup = _dedup_subquery(workspace_id, target_id)
-    dedup_q = select(Finding).join(dedup, Finding.id == dedup.c.id)
+    # Fetch all findings, dedup in Python, then compute stats
+    q = select(Finding).where(Finding.workspace_id == workspace_id)
+    if target_id:
+        q = q.where(Finding.target_id == target_id)
+    result = await db.execute(q)
+    all_findings = _dedup_findings(result.scalars().all())
 
-    by_severity = await db.execute(
-        select(Finding.severity, func.count())
-        .select_from(dedup_q.subquery())
-        .group_by(Finding.severity)
-    )
-    by_category = await db.execute(
-        select(Finding.category, func.count())
-        .select_from(dedup_q.subquery())
-        .group_by(Finding.category)
-    )
-    by_module = await db.execute(
-        select(Finding.module, func.count())
-        .select_from(dedup_q.subquery())
-        .group_by(Finding.module)
-    )
+    from collections import Counter
+    sev_counter = Counter(f.severity for f in all_findings)
+    cat_counter = Counter(f.category for f in all_findings)
+    mod_counter = Counter(f.module for f in all_findings)
 
     return {
-        "by_severity": dict(by_severity.all()),
-        "by_category": dict(by_category.all()),
-        "by_module": dict(by_module.all()),
+        "by_severity": dict(sev_counter),
+        "by_category": dict(cat_counter),
+        "by_module": dict(mod_counter),
     }
 
 

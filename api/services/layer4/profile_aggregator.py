@@ -13,15 +13,7 @@ logger = logging.getLogger(__name__)
 
 def aggregate_profile(target_id, workspace_id, session: Session) -> dict:
     """Build a unified profile from all findings for a target. Sync for Celery."""
-    from sqlalchemy import func as sa_func
-    # Deduplicate: only use latest finding per (module, title)
-    dedup = session.execute(
-        select(sa_func.max(Finding.id).label("id"))
-        .where(Finding.target_id == target_id, Finding.workspace_id == workspace_id, Finding.status == "active")
-        .group_by(Finding.module, Finding.title)
-    ).all()
-    dedup_ids = {row.id for row in dedup}
-
+    # Deduplicate: keep latest finding per (module, title) — Python-side
     all_findings = session.execute(
         select(Finding).where(
             Finding.target_id == target_id,
@@ -29,7 +21,13 @@ def aggregate_profile(target_id, workspace_id, session: Session) -> dict:
             Finding.status == "active",
         )
     ).scalars().all()
-    findings = [f for f in all_findings if f.id in dedup_ids]
+    seen = {}
+    for f in all_findings:
+        key = (f.module, f.title)
+        existing = seen.get(key)
+        if existing is None or (f.created_at and (not existing.created_at or f.created_at > existing.created_at)):
+            seen[key] = f
+    findings = list(seen.values())
 
     profile = {
         "names": [],

@@ -130,20 +130,21 @@ async def get_target(
 ):
     target = await _get_target(db, target_id, workspace_id)
 
-    # Get deduplicated findings count by severity
-    dedup = (
-        select(func.max(Finding.id).label("id"))
-        .where(Finding.target_id == target_id, Finding.workspace_id == workspace_id)
-        .group_by(Finding.module, Finding.title)
-        .subquery()
+    # Get deduplicated findings count by severity (Python-side dedup)
+    result = await db.execute(
+        select(Finding).where(Finding.target_id == target_id, Finding.workspace_id == workspace_id)
     )
-    severity_q = (
-        select(Finding.severity, func.count())
-        .join(dedup, Finding.id == dedup.c.id)
-        .group_by(Finding.severity)
-    )
-    result = await db.execute(severity_q)
-    severity_counts = dict(result.all())
+    all_findings = result.scalars().all()
+    # Dedup: keep latest per (module, title)
+    seen = {}
+    for f in all_findings:
+        key = (f.module, f.title)
+        existing = seen.get(key)
+        if existing is None or (f.created_at and (not existing.created_at or f.created_at > existing.created_at)):
+            seen[key] = f
+    deduped = list(seen.values())
+    from collections import Counter
+    severity_counts = dict(Counter(f.severity for f in deduped))
 
     data = _target_dict(target)
     data["findings_by_severity"] = severity_counts
@@ -269,18 +270,17 @@ async def get_fingerprint(
         try:
             from api.models.finding import Finding as F
             from api.models.identity import Identity as I
-            from sqlalchemy import func as sa_func
-            # Deduplicate: latest finding per (module, title)
-            dedup_rows = session.execute(
-                select(sa_func.max(F.id).label("id"))
-                .where(F.target_id == target_id, F.workspace_id == workspace_id)
-                .group_by(F.module, F.title)
-            ).all()
-            dedup_ids = {r.id for r in dedup_rows}
+            # Deduplicate: latest finding per (module, title) — Python-side
             all_findings = session.execute(
                 select(F).where(F.target_id == target_id, F.workspace_id == workspace_id)
             ).scalars().all()
-            findings = [f for f in all_findings if f.id in dedup_ids]
+            seen_fp = {}
+            for f in all_findings:
+                key = (f.module, f.title)
+                ex = seen_fp.get(key)
+                if ex is None or (f.created_at and (not ex.created_at or f.created_at > ex.created_at)):
+                    seen_fp[key] = f
+            findings = list(seen_fp.values())
             identities = session.execute(
                 select(I).where(I.target_id == target_id, I.workspace_id == workspace_id)
             ).scalars().all()
