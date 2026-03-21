@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useCallback, useRef, Fragment } from 'react'
-import { useParams } from 'react-router-dom'
+import { useParams, Link } from 'react-router-dom'
 import { Radar, ChevronDown, ChevronRight, ExternalLink, Lock, CheckCircle, Filter, Shield, AlertTriangle, Globe, Link2, Unlink } from 'lucide-react'
 import { getTarget, getFindings, getScans, createScan, getModules, getScan, getGraph, patchFinding, getTargetSources, getAccounts, startOAuth, auditAccount, disconnectAccount, getFingerprint, getFingerprintHistory } from '../lib/api'
 import IdentityGraph from '../components/IdentityGraph'
@@ -53,6 +53,7 @@ export default function TargetDetail() {
   const [sevFilter, setSevFilter] = useState('all')
   const [modFilter, setModFilter] = useState('all')
   const [statusFilter, setStatusFilter] = useState('all')
+  const [findingsLimit, setFindingsLimit] = useState(20)
   // Score animation
   const [animScore, setAnimScore] = useState(0)
   const pollRef = useRef(null)
@@ -214,7 +215,7 @@ export default function TargetDetail() {
   const layers = [...new Set(implementedModules.map(m => m.layer))].sort()
 
   // Overview data
-  const breachFindings = findings.filter(f => f.category === 'breach')
+  const breachFindings = findings.filter(f => f.category === 'breach' && !(f.title || '').toLowerCase().includes('not configured') && !(f.title || '').toLowerCase().includes('api key'))
   const socialFindings = findings.filter(f => f.category === 'social_account')
   const geoFindings = findings.filter(f => f.category === 'geolocation')
   const intelFindings = findings.filter(f => f.module === 'intelligence')
@@ -224,6 +225,15 @@ export default function TargetDetail() {
 
   return (
     <div className="space-y-6">
+      {/* Breadcrumb */}
+      <nav className="flex items-center gap-2 text-xs text-gray-500">
+        <Link to="/targets" className="hover:text-[#00ff88] transition-colors">Targets</Link>
+        <span>/</span>
+        <span className="font-mono text-gray-300">{target.email}</span>
+        <span>/</span>
+        <span className="text-gray-400 capitalize">{activeTab}</span>
+      </nav>
+
       {/* Profile Header */}
       <div className="flex items-start gap-4">
         <div className="flex-1">
@@ -256,11 +266,12 @@ export default function TargetDetail() {
               <div className="h-full rounded-full bg-[#00ff88] transition-all duration-500" style={{ width: `${pct}%` }} />
             </div>
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-1.5">
-              {Object.entries(progress).map(([mod, status]) => (
+              {Object.entries(progress).map(([mod, st]) => (
                 <div key={mod} className="flex items-center gap-1.5 text-xs font-mono px-2 py-1 rounded bg-[#0a0a0f]">
-                  {status === 'completed' ? <CheckCircle className="w-3 h-3 text-[#00ff88]" /> :
-                   status === 'running' ? <Radar className="w-3 h-3 text-[#ffcc00] animate-spin" /> :
-                   status === 'failed' ? <AlertTriangle className="w-3 h-3 text-[#ff2244]" /> :
+                  {st === 'completed' ? <CheckCircle className="w-3 h-3 text-[#00ff88]" /> :
+                   st === 'running' ? <Radar className="w-3 h-3 text-[#3388ff] animate-spin" /> :
+                   st === 'failed' ? <AlertTriangle className="w-3 h-3 text-[#ff2244]" /> :
+                   st === 'skipped' ? <CheckCircle className="w-3 h-3 text-[#666688]" /> :
                    <div className="w-3 h-3 rounded-full border border-gray-600" />}
                   <span className="truncate text-gray-400">{mod}</span>
                 </div>
@@ -301,7 +312,12 @@ export default function TargetDetail() {
                   }`} />
                   <div>
                     <h3 className="text-sm font-semibold">RISK LEVEL: {riskAssessment.data?.risk_level}</h3>
-                    <p className="text-xs text-gray-400">{riskAssessment.data?.summary}</p>
+                    <p className="text-xs text-gray-400">{riskAssessment.data?.summary || {
+                      CRITICAL: 'This identity is severely compromised. Immediate action required.',
+                      HIGH: 'Significant exposure detected. Multiple risks need attention.',
+                      MODERATE: 'Some exposure found. Recommended improvements available.',
+                      LOW: 'Minimal exposure. Good digital hygiene.',
+                    }[riskAssessment.data?.risk_level] || ''}</p>
                   </div>
                 </div>
                 <div className="text-right">
@@ -588,7 +604,7 @@ export default function TargetDetail() {
                 </tr>
               </thead>
               <tbody>
-                {filteredFindings.map((f, i) => (
+                {filteredFindings.slice(0, findingsLimit).map((f, i) => (
                   <Fragment key={f.id}>
                     <tr
                       onClick={() => setExpanded(expanded === f.id ? null : f.id)}
@@ -664,6 +680,12 @@ export default function TargetDetail() {
               </tbody>
             </table>
           </div>
+          {filteredFindings.length > findingsLimit && (
+            <button onClick={() => setFindingsLimit(prev => prev + 20)}
+              className="w-full mt-3 py-2.5 text-sm text-gray-400 hover:text-[#00ff88] bg-[#12121a] border border-[#1e1e2e] rounded-lg hover:border-[#00ff88]/30 transition-colors">
+              Show more ({filteredFindings.length - findingsLimit} remaining)
+            </button>
+          )}
         </div>
       )}
 
@@ -876,6 +898,31 @@ export default function TargetDetail() {
   )
 }
 
+const SECURITY_URLS = {
+  spotify: 'https://www.spotify.com/account/security/',
+  twitter: 'https://twitter.com/settings/security',
+  facebook: 'https://www.facebook.com/settings?tab=security',
+  instagram: 'https://www.instagram.com/accounts/privacy_and_security/',
+  github: 'https://github.com/settings/security',
+  google: 'https://myaccount.google.com/security',
+  reddit: 'https://www.reddit.com/prefs/update/',
+  steam: 'https://store.steampowered.com/account/',
+  linkedin: 'https://www.linkedin.com/psettings/',
+  discord: 'https://discord.com/channels/@me',
+  twitch: 'https://www.twitch.tv/settings/security',
+  medium: 'https://medium.com/me/settings/security',
+  gitlab: 'https://gitlab.com/-/profile/account',
+}
+
+const DATA_CLASS_COLORS = {
+  'Passwords': '#ff2244',
+  'Email addresses': '#ff8800',
+  'Phone numbers': '#ffcc00',
+  'IP addresses': '#ff8800',
+  'Credit cards': '#ff2244',
+  'Physical addresses': '#ff8800',
+}
+
 function FindingDataCard({ finding }) {
   const d = finding.data || {}
   const mod = finding.module
@@ -886,8 +933,9 @@ function FindingDataCard({ finding }) {
     const date = d.BreachDate || d.date || ''
     const dataClasses = d.DataClasses || d.data_classes || []
     const count = d.PwnCount || d.records || ''
+    const hasPasswords = dataClasses.some(dc => dc.toLowerCase().includes('password'))
     return (
-      <div className="bg-[#12121a] rounded-lg p-3 border border-[#ff2244]/20">
+      <div className="bg-[#12121a] rounded-lg p-4 border border-[#ff2244]/20">
         <div className="flex items-center gap-2 mb-2">
           <Shield className="w-4 h-4 text-[#ff2244]" />
           <span className="font-semibold text-sm">{name}</span>
@@ -895,11 +943,19 @@ function FindingDataCard({ finding }) {
         </div>
         {count && <p className="text-xs text-gray-400 mb-2">{typeof count === 'number' ? count.toLocaleString() : count} records exposed</p>}
         {dataClasses.length > 0 && (
-          <div className="flex flex-wrap gap-1">
-            {dataClasses.slice(0, 10).map(dc => (
-              <span key={dc} className="text-[10px] px-1.5 py-0.5 rounded bg-[#ff2244]/10 text-[#ff8800]">{dc}</span>
+          <div className="flex flex-wrap gap-1 mb-3">
+            {dataClasses.slice(0, 12).map(dc => (
+              <span key={dc} className="text-[10px] px-1.5 py-0.5 rounded font-mono"
+                style={{ backgroundColor: (DATA_CLASS_COLORS[dc] || '#666688') + '15', color: DATA_CLASS_COLORS[dc] || '#ff8800' }}>
+                {dc}
+              </span>
             ))}
-            {dataClasses.length > 10 && <span className="text-[10px] text-gray-500">+{dataClasses.length - 10}</span>}
+            {dataClasses.length > 12 && <span className="text-[10px] text-gray-500">+{dataClasses.length - 12}</span>}
+          </div>
+        )}
+        {hasPasswords && (
+          <div className="text-xs text-[#ff2244] bg-[#ff2244]/10 rounded px-2 py-1.5">
+            ⚠ Passwords were exposed in this breach — change your password immediately
           </div>
         )}
       </div>
@@ -911,13 +967,22 @@ function FindingDataCard({ finding }) {
     const platform = d.platform || d.network || d.service || ''
     const username = d.username || d.handle || d.login || ''
     const url = finding.url || d.url || ''
+    const secUrl = SECURITY_URLS[platform.toLowerCase()] || null
     return (
-      <div className="bg-[#12121a] rounded-lg p-3 border border-[#3388ff]/20 flex items-center gap-3">
-        {d.avatar_url && <img src={d.avatar_url} alt="" className="w-8 h-8 rounded-full" />}
-        <div>
-          <span className="text-sm font-medium">{platform}</span>
-          {username && <span className="text-xs text-gray-400 ml-2">@{username}</span>}
-          {url && <a href={url} target="_blank" rel="noreferrer" className="block text-[10px] text-[#3388ff] hover:underline mt-0.5">{url.replace(/https?:\/\//, '').substring(0, 50)}</a>}
+      <div className="bg-[#12121a] rounded-lg p-4 border border-[#3388ff]/20">
+        <div className="flex items-center gap-3">
+          {d.avatar_url && <img src={d.avatar_url} alt="" className="w-8 h-8 rounded-full" />}
+          <div className="flex-1 min-w-0">
+            <span className="text-sm font-medium">{platform}</span>
+            {username && <span className="text-xs text-gray-400 ml-2">@{username}</span>}
+            {url && <a href={url} target="_blank" rel="noreferrer" className="block text-[10px] text-[#3388ff] hover:underline mt-0.5">{url.replace(/https?:\/\//, '').substring(0, 50)}</a>}
+          </div>
+          {secUrl && (
+            <a href={secUrl} target="_blank" rel="noreferrer"
+               className="text-[10px] px-2 py-1 rounded bg-[#00ff88]/10 text-[#00ff88] hover:bg-[#00ff88]/20 whitespace-nowrap">
+              Secure this account →
+            </a>
+          )}
         </div>
       </div>
     )
@@ -959,23 +1024,66 @@ function FindingDataCard({ finding }) {
   if (mod === 'dns_deep' && (d.spf_record !== undefined || d.security_score !== undefined)) {
     if (d.security_score !== undefined) {
       return (
-        <div className="bg-[#12121a] rounded-lg p-3 border border-[#1e1e2e] grid grid-cols-3 gap-3 text-xs">
-          <div><span className="text-gray-500">SPF</span><div className={d.has_spf ? 'text-[#00ff88]' : 'text-[#ff2244]'}>{d.has_spf ? 'Yes' : 'Missing'}</div></div>
-          <div><span className="text-gray-500">DMARC</span><div className={d.has_dmarc ? 'text-[#00ff88]' : 'text-[#ff2244]'}>{d.has_dmarc ? 'Yes' : 'Missing'}</div></div>
-          <div><span className="text-gray-500">DKIM</span><div className={d.has_dkim ? 'text-[#00ff88]' : 'text-[#ffcc00]'}>{d.has_dkim ? 'Yes' : 'Not found'}</div></div>
+        <div className="bg-[#12121a] rounded-lg p-3 border border-[#1e1e2e]">
+          <div className="grid grid-cols-3 gap-3 text-xs mb-2">
+            <div><span className="text-gray-500">SPF</span><div className={d.has_spf ? 'text-[#00ff88]' : 'text-[#ff2244]'}>{d.has_spf ? '✓ Configured' : '✗ Missing'}</div></div>
+            <div><span className="text-gray-500">DMARC</span><div className={d.has_dmarc ? 'text-[#00ff88]' : 'text-[#ff2244]'}>{d.has_dmarc ? '✓ Configured' : '✗ Missing'}</div></div>
+            <div><span className="text-gray-500">DKIM</span><div className={d.has_dkim ? 'text-[#00ff88]' : 'text-[#ffcc00]'}>{d.has_dkim ? '✓ Configured' : '⚠ Not found'}</div></div>
+          </div>
+          {d.spf_record && <div className="text-[10px] font-mono text-gray-500 bg-[#0a0a0f] p-2 rounded mt-2 break-all">{d.spf_record}</div>}
+          {d.dmarc_record && <div className="text-[10px] font-mono text-gray-500 bg-[#0a0a0f] p-2 rounded mt-1 break-all">{d.dmarc_record}</div>}
         </div>
       )
     }
   }
 
+  // Intelligence findings
+  if (mod === 'intelligence' && d.risk_level) {
+    return (
+      <div className="bg-[#12121a] rounded-lg p-3 border border-[#1e1e2e]">
+        {d.summary && <p className="text-xs text-gray-300 mb-2">{d.summary}</p>}
+        {d.correlations?.length > 0 && (
+          <div className="space-y-1 mb-2">
+            {d.correlations.slice(0, 5).map((c, i) => (
+              <div key={i} className="text-[10px] text-gray-400 flex items-center gap-1">
+                <span className="text-[#3388ff]">→</span> {c}
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    )
+  }
+
+  // Scraper engine findings
+  if (mod === 'scraper_engine' && d.scraper_name) {
+    return (
+      <div className="bg-[#12121a] rounded-lg p-3 border border-[#1e1e2e]">
+        <div className="flex items-center justify-between mb-2">
+          <span className="text-xs font-mono text-gray-400">Source: {d.scraper_name}</span>
+        </div>
+        {d.extracted && Object.keys(d.extracted).length > 0 && (
+          <div className="grid grid-cols-2 gap-2 text-xs">
+            {Object.entries(d.extracted).map(([k, v]) => (
+              <div key={k}><span className="text-gray-500">{k}</span><div className="font-mono text-gray-300 truncate">{String(v)}</div></div>
+            ))}
+          </div>
+        )}
+      </div>
+    )
+  }
+
   // Geolocation
   if (finding.category === 'geolocation' && (d.lat || d.latitude)) {
     return (
-      <div className="bg-[#12121a] rounded-lg p-3 border border-[#1e1e2e] grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
-        {d.city && <div><span className="text-gray-500">City</span><div className="font-mono">{d.city}</div></div>}
-        {d.country && <div><span className="text-gray-500">Country</span><div className="font-mono">{d.country}</div></div>}
-        {d.isp && <div><span className="text-gray-500">ISP</span><div className="font-mono">{d.isp}</div></div>}
-        {d.org && <div><span className="text-gray-500">Org</span><div className="font-mono">{d.org}</div></div>}
+      <div className="bg-[#12121a] rounded-lg p-3 border border-[#1e1e2e]">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs mb-2">
+          {d.city && <div><span className="text-gray-500">City</span><div className="font-mono">{d.city}</div></div>}
+          {d.country && <div><span className="text-gray-500">Country</span><div className="font-mono">{d.country}</div></div>}
+          {d.isp && <div><span className="text-gray-500">ISP</span><div className="font-mono">{d.isp}</div></div>}
+          {(d.as || d.org) && <div><span className="text-gray-500">ASN</span><div className="font-mono truncate">{d.as || d.org}</div></div>}
+        </div>
+        <div className="text-[10px] text-gray-600 italic">This is the mail server location, not the user's physical location.</div>
       </div>
     )
   }

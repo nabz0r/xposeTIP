@@ -96,12 +96,22 @@ def compute_score(target_id, session: Session) -> tuple[int, dict]:
 
     v2: Each finding weighted by confidence * source_reliability.
     """
-    findings = session.execute(
+    from sqlalchemy import func as sa_func
+    # Deduplicate: only use latest finding per (module, title)
+    dedup = session.execute(
+        select(sa_func.max(Finding.id).label("id"))
+        .where(Finding.target_id == target_id, Finding.status == "active")
+        .group_by(Finding.module, Finding.title)
+    ).all()
+    dedup_ids = {row.id for row in dedup}
+
+    all_findings = session.execute(
         select(Finding).where(
             Finding.target_id == target_id,
             Finding.status == "active",
         )
     ).scalars().all()
+    findings = [f for f in all_findings if f.id in dedup_ids]
 
     # Group by category
     category_scores = defaultdict(float)

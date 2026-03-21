@@ -39,12 +39,15 @@ class FingerprintEngine:
     }
 
     SEMANTIC_LABELS = {
-        ("high_accounts", "high_breaches"): "Digital hoarder at risk",
-        ("high_security", "low_breaches"): "Open front door",
-        ("high_username_reuse",): "Pattern predictor's dream",
+        ("high_accounts", "high_breaches"): "Sprawling digital presence at risk",
+        ("high_security", "low_breaches"): "Weak perimeter, not yet exploited",
+        ("high_username_reuse",): "Predictable pattern across platforms",
         ("high_email_age", "high_data_leaked"): "Long-term exposure veteran",
-        ("high_breaches", "high_data_leaked"): "Data breach magnet",
-        ("high_accounts", "high_platforms"): "Account sprawl",
+        ("high_breaches", "high_data_leaked"): "Breach-heavy profile",
+        ("high_accounts", "high_platforms"): "Account sprawl across platforms",
+        ("high_accounts", "high_geo_spread"): "Global digital footprint",
+        ("high_security", "high_breaches"): "Compromised and still vulnerable",
+        ("high_data_leaked", "high_username_reuse"): "Highly targetable identity",
     }
 
     def compute(self, findings: list, identities: list, profile_data: dict = None, email: str = "") -> dict:
@@ -264,7 +267,10 @@ class FingerprintEngine:
                 traits.add(f"low_{axis}")
 
         if all(v <= 0.15 for v in axes.values()):
-            return "Digital minimalist"
+            return "Digital ghost — minimal exposure"
+
+        if all(v >= 0.5 for v in axes.values()):
+            return "Maximum exposure across all axes"
 
         for keys, label in self.SEMANTIC_LABELS.items():
             if all(k in traits for k in keys):
@@ -274,13 +280,13 @@ class FingerprintEngine:
         dominant = max(axes, key=axes.get)
         dominant_labels = {
             "accounts": "Wide digital footprint",
-            "platforms": "Platform diverse",
-            "username_reuse": "Predictable identity",
-            "breaches": "Breach exposed",
-            "geo_spread": "Globally scattered",
-            "data_leaked": "Data exposed",
-            "email_age": "Long-term presence",
-            "security": "Weak perimeter",
+            "platforms": "Spread across many platforms",
+            "username_reuse": "Predictable identity pattern",
+            "breaches": "Breach-exposed profile",
+            "geo_spread": "Globally distributed presence",
+            "data_leaked": "Significant data exposure",
+            "email_age": "Long-established digital identity",
+            "security": "Weak security perimeter",
         }
         return dominant_labels.get(dominant, "Identity mapped")
 

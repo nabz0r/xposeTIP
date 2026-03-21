@@ -14,7 +14,7 @@ MODULES = [
     {
         "id": "email_validator",
         "display_name": "Email Validator",
-        "description": "Validates email format, checks MX records, detects disposable providers",
+        "description": "Checks if the email address is valid, deliverable, and not disposable",
         "layer": 1,
         "category": "metadata",
         "enabled": True,
@@ -26,7 +26,7 @@ MODULES = [
     {
         "id": "holehe",
         "display_name": "Holehe",
-        "description": "Email-to-account enumeration across 120+ services",
+        "description": "Finds which websites and apps this email is registered on",
         "layer": 1,
         "category": "social",
         "enabled": True,
@@ -38,7 +38,7 @@ MODULES = [
     {
         "id": "maigret",
         "display_name": "Maigret",
-        "description": "Username enumeration across 2500+ sites",
+        "description": "Discovers accounts across 2500+ sites using username patterns",
         "layer": 1,
         "category": "social",
         "enabled": True,
@@ -50,7 +50,7 @@ MODULES = [
     {
         "id": "sherlock",
         "display_name": "Sherlock",
-        "description": "Username search across 400+ social networks",
+        "description": "Finds social media accounts using username variations",
         "layer": 1,
         "category": "social",
         "enabled": True,
@@ -75,7 +75,7 @@ MODULES = [
     {
         "id": "hibp",
         "display_name": "Have I Been Pwned",
-        "description": "Breach history lookup via HIBP API",
+        "description": "Checks if this email appears in known data breaches",
         "layer": 1,
         "category": "breach",
         "enabled": True,
@@ -124,7 +124,7 @@ MODULES = [
     {
         "id": "emailrep",
         "display_name": "Email Reputation",
-        "description": "Email reputation, breach status, social profiles, and domain security via emailrep.io (free, no key)",
+        "description": "Checks if this email has been flagged as suspicious or used in spam",
         "layer": 1,
         "category": "metadata",
         "enabled": True,
@@ -136,7 +136,7 @@ MODULES = [
     {
         "id": "epieos",
         "display_name": "Epieos Google",
-        "description": "Google account discovery — ID, name, profile photo from email via epieos.com (free)",
+        "description": "Discovers the Google account linked to this email (name, photo, ID)",
         "layer": 1,
         "category": "metadata",
         "enabled": True,
@@ -161,7 +161,7 @@ MODULES = [
     {
         "id": "github_deep",
         "display_name": "GitHub Deep",
-        "description": "Full GitHub profile, events, gists, alternate emails from commits (free public API)",
+        "description": "Finds the GitHub profile, repos, and alternate emails from commits",
         "layer": 1,
         "category": "social_account",
         "enabled": True,
@@ -173,7 +173,7 @@ MODULES = [
     {
         "id": "username_hunter",
         "display_name": "Username Hunter",
-        "description": "Generate username permutations and check Reddit, Steam, Keybase, GitLab, Medium, HackerNews, Dev.to",
+        "description": "Discovers accounts on gaming and social platforms using username patterns",
         "layer": 1,
         "category": "social_account",
         "enabled": True,
@@ -185,7 +185,7 @@ MODULES = [
     {
         "id": "google_profile",
         "display_name": "Google Profile",
-        "description": "Gmail/Google Workspace detection and YouTube presence search",
+        "description": "Detects Gmail/Google Workspace usage and YouTube channel presence",
         "layer": 1,
         "category": "metadata",
         "enabled": True,
@@ -223,7 +223,7 @@ MODULES = [
     {
         "id": "geoip",
         "display_name": "Free GeoIP",
-        "description": "IP geolocation via ip-api.com — no API key needed, 45 req/min",
+        "description": "Locates the mail servers handling this email (city, country, ISP)",
         "layer": 2,
         "category": "geolocation",
         "enabled": True,
@@ -235,7 +235,7 @@ MODULES = [
     {
         "id": "leaked_domains",
         "display_name": "Leaked Domains",
-        "description": "Free breach check via XposedOrNot — breach history, exposed data types, industry analysis",
+        "description": "Finds leaked credentials and breach exposure from public databases",
         "layer": 2,
         "category": "breach",
         "enabled": True,
@@ -247,7 +247,7 @@ MODULES = [
     {
         "id": "dns_deep",
         "display_name": "DNS Intelligence",
-        "description": "SPF, DMARC, DKIM, MX, NS analysis — email security posture assessment",
+        "description": "Checks if the email domain can be spoofed by attackers",
         "layer": 2,
         "category": "metadata",
         "enabled": True,

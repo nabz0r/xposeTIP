@@ -17,6 +17,22 @@ class FindingUpdate(BaseModel):
     status: str  # resolved, false_positive, monitoring, active
 
 
+def _dedup_subquery(workspace_id, target_id=None):
+    """Subquery: latest finding ID per (target_id, module, title).
+
+    This ensures we only show unique findings — if holehe found
+    "Account on Spotify" in scan 1 and scan 5, only show scan 5's result.
+    """
+    q = (
+        select(func.max(Finding.id).label("id"))
+        .where(Finding.workspace_id == workspace_id)
+    )
+    if target_id:
+        q = q.where(Finding.target_id == target_id)
+    q = q.group_by(Finding.target_id, Finding.module, Finding.title)
+    return q.subquery()
+
+
 @router.get("")
 async def list_findings(
     target_id: uuid.UUID | None = None,
@@ -24,15 +40,21 @@ async def list_findings(
     severity: str | None = None,
     category: str | None = None,
     finding_status: str | None = Query(None, alias="status"),
+    deduplicate: bool = Query(True),
     page: int = Query(1, ge=1),
     per_page: int = Query(50, ge=1, le=200),
     workspace_id: uuid.UUID = Depends(get_current_workspace),
     user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
-    q = select(Finding).where(Finding.workspace_id == workspace_id)
-    if target_id:
-        q = q.where(Finding.target_id == target_id)
+    if deduplicate:
+        dedup = _dedup_subquery(workspace_id, target_id)
+        q = select(Finding).join(dedup, Finding.id == dedup.c.id)
+    else:
+        q = select(Finding).where(Finding.workspace_id == workspace_id)
+        if target_id:
+            q = q.where(Finding.target_id == target_id)
+
     if module:
         q = q.where(Finding.module == module)
     if severity:
@@ -59,26 +81,23 @@ async def findings_stats(
     user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
-    base = select(Finding).where(Finding.workspace_id == workspace_id)
-    if target_id:
-        base = base.where(Finding.target_id == target_id)
+    # Use deduplicated findings for accurate stats
+    dedup = _dedup_subquery(workspace_id, target_id)
+    dedup_q = select(Finding).join(dedup, Finding.id == dedup.c.id)
 
     by_severity = await db.execute(
         select(Finding.severity, func.count())
-        .where(Finding.workspace_id == workspace_id)
-        .where(Finding.target_id == target_id if target_id else True)
+        .select_from(dedup_q.subquery())
         .group_by(Finding.severity)
     )
     by_category = await db.execute(
         select(Finding.category, func.count())
-        .where(Finding.workspace_id == workspace_id)
-        .where(Finding.target_id == target_id if target_id else True)
+        .select_from(dedup_q.subquery())
         .group_by(Finding.category)
     )
     by_module = await db.execute(
         select(Finding.module, func.count())
-        .where(Finding.workspace_id == workspace_id)
-        .where(Finding.target_id == target_id if target_id else True)
+        .select_from(dedup_q.subquery())
         .group_by(Finding.module)
     )
 

@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "dev:clean": "pkill -f vite 2>/dev/null; sleep 1; vite",
     "build": "vite build",
     "preview": "vite preview"
   },

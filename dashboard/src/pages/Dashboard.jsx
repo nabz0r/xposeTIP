@@ -153,12 +153,7 @@ export default function Dashboard() {
               {topFingerprint ? (
                 <FingerprintRadar fingerprint={topFingerprint} size="small" animate={true} />
               ) : (
-                <div className="text-right">
-                  <div className="text-2xl font-bold font-mono" style={{
-                    color: topTarget.exposure_score >= 61 ? '#ff2244' : topTarget.exposure_score >= 31 ? '#ff8800' : '#00ff88'
-                  }}>{topTarget.exposure_score}</div>
-                  <span className="text-[10px] text-gray-500 uppercase">Score</span>
-                </div>
+                <ScoreRing score={topTarget.exposure_score} size={60} />
               )}
             </div>
           </div>
@@ -277,6 +272,24 @@ export default function Dashboard() {
         </div>
       )}
     </div>
+  )
+}
+
+function ScoreRing({ score, size = 60 }) {
+  const color = score >= 61 ? '#ff2244' : score >= 31 ? '#ff8800' : '#00ff88'
+  const r = 26
+  const circumference = 2 * Math.PI * r
+  return (
+    <svg width={size} height={size} viewBox="0 0 60 60">
+      <circle cx="30" cy="30" r={r} fill="none" stroke="#333" strokeWidth="3" opacity="0.2" />
+      <circle cx="30" cy="30" r={r} fill="none" stroke={color} strokeWidth="3"
+        strokeDasharray={`${(score || 0) / 100 * circumference} ${circumference}`}
+        strokeLinecap="round" transform="rotate(-90 30 30)"
+        className="transition-all duration-700" />
+      <text x="30" y="34" textAnchor="middle" fill={color} fontSize="18" fontWeight="500" fontFamily="monospace">
+        {score ?? '-'}
+      </text>
+    </svg>
   )
 }
 

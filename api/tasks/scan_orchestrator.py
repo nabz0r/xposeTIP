@@ -148,9 +148,18 @@ def finalize_scan(scan_id: str):
             from api.services.layer4.fingerprint_engine import FingerprintEngine
             from api.models.identity import Identity
 
-            all_findings = session.execute(
+            # Deduplicate findings: latest per (module, title)
+            dedup = session.execute(
+                select(func.max(Finding.id).label("id"))
+                .where(Finding.target_id == scan.target_id)
+                .group_by(Finding.module, Finding.title)
+            ).all()
+            dedup_ids = {row.id for row in dedup}
+
+            raw_findings = session.execute(
                 select(Finding).where(Finding.target_id == scan.target_id)
             ).scalars().all()
+            all_findings = [f for f in raw_findings if f.id in dedup_ids]
             all_identities = session.execute(
                 select(Identity).where(Identity.target_id == scan.target_id)
             ).scalars().all()

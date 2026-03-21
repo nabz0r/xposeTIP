@@ -29,7 +29,10 @@ export default function ProfileHeader({ target, findings, animScore }) {
 
   // Fallback to findings-based extraction if profile not available
   const p = profile || {}
-  const displayName = p.primary_name || target.display_name || ''
+  // Never show platform names as the display name — only real names from profile data
+  const rawName = p.primary_name || target.display_name || ''
+  const PLATFORM_REJECT = /^(spotify|amazon|reddit|steam|keybase|github|twitter|facebook|instagram|freelancer|replit|medium|gitlab|eventbrite)$/i
+  const displayName = rawName && !PLATFORM_REJECT.test(rawName.trim()) ? rawName : ''
   const avatarUrl = p.primary_avatar || target.avatar_url || null
   const bio = p.bio || ''
   const location = p.location || ''
@@ -44,7 +47,7 @@ export default function ProfileHeader({ target, findings, animScore }) {
   const altEmails = p.emails || []
   const dataSources = p.data_sources || []
 
-  const breachCount = p.breach_summary?.count || findings.filter(f => f.category === 'breach').length
+  const breachCount = p.breach_summary?.count || findings.filter(f => f.category === 'breach' && !(f.title || '').toLowerCase().includes('not configured') && !(f.title || '').toLowerCase().includes('api key')).length
   const socialCount = socialProfiles.length || findings.filter(f => f.category === 'social_account').length
   const credentialsLeaked = p.breach_summary?.credentials_leaked || false
 

@@ -43,6 +43,7 @@ class GeoIPScanner(BaseScanner):
             return []
 
         results = []
+        seen_locations = set()
         async with httpx.AsyncClient(timeout=10) as client:
             for ip in ips:
                 try:
@@ -56,6 +57,12 @@ class GeoIPScanner(BaseScanner):
                     country = data.get("country", "Unknown")
                     city = data.get("city", "Unknown")
                     country_code = data.get("countryCode", "")
+
+                    # Deduplicate by (city, country) — avoid 8x "Mountain View, US"
+                    location_key = f"{city}:{country}"
+                    if location_key in seen_locations:
+                        continue
+                    seen_locations.add(location_key)
 
                     geo_data = {
                         "ip": ip,

@@ -193,7 +193,7 @@ export default function Layout() {
 
       {/* Main content */}
       <main className="flex-1 bg-[#0f0f14] overflow-auto">
-        <div className="p-6 max-lg:pt-16">
+        <div key={location.pathname} className="p-6 max-lg:pt-16 animate-page-in">
           <Outlet />
         </div>
       </main>

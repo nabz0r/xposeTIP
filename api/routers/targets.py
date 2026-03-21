@@ -130,10 +130,16 @@ async def get_target(
 ):
     target = await _get_target(db, target_id, workspace_id)
 
-    # Get findings count by severity
+    # Get deduplicated findings count by severity
+    dedup = (
+        select(func.max(Finding.id).label("id"))
+        .where(Finding.target_id == target_id, Finding.workspace_id == workspace_id)
+        .group_by(Finding.module, Finding.title)
+        .subquery()
+    )
     severity_q = (
         select(Finding.severity, func.count())
-        .where(Finding.target_id == target_id, Finding.workspace_id == workspace_id)
+        .join(dedup, Finding.id == dedup.c.id)
         .group_by(Finding.severity)
     )
     result = await db.execute(severity_q)
@@ -263,9 +269,18 @@ async def get_fingerprint(
         try:
             from api.models.finding import Finding as F
             from api.models.identity import Identity as I
-            findings = session.execute(
+            from sqlalchemy import func as sa_func
+            # Deduplicate: latest finding per (module, title)
+            dedup_rows = session.execute(
+                select(sa_func.max(F.id).label("id"))
+                .where(F.target_id == target_id, F.workspace_id == workspace_id)
+                .group_by(F.module, F.title)
+            ).all()
+            dedup_ids = {r.id for r in dedup_rows}
+            all_findings = session.execute(
                 select(F).where(F.target_id == target_id, F.workspace_id == workspace_id)
             ).scalars().all()
+            findings = [f for f in all_findings if f.id in dedup_ids]
             identities = session.execute(
                 select(I).where(I.target_id == target_id, I.workspace_id == workspace_id)
             ).scalars().all()

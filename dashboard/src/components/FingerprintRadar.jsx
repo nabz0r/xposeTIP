@@ -66,6 +66,8 @@ export default function FingerprintRadar({ fingerprint, size = 'large', animate 
       <div className="relative group" title={`${hash} · score ${score}`}>
         <svg width={w} height={h} viewBox={`0 0 ${w} ${h}`}
           role="img" aria-label={`Fingerprint score ${score}, ${riskLevel}`}>
+          {/* Background circle to define radar area */}
+          <circle cx={cx} cy={cy} r={radius} fill="#1e1e2e" opacity="0.15" />
           {/* Grid */}
           {[0.5, 1.0].map(pct => (
             <circle key={pct} cx={cx} cy={cy} r={radius * pct}
@@ -185,6 +187,24 @@ export default function FingerprintRadar({ fingerprint, size = 'large', animate 
                 )}
               </circle>
             </g>
+          )
+        })}
+
+        {/* Vertex raw value labels (non-zero only) */}
+        {points.map((p, i) => {
+          const rawKey = AXIS_LABELS[i].key === 'email_age' ? 'email_age_years' :
+                         AXIS_LABELS[i].key === 'security' ? 'security_weak' :
+                         AXIS_LABELS[i].key
+          const rawVal = rawValues[rawKey]
+          if (!rawVal || rawVal === 0) return null
+          // Offset label slightly outward from the vertex
+          const labelP = polarToCartesian(cx, cy, radius * Math.max(0.08, axes[AXIS_LABELS[i].key] || 0) + 12, i)
+          return (
+            <text key={`val-${i}`} x={labelP.x} y={labelP.y}
+              fill={color} fontSize="10" fontFamily="JetBrains Mono, monospace"
+              textAnchor="middle" dominantBaseline="middle" opacity="0.8">
+              {typeof rawVal === 'number' && rawVal % 1 !== 0 ? rawVal.toFixed(1) : rawVal}
+            </text>
           )
         })}
 

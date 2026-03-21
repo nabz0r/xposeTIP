@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { X, ExternalLink, Shield, Radar, AlertTriangle } from 'lucide-react'
-import { getTarget, getFindings, getScans } from '../lib/api'
+import { getTarget, getFindings, getScans, getFingerprint } from '../lib/api'
+import FingerprintRadar from './FingerprintRadar'
 
 const severityColors = {
   critical: '#ff2244', high: '#ff8800', medium: '#ffcc00', low: '#3388ff', info: '#666688',
@@ -42,7 +43,10 @@ export default function TargetQuickView({ targetId, onClose }) {
   const [findings, setFindings] = useState([])
   const [lastScan, setLastScan] = useState(null)
   const [identityStats, setIdentityStats] = useState({})
+  const [fp, setFp] = useState(null)
   const navigate = useNavigate()
+
+  const sevOrder = { critical: 0, high: 1, medium: 2, low: 3, info: 4 }
 
   useEffect(() => {
     if (!targetId) return
@@ -53,16 +57,21 @@ export default function TargetQuickView({ targetId, onClose }) {
     try {
       const [t, f, s] = await Promise.all([
         getTarget(targetId),
-        getFindings(`target_id=${targetId}&per_page=5`),
+        getFindings(`target_id=${targetId}&per_page=50`),
         getScans(`target_id=${targetId}`),
       ])
       setTarget(t)
-      setFindings(f.items || [])
+      // Sort by severity: critical → high → medium → low → info, show top 5
+      const sorted = (f.items || []).sort((a, b) => (sevOrder[a.severity] ?? 5) - (sevOrder[b.severity] ?? 5))
+      setFindings(sorted.slice(0, 5))
 
       const scans = s.items || []
       if (scans.length > 0) {
         setLastScan(scans[0])
       }
+
+      // Load fingerprint
+      getFingerprint(targetId).then(setFp).catch(() => {})
 
       // Compute identity stats from findings
       const allFindings = f.items || []
@@ -95,9 +104,16 @@ export default function TargetQuickView({ targetId, onClose }) {
           <div className="p-5 text-center text-gray-500">Loading...</div>
         ) : (
           <div className="p-5 space-y-5">
+            {/* Fingerprint */}
+            {fp && (
+              <div className="flex justify-center">
+                <FingerprintRadar fingerprint={fp} size="small" animate={true} />
+              </div>
+            )}
+
             {/* Email + Score */}
             <div className="flex items-center gap-4">
-              <ScoreDonut score={target.exposure_score} />
+              {!fp && <ScoreDonut score={target.exposure_score} />}
               <div className="flex-1 min-w-0">
                 <div className="font-mono text-sm truncate">{target.email}</div>
                 <div className="text-xs text-gray-500 mt-1">
@@ -135,7 +151,7 @@ export default function TargetQuickView({ targetId, onClose }) {
             {/* Top Findings */}
             <div>
               <div className="text-xs text-gray-400 mb-2 uppercase tracking-wider flex items-center gap-1.5">
-                <AlertTriangle className="w-3 h-3" /> Top Findings
+                <AlertTriangle className="w-3 h-3" /> Most Severe Findings
               </div>
               {findings.length === 0 ? (
                 <div className="text-xs text-gray-600">No findings yet</div>

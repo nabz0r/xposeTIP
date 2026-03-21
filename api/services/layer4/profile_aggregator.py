@@ -13,13 +13,23 @@ logger = logging.getLogger(__name__)
 
 def aggregate_profile(target_id, workspace_id, session: Session) -> dict:
     """Build a unified profile from all findings for a target. Sync for Celery."""
-    findings = session.execute(
+    from sqlalchemy import func as sa_func
+    # Deduplicate: only use latest finding per (module, title)
+    dedup = session.execute(
+        select(sa_func.max(Finding.id).label("id"))
+        .where(Finding.target_id == target_id, Finding.workspace_id == workspace_id, Finding.status == "active")
+        .group_by(Finding.module, Finding.title)
+    ).all()
+    dedup_ids = {row.id for row in dedup}
+
+    all_findings = session.execute(
         select(Finding).where(
             Finding.target_id == target_id,
             Finding.workspace_id == workspace_id,
             Finding.status == "active",
         )
     ).scalars().all()
+    findings = [f for f in all_findings if f.id in dedup_ids]
 
     profile = {
         "names": [],
@@ -135,15 +145,17 @@ def aggregate_profile(target_id, workspace_id, session: Session) -> dict:
                 seen_usernames.add(uname)
                 profile["usernames"].append({"value": uname, "source": source})
 
-        # --- Breaches ---
+        # --- Breaches (exclude "not configured" / "api key" info findings) ---
         if f.category == "breach":
-            breach_name = data.get("breach_name") or data.get("Name") or f.title
-            if breach_name not in breach_names:
-                breach_names.add(breach_name)
-                profile["breach_summary"]["count"] += 1
-                profile["breach_summary"]["sources"].append(breach_name)
-            if data.get("credentials_leaked"):
-                profile["breach_summary"]["credentials_leaked"] = True
+            title_lower = (f.title or "").lower()
+            if "not configured" not in title_lower and "api key" not in title_lower:
+                breach_name = data.get("breach_name") or data.get("Name") or f.title
+                if breach_name not in breach_names:
+                    breach_names.add(breach_name)
+                    profile["breach_summary"]["count"] += 1
+                    profile["breach_summary"]["sources"].append(breach_name)
+                if data.get("credentials_leaked"):
+                    profile["breach_summary"]["credentials_leaked"] = True
 
         # --- Reputation (EmailRep) ---
         if data.get("reputation") and not profile["reputation"]:
@@ -190,28 +202,50 @@ def aggregate_profile(target_id, workspace_id, session: Session) -> dict:
     profile["data_sources"] = sorted(sources)
     profile["breach_summary"]["sources"] = profile["breach_summary"]["sources"][:20]
 
-    # Pick primary name with priority:
-    # 1. Google OAuth, 2. FullContact, 3. GitHub, 4. Gravatar, 5. EmailRep, 6. Others
+    # Pick primary name with strict validation
+    PLATFORM_NAMES = {
+        "spotify", "amazon", "reddit", "steam", "keybase", "github", "twitter",
+        "facebook", "instagram", "tiktok", "freelancer", "replit", "eventbrite",
+        "xvideos", "medium", "hackernews", "devto", "gitlab", "pinterest",
+        "snapchat", "linkedin", "tumblr", "flickr", "twitch", "discord",
+        "telegram", "whatsapp", "signal", "youtube", "netflix", "hulu",
+        "apple", "google", "microsoft", "yahoo", "outlook", "protonmail",
+        "gravatar", "wordpress", "blogger", "bitbucket", "stackoverflow",
+    }
+    REJECT_PATTERNS = {"account", "found", "not configured", "api key", "profile"}
+
+    def _is_valid_name(name_val):
+        """Validate: must be a real human name, not a platform or finding title."""
+        if not name_val or len(name_val.strip()) < 3:
+            return False
+        val = name_val.strip().lower()
+        # Reject platform names
+        if val in PLATFORM_NAMES:
+            return False
+        # Reject finding-title patterns
+        if any(p in val for p in REJECT_PATTERNS):
+            return False
+        # Reject single words that look like usernames (all lowercase, no spaces)
+        # Real names usually have at least a first+last or a proper cased single name
+        if " " not in val and val == val.lower() and len(val) < 20:
+            # Check if it matches a known platform
+            if val in PLATFORM_NAMES:
+                return False
+        return True
+
     NAME_PRIORITY = ["google_audit", "fullcontact", "github_deep", "social_enricher", "gravatar", "epieos", "emailrep"]
     primary_name = None
     for source_prio in NAME_PRIORITY:
         for n in profile["names"]:
-            if n.get("source") == source_prio and len(n["value"]) > 1:
-                # Reject names that look like platform names or finding titles
-                val = n["value"].lower()
-                platform_keywords = ["spotify", "amazon", "github", "reddit", "steam", "keybase", "account", "found"]
-                if not any(kw == val for kw in platform_keywords):
-                    primary_name = n["value"]
-                    break
+            if n.get("source") == source_prio and _is_valid_name(n["value"]):
+                primary_name = n["value"].strip()
+                break
         if primary_name:
             break
     if not primary_name and profile["names"]:
-        # Fallback: first name that doesn't look like a platform
         for n in profile["names"]:
-            val = n["value"].lower()
-            platform_keywords = ["spotify", "amazon", "github", "reddit", "steam", "keybase", "account", "found"]
-            if not any(kw == val for kw in platform_keywords):
-                primary_name = n["value"]
+            if _is_valid_name(n["value"]):
+                primary_name = n["value"].strip()
                 break
     profile["primary_name"] = primary_name
 
