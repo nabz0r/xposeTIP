@@ -1,3 +1,4 @@
+import hashlib
 import json
 import logging
 import re
@@ -43,6 +44,8 @@ class ScraperEngine:
             first_name = name_parts[0].lower() if name_parts else prefix
             fullname = " ".join(p for p in name_parts if len(p) > 1).strip() or prefix
 
+            email_md5 = hashlib.md5(input_value.lower().strip().encode()).hexdigest() if "@" in input_value else ""
+
             fmt_kwargs = dict(
                 email=input_value,
                 username=transformed,
@@ -51,6 +54,7 @@ class ScraperEngine:
                 first_name=first_name,
                 fullname=fullname,
                 fullname_encoded=url_quote(fullname),
+                email_md5=email_md5,
             )
 
             url = scraper["url_template"].format(**fmt_kwargs)

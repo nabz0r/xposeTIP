@@ -39,11 +39,11 @@ The exposure score for a US target will naturally be higher (more public data av
 than for an EU target (GDPR reduces public exposure). That's a feature, not a bug —
 it proves the point about digital exposure varying by jurisdiction.
 
-## Current version: v0.24.0
+## Current version: v0.25.0
 
-Sprint 25 complete. 25 scanners (17 implemented + 8 placeholder), 43 scrapers
-across 7 categories (social, breach, metadata, people_search, identity, archive,
-gaming), 5 intelligence analyzers, digital fingerprint (8-axis radar), persona
+Sprint 26 complete. 25 scanners (17 implemented + 8 placeholder), 51 scrapers
+across 8 categories (social, breach, metadata, people_search, identity, archive,
+gaming, music), 5 intelligence analyzers, digital fingerprint (8-axis radar), persona
 clustering engine, dual score (exposure/threat), identity estimation
 (gender/age/nationality) with re-query engine, per-field confidence with blacklist
 filtering, email name extraction + cross-reference, IdentityCard + PersonaCard,
@@ -55,7 +55,8 @@ scoring, Google/Microsoft OAuth framework, DB-driven name blacklist system
 scan metadata with log download, target exposure leaderboard on dashboard,
 DNS SaaS blocklist (50+ managed domains), executive summary narrative, global
 API keys fallback, remediation toggle, findings CSV export, inherited keys
-banner, recalculate profiles button, persona username blacklist filtering.
+banner, recalculate profiles button, persona username blacklist filtering,
+email_md5 URL placeholder for scraper engine.
 
 ## Tech stack (locked)
 
@@ -141,16 +142,17 @@ editable via the Scrapers UI page without code changes.
 
 ## Scraper registry (scripts/seed_scrapers.py)
 
-43 scrapers across 7 categories, all editable via UI:
+51 scrapers across 8 categories, all editable via UI:
 
 | Category | Count | Scrapers |
 |----------|-------|----------|
-| social | 21 | Reddit, GitHub, Steam, Keybase, Medium, HackerNews, Dev.to, GitLab, About.me, Imgur, Mastodon, StackOverflow, Pinterest, Linktree, Disqus, Twitch, Telegram, Letterboxd, BuyMeACoffee, Pastebin User, Docker Hub |
+| social | 24 | Reddit, GitHub, Steam, Keybase, Medium, HackerNews, Dev.to, GitLab, About.me, Imgur, Mastodon, StackOverflow, Pinterest, Linktree, Disqus, Twitch, Telegram, Letterboxd, BuyMeACoffee, Pastebin User, Docker Hub, SlideShare, Last.fm, Bandcamp |
 | breach | 3 | XposedOrNot, LeakCheck, Pastebin Dumps |
 | metadata | 4 | Gravatar, crt.sh subdomains, SecurityTrails, Disposable Email |
+| people_search | 3 | GitHub People Search, Gravatar Email Lookup, Snapchat Profile |
 | identity | 3 | Genderize (gender), Agify (age), Nationalize (nationality) |
 | archive | 3 | Wayback Domain History, Wayback Snapshot Count, Wayback Profile Archive |
-| gaming | 7 | Steam (expanded), Xbox Gamertag, PSN Profile, Epic Games, Riot Games, Chess.com, Lichess |
+| gaming | 9 | Steam (expanded), Xbox Gamertag, PSN Profile, Epic Games, Riot Games, Chess.com, Lichess, CodeWars, RuneScape |
 | music | 2 | Mixcloud, Duolingo |
 
 All scrapers use the ScraperEngine: URL template + regex/JSONPath extraction.
@@ -472,6 +474,7 @@ Frontend pre-selects: all enabled+implemented L1 + recommended L2 (dns_deep, lea
 | 23 | v0.22.0 | Name blacklist system, targets rework, quality polish, scan metadata |
 | 24 | v0.23.0 | DNS SaaS blocklist, executive summary, global API keys, remediation toggle, CSV export |
 | 25 | v0.24.0 | Identity intelligence fix, blacklist expansion, re-query engine, email name extraction, recalculate profiles, persona cleanup |
+| 26 | v0.25.0 | 8 new scrapers: people search (3), gaming (2), social (3), email_md5 engine placeholder (43→51 total) |
 
 ## Bugs fixed (v0.5.x)
 
