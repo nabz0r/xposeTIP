@@ -2,7 +2,7 @@
 
 ## Overview
 
-xpose has **25+ scanner modules** across 4 layers. Scanners are lazy-loaded via `importlib` — missing dependencies don't crash the worker.
+xpose has **25 scanner modules** across 4 layers + **43 data-driven scrapers** across 7 categories. Scanners are lazy-loaded via `importlib` — missing dependencies don't crash the worker.
 
 ## Scanner Registry
 
@@ -114,6 +114,29 @@ Scrapers are editable via the Scrapers UI page — no code deploy needed.
 | Pinterest | username | display name, bio, avatar |
 | Linktree | username | display name, bio, avatar |
 | Disqus | username | display name, avatar, bio |
+| Twitch | username | display name, bio, avatar, followers, partner status |
+| Telegram | username | display name, bio, avatar |
+| Letterboxd | username | display name, bio, avatar, film stats |
+| BuyMeACoffee | username | display name, bio, avatar |
+| Pastebin User | username | public paste count, account presence |
+| Docker Hub | username | display name, avatar, repo count |
+
+### Gaming Profile Scrapers
+| Scraper | Input | Output |
+|---------|-------|--------|
+| Steam (expanded) | username | full profile, games owned, hours played, friends |
+| Xbox Gamertag | username | gamertag presence, avatar, gamerscore |
+| PSN Profile | username | PSN profile, trophies, avatar |
+| Epic Games | username | account presence, display name |
+| Riot Games | username | account presence, region |
+| Chess.com | username | rating, games played, avatar, country |
+| Lichess | username | rating, games played, profile bio |
+
+### Music / Learning Scrapers
+| Scraper | Input | Output |
+|---------|-------|--------|
+| Mixcloud | username | display name, bio, avatar, followers |
+| Duolingo | username | display name, learning languages, streak |
 
 ### Breach / Enrichment Scrapers
 | Scraper | Input | Output |

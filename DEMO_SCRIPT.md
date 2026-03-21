@@ -44,7 +44,18 @@
 - Breach nodes in red
 - Click a node to see details
 
-## [1:30] Google Account Audit
+## [1:30] Digital Personas
+
+> "xpose clusters your accounts into distinct digital personas."
+
+- Show PersonaCard component — clusters of accounts sharing usernames/names
+- "Persona 1: 'loupn' — Reddit, Steam, GitHub, GitLab — 92% confidence"
+- "Persona 2: 'Nicolas L.' — LinkedIn, About.me — 78% confidence"
+- Dual score display: Exposure 72/100 + Threat 45/100
+
+> "An attacker doesn't just find accounts — they build a profile. We show you theirs."
+
+## [1:45] Google Account Audit
 
 > "Let me show you what your own Google account is exposing."
 
@@ -76,7 +87,7 @@
 ## [2:30] Closing
 
 > "xpose is built in Luxembourg, GDPR compliant, runs on-premise.
-> 53 intelligence modules, source-scored findings, identity estimation, automated remediation.
+> 68 intelligence modules, persona clustering, dual scoring, three pricing tiers.
 > We're looking for pilot companies ready to audit their digital exposure."
 
 ## [3:00] Call to Action

@@ -39,14 +39,17 @@ The exposure score for a US target will naturally be higher (more public data av
 than for an EU target (GDPR reduces public exposure). That's a feature, not a bug —
 it proves the point about digital exposure varying by jurisdiction.
 
-## Current version: v0.12.0
+## Current version: v0.21.0
 
-Sprint 12 complete. 25 scanners (17 implemented + 8 placeholder), 28 scrapers
-(identity, social, breach, metadata, archive, people_search), 5 intelligence
-analyzers, digital fingerprint (8-axis radar), identity estimation
-(gender/age/nationality), photo strip, IdentityCard component, profile
-aggregator with scraper data integration, source scoring, scraper engine with
-editable regex, finding deduplication (Python-side).
+Sprint 21 complete. 25 scanners (17 implemented + 8 placeholder), 43 scrapers
+across 7 categories (social, breach, metadata, people_search, identity, archive,
+gaming), 5 intelligence analyzers, digital fingerprint (8-axis radar), persona
+clustering engine, dual score (exposure/threat), identity estimation
+(gender/age/nationality), per-field confidence, IdentityCard + PersonaCard,
+real-time log viewer with Redis ring buffer, plans (Free/Consultant/Enterprise)
+with enforcement, open registration, admin panel (users/workspaces management),
+quick scan from targets list, multi-workspace, RBAC, organizations, source
+scoring, Google/Microsoft OAuth framework.
 
 ## Tech stack (locked)
 
@@ -60,7 +63,7 @@ editable regex, finding deduplication (Python-side).
 - **Graph**: D3.js force-directed (identity graph) + D3 geo (world heatmap)
 - **Map**: SVG world map with Mercator projection (replaced Leaflet in v0.5.0)
 - **Reports**: WeasyPrint (HTML→PDF) — planned
-- **OSINT**: Holehe, Sherlock (Python wrappers), plus 15 custom scanners + 28 data-driven scrapers
+- **OSINT**: Holehe, Sherlock (Python wrappers), plus 15 custom scanners + 43 data-driven scrapers
 - **Identity**: Genderize.io, Agify.io, Nationalize.io (free, no auth)
 - **Archive**: Wayback Machine CDX API (free, no auth)
 - **Breach**: HIBP API ($3.50/mo) + XposedOrNot (free)
@@ -126,22 +129,23 @@ Lazy-loaded via `importlib` — missing deps don't crash the worker.
 Modules without a registered scanner are marked `implemented: false` in the API response
 and silently excluded from scan dispatch.
 
-Additionally, the scraper engine (`scraper_engine` module) executes 28 data-driven scrapers
+Additionally, the scraper engine (`scraper_engine` module) executes 43 data-driven scrapers
 defined in `scripts/seed_scrapers.py` and stored in the `scrapers` DB table. These are
 editable via the Scrapers UI page without code changes.
 
 ## Scraper registry (scripts/seed_scrapers.py)
 
-28 scrapers across 6 categories, all editable via UI:
+43 scrapers across 7 categories, all editable via UI:
 
 | Category | Count | Scrapers |
 |----------|-------|----------|
-| social | 15 | Reddit, GitHub, Steam, Keybase, Medium, HackerNews, Dev.to, GitLab, About.me, Imgur, Mastodon, StackOverflow, Pinterest, Linktree, Disqus |
+| social | 21 | Reddit, GitHub, Steam, Keybase, Medium, HackerNews, Dev.to, GitLab, About.me, Imgur, Mastodon, StackOverflow, Pinterest, Linktree, Disqus, Twitch, Telegram, Letterboxd, BuyMeACoffee, Pastebin User, Docker Hub |
 | breach | 3 | XposedOrNot, LeakCheck, Pastebin Dumps |
 | metadata | 4 | Gravatar, crt.sh subdomains, SecurityTrails, Disposable Email |
 | identity | 3 | Genderize (gender), Agify (age), Nationalize (nationality) |
 | archive | 3 | Wayback Domain History, Wayback Snapshot Count, Wayback Profile Archive |
-| people_search | 0 | (planned) |
+| gaming | 7 | Steam (expanded), Xbox Gamertag, PSN Profile, Epic Games, Riot Games, Chess.com, Lichess |
+| music | 2 | Mixcloud, Duolingo |
 
 All scrapers use the ScraperEngine: URL template + regex/JSONPath extraction.
 Input types: email, username, domain, first_name.
@@ -198,6 +202,40 @@ Stored in `target.profile_data.identity_estimation`:
 - `gender` + `gender_probability` (from Genderize.io)
 - `age` + `age_sample_count` (from Agify.io)
 - `nationalities[]` with `country_code` + `probability` (from Nationalize.io, top 3)
+
+### Persona clustering engine (api/services/layer4/persona_engine.py)
+
+Identifies distinct digital personas from identity graph nodes.
+Clusters social accounts by shared usernames, profile names, avatars.
+Each persona gets: name, confidence score, associated accounts, risk assessment.
+Stored in `target.profile_data.personas` (JSONB array).
+Feature-gated: requires Consultant or Enterprise plan (or superadmin).
+
+### Dual score engine
+
+Two scores computed in `finalize_scan`:
+- **Exposure score** (0-100): How much data is publicly visible. Weighted by category.
+- **Threat score** (0-100): Active risk level. Weighted by breach recency, credential leaks, active tracking.
+Both stored on `target` model. UI shows both with color-coded indicators.
+
+## Plans & Monetization (api/services/plan_config.py)
+
+Three-tier plan system enforced at API level:
+
+| Plan | Price | Targets | Scans/mo | Layers | Features |
+|------|-------|---------|----------|--------|----------|
+| Free | €0 | 1 | 5 | L1 only | Basic exposure scan |
+| Consultant | €49/mo | 25 | 100 | L1+L2 | Persona clustering, multi-workspace, PDF reports |
+| Enterprise | €199/mo | Unlimited | Unlimited | All | Intelligence pipeline, API access, priority support |
+
+Enforcement points:
+- `check_target_limit()` — blocks target creation over plan quota
+- `check_scan_limit()` — blocks scan creation over monthly quota
+- `filter_modules_by_plan()` — strips modules from layers not included in plan
+- `check_feature()` — gates features like persona clustering, intelligence pipeline
+- **superadmin bypasses ALL limits** — `is_superadmin()` check in every function
+- Plan lives on `Workspace`, not on `User`
+- First registered user = superadmin + enterprise; subsequent = user + free
 
 ## API design
 
@@ -264,12 +302,38 @@ GET    /api/v1/settings/defaults      -- scan default modules
 PUT    /api/v1/settings/defaults      -- update scan defaults
 ```
 
+### Workspaces
+```
+GET    /api/v1/workspaces             -- list user workspaces
+POST   /api/v1/workspaces             -- create workspace
+PATCH  /api/v1/workspaces/{id}        -- update workspace
+DELETE /api/v1/workspaces/{id}        -- delete workspace
+GET    /api/v1/workspaces/{id}/members
+POST   /api/v1/workspaces/{id}/invite -- invite member by email
+PATCH  /api/v1/workspaces/{id}/members/{user_id}
+DELETE /api/v1/workspaces/{id}/members/{user_id}
+GET    /api/v1/workspaces/plans       -- list available plans
+GET    /api/v1/workspaces/{id}/usage  -- target count, scans this month, limits
+PATCH  /api/v1/workspaces/{id}/plan   -- change workspace plan (superadmin)
+```
+
+### System (superadmin only)
+```
+GET    /api/v1/system/stats           -- platform statistics
+GET    /api/v1/system/users           -- all users with workspace memberships
+PATCH  /api/v1/system/users/{id}      -- activate/deactivate user
+GET    /api/v1/system/workspaces      -- all workspaces with member/target/scan counts
+GET    /api/v1/system/logs            -- structured logs from Redis ring buffer
+DELETE /api/v1/system/logs            -- clear logs
+POST   /api/v1/system/recalculate-scores
+```
+
 ## Database schema
 
 All tables: UUID PKs (gen_random_uuid), created_at/updated_at TIMESTAMPTZ.
 All queries scoped to workspace_id. Key tables:
 
-- **workspaces** — multi-tenant isolation, settings JSONB (stores encrypted API keys)
+- **workspaces** — multi-tenant isolation, plan (free/consultant/enterprise), settings JSONB (stores encrypted API keys)
 - **users** — auth, display_name, avatar
 - **user_workspaces** — RBAC junction (role per workspace)
 - **targets** — email, exposure_score, score_breakdown, profile_data (JSONB)
@@ -289,8 +353,9 @@ Stats cards: total targets, active scans, total findings, HIGH count, most expos
 Recharts severity bar chart + module donut chart. Quick scan form with 7 default modules.
 
 ### Targets (/targets)
-Table: email, country, status, score, last scanned, findings count.
-Search + filter. "Add target" modal. Click row → detail.
+Table: email, country, status, fingerprint radar, score, last scanned.
+Search + filter. "Add target" modal. Bulk import (CSV/paste). Quick scan button per row.
+Click row → detail.
 
 ### Target detail (/targets/:id)
 ProfileHeader: social profiles strip, credentials leaked status, email security badge,
@@ -310,18 +375,40 @@ Module selector: grouped by layer, "Select all Layer N", lock icon for auth-requ
 Toast notifications on scan completion.
 
 ### Settings (/settings)
-Tabs: Modules (toggle + health) | API Keys (add/validate/delete, Fernet encrypted) |
-Scan Defaults | Profile (display_name edit).
+Tabs: Plan & Billing (usage bars, feature matrix, plan comparison) | Modules (toggle + health) |
+API Keys (add/validate/delete, Fernet encrypted) | Scan Defaults | Profile (display_name edit).
+
+### Organization (/organization)
+Multi-workspace management. Create/switch workspaces. Plan badge per workspace.
+Member management: invite by email, role assignment, remove.
+Usage bars (targets, scans/month) with plan limits. Superadmin: inline plan change dropdown.
+
+### System (/system) — superadmin only
+Tabs: Stats | Logs | Users | Workspaces.
+- Stats: platform-wide metrics, recalculate scores
+- Logs: real-time structured logs from Redis ring buffer (LogViewer component)
+- Users: all users with workspace memberships, active/inactive toggle, email search
+- Workspaces: all workspaces with member/target/scan counts, inline plan dropdown
+
+### Login (/login)
+Login/Register toggle. Open registration — first user = superadmin + enterprise,
+subsequent = user + free. Invited users (pre-created, no last_login) register with own password.
 
 ## Frontend components
 
 - `ProfileHeader.jsx` — uses `/profile` API, shows social strip + stats + category-labeled breakdown
 - `IdentityCard.jsx` — photo strip + gender/age/nationality estimation display
+- `PersonaCard.jsx` — clustered digital persona display with confidence scores
 - `IdentityGraph.jsx` — D3 force-directed with zoom, drag, hover highlight
 - `IOCTimeline.jsx` — vertical timeline grouped by date
+- `LifeTimeline.jsx` — chronological life events extracted from OSINT data
 - `LocationMap.jsx` — pure SVG world map (Mercator projection, animated dots)
 - `WorldHeatmap.jsx` — D3 geo choropleth (dashboard)
+- `FingerprintRadar.jsx` — 8-axis radar chart (digital fingerprint visualization)
+- `LogViewer.jsx` — real-time structured log viewer from Redis ring buffer
+- `TargetQuickView.jsx` — slide-out quick preview panel for target details
 - `Toast.jsx` — ToastProvider context, auto-dismiss 4s, stackable, top-right
+- `Layout.jsx` — sidebar nav, workspace switcher, plan badge, refreshKey pattern
 
 ## UI rules
 
@@ -362,6 +449,15 @@ Frontend pre-selects: all enabled+implemented L1 + recommended L2 (dns_deep, lea
 | 10 | v0.10.0 | Quality polish, dedup, profile name fix, finding details |
 | 11 | v0.11.0 | 15 new scrapers: identity estimation, Wayback archive, social expansion (28 total) |
 | 12 | v0.12.0 | IdentityCard, photo strip, profile aggregator fix, UX polish |
+| 13 | v0.13.0 | Persona clustering engine, per-field confidence scoring, PersonaCard UI |
+| 14 | v0.14.0 | Dual score (exposure + threat), score history, LifeTimeline component |
+| 15 | v0.15.0 | Real-time log viewer (Redis ring buffer), structured logging, LogViewer UI |
+| 16 | v0.16.0 | Multi-workspace support, workspace CRUD, member invite flow, Organization page |
+| 17 | v0.17.0 | Connected accounts (OAuth framework), Google/Microsoft audit, Accounts UI |
+| 18 | v0.18.0 | 7 gaming scrapers, 6 social scrapers, scraper import/export (43 total) |
+| 19 | v0.19.0 | Scraper UI: test runner, toggle, YAML export/import, bulk operations |
+| 20 | v0.20.0 | Plans (Free/Consultant/Enterprise), open registration, plan enforcement, billing UI |
+| 21 | v0.21.0 | Admin panel (platform users/workspaces), quick scan, invite flow fix |
 
 ## Bugs fixed (v0.5.x)
 

@@ -93,6 +93,7 @@ erDiagram
     workspaces {
         uuid id PK
         string name
+        string plan
         jsonb settings
     }
     targets {
@@ -198,6 +199,59 @@ enable name-based intelligence APIs like Genderize, Agify, and Nationalize.
 New in v0.12.0: Profile aggregator unwraps scraper `extracted` dict, enabling
 scraper-sourced names, avatars, and identity estimation data to flow into
 the unified profile.
+
+## Persona Clustering (v0.13.0+)
+
+Post-scan, the persona engine clusters identity graph nodes into distinct digital personas:
+1. Extract all social accounts, usernames, display names from findings
+2. Group by shared username patterns (exact match, prefix match, similarity)
+3. Cross-reference with avatar hashes and display names
+4. Assign confidence score per cluster
+5. Store in `target.profile_data.personas` (JSONB array)
+
+Feature-gated: Consultant/Enterprise plans only (superadmin bypasses).
+
+## Dual Score Engine (v0.14.0+)
+
+Two complementary scores computed in `finalize_scan`:
+
+**Exposure Score** (0-100): How much data is publicly visible.
+```
+exposure = Σ (category_weight × min(Σ severity_multiplier, 100))
+```
+
+**Threat Score** (0-100): Active risk level.
+```
+threat = f(breach_recency, credential_leaks, active_tracking, password_reuse)
+```
+
+Both displayed in UI with color-coded indicators. History tracked per-scan.
+
+## Plan Enforcement (v0.20.0+)
+
+Three-tier plan system (Free/Consultant/Enterprise) enforced at API endpoints:
+
+```
+POST /targets → check_target_limit(plan, current_count, role)
+POST /scans   → check_scan_limit(plan, scans_this_month, role)
+               → filter_modules_by_plan(modules, plan, role, layers)
+finalize_scan → check_feature(plan, "persona_clustering", role)
+              → check_feature(plan, "intelligence_pipeline", role)
+```
+
+superadmin role bypasses ALL plan limits. Plan lives on Workspace, not User.
+
+Central config: `api/services/plan_config.py`
+
+## Admin Panel (v0.21.0+)
+
+Platform-wide management endpoints (superadmin only):
+- `GET /system/users` — all users with workspace memberships, roles, last_login
+- `PATCH /system/users/{id}` — activate/deactivate users
+- `GET /system/workspaces` — all workspaces with member/target/scan counts
+
+Frontend: System page with Users + Workspaces tabs. Expandable user rows
+showing workspace memberships. Inline plan change dropdown for workspaces.
 
 ## Encryption
 
