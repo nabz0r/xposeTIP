@@ -191,6 +191,7 @@ async def get_target_profile(
     # Enrich with live data from target model
     profile["email"] = target.email
     profile["exposure_score"] = target.exposure_score
+    profile["threat_score"] = target.threat_score
     profile["score_breakdown"] = target.score_breakdown
     profile["status"] = target.status
     profile["country_code"] = target.country_code
@@ -343,6 +344,7 @@ def _target_dict(t: Target) -> dict:
         "country_code": t.country_code,
         "status": t.status,
         "exposure_score": t.exposure_score,
+        "threat_score": t.threat_score,
         "score_breakdown": t.score_breakdown,
         "first_scanned": t.first_scanned.isoformat() if t.first_scanned else None,
         "last_scanned": t.last_scanned.isoformat() if t.last_scanned else None,

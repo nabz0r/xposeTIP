@@ -55,6 +55,7 @@ async def get_graph(
             "platform": i.platform,
             "source_module": i.source_module,
             "confidence": i.confidence,
+            "metadata": i.metadata_ or {},
         }
         for i in identities
     ]

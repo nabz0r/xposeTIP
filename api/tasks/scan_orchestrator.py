@@ -106,8 +106,8 @@ def finalize_scan(scan_id: str):
         # Compute exposure score (separate transaction so scan status is visible)
         try:
             from api.services.layer4.score_engine import compute_score
-            score, breakdown = compute_score(scan.target_id, session)
-            logger.info("Score for target %s: %d", scan.target_id, score)
+            score, threat, breakdown = compute_score(scan.target_id, session)
+            logger.info("Score for target %s: exposure=%d, threat=%d", scan.target_id, score, threat)
         except Exception:
             logger.exception("Score computation failed for target %s", scan.target_id)
             # Ensure score is at least 0 on failure
@@ -129,6 +129,19 @@ def finalize_scan(scan_id: str):
             aggregate_profile(scan.target_id, scan.workspace_id, session)
         except Exception:
             logger.exception("Profile aggregation failed for target %s", scan.target_id)
+
+        # Cluster personas
+        try:
+            from api.services.layer4.persona_engine import cluster_personas
+            personas = cluster_personas(scan.target_id, scan.workspace_id, session)
+            if personas:
+                profile = dict(target.profile_data or {})
+                profile["personas"] = personas
+                target.profile_data = profile
+                session.commit()
+                logger.info("Personas clustered for target %s: %d personas", scan.target_id, len(personas))
+        except Exception:
+            logger.exception("Persona clustering failed for target %s", scan.target_id)
 
         # Run intelligence analysis pipeline
         try:

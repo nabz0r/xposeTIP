@@ -18,6 +18,7 @@ class Target(UUIDMixin, TimestampMixin, Base):
     country_code: Mapped[str | None] = mapped_column(String(2))
     status: Mapped[str] = mapped_column(String(20), default="pending")
     exposure_score: Mapped[int | None] = mapped_column(Integer)
+    threat_score: Mapped[int | None] = mapped_column(Integer)
     score_breakdown: Mapped[dict | None] = mapped_column(JSONB)
     first_scanned: Mapped[datetime | None] = mapped_column(TIMESTAMP(timezone=True))
     last_scanned: Mapped[datetime | None] = mapped_column(TIMESTAMP(timezone=True))

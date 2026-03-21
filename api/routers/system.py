@@ -181,7 +181,7 @@ async def recalculate_scores(
     try:
         for t in targets:
             try:
-                score, breakdown = compute_score(t.id, sync_session)
+                score, threat, breakdown = compute_score(t.id, sync_session)
                 updated += 1
             except Exception:
                 logger.exception("Failed to recompute score for target %s", t.id)

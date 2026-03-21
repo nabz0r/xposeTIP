@@ -22,10 +22,59 @@ const nodeRadius = {
   paste: 10,
 }
 
-export default function IdentityGraph({ data }) {
+const PERSONA_COLORS = [
+  '#00ff88', '#3388ff', '#ff8800', '#aa55ff', '#ffcc00', '#ff4466', '#00ddcc',
+]
+
+export default function IdentityGraph({ data, personas = [] }) {
   const svgRef = useRef()
   const containerRef = useRef()
   const [selected, setSelected] = useState(null)
+
+  // Compute edge counts for dynamic sizing
+  const edgeCounts = {}
+  if (data?.edges) {
+    data.edges.forEach(e => {
+      edgeCounts[e.source] = (edgeCounts[e.source] || 0) + 1
+      edgeCounts[e.dest] = (edgeCounts[e.dest] || 0) + 1
+    })
+  }
+
+  const getNodeColor = (node) => {
+    if (node.type === 'email') return '#00ff88'
+    if (node.type === 'breach') return '#ff2244'
+    const personaId = node.metadata?.persona
+    if (personaId) {
+      const idx = parseInt(personaId.replace('persona_', '')) || 0
+      return PERSONA_COLORS[idx % PERSONA_COLORS.length]
+    }
+    return nodeColors[node.type] || '#666688'
+  }
+
+  const getDynamicRadius = (node) => {
+    const base = nodeRadius[node.type] || 10
+    const edges = edgeCounts[node.id] || 0
+    return base + Math.min(edges * 2, 12)
+  }
+
+  // Get connected nodes for detail panel
+  const getConnectedNodes = (nodeId) => {
+    if (!data?.edges) return []
+    const connected = []
+    data.edges.forEach(e => {
+      if (e.source === nodeId || (typeof e.source === 'object' && e.source?.id === nodeId)) {
+        const targetId = typeof e.dest === 'object' ? e.dest.id : e.dest
+        const targetNode = data.nodes.find(n => n.id === targetId)
+        if (targetNode) connected.push({ node: targetNode, type: e.type })
+      }
+      if (e.dest === nodeId || (typeof e.dest === 'object' && e.dest?.id === nodeId)) {
+        const sourceId = typeof e.source === 'object' ? e.source.id : e.source
+        const sourceNode = data.nodes.find(n => n.id === sourceId)
+        if (sourceNode) connected.push({ node: sourceNode, type: e.type })
+      }
+    })
+    return connected
+  }
 
   useEffect(() => {
     if (!data || !data.nodes.length) return
@@ -58,7 +107,7 @@ export default function IdentityGraph({ data }) {
       .force('link', d3.forceLink(links).id(d => d.id).distance(100))
       .force('charge', d3.forceManyBody().strength(-300))
       .force('center', d3.forceCenter(width / 2, height / 2))
-      .force('collision', d3.forceCollide().radius(d => (nodeRadius[d.type] || 10) + 5))
+      .force('collision', d3.forceCollide().radius(d => getDynamicRadius(d) + 5))
 
     // Edges
     const link = g.append('g')
@@ -105,14 +154,14 @@ export default function IdentityGraph({ data }) {
     feMerge.append('feMergeNode').attr('in', 'SourceGraphic')
 
     node.append('circle')
-      .attr('r', d => nodeRadius[d.type] || 10)
-      .attr('fill', d => (nodeColors[d.type] || '#666688') + '33')
-      .attr('stroke', d => nodeColors[d.type] || '#666688')
+      .attr('r', d => getDynamicRadius(d))
+      .attr('fill', d => getNodeColor(d) + '33')
+      .attr('stroke', d => getNodeColor(d))
       .attr('stroke-width', 2)
       .attr('filter', d => d.type === 'email' ? 'url(#glow)' : null)
 
     node.append('text')
-      .attr('dy', d => (nodeRadius[d.type] || 10) + 14)
+      .attr('dy', d => getDynamicRadius(d) + 14)
       .attr('text-anchor', 'middle')
       .attr('font-size', 10)
       .attr('fill', '#888')
@@ -126,8 +175,8 @@ export default function IdentityGraph({ data }) {
     node.append('text')
       .attr('dy', 4)
       .attr('text-anchor', 'middle')
-      .attr('font-size', d => (nodeRadius[d.type] || 10) * 0.8)
-      .attr('fill', d => nodeColors[d.type] || '#666688')
+      .attr('font-size', d => getDynamicRadius(d) * 0.7)
+      .attr('fill', d => getNodeColor(d))
       .text(d => {
         const icons = { email: '@', social_url: '🔗', breach: '⚠', domain: '🌐', username: '👤', ip: '📍', paste: '📋' }
         return icons[d.type] || '•'
@@ -177,11 +226,15 @@ export default function IdentityGraph({ data }) {
     )
   }
 
+  const connectedNodes = selected ? getConnectedNodes(selected.id) : []
+  const selectedPersona = selected?.metadata?.persona
+  const personaLabel = selectedPersona ? personas.find(p => p.id === selectedPersona)?.label : null
+
   return (
     <div className="relative" ref={containerRef} style={{ minHeight: 500 }}>
       <svg ref={svgRef} className="w-full" style={{ minHeight: 500, background: '#0a0a0f', borderRadius: 12 }} />
 
-      {/* Legend */}
+      {/* Type Legend */}
       <div className="absolute top-3 left-3 bg-[#12121a]/90 border border-[#1e1e2e] rounded-lg p-3 text-xs space-y-1">
         {Object.entries(nodeColors).map(([type, color]) => (
           <div key={type} className="flex items-center gap-2">
@@ -190,6 +243,20 @@ export default function IdentityGraph({ data }) {
           </div>
         ))}
       </div>
+
+      {/* Persona Legend */}
+      {personas.length > 0 && (
+        <div className="absolute top-3 left-3 mt-[200px] bg-[#12121a]/90 border border-[#1e1e2e] rounded-lg p-3 text-xs space-y-1">
+          <div className="text-gray-500 font-semibold mb-1">Personas</div>
+          {personas.map((p, i) => (
+            <div key={p.id} className="flex items-center gap-2">
+              <span className="w-3 h-3 rounded-full" style={{ backgroundColor: PERSONA_COLORS[i % PERSONA_COLORS.length] }} />
+              <span className="text-gray-400">@{p.label}</span>
+              <span className="text-gray-600">({p.accounts_count})</span>
+            </div>
+          ))}
+        </div>
+      )}
 
       {/* Stats */}
       <div className="absolute top-3 right-3 bg-[#12121a]/90 border border-[#1e1e2e] rounded-lg p-3 text-xs text-gray-400">
@@ -202,17 +269,36 @@ export default function IdentityGraph({ data }) {
         <div className="absolute bottom-3 left-3 right-3 bg-[#12121a] border border-[#1e1e2e] rounded-lg p-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <span className="w-3 h-3 rounded-full" style={{ backgroundColor: nodeColors[selected.type] || '#666688' }} />
+              <span className="w-3 h-3 rounded-full" style={{ backgroundColor: getNodeColor(selected) }} />
               <span className="font-mono text-sm">{selected.value}</span>
+              {personaLabel && (
+                <span className="text-[10px] font-mono px-1.5 py-0.5 rounded-full bg-[#3388ff]/10 text-[#3388ff]">
+                  @{personaLabel} persona
+                </span>
+              )}
             </div>
             <button onClick={() => setSelected(null)} className="text-gray-500 hover:text-white text-sm">✕</button>
           </div>
-          <div className="mt-2 grid grid-cols-3 gap-4 text-xs text-gray-400">
+          <div className="mt-2 grid grid-cols-4 gap-4 text-xs text-gray-400">
             <div><span className="text-gray-500">Type:</span> {selected.type}</div>
             <div><span className="text-gray-500">Platform:</span> {selected.platform || '-'}</div>
             <div><span className="text-gray-500">Module:</span> {selected.source_module || '-'}</div>
-            <div><span className="text-gray-500">Confidence:</span> {(selected.confidence * 100).toFixed(0)}%</div>
+            <div><span className="text-gray-500">Confidence:</span> {((selected.confidence || 0) * 100).toFixed(0)}%</div>
           </div>
+          {connectedNodes.length > 0 && (
+            <div className="mt-2 pt-2 border-t border-[#1e1e2e]">
+              <div className="text-[10px] text-gray-500 mb-1">Connected ({connectedNodes.length}):</div>
+              <div className="flex flex-wrap gap-1.5">
+                {connectedNodes.slice(0, 8).map((cn, i) => (
+                  <span key={i} className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-[#1e1e2e] text-gray-400">
+                    {cn.node.value.length > 20 ? cn.node.value.slice(0, 18) + '…' : cn.node.value}
+                    <span className="text-gray-600 ml-1">({cn.type.replace(/_/g, ' ')})</span>
+                  </span>
+                ))}
+                {connectedNodes.length > 8 && <span className="text-[10px] text-gray-500">+{connectedNodes.length - 8} more</span>}
+              </div>
+            </div>
+          )}
         </div>
       )}
     </div>

@@ -54,6 +54,41 @@ export default function ProfileHeader({ target, findings, animScore, profileData
   const socialCount = socialProfiles.length || findings.filter(f => f.category === 'social_account').length
   const credentialsLeaked = p.breach_summary?.credentials_leaked || false
 
+  const threatScore = p.threat_score ?? target.threat_score ?? null
+  const exposureScore = target.exposure_score ?? null
+
+  const exposureColor = (s) => {
+    if (s == null) return '#666688'
+    if (s <= 20) return '#00ff88'
+    if (s <= 40) return '#3388ff'
+    if (s <= 60) return '#ffcc00'
+    if (s <= 80) return '#ff8800'
+    return '#ff2244'
+  }
+  const threatColor = (s) => {
+    if (s == null) return '#666688'
+    if (s <= 20) return '#00ff88'
+    if (s <= 40) return '#ffcc00'
+    if (s <= 60) return '#ff8800'
+    return '#ff2244'
+  }
+  const exposureLabel = (s) => {
+    if (s == null) return ''
+    if (s <= 20) return 'Minimal footprint'
+    if (s <= 40) return 'Low footprint'
+    if (s <= 60) return 'Moderate footprint'
+    if (s <= 80) return 'Wide footprint'
+    return 'Maximum footprint'
+  }
+  const threatLabel = (s) => {
+    if (s == null) return ''
+    if (s <= 20) return 'Safe'
+    if (s <= 40) return 'Guarded'
+    if (s <= 60) return 'Elevated'
+    if (s <= 80) return 'High'
+    return 'Critical'
+  }
+
   const breakdown = target.score_breakdown || p.score_breakdown || {}
 
   const CATEGORY_LABELS = {
@@ -163,6 +198,32 @@ export default function ProfileHeader({ target, findings, animScore, profileData
           {socialProfiles.length > 12 && (
             <span className="text-[11px] text-gray-500 self-center">+{socialProfiles.length - 12} more</span>
           )}
+        </div>
+      )}
+
+      {/* Dual Score Gauges */}
+      {(exposureScore != null || threatScore != null) && (
+        <div className="flex gap-4 mt-4 pt-4 border-t border-[#1e1e2e]">
+          <div className="flex-1">
+            <div className="text-[10px] text-gray-500 uppercase tracking-wider mb-1">Exposure</div>
+            <div className="flex items-center gap-2 mb-1">
+              <span className="text-2xl font-mono font-bold" style={{ color: exposureColor(exposureScore) }}>{exposureScore ?? '-'}</span>
+              <span className="text-[10px] text-gray-500">{exposureLabel(exposureScore)}</span>
+            </div>
+            <div className="h-2 bg-[#0a0a0f] rounded-full overflow-hidden">
+              <div className="h-full rounded-full transition-all duration-700" style={{ width: `${exposureScore || 0}%`, backgroundColor: exposureColor(exposureScore) }} />
+            </div>
+          </div>
+          <div className="flex-1">
+            <div className="text-[10px] text-gray-500 uppercase tracking-wider mb-1">Threat</div>
+            <div className="flex items-center gap-2 mb-1">
+              <span className="text-2xl font-mono font-bold" style={{ color: threatColor(threatScore) }}>{threatScore ?? '-'}</span>
+              <span className="text-[10px] text-gray-500">{threatLabel(threatScore)}</span>
+            </div>
+            <div className="h-2 bg-[#0a0a0f] rounded-full overflow-hidden">
+              <div className="h-full rounded-full transition-all duration-700" style={{ width: `${threatScore || 0}%`, backgroundColor: threatColor(threatScore) }} />
+            </div>
+          </div>
         </div>
       )}
 

@@ -29,6 +29,25 @@ SCORE_WEIGHTS = {
     "intelligence": 0.03,
 }
 
+# Categories that indicate EXPOSURE (visibility, footprint)
+EXPOSURE_CATEGORIES = {
+    "social_account": 0.30,
+    "metadata": 0.20,
+    "identity": 0.15,
+    "archive": 0.10,
+    "geolocation": 0.10,
+    "domain_registration": 0.08,
+    "intelligence": 0.07,
+}
+
+# Categories that indicate THREAT (danger, risk)
+THREAT_CATEGORIES = {
+    "breach": 0.35,
+    "paste": 0.15,
+    "data_broker": 0.15,
+    "tracking": 0.20,
+}
+
 SEVERITY_MULTIPLIER = {
     "critical": 5,
     "high": 4,
@@ -94,10 +113,10 @@ def _compute_bonus_factors(findings: list) -> int:
     return bonus
 
 
-def compute_score(target_id, session: Session) -> tuple[int, dict]:
-    """Compute exposure score 0-100 and category breakdown for a target.
+def compute_score(target_id, session: Session) -> tuple[int, int, dict]:
+    """Compute exposure (0-100) and threat (0-100) scores and category breakdown.
 
-    v2: Each finding weighted by confidence * source_reliability.
+    Returns (exposure_score, threat_score, breakdown).
     """
     # Deduplicate: keep latest finding per (module, title) — Python-side
     all_findings = session.execute(
@@ -136,7 +155,7 @@ def compute_score(target_id, session: Session) -> tuple[int, dict]:
         normalized = min(100, int((raw / max_raw) * 100))
         breakdown[cat] = normalized
 
-    # Weighted total
+    # Weighted total (combined, kept for backward compat)
     total = 0.0
     for cat, weight in SCORE_WEIGHTS.items():
         total += breakdown.get(cat, 0) * weight
@@ -147,11 +166,27 @@ def compute_score(target_id, session: Session) -> tuple[int, dict]:
         if cat not in known_cats:
             total += score * 0.02
 
-    # Apply bonus factors
-    bonus = _compute_bonus_factors(findings)
-    total += bonus
+    # Exposure score (visibility)
+    exposure_total = 0.0
+    for cat, weight in EXPOSURE_CATEGORIES.items():
+        exposure_total += breakdown.get(cat, 0) * weight
+    known_all = set(EXPOSURE_CATEGORIES.keys()) | set(THREAT_CATEGORIES.keys())
+    for cat, score in breakdown.items():
+        if cat not in known_all:
+            exposure_total += score * 0.02
 
-    final_score = min(100, max(0, int(total)))
+    # Threat score (danger)
+    threat_total = 0.0
+    for cat, weight in THREAT_CATEGORIES.items():
+        threat_total += breakdown.get(cat, 0) * weight
+
+    # Apply bonus factors to THREAT only
+    bonus = _compute_bonus_factors(findings)
+    threat_total += bonus
+
+    exposure_score = min(100, max(0, int(exposure_total)))
+    threat_score = min(100, max(0, int(threat_total)))
+    final_score = exposure_score  # Keep exposure as the primary score for backward compat
 
     # Update target
     target = session.execute(
@@ -159,13 +194,14 @@ def compute_score(target_id, session: Session) -> tuple[int, dict]:
     ).scalar_one_or_none()
 
     if target:
-        target.exposure_score = final_score
+        target.exposure_score = exposure_score
+        target.threat_score = threat_score
         target.score_breakdown = breakdown
         session.commit()
 
     logger.info(
-        "Score computed for target %s: %d (bonus=%d, breakdown=%s)",
-        target_id, final_score, bonus, breakdown,
+        "Score computed for target %s: exposure=%d, threat=%d (bonus=%d, breakdown=%s)",
+        target_id, exposure_score, threat_score, bonus, breakdown,
     )
 
-    return final_score, breakdown
+    return exposure_score, threat_score, breakdown

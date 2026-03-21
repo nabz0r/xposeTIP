@@ -8,6 +8,7 @@ import PlatformIcon, { getRemediationLink } from '../components/PlatformIcon'
 import IOCTimeline from '../components/IOCTimeline'
 import ProfileHeader from '../components/ProfileHeader'
 import IdentityCard from '../components/IdentityCard'
+import PersonaCard from '../components/PersonaCard'
 import LocationMap from '../components/LocationMap'
 
 const severityColors = {
@@ -341,11 +342,19 @@ export default function TargetDetail() {
                     }[riskAssessment.data?.risk_level] || ''}</p>
                   </div>
                 </div>
-                <div className="text-right">
-                  <div className="text-2xl font-mono font-bold" style={{ color: scoreColor(target.exposure_score) }}>
-                    {target.exposure_score ?? '-'}
+                <div className="flex gap-4 text-right">
+                  <div>
+                    <div className="text-2xl font-mono font-bold" style={{ color: scoreColor(target.exposure_score) }}>
+                      {target.exposure_score ?? '-'}
+                    </div>
+                    <div className="text-[10px] text-gray-500 uppercase">Exposure</div>
                   </div>
-                  <div className="text-[10px] text-gray-500 uppercase">Score</div>
+                  <div>
+                    <div className="text-2xl font-mono font-bold" style={{ color: target.threat_score >= 61 ? '#ff2244' : target.threat_score >= 31 ? '#ff8800' : '#00ff88' }}>
+                      {target.threat_score ?? '-'}
+                    </div>
+                    <div className="text-[10px] text-gray-500 uppercase">Threat</div>
+                  </div>
                 </div>
               </div>
               {/* Progress bar */}
@@ -372,6 +381,9 @@ export default function TargetDetail() {
 
           {/* Identity Estimation */}
           <IdentityCard profile={profile} />
+
+          {/* Persona Clusters */}
+          <PersonaCard personas={profile?.personas} />
 
           {/* Digital Fingerprint */}
           {fingerprint && (
@@ -714,7 +726,7 @@ export default function TargetDetail() {
       )}
 
       {/* Graph Tab */}
-      {activeTab === 'graph' && <IdentityGraph data={graphData} />}
+      {activeTab === 'graph' && <IdentityGraph data={graphData} personas={profile?.personas || []} />}
 
       {/* Timeline Tab */}
       {activeTab === 'timeline' && <IOCTimeline findings={findings} />}
