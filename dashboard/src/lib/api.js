@@ -116,6 +116,17 @@ export const oauthCallback = (data) => request('/accounts/oauth/callback', { met
 export const auditAccount = (accountId) => request(`/accounts/${accountId}/audit`, { method: 'POST' })
 export const disconnectAccount = (accountId) => request(`/accounts/${accountId}`, { method: 'DELETE' })
 
+// Scrapers
+export const getScrapers = (params = '') => request(`/scrapers${params ? '?' + params : ''}`)
+export const getScraper = (id) => request(`/scrapers/${id}`)
+export const createScraper = (data) => request('/scrapers', { method: 'POST', body: JSON.stringify(data) })
+export const updateScraper = (id, data) => request(`/scrapers/${id}`, { method: 'PATCH', body: JSON.stringify(data) })
+export const deleteScraper = (id) => request(`/scrapers/${id}`, { method: 'DELETE' })
+export const testScraper = (id, input) => request(`/scrapers/${id}/test`, { method: 'POST', body: JSON.stringify({ input }) })
+export const toggleScraper = (id) => request(`/scrapers/${id}/toggle`, { method: 'POST' })
+export const exportScraper = (id) => request(`/scrapers/${id}/export`, { method: 'POST' })
+export const importScraper = (data) => request('/scrapers/import', { method: 'POST', body: JSON.stringify(data) })
+
 // User profile
 export const updateProfile = (data) => request('/auth/profile', { method: 'PATCH', body: JSON.stringify(data) })
 export const changePassword = (data) => request('/auth/password', { method: 'POST', body: JSON.stringify(data) })

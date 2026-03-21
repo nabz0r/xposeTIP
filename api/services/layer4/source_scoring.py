@@ -55,6 +55,9 @@ SOURCE_RELIABILITY = {
     "google_audit": 0.95,      # Direct from Google API with OAuth
     "microsoft_audit": 0.95,   # Direct from Microsoft Graph with OAuth
 
+    # Layer 1 — Scraper engine (DB-defined scrapers)
+    "scraper_engine": 0.60,    # Community/custom scrapers, variable quality
+
     # Layer 4 — Intelligence engine
     "intelligence": 0.90,      # Auto-generated cross-referencing, high quality
 }

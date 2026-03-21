@@ -194,6 +194,18 @@ MODULES = [
         "supported_regions": ["*"],
         "version": "1.0.0",
     },
+    {
+        "id": "scraper_engine",
+        "display_name": "Scraper Engine",
+        "description": "Modular scraping framework — executes DB-defined scrapers with editable regex patterns",
+        "layer": 1,
+        "category": "social",
+        "enabled": True,
+        "requires_auth": False,
+        "rate_limit": {"rpm": 30, "cooldown_sec": 2},
+        "supported_regions": ["*"],
+        "version": "1.0.0",
+    },
     # Layer 2 — Public databases (disabled by default)
     {
         "id": "maxmind_geo",

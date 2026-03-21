@@ -30,6 +30,8 @@ SCANNER_REGISTRY = {
     "username_hunter": "api.services.layer1.username_scanner:UsernameScannerPlugin",
     "leaked_domains": "api.services.layer2.leaked_scanner:LeakedScanner",
     "dns_deep": "api.services.layer2.dns_scanner:DNSDeepScanner",
+    # Layer 1 — Scraper engine (DB-defined scrapers)
+    "scraper_engine": "api.services.layer1.scraper_scanner:ScraperScanner",
     # Layer 2 — Premium (requires API keys)
     "virustotal": "api.services.layer2.virustotal_scanner:VirusTotalScanner",
     "shodan": "api.services.layer2.shodan_scanner:ShodanScanner",

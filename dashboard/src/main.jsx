@@ -9,6 +9,7 @@ import Dashboard from './pages/Dashboard'
 import Targets from './pages/Targets'
 import TargetDetail from './pages/TargetDetail'
 import Settings from './pages/Settings'
+import Scrapers from './pages/Scrapers'
 import System from './pages/System'
 import Organization from './pages/Organization'
 import Landing from './pages/Landing'
@@ -35,6 +36,7 @@ function App() {
             <Route path="targets" element={<Targets />} />
             <Route path="targets/:id" element={<TargetDetail />} />
             <Route path="organization" element={<Organization />} />
+            <Route path="scrapers" element={<Scrapers />} />
             <Route path="system" element={<System />} />
             <Route path="settings" element={<Settings />} />
           </Route>

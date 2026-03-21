@@ -1,12 +1,13 @@
 import { useEffect, useState } from 'react'
 import { Outlet, NavLink, useNavigate, useLocation } from 'react-router-dom'
-import { LayoutDashboard, Crosshair, Settings, LogOut, Shield, ServerCog, Building2, ChevronDown, Plus, Menu, X } from 'lucide-react'
+import { LayoutDashboard, Crosshair, Settings, LogOut, Shield, ServerCog, Building2, ChevronDown, Plus, Menu, X, Globe } from 'lucide-react'
 import { useAuth } from '../lib/auth'
 import { getMe, getWorkspaces, switchWorkspace } from '../lib/api'
 
 const navItems = [
   { to: '/', icon: LayoutDashboard, label: 'Dashboard' },
   { to: '/targets', icon: Crosshair, label: 'Targets' },
+  { to: '/scrapers', icon: Globe, label: 'Scrapers' },
   { to: '/organization', icon: Building2, label: 'Organization' },
   { to: '/system', icon: ServerCog, label: 'System' },
   { to: '/settings', icon: Settings, label: 'Settings' },
@@ -20,6 +21,7 @@ const roleColors = {
 const pageTitles = {
   '/': 'Dashboard',
   '/targets': 'Targets',
+  '/scrapers': 'Scrapers',
   '/organization': 'Organization',
   '/system': 'System',
   '/settings': 'Settings',
