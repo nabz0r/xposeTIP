@@ -1,5 +1,6 @@
 import asyncio
 import logging
+import re
 
 from api.services.base import BaseScanner, ScanResult
 from api.services.scraper_engine import ScraperEngine
@@ -30,7 +31,7 @@ class ScraperScanner(BaseScanner):
             scrapers = session.execute(
                 select(Scraper).where(
                     Scraper.enabled == True,
-                    Scraper.input_type.in_(["email", "username", "domain"]),
+                    Scraper.input_type.in_(["email", "username", "domain", "first_name"]),
                 )
             ).scalars().all()
 
@@ -40,7 +41,10 @@ class ScraperScanner(BaseScanner):
             engine = ScraperEngine()
             username = email.split("@")[0]
             domain = email.split("@")[-1] if "@" in email else email
-            inputs = {"email": email, "username": username, "domain": domain}
+            cleaned_prefix = re.sub(r"\d+", "", username)
+            name_parts = re.split(r"[._]", cleaned_prefix)
+            first_name = name_parts[0].lower() if name_parts else username
+            inputs = {"email": email, "username": username, "domain": domain, "first_name": first_name}
 
             for scraper in scrapers:
                 input_value = inputs.get(scraper.input_type, email)

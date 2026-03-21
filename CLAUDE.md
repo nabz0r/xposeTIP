@@ -316,6 +316,12 @@ Frontend pre-selects: all enabled+implemented L1 + recommended L2 (dns_deep, lea
 | 3 | v0.3.0 | Gravatar, Social Enricher, Google Profile, Free GeoIP, settings UI |
 | 4 | v0.4.0 | Dynamic API keys (Fernet), key validation, location mapping, scan defaults |
 | 5 | v0.5.0 | 7 new scanners, profile aggregation, health checks, SVG world map, toast system |
+| 6 | v0.6.0 | EmailRep, Epieos, FullContact scanners, enhanced findings UI |
+| 7 | v0.7.0 | Source scoring, confidence engine, FingerprintEngine, radar chart |
+| 8 | v0.8.0 | Digital fingerprint: 8-axis radar, risk labels, comparison, history |
+| 9 | v0.9.0 | Scraper engine: DB-driven scrapers, CRUD API, 13 initial scrapers |
+| 10 | v0.10.0 | Quality polish: dedup, profile names, finding details, page transitions |
+| 11 | v0.11.0 | 15 new scrapers: identity estimation, Wayback archive, social expansion, enrichment |
 
 ## Bugs fixed (v0.5.x)
 

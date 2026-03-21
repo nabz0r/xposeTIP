@@ -31,22 +31,34 @@ class ScraperEngine:
         """Execute a single scraper definition against an input value."""
         url = ""
         try:
+            from urllib.parse import quote as url_quote
+
             transformed = self._transform_input(input_value, scraper)
             domain = input_value.split("@")[-1] if "@" in input_value else input_value
 
-            url = scraper["url_template"].format(
+            # Derive name-based placeholders from email prefix
+            prefix = input_value.split("@")[0] if "@" in input_value else input_value
+            cleaned_prefix = re.sub(r"\d+", "", prefix)
+            name_parts = re.split(r"[._]", cleaned_prefix)
+            first_name = name_parts[0].lower() if name_parts else prefix
+            fullname = " ".join(p for p in name_parts if len(p) > 1).strip() or prefix
+
+            fmt_kwargs = dict(
                 email=input_value,
                 username=transformed,
                 domain=domain,
                 input=input_value,
+                first_name=first_name,
+                fullname=fullname,
+                fullname_encoded=url_quote(fullname),
             )
+
+            url = scraper["url_template"].format(**fmt_kwargs)
 
             headers = {**dict(self.client.headers), **(scraper.get("headers") or {})}
 
             if scraper.get("method", "GET").upper() == "POST":
-                body = (scraper.get("body_template") or "").format(
-                    email=input_value, username=transformed, domain=domain,
-                )
+                body = (scraper.get("body_template") or "").format(**fmt_kwargs)
                 response = await self.client.post(url, content=body, headers=headers)
             else:
                 response = await self.client.get(url, headers=headers)
@@ -92,6 +104,23 @@ class ScraperEngine:
             return input_value.split("@")[0]
         elif transform == "email_to_domain":
             return input_value.split("@")[-1]
+        elif transform == "email_to_first_name":
+            prefix = input_value.split("@")[0] if "@" in input_value else input_value
+            cleaned = re.sub(r"\d+", "", prefix)
+            parts = re.split(r"[._]", cleaned)
+            first = parts[0] if parts else cleaned
+            return first.lower() if first else prefix
+
+        elif transform == "email_to_fullname":
+            prefix = input_value.split("@")[0] if "@" in input_value else input_value
+            cleaned = re.sub(r"\d+", "", prefix)
+            parts = re.split(r"[._]", cleaned)
+            return " ".join(p for p in parts if len(p) > 1).strip() or prefix
+
+        elif transform == "url_encode":
+            from urllib.parse import quote
+            return quote(input_value)
+
         elif transform.startswith("regex:"):
             pattern = transform[6:]
             match = re.search(pattern, input_value)
