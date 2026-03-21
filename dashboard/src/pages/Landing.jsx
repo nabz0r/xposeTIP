@@ -1,20 +1,46 @@
-import React, { useState } from 'react'
+import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../lib/auth'
-import { Shield, Radar, Lock, Globe, Zap, ChevronRight } from 'lucide-react'
-import FingerprintRadar from '../components/FingerprintRadar'
+import { Shield, Radar, Lock, Globe, Zap, Eye, Database, Network, Users, ChevronRight, ArrowRight, Check } from 'lucide-react'
+import HeroGraph from '../components/HeroGraph'
+import CountUp from '../components/CountUp'
 
-const STATS = [
-  { value: '25+', label: 'Scanners', desc: 'Intelligence modules' },
-  { value: '120+', label: 'Sites', desc: 'Account enumeration' },
-  { value: 'Free', label: 'Core', desc: 'Open source engine' },
-  { value: 'GDPR', label: 'Compliant', desc: 'EU privacy ready' },
+const FEATURES = [
+  { icon: Radar, title: 'Deep OSINT Scanning', desc: '25+ intelligence modules scan breaches, social networks, code repos, DNS, and public databases in 30 seconds.' },
+  { icon: Network, title: 'Identity Graph', desc: 'Force-directed graph maps every connection between your accounts, usernames, and exposed data points.' },
+  { icon: Eye, title: 'Digital Fingerprint', desc: '8-axis radar chart quantifies your exposure. Eigenvalue topology creates a unique identity signature.' },
+  { icon: Database, title: 'Breach Intelligence', desc: 'Cross-references HIBP, XposedOrNot, and paste sites. Shows exactly which credentials leaked and when.' },
+  { icon: Users, title: 'Persona Clustering', desc: 'AI groups your digital personas by shared usernames, avatars, and behavioral patterns across platforms.' },
+  { icon: Lock, title: 'Actionable Remediation', desc: 'Every finding includes step-by-step remediation. Track progress as you reduce your attack surface.' },
+]
+
+const PLANS = [
+  {
+    name: 'Free', price: '€0', period: '/forever', accent: '#666688',
+    features: ['1 target', '5 scans/month', 'Layer 1 scanners', 'Basic exposure score', 'Identity graph'],
+    cta: 'Start free', href: '/setup',
+  },
+  {
+    name: 'Consultant', price: '€49', period: '/month', accent: '#00ff88', popular: true,
+    features: ['25 targets', '100 scans/month', 'Layer 1 + Layer 2', 'Persona clustering', 'Multi-workspace', 'PDF reports', 'CSV export'],
+    cta: 'Start trial', href: '/setup?plan=consultant',
+  },
+  {
+    name: 'Enterprise', price: '€199', period: '/month', accent: '#3388ff',
+    features: ['Unlimited targets', 'Unlimited scans', 'All layers', 'Intelligence pipeline', 'API access', 'Priority support', 'Custom modules'],
+    cta: 'Contact sales', href: '/setup?plan=enterprise',
+  },
+]
+
+const STEPS = [
+  { num: '01', title: 'Enter an email', desc: 'Any email address — yours, a client\'s, or a test target. No account needed for a quick scan.' },
+  { num: '02', title: 'We scan everything', desc: '25+ modules query breaches, social networks, DNS, metadata, archives, and public databases in parallel.' },
+  { num: '03', title: 'See your exposure', desc: 'Identity graph, exposure score, persona clusters, and step-by-step remediation — all in one dashboard.' },
 ]
 
 export default function Landing() {
   const [email, setEmail] = useState('')
   const [loading, setLoading] = useState(false)
-  const [quickResult, setQuickResult] = useState(null)
   const [error, setError] = useState('')
   const { token } = useAuth()
   const navigate = useNavigate()
@@ -28,13 +54,11 @@ export default function Landing() {
     setError('')
     setLoading(true)
 
-    // If logged in, create target + scan
     if (token) {
       navigate(`/targets?scan=${encodeURIComponent(email)}`)
       return
     }
 
-    // Quick scan (no auth)
     try {
       const resp = await fetch('/api/v1/scan/quick', {
         method: 'POST',
@@ -47,8 +71,7 @@ export default function Landing() {
         setLoading(false)
         return
       }
-      const data = await resp.json()
-      setQuickResult(data)
+      navigate(`/login?email=${encodeURIComponent(email)}`)
     } catch {
       setError('Network error. Try again.')
     } finally {
@@ -57,165 +80,253 @@ export default function Landing() {
   }
 
   return (
-    <div className="min-h-screen bg-[#0a0a0f] text-white flex flex-col">
+    <div className="min-h-screen bg-[#0a0a0f] text-white overflow-x-hidden">
       {/* Nav */}
-      <nav className="border-b border-[#1e1e2e] px-6 py-4 flex items-center justify-between">
+      <nav className="fixed top-0 w-full z-50 border-b border-[#1e1e2e]/50 bg-[#0a0a0f]/80 backdrop-blur-xl px-6 py-4 flex items-center justify-between">
         <div className="flex items-center gap-2">
           <Shield className="w-6 h-6 text-[#00ff88]" />
-          <span className="text-xl font-bold tracking-tight">xpose</span>
+          <span className="text-xl font-bold tracking-tight font-['Instrument_Sans',sans-serif]">xpose</span>
         </div>
         <div className="flex items-center gap-3">
-          <a href="/login" className="text-sm text-gray-400 hover:text-white px-3 py-1.5">Sign in</a>
-          <a href="/setup" className="text-sm bg-[#00ff88] text-black font-semibold rounded-lg px-4 py-1.5 hover:bg-[#00ff88]/90">
+          <a href="/login" className="text-sm text-gray-400 hover:text-white px-3 py-1.5 transition-colors">Sign in</a>
+          <a href="/setup" className="text-sm bg-[#00ff88] text-black font-semibold rounded-lg px-4 py-1.5 hover:bg-[#00ff88]/90 transition-colors">
             Create account
           </a>
         </div>
       </nav>
 
-      {/* Hero */}
-      <div className="flex-1 flex flex-col items-center justify-center px-6 py-20">
-        <div className="max-w-2xl mx-auto text-center">
-          <div className="inline-flex items-center gap-2 text-[#00ff88] mb-6">
-            <Shield className="w-10 h-10" />
-            <h1 className="text-4xl md:text-5xl font-bold tracking-tight">xpose</h1>
+      {/* ═══════════════════ Section 1: Hero ═══════════════════ */}
+      <section className="min-h-screen flex items-center justify-center relative pt-16">
+        {/* Background grid */}
+        <div className="absolute inset-0 opacity-[0.03]" style={{
+          backgroundImage: 'linear-gradient(#00ff88 1px, transparent 1px), linear-gradient(90deg, #00ff88 1px, transparent 1px)',
+          backgroundSize: '60px 60px',
+        }} />
+
+        <div className="max-w-7xl mx-auto px-6 grid lg:grid-cols-2 gap-12 items-center relative z-10">
+          {/* Left — Copy + form */}
+          <div>
+            <div className="inline-flex items-center gap-2 text-xs font-mono text-[#00ff88] bg-[#00ff88]/10 border border-[#00ff88]/20 rounded-full px-3 py-1 mb-6">
+              <span className="w-1.5 h-1.5 bg-[#00ff88] rounded-full animate-pulse" />
+              v0.26.0 — 76+ intelligence modules
+            </div>
+
+            <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight leading-tight mb-4 font-['Instrument_Sans',sans-serif]">
+              What does the internet know about{' '}
+              <span className="text-[#00ff88]">you</span>?
+            </h1>
+
+            <p className="text-lg text-gray-400 mb-8 max-w-lg leading-relaxed">
+              Identity Threat Intelligence platform. 25 scanners, 51 scrapers,
+              graph-based intelligence engine. See your complete digital exposure in 30 seconds.
+            </p>
+
+            {/* Scan form */}
+            <form onSubmit={handleQuickScan} className="flex gap-3 max-w-md mb-3">
+              <input
+                type="email"
+                value={email}
+                onChange={e => setEmail(e.target.value)}
+                placeholder="you@email.com"
+                className="flex-1 bg-[#12121a] border border-[#1e1e2e] rounded-lg px-4 py-3.5 text-sm focus:outline-none focus:border-[#00ff88]/50 font-mono placeholder-gray-600 transition-colors"
+              />
+              <button
+                type="submit"
+                disabled={loading}
+                className="bg-[#00ff88] text-black font-semibold rounded-lg px-6 py-3.5 text-sm hover:bg-[#00ff88]/90 disabled:opacity-50 flex items-center gap-2 transition-all group"
+              >
+                {loading ? (
+                  <Radar className="w-4 h-4 animate-spin" />
+                ) : (
+                  <>
+                    <Radar className="w-4 h-4" /> Scan
+                    <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" />
+                  </>
+                )}
+              </button>
+            </form>
+            {error && <p className="text-xs text-[#ff2244] mb-2">{error}</p>}
+            <p className="text-xs text-gray-600 font-mono">
+              No account required for quick scan · GDPR compliant
+            </p>
           </div>
-          <p className="text-lg md:text-xl text-gray-300 mb-2">
-            Identity Threat Intelligence Platform
-          </p>
-          <p className="text-2xl md:text-3xl font-semibold mb-8">
-            What does the internet know about <span className="text-[#00ff88]">you</span>?
-          </p>
 
-          {/* Scan form */}
-          <form onSubmit={handleQuickScan} className="flex gap-3 max-w-md mx-auto mb-4">
-            <input
-              type="email"
-              value={email}
-              onChange={e => setEmail(e.target.value)}
-              placeholder="Enter your email"
-              className="flex-1 bg-[#12121a] border border-[#1e1e2e] rounded-lg px-4 py-3 text-sm focus:outline-none focus:border-[#00ff88]/50 font-mono"
-            />
-            <button
-              type="submit"
-              disabled={loading}
-              className="bg-[#00ff88] text-black font-semibold rounded-lg px-6 py-3 text-sm hover:bg-[#00ff88]/90 disabled:opacity-50 flex items-center gap-2"
-            >
-              {loading ? (
-                <Radar className="w-4 h-4 animate-spin" />
-              ) : (
-                <>
-                  <Radar className="w-4 h-4" /> Scan
-                </>
-              )}
-            </button>
-          </form>
-          {error && <p className="text-xs text-[#ff2244] mb-4">{error}</p>}
-          <p className="text-sm text-gray-500 mb-12">
-            In 30 seconds, discover your digital exposure
-          </p>
+          {/* Right — HeroGraph */}
+          <div className="flex justify-center lg:justify-end">
+            <HeroGraph size={440} className="opacity-80" />
+          </div>
+        </div>
 
-          {/* Quick result preview with fingerprint */}
-          {quickResult && (() => {
-            // Build lightweight fingerprint from quick scan findings
-            const findings = quickResult.findings || []
-            const breaches = findings.filter(f => f.category === 'breach').length
-            const social = findings.filter(f => f.category === 'social_account' || f.category === 'social').length
-            const security = findings.filter(f => (f.title || '').toLowerCase().includes('no spf') || (f.title || '').toLowerCase().includes('no dmarc')).length
-            const dataTypes = new Set()
-            findings.forEach(f => { if (f.data?.data_classes) f.data.data_classes.forEach(d => dataTypes.add(d)); if (f.data?.DataClasses) f.data.DataClasses.forEach(d => dataTypes.add(d)) })
-            const maxA = 15, maxP = 10, maxB = 5, maxD = 8, maxS = 4
-            const quickFp = {
-              axes: {
-                accounts: Math.min(1, social / maxA),
-                platforms: Math.min(1, social / maxP),
-                username_reuse: 0,
-                breaches: Math.min(1, breaches / maxB),
-                geo_spread: Math.min(1, findings.filter(f => f.data?.country).length / 5),
-                data_leaked: Math.min(1, dataTypes.size / maxD),
-                email_age: 0,
-                security: Math.min(1, security / maxS),
-              },
-              color: findings.length > 10 ? '#E24B4A' : findings.length > 5 ? '#D85A30' : findings.length > 2 ? '#EF9F27' : '#1D9E75',
-              fill_color: findings.length > 5 ? 'rgba(225,50,50,0.08)' : 'rgba(29,158,117,0.12)',
-              hash: '--------',
-              score: Math.min(100, Math.round(findings.length * 5)),
-              risk_level: findings.length > 10 ? 'HIGH' : findings.length > 5 ? 'MODERATE' : 'LOW',
-              scars: [],
-              raw_values: { accounts: social, platforms: social, username_reuse: 0, breaches, geo_spread: 0, data_leaked: dataTypes.size, email_age_years: 0, security_weak: security },
-            }
-            return (
-              <div className="bg-[#12121a] border border-[#1e1e2e] rounded-xl p-6 max-w-lg mx-auto mb-8">
-                <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-sm font-semibold">Your Digital Fingerprint</h3>
-                  <span className="text-xs font-mono text-gray-500">{findings.length} findings</span>
+        {/* Scroll indicator */}
+        <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 text-gray-600">
+          <span className="text-xs font-mono">scroll</span>
+          <div className="w-px h-8 bg-gradient-to-b from-gray-600 to-transparent" />
+        </div>
+      </section>
+
+      {/* ═══════════════════ Section 2: How it works ═══════════════════ */}
+      <section className="min-h-screen flex items-center justify-center py-24 relative">
+        <div className="max-w-5xl mx-auto px-6">
+          <div className="text-center mb-16">
+            <span className="text-xs font-mono text-[#00ff88] tracking-widest uppercase">How it works</span>
+            <h2 className="text-3xl md:text-4xl font-bold mt-3 font-['Instrument_Sans',sans-serif]">
+              Three steps to full visibility
+            </h2>
+          </div>
+
+          <div className="grid md:grid-cols-3 gap-8">
+            {STEPS.map((step, i) => (
+              <div key={step.num} className="relative group">
+                {/* Connector line */}
+                {i < 2 && (
+                  <div className="hidden md:block absolute top-8 left-[60%] w-[80%] h-px bg-gradient-to-r from-[#1e1e2e] to-[#1e1e2e]/0" />
+                )}
+                <div className="bg-[#12121a] border border-[#1e1e2e] rounded-xl p-6 hover:border-[#00ff88]/20 transition-all duration-300 group-hover:shadow-[0_0_30px_rgba(0,255,136,0.05)]">
+                  <span className="text-4xl font-bold font-mono text-[#00ff88]/20 group-hover:text-[#00ff88]/40 transition-colors">{step.num}</span>
+                  <h3 className="text-lg font-semibold mt-2 mb-2">{step.title}</h3>
+                  <p className="text-sm text-gray-400 leading-relaxed">{step.desc}</p>
                 </div>
-                <FingerprintRadar fingerprint={quickFp} size="large" animate={true} />
-                <div className="space-y-2 mt-4 text-left">
-                  {findings.slice(0, 5).map((f, i) => (
-                    <div key={i} className="flex items-center gap-2 text-sm">
-                      <span className="inline-block text-[10px] font-medium px-1.5 py-0.5 rounded-full"
-                        style={{
-                          backgroundColor: (f.severity === 'critical' ? '#ff2244' : f.severity === 'high' ? '#ff8800' : f.severity === 'medium' ? '#ffcc00' : '#3388ff') + '26',
-                          color: f.severity === 'critical' ? '#ff2244' : f.severity === 'high' ? '#ff8800' : f.severity === 'medium' ? '#ffcc00' : '#3388ff',
-                        }}>
-                        {f.severity}
-                      </span>
-                      <span className="text-gray-300 truncate">{f.title}</span>
-                    </div>
-                  ))}
-                  {findings.length > 5 && (
-                    <div className="relative">
-                      <div className="space-y-2 blur-sm">
-                        {findings.slice(5, 8).map((f, i) => (
-                          <div key={i} className="flex items-center gap-2 text-sm">
-                            <span className="inline-block text-[10px] px-1.5 py-0.5 rounded-full bg-gray-800 text-gray-500">{f.severity}</span>
-                            <span className="text-gray-500 truncate">{f.title}</span>
-                          </div>
-                        ))}
-                      </div>
-                      <div className="absolute inset-0 flex items-center justify-center">
-                        <a href={`/setup?email=${encodeURIComponent(email)}`}
-                           className="bg-[#00ff88] text-black font-semibold rounded-lg px-4 py-2 text-xs hover:bg-[#00ff88]/90">
-                          Sign up to see full audit
-                        </a>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </div>
-            )
-          })()}
-
-          {/* Stats */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 max-w-lg mx-auto mb-16">
-            {STATS.map(s => (
-              <div key={s.label} className="bg-[#12121a] border border-[#1e1e2e] rounded-xl p-4 text-center hover:border-[#00ff88]/20 transition-colors">
-                <div className="text-2xl font-mono font-bold text-[#00ff88]">{s.value}</div>
-                <div className="text-xs text-gray-400 mt-1">{s.label}</div>
               </div>
             ))}
           </div>
+        </div>
+      </section>
 
-          {/* Features */}
-          <div className="grid md:grid-cols-3 gap-6 max-w-3xl mx-auto text-left">
-            {[
-              { icon: Radar, title: 'Deep OSINT', desc: '25+ intelligence scanners check your email across breaches, social networks, code repos, and public databases.' },
-              { icon: Lock, title: 'Actionable Security', desc: 'Every finding comes with remediation steps. We tell you exactly how to fix your exposure.' },
-              { icon: Zap, title: 'Intelligence Engine', desc: 'Auto cross-references usernames, IPs, domains, and breaches to surface hidden connections.' },
-            ].map(({ icon: Icon, title, desc }) => (
-              <div key={title} className="bg-[#12121a] border border-[#1e1e2e] rounded-xl p-5 hover:border-[#00ff88]/20 transition-colors">
-                <Icon className="w-8 h-8 text-[#00ff88] mb-3" />
+      {/* ═══════════════════ Section 3: Features Grid ═══════════════════ */}
+      <section className="min-h-screen flex items-center justify-center py-24 relative">
+        <div className="max-w-6xl mx-auto px-6">
+          <div className="text-center mb-16">
+            <span className="text-xs font-mono text-[#00ff88] tracking-widest uppercase">Capabilities</span>
+            <h2 className="text-3xl md:text-4xl font-bold mt-3 font-['Instrument_Sans',sans-serif]">
+              Intelligence-grade OSINT
+            </h2>
+            <p className="text-gray-400 mt-3 max-w-lg mx-auto">
+              Professional tools with consumer-grade UX. Every finding is an Identity IOC.
+            </p>
+          </div>
+
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {FEATURES.map(({ icon: Icon, title, desc }) => (
+              <div key={title} className="bg-[#12121a] border border-[#1e1e2e] rounded-xl p-6 hover:border-[#00ff88]/20 transition-all duration-300 group hover:shadow-[0_0_30px_rgba(0,255,136,0.05)]">
+                <div className="w-10 h-10 rounded-lg bg-[#00ff88]/10 flex items-center justify-center mb-4 group-hover:bg-[#00ff88]/15 transition-colors">
+                  <Icon className="w-5 h-5 text-[#00ff88]" />
+                </div>
                 <h3 className="text-sm font-semibold mb-2">{title}</h3>
                 <p className="text-xs text-gray-400 leading-relaxed">{desc}</p>
               </div>
             ))}
           </div>
-
-          <p className="text-sm text-gray-600 mt-12">
-            Built in Luxembourg. Open source. GDPR compliant.
-          </p>
         </div>
-      </div>
+      </section>
+
+      {/* ═══════════════════ Section 4: Stats Counter ═══════════════════ */}
+      <section className="py-24 relative">
+        <div className="max-w-5xl mx-auto px-6">
+          <div className="bg-[#12121a] border border-[#1e1e2e] rounded-2xl p-12 relative overflow-hidden">
+            {/* Background accent */}
+            <div className="absolute top-0 left-1/2 -translate-x-1/2 w-96 h-px bg-gradient-to-r from-transparent via-[#00ff88]/30 to-transparent" />
+
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
+              <div>
+                <div className="text-3xl md:text-4xl font-mono font-bold text-[#00ff88]">
+                  <CountUp target={76} suffix="+" />
+                </div>
+                <div className="text-xs text-gray-400 mt-2 font-mono">Intelligence modules</div>
+              </div>
+              <div>
+                <div className="text-3xl md:text-4xl font-mono font-bold text-[#00ff88]">
+                  <CountUp target={51} />
+                </div>
+                <div className="text-xs text-gray-400 mt-2 font-mono">Data scrapers</div>
+              </div>
+              <div>
+                <div className="text-3xl md:text-4xl font-mono font-bold text-[#00ff88]">
+                  <CountUp target={8} />
+                </div>
+                <div className="text-xs text-gray-400 mt-2 font-mono">Fingerprint axes</div>
+              </div>
+              <div>
+                <div className="text-3xl md:text-4xl font-mono font-bold text-white">
+                  <CountUp target={30} suffix="s" />
+                </div>
+                <div className="text-xs text-gray-400 mt-2 font-mono">Full scan time</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ═══════════════════ Section 5: Pricing ═══════════════════ */}
+      <section className="min-h-screen flex items-center justify-center py-24 relative">
+        <div className="max-w-5xl mx-auto px-6">
+          <div className="text-center mb-16">
+            <span className="text-xs font-mono text-[#00ff88] tracking-widest uppercase">Pricing</span>
+            <h2 className="text-3xl md:text-4xl font-bold mt-3 font-['Instrument_Sans',sans-serif]">
+              Simple, transparent pricing
+            </h2>
+          </div>
+
+          <div className="grid md:grid-cols-3 gap-6">
+            {PLANS.map(plan => (
+              <div key={plan.name}
+                className={`bg-[#12121a] border rounded-xl p-6 relative transition-all duration-300 hover:shadow-[0_0_30px_rgba(0,255,136,0.05)] ${
+                  plan.popular ? 'border-[#00ff88]/40 shadow-[0_0_40px_rgba(0,255,136,0.08)]' : 'border-[#1e1e2e] hover:border-[#1e1e2e]'
+                }`}
+              >
+                {plan.popular && (
+                  <div className="absolute -top-3 left-1/2 -translate-x-1/2 text-[10px] font-mono font-semibold bg-[#00ff88] text-black px-3 py-1 rounded-full">
+                    MOST POPULAR
+                  </div>
+                )}
+                <div className="mb-6">
+                  <h3 className="text-lg font-semibold" style={{ color: plan.accent }}>{plan.name}</h3>
+                  <div className="flex items-baseline gap-1 mt-2">
+                    <span className="text-3xl font-bold font-mono">{plan.price}</span>
+                    <span className="text-sm text-gray-500">{plan.period}</span>
+                  </div>
+                </div>
+                <ul className="space-y-3 mb-8">
+                  {plan.features.map(f => (
+                    <li key={f} className="flex items-center gap-2 text-sm text-gray-300">
+                      <Check className="w-3.5 h-3.5 shrink-0" style={{ color: plan.accent }} />
+                      {f}
+                    </li>
+                  ))}
+                </ul>
+                <a href={plan.href}
+                  className={`block text-center text-sm font-semibold rounded-lg py-2.5 transition-all ${
+                    plan.popular
+                      ? 'bg-[#00ff88] text-black hover:bg-[#00ff88]/90'
+                      : 'border border-[#1e1e2e] text-gray-300 hover:border-gray-500'
+                  }`}
+                >
+                  {plan.cta}
+                </a>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ═══════════════════ Section 6: Footer ═══════════════════ */}
+      <footer className="border-t border-[#1e1e2e] py-12">
+        <div className="max-w-5xl mx-auto px-6">
+          <div className="flex flex-col md:flex-row items-center justify-between gap-4">
+            <div className="flex items-center gap-2">
+              <Shield className="w-5 h-5 text-[#00ff88]" />
+              <span className="font-bold font-['Instrument_Sans',sans-serif]">xpose</span>
+              <span className="text-xs text-gray-600 font-mono ml-2">v0.26.0</span>
+            </div>
+            <p className="text-xs text-gray-600 font-mono text-center">
+              Identity Threat Intelligence · Open Source · GDPR Compliant
+            </p>
+            <div className="flex items-center gap-4 text-xs text-gray-500">
+              <a href="https://github.com/nabz0r/xposeTIP" className="hover:text-white transition-colors">GitHub</a>
+              <a href="/login" className="hover:text-white transition-colors">Sign in</a>
+            </div>
+          </div>
+        </div>
+      </footer>
     </div>
   )
 }

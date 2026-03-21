@@ -39,9 +39,9 @@ The exposure score for a US target will naturally be higher (more public data av
 than for an EU target (GDPR reduces public exposure). That's a feature, not a bug —
 it proves the point about digital exposure varying by jurisdiction.
 
-## Current version: v0.26.0
+## Current version: v0.27.0
 
-Sprint 27 complete. 25 scanners (17 implemented + 8 placeholder), 51 scrapers
+Sprint 28 complete. 25 scanners (17 implemented + 8 placeholder), 51 scrapers
 across 8 categories (social, breach, metadata, people_search, identity, archive,
 gaming, music), 5 intelligence analyzers, digital fingerprint (8-axis radar +
 eigenvalue topology signature), persona clustering engine, dual score
@@ -58,7 +58,9 @@ download, target exposure leaderboard on dashboard, DNS SaaS blocklist (50+
 managed domains), executive summary narrative, global API keys fallback,
 remediation toggle, findings CSV export, inherited keys banner, recalculate
 profiles button, persona username blacklist filtering, email_md5 URL placeholder
-for scraper engine.
+for scraper engine, landing page redesign (dark cyberpunk aesthetic, animated
+HeroGraph, scroll-triggered CountUp, pricing cards, Instrument Sans typography),
+README.md with intelligence features, DEMO_SCRIPT.md for Nexus 2026 demo.
 
 ## Tech stack (locked)
 
@@ -423,6 +425,9 @@ subsequent = user + free. Invited users (pre-created, no last_login) register wi
 - `TargetQuickView.jsx` — slide-out quick preview panel for target details
 - `Toast.jsx` — ToastProvider context, auto-dismiss 4s, stackable, top-right
 - `Layout.jsx` — sidebar nav, workspace switcher, plan badge, refreshKey pattern
+- `HeroGraph.jsx` — animated SVG identity graph for landing page (18 nodes, CSS animations)
+- `CountUp.jsx` — scroll-triggered number animation (IntersectionObserver + ease-out cubic)
+- `GenerativeAvatar.jsx` — deterministic SVG avatar from graph eigenvalues + axes
 
 ## UI rules
 
@@ -478,6 +483,7 @@ Frontend pre-selects: all enabled+implemented L1 + recommended L2 (dns_deep, lea
 | 25 | v0.24.0 | Identity intelligence fix, blacklist expansion, re-query engine, email name extraction, recalculate profiles, persona cleanup |
 | 26 | v0.25.0 | 8 new scrapers: people search (3), gaming (2), social (3), email_md5 engine placeholder (43→51 total) |
 | 27 | v0.26.0 | PageRank confidence propagation, eigenvalue fingerprint, generative avatar, graph-weighted edges |
+| 28 | v0.27.0 | Landing page redesign (cyberpunk aesthetic, HeroGraph, CountUp, pricing), README.md, DEMO_SCRIPT.md |
 
 ## Bugs fixed (v0.5.x)
 

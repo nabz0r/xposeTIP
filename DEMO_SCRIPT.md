@@ -1,110 +1,96 @@
 # NEXUS 2026 DEMO SCRIPT — xpose Identity Threat Intelligence
 
-**Time: 3 minutes**
+**Event**: Nexus 2026 · Luxembourg · June 10-11 · €100K Grand Prize
+**Duration**: 3 minutes
 
 ---
 
-## [0:00] Opening
+## [0:00] Opening (20s)
 
-> "Every employee in your company has a digital shadow.
-> Let me show you what an attacker sees."
+> "Every data breach starts with one thing: an email address. From that single string, an attacker can map your entire digital life — your accounts, your passwords, your location, your real name. Today, only intelligence analysts have the tools to see this. xpose changes that."
 
-## [0:15] Quick Scan
+## [0:20] Live Scan (40s)
 
-- Type email in the landing page
+**Action**: Landing page is displayed with animated HeroGraph.
+
+- Type demo email into the scan form
 - Click **Scan**
-- Show real-time scan animation (modules completing one by one)
-- Modules complete: Email Validator, DNS Intelligence, GeoIP, Holehe, GitHub Deep...
+- Show real-time module progress badges updating
+- "25 scanners running in parallel — breaches, social networks, DNS, metadata, archives"
 
-## [0:45] Profile Appears
+**Scan completes** → navigate to target detail.
 
-> "In 30 seconds, we found 47 exposures across 10 sources."
+## [1:00] Exposure Dashboard (30s)
 
-- Profile header: real photo, name, email security badge
-- **Identity estimation: Male, ~54 years old, probable Egyptian origin (21% confidence)**
-- Risk level banner: **HIGH** with score 18/100
-- Photo strip: 4 different profile pictures found across platforms
-- Accounts strip: Reddit, Steam, Keybase, Amazon, Spotify...
-- Each with platform icon and "Secure" link
+> "Exposure score: 73 out of 100. That's not good."
 
-## [1:00] Findings Tab
+Walk through:
+1. **Profile header**: "Real name, location, 8 social profiles — all from one email"
+2. **Identity card**: "Gender, estimated age, probable nationality — derived from public APIs"
+3. **Digital fingerprint**: "8-axis radar — unique identity signature. Eigenvalue topology means no two people get the same shape"
+4. **Generative avatar**: "This abstract shape is generated from the identity graph structure. Same data = same avatar. Data changes = avatar evolves"
 
-> "DNS shows Microsoft 365 with weak DMARC — an attacker can spoof emails from this domain."
+## [1:30] Identity Graph (30s)
 
-> "Username 'loupn' is reused across 3 platforms — credential stuffing risk."
+**Switch to Graph tab.**
 
-- Show intelligence findings: username correlation, breach timeline, data exposure summary
+> "Every node is a data point. Every edge is a proven connection."
 
-## [1:15] Identity Graph
+- **Zoom into cluster**: "These 3 accounts share the same username — persona engine grouped them automatically"
+- **Highlight breach nodes**: "Two breaches connected to the same credentials — password reuse detected"
+- **Point out edge weights**: "Confidence scores propagate through the graph like Google's PageRank. A name confirmed by 3 independent paths gets higher confidence"
 
-> "This is the identity graph — every node is a connection an attacker can exploit."
+## [2:00] Remediation (20s)
 
-- Email at center, social accounts radiating out
-- Username nodes connecting multiple platforms
-- Breach nodes in red
-- Click a node to see details
+**Switch to Findings tab.**
 
-## [1:30] Digital Personas
+> "Every finding is actionable."
 
-> "xpose clusters your accounts into distinct digital personas."
+- Show critical findings: passwords leaked in cleartext
+- Show finding status toggle: active → resolved
+- Show remediation progress bar
+- Quick mention: CSV export for compliance
 
-- Show PersonaCard component — clusters of accounts sharing usernames/names
-- "Persona 1: 'loupn' — Reddit, Steam, GitHub, GitLab — 92% confidence"
-- "Persona 2: 'Nicolas L.' — LinkedIn, About.me — 78% confidence"
-- Dual score display: Exposure 72/100 + Threat 45/100
+## [2:20] Differentiator (25s)
 
-> "An attacker doesn't just find accounts — they build a profile. We show you theirs."
+> "What makes xpose different?"
 
-## [1:45] Google Account Audit
+1. "SpiderFoot and Maltego are powerful — but built for analysts. xpose gives the same intelligence with consumer-grade UX"
+2. "Aura and NordProtect monitor breaches — but they don't show you the identity graph. They don't cluster personas. They don't give you a digital fingerprint"
+3. "76 intelligence modules. Open source. GDPR compliant. On-premise deployment"
 
-> "Let me show you what your own Google account is exposing."
+## [2:45] Close (15s)
 
-- Click **Connect Google Account** in Accounts tab
-- Authorize with Google OAuth
-- Results appear: "12 Drive files shared publicly. 47 third-party apps connected."
+> "Your digital exposure is a liability. xpose turns it into intelligence. Free tier today — scan yourself, see what we find."
 
-> "This is what your employees don't know they're exposing."
-
-## [2:00] Remediation Panel
-
-> "xpose doesn't just find problems — it tells you exactly how to fix them."
-
-- Show Top Actions Required:
-  1. Change leaked passwords (3 breaches found)
-  2. Enable 2FA on Amazon, Spotify
-  3. Restrict 12 publicly shared Drive files
-  4. Strengthen DMARC policy
-- Each action has direct links to security settings pages
-
-## [2:15] Organization View
-
-> "For security teams: bulk import your company's emails, monitor exposure across the organization."
-
-- Show organization page with multiple targets
-- Comparative exposure scores
-- "Generate compliance report" button
-
-## [2:30] Closing
-
-> "xpose is built in Luxembourg, GDPR compliant, runs on-premise.
-> 68 intelligence modules, persona clustering, dual scoring, three pricing tiers.
-> We're looking for pilot companies ready to audit their digital exposure."
-
-## [3:00] Call to Action
-
-- Show landing page URL
-- **"Try it yourself: xpose.dev"**
+**End on landing page with scan form visible.**
 
 ---
 
-## Technical Requirements for Demo
+## Demo Checklist
 
-1. Pre-scan a demo email 24h before to have full results cached
-2. Ensure Google OAuth is configured (test mode, 100 users)
-3. Have a Google account with some shared Drive files
-4. Stable internet connection (scanners hit external APIs)
-5. Use Chrome in fullscreen, dark mode
-6. Dashboard at `http://localhost:5173`
+- [ ] Pre-scan demo target 24h before (results cached in DB)
+- [ ] Have backup pre-scanned target ready
+- [ ] Test HeroGraph animation renders smoothly on projector
+- [ ] Verify all Docker services: `docker compose ps`
+- [ ] Clear browser cache for fresh landing page load
+- [ ] Font check: Instrument Sans + JetBrains Mono rendering
+- [ ] Pre-load Graph tab in second browser tab as backup
+- [ ] Chrome fullscreen, dark mode
+- [ ] Stable internet connection (scanners hit external APIs)
+
+## Key Numbers
+
+| Metric | Value |
+|--------|-------|
+| Scanners | 25 (17 implemented + 8 planned) |
+| Scrapers | 51 across 8 categories |
+| Intelligence analyzers | 5 |
+| Fingerprint axes | 8 |
+| Scan time | ~30 seconds |
+| Sites checked | 120+ (via Holehe + scrapers) |
+| Breach databases | HIBP + XposedOrNot + paste sites |
+| Confidence model | PageRank (damping=0.85) |
 
 ## Fallback Plan
 
@@ -112,3 +98,4 @@ If live scanning fails:
 - Pre-scan results are cached in the database
 - Navigate directly to the target detail page
 - All findings, graph, and analysis are already computed
+- HeroGraph on landing page works offline (pure CSS animation)

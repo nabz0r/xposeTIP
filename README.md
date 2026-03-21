@@ -11,13 +11,13 @@
 [![React 18](https://img.shields.io/badge/React-18-61DAFB?logo=react)](https://react.dev)
 [![Docker](https://img.shields.io/badge/Docker-Compose-2496ED?logo=docker)](https://docker.com)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
-[![Scanners & Scrapers](https://img.shields.io/badge/Scanners_&_Scrapers-68+-00ff88)](#features)
+[![Modules](https://img.shields.io/badge/modules-76+-00ff88)](#features)
+[![Scrapers](https://img.shields.io/badge/scrapers-51-3388ff)](#features)
+[![Version](https://img.shields.io/badge/version-0.26.0-green)](#roadmap)
 
 **Enter an email. See what the internet knows. Fix it.**
 
 xpose is an identity threat intelligence platform that bridges deep OSINT tools (SpiderFoot, Maltego) with consumer-grade UX (Aura, NordProtect). Every finding is an Identity IOC — with actionable remediation.
-
-<!-- Add demo GIF here -->
 
 ---
 
@@ -25,15 +25,35 @@ xpose is an identity threat intelligence platform that bridges deep OSINT tools 
 
 | Layer | Category | Scanners | What it finds |
 |:-----:|----------|----------|---------------|
-| **L1** | Passive Recon | Holehe, Sherlock, HIBP, Gravatar, EmailRep, Epieos, FullContact, GitHub Deep, GHunt, Maigret, h8mail, Reverse Image | Account enumeration (120+ sites), breach history, social profiles, Google metadata, avatar matching |
-| **L2** | Public Databases | DNS Deep, WHOIS, GeoIP, MaxMind, VirusTotal, Shodan, Intelligence X, Hunter.io, Dehashed, XposedOrNot | Domain security (SPF/DMARC/DKIM), IP geolocation, darkweb exposure, credential leaks, subdomain discovery |
+| **L1** | Passive Recon | Holehe, Sherlock, HIBP, Gravatar, EmailRep, Epieos, FullContact, GitHub Deep, GHunt, Maigret, h8mail, Username Hunter | Account enumeration (120+ sites), breach history, social profiles, Google metadata, avatar matching |
+| **L2** | Public Databases | DNS Deep, WHOIS, GeoIP, MaxMind, Leaked Domains | Domain security (SPF/DMARC/DKIM), IP geolocation, credential leaks, subdomain discovery |
 | **L3** | Self-Audit | Google OAuth, Microsoft OAuth, Exodus Tracker, Browser Audit | Drive public files, Gmail forwarding rules, OAuth app permissions, app trackers |
-| **L4** | Intelligence | IP Analyzer, Domain Analyzer, Username Correlator, Breach Correlator, Risk Assessor | Cross-reference all findings, exposure score (0-100), identity graph, prioritized remediation |
-| **Identity** | Estimation | Genderize, Agify, Nationalize | Gender, age, nationality prediction from name with confidence scores |
-| **Archive** | Historical | Wayback Machine CDX | Domain archive history, snapshot count, deleted profile recovery |
-| **Gaming** | Digital Life | Steam, Xbox, PSN, Epic, Riot, Chess.com, Lichess | Gaming profiles, linked accounts, activity exposure |
-| **Plans** | Monetization | Free / Consultant / Enterprise | Tiered access, scan quotas, layer restrictions, feature gating |
-| **Admin** | Platform | User Management, Workspace Management | Superadmin panel: all users, workspaces, plan changes, activate/deactivate |
+| **L4** | Intelligence | Score Engine, Graph Builder, Profile Aggregator, Persona Engine, Fingerprint Engine, Confidence Propagator | Cross-reference all findings, dual score (exposure + threat), identity graph, PageRank confidence, digital fingerprint |
+
+### Intelligence Engine (v0.26.0)
+
+- **PageRank confidence propagation** — confidence flows through the identity graph (damping=0.85, convergence threshold 0.001)
+- **Eigenvalue topology signature** — adjacency matrix eigenvalues via power iteration create unique graph fingerprints
+- **Generative avatar** — deterministic SVG shape derived from graph eigenvalues + axes values
+- **8-axis digital fingerprint** — accounts, platforms, username reuse, breaches, geo spread, data leaked, email age, security
+- **Persona clustering** — groups digital personas by shared usernames, profile names, and avatars
+- **Dual scoring** — exposure (0-100, weighted by category) + threat (0-100, weighted by breach recency)
+- **Per-field confidence** — blacklist filtering + PageRank graph propagation + source reliability weighting
+
+### Scraper Engine
+
+51 data-driven scrapers across 8 categories, all editable via UI:
+
+| Category | Count | Examples |
+|----------|-------|---------|
+| Social | 24 | Reddit, GitHub, Steam, Medium, Mastodon, StackOverflow, Twitch, Telegram |
+| Breach | 3 | XposedOrNot, LeakCheck, Pastebin Dumps |
+| Metadata | 4 | Gravatar, crt.sh, SecurityTrails, Disposable Email |
+| People Search | 3 | GitHub People Search, Gravatar Email Lookup, Snapchat Profile |
+| Identity | 3 | Genderize (gender), Agify (age), Nationalize (nationality) |
+| Archive | 3 | Wayback Domain History, Wayback Snapshots, Wayback Profile Archive |
+| Gaming | 9 | Steam, Xbox, PSN, Epic, Riot, Chess.com, Lichess, CodeWars, RuneScape |
+| Music | 2 | Mixcloud, Duolingo |
 
 ## Architecture
 
@@ -47,7 +67,7 @@ graph LR
     C --> S1[L1 Scanners<br/>Passive Recon]
     C --> S2[L2 Scanners<br/>Public DBs]
     C --> S3[L3 Connectors<br/>OAuth Audit]
-    C --> L4[L4 Intelligence<br/>Analysis Pipeline]
+    C --> L4[L4 Intelligence<br/>Score → Graph → Profile → Persona → Fingerprint]
     L4 --> PG
 ```
 
@@ -58,20 +78,19 @@ git clone https://github.com/nabz0r/xposeTIP.git && cd xposeTIP
 cp .env.example .env                          # configure API keys
 docker compose up -d                          # start all 5 services
 docker compose exec api python scripts/seed_modules.py
+docker compose exec api python scripts/seed_scrapers.py
 # Register at http://localhost:5173 → Add target → Scan
 ```
 
-> Full setup guide with troubleshooting: [docs/INSTALL.md](docs/INSTALL.md)
+First registered user = **superadmin** + **Enterprise** plan. Subsequent users = **Free** plan.
 
-## Documentation
+## Plans
 
-| Document | Description |
-|----------|-------------|
-| [INSTALL.md](docs/INSTALL.md) | Full setup, environment variables, troubleshooting |
-| [ARCHITECTURE.md](docs/ARCHITECTURE.md) | System design, DB schema, scan pipeline, queue flow |
-| [SCANNERS.md](docs/SCANNERS.md) | All 25+ scanners and 43 scrapers with descriptions |
-| [API.md](docs/API.md) | REST API reference (also available at `/docs` via Swagger) |
-| [CONTRIBUTING.md](docs/CONTRIBUTING.md) | How to add a scanner, code style, PR guidelines |
+| Plan | Price | Targets | Scans/mo | Layers | Key Features |
+|------|-------|---------|----------|--------|-------------|
+| Free | €0 | 1 | 5 | L1 | Basic exposure scan |
+| Consultant | €49/mo | 25 | 100 | L1+L2 | Persona clustering, multi-workspace, PDF reports |
+| Enterprise | €199/mo | Unlimited | Unlimited | All | Intelligence pipeline, API access, custom modules |
 
 ## Roadmap
 
@@ -97,14 +116,26 @@ docker compose exec api python scripts/seed_modules.py
 | v0.18.0 | 7 gaming scrapers, 6 social scrapers, import/export (43 total) | Done |
 | v0.19.0 | Scraper UI: test runner, toggle, YAML export/import | Done |
 | v0.20.0 | Plans (Free/Consultant/Enterprise), open registration, billing UI | Done |
-| **v0.21.0** | **Admin panel, quick scan, invite flow fix** | **Done** |
-| v0.22.0 | PDF reports, GHunt integration, WebSocket | Next |
+| v0.21.0 | Admin panel, quick scan, invite flow fix | Done |
+| v0.22.0 | Documentation update | Done |
+| v0.23.0 | Name blacklist, targets rework, scan metadata | Done |
+| v0.24.0 | DNS SaaS blocklist, executive summary, CSV export | Done |
+| v0.25.0 | 8 new scrapers: people search, gaming, social (51 total) | Done |
+| v0.26.0 | PageRank confidence, eigenvalue fingerprint, generative avatar | Done |
+| **v0.27.0** | **Landing page redesign, demo script, documentation** | **Done** |
 
-> **Nexus 2026 — June 10-11, Luxembourg** &nbsp; Target: Grand Prize
+> **Nexus 2026 — June 10-11, Luxembourg** &nbsp; Target: Grand Prize (€100K)
 
 ## Tech Stack
 
 `FastAPI` `SQLAlchemy 2.0` `Celery` `PostgreSQL 16` `Redis 7` `React 18` `Vite` `Tailwind CSS 4` `D3.js` `Recharts` `Docker Compose` `Fernet AES-256` `JWT` `OAuth 2.0` `RBAC` `Genderize` `Agify` `Nationalize` `Wayback Machine CDX`
+
+## Global Scope
+
+xpose works worldwide with varying depth:
+- **US targets**: Maximum data. Voter rolls, court records, Spokeo, WhitePages, BeenVerified — all public.
+- **EU targets**: GDPR applies but we reveal exposure that already exists publicly.
+- **Rest of world**: Varies. Module system adapts per region.
 
 ## License
 
@@ -113,6 +144,6 @@ MIT License. See [LICENSE](LICENSE).
 ---
 
 <p align="center">
-Built in Luxembourg 🇱🇺 &nbsp;|&nbsp; GDPR compliant &nbsp;|&nbsp; MIT License<br/>
+Built in Luxembourg &nbsp;|&nbsp; GDPR compliant &nbsp;|&nbsp; MIT License<br/>
 <sub>Your personal SOC for privacy.</sub>
 </p>
