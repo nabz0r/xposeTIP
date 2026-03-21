@@ -126,6 +126,40 @@ async def system_stats(
     }
 
 
+@router.get("/logs")
+async def get_system_logs(
+    limit: int = 200,
+    level: str | None = None,
+    container: str | None = None,
+    role: str = Depends(require_role("superadmin", "admin")),
+):
+    """Read structured logs from the Redis ring buffer."""
+    from api.services.log_handler import get_logs
+    try:
+        entries = get_logs(
+            redis_url=settings.REDIS_URL,
+            limit=min(limit, 1000),
+            level=level,
+            container=container,
+        )
+        return {"logs": entries, "count": len(entries)}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to read logs: {e}")
+
+
+@router.delete("/logs")
+async def clear_system_logs(
+    role: str = Depends(require_role("superadmin")),
+):
+    """Clear all logs from the Redis ring buffer."""
+    from api.services.log_handler import clear_logs
+    try:
+        deleted = clear_logs(redis_url=settings.REDIS_URL)
+        return {"deleted": deleted}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to clear logs: {e}")
+
+
 @router.post("/recalculate-scores")
 async def recalculate_scores(
     role: str = Depends(require_role("superadmin", "admin")),

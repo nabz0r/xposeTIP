@@ -11,6 +11,22 @@ from api.routers import auth, targets, scans, findings, modules, graph, system, 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    # Install structured logging to Redis
+    from api.services.log_handler import setup_logging
+    setup_logging(redis_url=settings.REDIS_URL, container="api")
+
+    # Optional syslog forwarding
+    if settings.SYSLOG_HOST:
+        import logging
+        from logging.handlers import SysLogHandler
+        proto = SysLogHandler.TCP_LOG_HOST if settings.SYSLOG_PROTOCOL == "tcp" else None
+        syslog_handler = SysLogHandler(
+            address=(settings.SYSLOG_HOST, settings.SYSLOG_PORT),
+            socktype=__import__("socket").SOCK_STREAM if settings.SYSLOG_PROTOCOL == "tcp" else __import__("socket").SOCK_DGRAM,
+        )
+        syslog_handler.setFormatter(logging.Formatter("xpose[%(name)s]: %(levelname)s %(message)s"))
+        logging.getLogger().addHandler(syslog_handler)
+
     yield
     await engine.dispose()
 

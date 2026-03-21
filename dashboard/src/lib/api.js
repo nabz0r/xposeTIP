@@ -85,6 +85,8 @@ export const getGraph = (targetId) => request(`/graph/${targetId}`)
 // System
 export const getSystemStats = () => request('/system/stats')
 export const recalculateScores = () => request('/system/recalculate-scores', { method: 'POST' })
+export const getLogs = (params = '') => request(`/system/logs${params ? '?' + params : ''}`)
+export const clearLogs = () => request('/system/logs', { method: 'DELETE' })
 
 // Settings
 export const getApiKeys = () => request('/settings/apikeys')

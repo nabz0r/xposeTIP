@@ -24,3 +24,12 @@ celery_app.conf.update(
 # (autodiscover_tasks alone doesn't reliably find them in this package layout)
 import api.tasks.scan_orchestrator  # noqa: E402, F401
 import api.tasks.module_tasks  # noqa: E402, F401
+
+
+@celery_app.on_after_configure.connect
+def setup_worker_logging(sender, **kwargs):
+    """Install RedisLogHandler on worker processes."""
+    import os
+    container = os.environ.get("XPOSE_CONTAINER", "worker")
+    from api.services.log_handler import setup_logging
+    setup_logging(redis_url=settings.REDIS_URL, container=container)

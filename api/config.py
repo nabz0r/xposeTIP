@@ -12,6 +12,9 @@ class Settings(BaseSettings):
     HIBP_API_KEY: str = ""
     MAXMIND_LICENSE: str = ""
     CORS_ORIGINS: str = "http://localhost:3000,http://localhost:5173"
+    SYSLOG_HOST: str = ""
+    SYSLOG_PORT: int = 514
+    SYSLOG_PROTOCOL: str = "udp"
 
     model_config = {"env_file": ".env", "extra": "ignore"}
 

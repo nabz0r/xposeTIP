@@ -43,6 +43,7 @@ services:
       - .:/app
     environment:
       - PYTHONPATH=/app
+      - XPOSE_CONTAINER=api
     env_file:
       - .env
     depends_on:
@@ -68,6 +69,7 @@ services:
     environment:
       - PYTHONPATH=/app
       - CELERY_PREFETCH_MULTIPLIER=1
+      - XPOSE_CONTAINER=worker
     env_file:
       - .env
     depends_on:
@@ -91,6 +93,7 @@ services:
       - .:/app
     environment:
       - PYTHONPATH=/app
+      - XPOSE_CONTAINER=beat
     env_file:
       - .env
     depends_on:

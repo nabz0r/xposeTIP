@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
-import { RefreshCw, Database, Server, Cpu, Wifi, CheckCircle, XCircle, AlertCircle } from 'lucide-react'
+import { RefreshCw, Database, Server, Cpu, Wifi, CheckCircle, XCircle, AlertCircle, ScrollText } from 'lucide-react'
 import { getSystemStats, recalculateScores, checkAllModulesHealth } from '../lib/api'
+import LogViewer from '../components/LogViewer'
 
 const statusIcon = (status) => {
   if (status === 'healthy') return <CheckCircle className="w-4 h-4 text-[#00ff88]" />
@@ -70,7 +71,7 @@ function InfraCard({ name, data }) {
   )
 }
 
-export default function System() {
+function DashboardTab() {
   const [stats, setStats] = useState(null)
   const [loading, setLoading] = useState(true)
   const [refreshing, setRefreshing] = useState(false)
@@ -116,33 +117,30 @@ export default function System() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold">System</h1>
-        <div className="flex items-center gap-3">
-          <button onClick={async () => {
-              setHealthChecking(true)
-              try {
-                const r = await checkAllModulesHealth()
-                const healthy = r.results.filter(m => m.health_status === 'healthy').length
-                alert(`Health checks done: ${healthy}/${r.total} healthy`)
-                loadStats()
-              } catch (e) { alert(e.message) }
-              finally { setHealthChecking(false) }
-            }}
-            disabled={healthChecking}
-            className="flex items-center gap-2 text-sm text-gray-400 hover:text-[#00ff88] disabled:opacity-50 border border-[#1e1e2e] rounded-lg px-3 py-1.5">
-            {healthChecking ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Cpu className="w-4 h-4" />} Run Health Checks
-          </button>
-          <button onClick={async () => { setRecalculating(true); try { const r = await recalculateScores(); alert(`Recalculated ${r.recalculated}/${r.total} targets`) } catch (e) { alert(e.message) } finally { setRecalculating(false) } }}
-            disabled={recalculating}
-            className="flex items-center gap-2 text-sm text-gray-400 hover:text-[#00ff88] disabled:opacity-50 border border-[#1e1e2e] rounded-lg px-3 py-1.5">
-            {recalculating ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Database className="w-4 h-4" />} Recalculate Scores
-          </button>
-          <button onClick={handleRefresh} disabled={refreshing}
-            className="flex items-center gap-2 text-sm text-gray-400 hover:text-white disabled:opacity-50">
-            <RefreshCw className={`w-4 h-4 ${refreshing ? 'animate-spin' : ''}`} /> Refresh
-          </button>
-        </div>
+      <div className="flex items-center justify-end gap-3">
+        <button onClick={async () => {
+            setHealthChecking(true)
+            try {
+              const r = await checkAllModulesHealth()
+              const healthy = r.results.filter(m => m.health_status === 'healthy').length
+              alert(`Health checks done: ${healthy}/${r.total} healthy`)
+              loadStats()
+            } catch (e) { alert(e.message) }
+            finally { setHealthChecking(false) }
+          }}
+          disabled={healthChecking}
+          className="flex items-center gap-2 text-sm text-gray-400 hover:text-[#00ff88] disabled:opacity-50 border border-[#1e1e2e] rounded-lg px-3 py-1.5">
+          {healthChecking ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Cpu className="w-4 h-4" />} Run Health Checks
+        </button>
+        <button onClick={async () => { setRecalculating(true); try { const r = await recalculateScores(); alert(`Recalculated ${r.recalculated}/${r.total} targets`) } catch (e) { alert(e.message) } finally { setRecalculating(false) } }}
+          disabled={recalculating}
+          className="flex items-center gap-2 text-sm text-gray-400 hover:text-[#00ff88] disabled:opacity-50 border border-[#1e1e2e] rounded-lg px-3 py-1.5">
+          {recalculating ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Database className="w-4 h-4" />} Recalculate Scores
+        </button>
+        <button onClick={handleRefresh} disabled={refreshing}
+          className="flex items-center gap-2 text-sm text-gray-400 hover:text-white disabled:opacity-50">
+          <RefreshCw className={`w-4 h-4 ${refreshing ? 'animate-spin' : ''}`} /> Refresh
+        </button>
       </div>
 
       {/* Infrastructure Health */}
@@ -271,6 +269,46 @@ export default function System() {
           </div>
         </div>
       )}
+    </div>
+  )
+}
+
+const TABS = [
+  { id: 'dashboard', label: 'Dashboard', icon: Server },
+  { id: 'logs', label: 'Logs', icon: ScrollText },
+]
+
+export default function System() {
+  const [activeTab, setActiveTab] = useState('dashboard')
+
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <h1 className="text-2xl font-bold">System</h1>
+      </div>
+
+      {/* Tabs */}
+      <div className="flex gap-1 border-b border-[#1e1e2e]">
+        {TABS.map(tab => {
+          const Icon = tab.icon
+          const active = activeTab === tab.id
+          return (
+            <button key={tab.id} onClick={() => setActiveTab(tab.id)}
+              className={`flex items-center gap-2 px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
+                active
+                  ? 'border-[#00ff88] text-[#00ff88]'
+                  : 'border-transparent text-gray-500 hover:text-gray-300'
+              }`}>
+              <Icon className="w-4 h-4" />
+              {tab.label}
+            </button>
+          )
+        })}
+      </div>
+
+      {/* Tab content */}
+      {activeTab === 'dashboard' && <DashboardTab />}
+      {activeTab === 'logs' && <LogViewer />}
     </div>
   )
 }
