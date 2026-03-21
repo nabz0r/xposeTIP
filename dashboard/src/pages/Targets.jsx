@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Plus, Trash2, Search, Eye, Upload } from 'lucide-react'
-import { getTargets, createTarget, deleteTarget, bulkImportTargets, getFingerprint } from '../lib/api'
+import { Plus, Trash2, Search, Eye, Upload, Play } from 'lucide-react'
+import { getTargets, createTarget, deleteTarget, bulkImportTargets, getFingerprint, createScan } from '../lib/api'
 import TargetQuickView from '../components/TargetQuickView'
 import FingerprintRadar from '../components/FingerprintRadar'
 
@@ -187,13 +187,34 @@ export default function Targets() {
                 <td className="px-5 py-3 text-gray-400">
                   {t.last_scanned ? new Date(t.last_scanned).toLocaleDateString() : 'Never'}
                 </td>
-                <td className="px-5 py-3 flex items-center gap-2">
-                  <button onClick={(e) => { e.stopPropagation(); setQuickViewId(t.id) }} className="text-gray-500 hover:text-[#00ff88]" title="Quick view">
-                    <Eye className="w-4 h-4" />
-                  </button>
-                  <button onClick={(e) => handleDelete(e, t.id)} className="text-gray-500 hover:text-[#ff2244]">
-                    <Trash2 className="w-4 h-4" />
-                  </button>
+                <td className="px-5 py-3">
+                  <div className="flex items-center gap-2">
+                    {t.status !== 'scanning' ? (
+                      <button
+                        onClick={async (e) => {
+                          e.stopPropagation()
+                          try {
+                            await createScan({ target_id: t.id })
+                            loadTargets()
+                          } catch (err) { alert(err.message) }
+                        }}
+                        className="text-[10px] px-2 py-1 rounded bg-[#00ff88]/10 text-[#00ff88] hover:bg-[#00ff88]/20 transition-colors"
+                        title="Quick scan with default modules"
+                      >
+                        <Play className="w-3 h-3 inline mr-0.5" />Scan
+                      </button>
+                    ) : (
+                      <span className="text-[10px] px-2 py-1 rounded bg-[#ffcc00]/10 text-[#ffcc00] animate-pulse">
+                        Scanning...
+                      </span>
+                    )}
+                    <button onClick={(e) => { e.stopPropagation(); setQuickViewId(t.id) }} className="text-gray-500 hover:text-[#00ff88]" title="Quick view">
+                      <Eye className="w-4 h-4" />
+                    </button>
+                    <button onClick={(e) => handleDelete(e, t.id)} className="text-gray-500 hover:text-[#ff2244]">
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
                 </td>
               </tr>
             ))}

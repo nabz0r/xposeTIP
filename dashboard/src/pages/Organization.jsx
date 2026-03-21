@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Users, Plus, Trash2, AlertTriangle, Building2 } from 'lucide-react'
 import { useAuth } from '../lib/auth'
-import { getWorkspaces, createWorkspace, getWorkspaceMembers, inviteMember, updateMemberRole, removeMember, deleteWorkspace } from '../lib/api'
+import { getWorkspaces, createWorkspace, getWorkspaceMembers, inviteMember, updateMemberRole, removeMember, deleteWorkspace, updateWorkspacePlan, getWorkspaceUsage } from '../lib/api'
 
 const roleColors = {
   superadmin: '#ff2244', admin: '#ff8800', consultant: '#3388ff', client: '#00ff88', user: '#666688',
@@ -21,6 +21,16 @@ export default function Organization() {
   const [deleteConfirm, setDeleteConfirm] = useState('')
   const [showDelete, setShowDelete] = useState(false)
   const [loading, setLoading] = useState(false)
+  const [usage, setUsage] = useState(null)
+
+  // Check if superadmin from JWT
+  const isSuperAdmin = (() => {
+    const token = localStorage.getItem('xpose_token')
+    if (!token) return false
+    try {
+      return JSON.parse(atob(token.split('.')[1])).role === 'superadmin'
+    } catch { return false }
+  })()
 
   useEffect(() => { loadWorkspaces() }, [])
 
@@ -31,6 +41,7 @@ export default function Organization() {
       if (data.length > 0 && !activeWs) {
         setActiveWs(data[0])
         loadMembers(data[0].id)
+        loadUsage(data[0].id)
       }
     } catch {}
   }
@@ -42,9 +53,26 @@ export default function Organization() {
     } catch {}
   }
 
+  async function loadUsage(wsId) {
+    try {
+      const data = await getWorkspaceUsage(wsId)
+      setUsage(data)
+    } catch { setUsage(null) }
+  }
+
   function selectWorkspace(ws) {
     setActiveWs(ws)
     loadMembers(ws.id)
+    loadUsage(ws.id)
+  }
+
+  async function handlePlanChange(newPlan) {
+    if (!activeWs) return
+    try {
+      await updateWorkspacePlan(activeWs.id, newPlan)
+      loadWorkspaces()
+      loadUsage(activeWs.id)
+    } catch (err) { alert(err.message) }
   }
 
   async function handleCreate(e) {
@@ -119,12 +147,19 @@ export default function Organization() {
         <div className="flex gap-2 overflow-x-auto pb-1">
           {workspaces.map(ws => (
             <button key={ws.id} onClick={() => selectWorkspace(ws)}
-              className={`px-4 py-2 rounded-lg text-sm whitespace-nowrap border transition-colors ${
+              className={`px-4 py-2 rounded-lg text-sm whitespace-nowrap border transition-colors flex items-center gap-1.5 ${
                 activeWs?.id === ws.id
                   ? 'border-[#00ff88]/50 bg-[#00ff88]/10 text-[#00ff88]'
                   : 'border-[#1e1e2e] bg-[#12121a] text-gray-400 hover:text-white'
               }`}>
               {ws.name}
+              {ws.plan && (
+                <span className={`text-[9px] font-mono font-bold px-1.5 py-0.5 rounded-full uppercase ${
+                  ws.plan === 'enterprise' ? 'bg-[#00ff88]/15 text-[#00ff88]' :
+                  ws.plan === 'consultant' ? 'bg-[#3388ff]/15 text-[#3388ff]' :
+                  'bg-[#666688]/15 text-[#666688]'
+                }`}>{ws.plan}</span>
+              )}
             </button>
           ))}
         </div>
@@ -145,7 +180,16 @@ export default function Organization() {
                       style={{ backgroundColor: (roleColors[activeWs.role] || '#666688') + '26', color: roleColors[activeWs.role] }}>
                       {activeWs.role}
                     </span>
-                    <span>{activeWs.plan} plan</span>
+                    {isSuperAdmin ? (
+                      <select value={activeWs.plan} onChange={e => handlePlanChange(e.target.value)}
+                        className="bg-[#0a0a0f] border border-[#1e1e2e] rounded px-2 py-0.5 text-xs focus:outline-none focus:border-[#00ff88]/50">
+                        <option value="free">free</option>
+                        <option value="consultant">consultant</option>
+                        <option value="enterprise">enterprise</option>
+                      </select>
+                    ) : (
+                      <span>{activeWs.plan} plan</span>
+                    )}
                   </div>
                 </div>
               </div>
@@ -160,8 +204,35 @@ export default function Organization() {
                 </div>
               </div>
             </div>
+            {/* Usage bar */}
+            {usage && usage.limits.max_targets !== -1 && (
+              <div className="mt-3 space-y-2">
+                <div className="space-y-1">
+                  <div className="flex justify-between text-xs">
+                    <span className="text-gray-500">Targets</span>
+                    <span className="font-mono text-gray-300">{usage.usage.targets} / {usage.limits.max_targets}</span>
+                  </div>
+                  <div className="h-1.5 bg-[#0a0a0f] rounded-full overflow-hidden">
+                    <div className="h-full rounded-full bg-[#00ff88] transition-all"
+                      style={{ width: `${Math.min(100, (usage.usage.targets / usage.limits.max_targets) * 100)}%` }} />
+                  </div>
+                </div>
+                <div className="space-y-1">
+                  <div className="flex justify-between text-xs">
+                    <span className="text-gray-500">Scans this month</span>
+                    <span className="font-mono text-gray-300">{usage.usage.scans_this_month} / {usage.limits.max_scans_per_month === -1 ? '∞' : usage.limits.max_scans_per_month}</span>
+                  </div>
+                  {usage.limits.max_scans_per_month !== -1 && (
+                    <div className="h-1.5 bg-[#0a0a0f] rounded-full overflow-hidden">
+                      <div className="h-full rounded-full bg-[#3388ff] transition-all"
+                        style={{ width: `${Math.min(100, (usage.usage.scans_this_month / usage.limits.max_scans_per_month) * 100)}%` }} />
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
             {activeWs.created_at && (
-              <div className="text-xs text-gray-600">Created {new Date(activeWs.created_at).toLocaleDateString()}</div>
+              <div className="text-xs text-gray-600 mt-2">Created {new Date(activeWs.created_at).toLocaleDateString()}</div>
             )}
           </div>
 

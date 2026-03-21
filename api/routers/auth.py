@@ -44,19 +44,42 @@ class RefreshRequest(BaseModel):
 
 @router.post("/register", response_model=TokenResponse)
 async def register(body: RegisterRequest, db: AsyncSession = Depends(get_db)):
-    # Check if email already taken
-    existing = await db.execute(select(User).where(User.email == body.email))
-    if existing.scalar_one_or_none():
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT,
-            detail="Email already registered.",
-        )
-
     if len(body.password) < 8:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Password must be at least 8 characters.",
         )
+
+    # Check if email already exists
+    existing = await db.execute(select(User).where(User.email == body.email))
+    existing_user = existing.scalar_one_or_none()
+
+    if existing_user:
+        if existing_user.last_login is not None:
+            # Real user who has logged in before — cannot re-register
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail="Email already registered. Try logging in.",
+            )
+        else:
+            # Invited user who never logged in — let them set their own password
+            existing_user.password_hash = hash_password(body.password)
+            if body.display_name:
+                existing_user.display_name = body.display_name
+            await db.commit()
+
+            # Get their workspace membership
+            result = await db.execute(
+                select(UserWorkspace).where(UserWorkspace.user_id == existing_user.id).limit(1)
+            )
+            membership = result.scalar_one_or_none()
+            ws_id = membership.workspace_id if membership else None
+            role = membership.role if membership else "user"
+
+            return TokenResponse(
+                access_token=create_access_token(existing_user.id, ws_id, role),
+                refresh_token=create_refresh_token(existing_user.id),
+            )
 
     # First user = superadmin + enterprise workspace, rest = user + free workspace
     user_count = await db.scalar(select(func.count()).select_from(User))

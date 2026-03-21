@@ -1,4 +1,5 @@
 import logging
+import uuid
 from datetime import datetime, timezone
 
 from fastapi import APIRouter, Depends, HTTPException
@@ -13,7 +14,8 @@ from api.models.identity import Identity
 from api.models.module import Module
 from api.models.scan import Scan
 from api.models.target import Target
-from api.models.user import User
+from api.models.user import User, UserWorkspace
+from api.models.workspace import Workspace
 from api.tasks.module_tasks import SCANNER_REGISTRY
 
 router = APIRouter()
@@ -194,3 +196,107 @@ async def recalculate_scores(
         sync_session.close()
 
     return {"recalculated": updated, "total": len(targets)}
+
+
+# ---- Platform Admin (superadmin only) ----
+
+@router.get("/users")
+async def list_all_users(
+    role: str = Depends(require_role("superadmin")),
+    db: AsyncSession = Depends(get_db),
+):
+    """Platform admin: list ALL users with their workspace memberships."""
+    users = await db.execute(
+        select(User).order_by(User.created_at.desc())
+    )
+
+    result = []
+    for u in users.scalars().all():
+        memberships = await db.execute(
+            select(UserWorkspace, Workspace)
+            .join(Workspace, UserWorkspace.workspace_id == Workspace.id)
+            .where(UserWorkspace.user_id == u.id)
+        )
+        ws_list = [
+            {
+                "workspace_id": str(ws.id),
+                "workspace_name": ws.name,
+                "plan": ws.plan,
+                "role": uw.role,
+            }
+            for uw, ws in memberships.all()
+        ]
+
+        result.append({
+            "id": str(u.id),
+            "email": u.email,
+            "display_name": u.display_name,
+            "avatar_url": u.avatar_url,
+            "is_active": u.is_active,
+            "created_at": u.created_at.isoformat() if u.created_at else None,
+            "last_login": u.last_login.isoformat() if u.last_login else None,
+            "workspaces": ws_list,
+            "workspace_count": len(ws_list),
+            "highest_role": ws_list[0]["role"] if ws_list else "none",
+        })
+
+    return {"items": result, "total": len(result)}
+
+
+@router.patch("/users/{user_id}")
+async def admin_update_user(
+    user_id: str,
+    body: dict,
+    role: str = Depends(require_role("superadmin")),
+    db: AsyncSession = Depends(get_db),
+):
+    """Platform admin: activate/deactivate user, update display name."""
+    result = await db.execute(select(User).where(User.id == uuid.UUID(user_id)))
+    user = result.scalar_one_or_none()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    if "is_active" in body:
+        user.is_active = body["is_active"]
+    if "display_name" in body:
+        user.display_name = body["display_name"]
+
+    await db.commit()
+    return {"updated": True, "user_id": user_id}
+
+
+@router.get("/workspaces")
+async def list_all_workspaces(
+    role: str = Depends(require_role("superadmin")),
+    db: AsyncSession = Depends(get_db),
+):
+    """Platform admin: list ALL workspaces with stats."""
+    workspaces = await db.execute(
+        select(Workspace).order_by(Workspace.created_at.desc())
+    )
+
+    result = []
+    for ws in workspaces.scalars().all():
+        member_count = await db.scalar(
+            select(func.count()).select_from(UserWorkspace).where(UserWorkspace.workspace_id == ws.id)
+        )
+        target_count = await db.scalar(
+            select(func.count()).select_from(Target).where(Target.workspace_id == ws.id)
+        )
+        scan_count = await db.scalar(
+            select(func.count()).select_from(Scan).where(Scan.workspace_id == ws.id)
+        )
+
+        result.append({
+            "id": str(ws.id),
+            "name": ws.name,
+            "slug": ws.slug,
+            "plan": ws.plan,
+            "owner_id": str(ws.owner_id) if ws.owner_id else None,
+            "member_count": member_count or 0,
+            "target_count": target_count or 0,
+            "scan_count": scan_count or 0,
+            "created_at": ws.created_at.isoformat() if ws.created_at else None,
+        })
+
+    return {"items": result, "total": len(result)}

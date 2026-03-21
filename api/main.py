@@ -47,7 +47,7 @@ async def lifespan(app: FastAPI):
 app = FastAPI(
     title="xpose",
     description="Identity Threat Intelligence Platform",
-    version="0.20.0",
+    version="0.21.0",
     lifespan=lifespan,
 )
 

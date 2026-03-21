@@ -89,6 +89,11 @@ export const recalculateScores = () => request('/system/recalculate-scores', { m
 export const getLogs = (params = '') => request(`/system/logs${params ? '?' + params : ''}`)
 export const clearLogs = () => request('/system/logs', { method: 'DELETE' })
 
+// Admin (superadmin only)
+export const adminListUsers = () => request('/system/users')
+export const adminUpdateUser = (userId, data) => request(`/system/users/${userId}`, { method: 'PATCH', body: JSON.stringify(data) })
+export const adminListWorkspaces = () => request('/system/workspaces')
+
 // Settings
 export const getApiKeys = () => request('/settings/apikeys')
 export const saveApiKey = (key_name, key_value) => request('/settings/apikeys', { method: 'POST', body: JSON.stringify({ key_name, key_value }) })
