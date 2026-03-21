@@ -14,7 +14,11 @@ logger = logging.getLogger(__name__)
 
 # Avatar URL blacklist — platform logos, default images, not real profile photos
 AVATAR_BLACKLIST_PATTERNS = [
-    "telesco.pe/",
+    "telesco.pe",
+    "cdn1.telesco.pe",
+    "cdn2.telesco.pe",
+    "cdn3.telesco.pe",
+    "cdn4.telesco.pe",
     "telegram.org",
     "t.me/i/",
     "static.xx.fbcdn",
@@ -37,6 +41,9 @@ BIO_BLACKLIST = [
     "see what's happening",
     "instant messaging",
     "cloud-based mobile",
+    "linktree",
+    "discover and stream music",
+    "your next favorite track",
 ]
 
 

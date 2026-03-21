@@ -39,6 +39,10 @@ MANAGED_DOMAINS = {
     # Other
     "yandex.com", "yandex.ru", "mail.ru", "inbox.lv",
     "hey.com", "pm.me", "posteo.de", "mailbox.org",
+    # SaaS platforms (managed DNS)
+    "office365.com", "eventbrite.com", "spotify.com", "amazon.com",
+    "netflix.com", "adobe.com", "dropbox.com", "slack.com",
+    "notion.so", "figma.com", "canva.com", "trello.com",
 }
 
 REMEDIATION_LINKS = {

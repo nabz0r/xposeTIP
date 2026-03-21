@@ -4,13 +4,43 @@ import { useAuth } from '../lib/auth'
 import { Shield, Radar, Lock, Globe, Zap, Eye, Database, Network, Users, ChevronRight, ArrowRight, Check } from 'lucide-react'
 import HeroGraph from '../components/HeroGraph'
 import CountUp from '../components/CountUp'
+import GenerativeAvatar from '../components/GenerativeAvatar'
+
+const DEMO_AVATARS = [
+    { email_hash: 12345, score: 5 },
+    { email_hash: 67890, score: 15 },
+    { email_hash: 11111, score: 25 },
+    { email_hash: 22222, score: 35 },
+    { email_hash: 33333, score: 45 },
+    { email_hash: 44444, score: 55 },
+    { email_hash: 55555, score: 65 },
+    { email_hash: 66666, score: 75 },
+    { email_hash: 77777, score: 85 },
+    { email_hash: 88888, score: 95 },
+    { email_hash: 99999, score: 10 },
+    { email_hash: 10101, score: 30 },
+    { email_hash: 20202, score: 50 },
+    { email_hash: 30303, score: 70 },
+    { email_hash: 40404, score: 90 },
+    { email_hash: 50505, score: 20 },
+]
+
+const DEFAULT_SEED_PROPS = { hue: 140, num_points: 6, rotation: 45, saturation: 70, lightness: 50, inner_radius: 0.5, complexity: 3 }
+
+const scoreColor = (score) => {
+  if (score >= 80) return '#ff2244'
+  if (score >= 60) return '#ff8800'
+  if (score >= 40) return '#ffcc00'
+  if (score >= 20) return '#3388ff'
+  return '#00ff88'
+}
 
 const FEATURES = [
   { icon: Radar, title: 'Deep OSINT Scanning', desc: '25+ intelligence modules scan breaches, social networks, code repos, DNS, and public databases in 30 seconds.' },
   { icon: Network, title: 'Identity Graph', desc: 'Force-directed graph maps every connection between your accounts, usernames, and exposed data points.' },
   { icon: Eye, title: 'Digital Fingerprint', desc: '8-axis radar chart quantifies your exposure. Eigenvalue topology creates a unique identity signature.' },
   { icon: Database, title: 'Breach Intelligence', desc: 'Cross-references HIBP, XposedOrNot, and paste sites. Shows exactly which credentials leaked and when.' },
-  { icon: Users, title: 'Persona Clustering', desc: 'AI groups your digital personas by shared usernames, avatars, and behavioral patterns across platforms.' },
+  { icon: Users, title: 'Identity Avatars', desc: 'Every email gets a unique 32×32 pixel face. 5.4 billion combinations. The avatar evolves with exposure — calm green at low risk, alarmed red with glitch at high threat.' },
   { icon: Lock, title: 'Actionable Remediation', desc: 'Every finding includes step-by-step remediation. Track progress as you reduce your attack surface.' },
 ]
 
@@ -81,6 +111,17 @@ export default function Landing() {
 
   return (
     <div className="min-h-screen bg-[#0a0a0f] text-white overflow-x-hidden">
+      <style>{`
+        @keyframes float {
+          0%, 100% { transform: translateY(0px); }
+          50% { transform: translateY(-6px); }
+        }
+        @keyframes fadeInUp {
+          from { opacity: 0; transform: translateY(20px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+      `}</style>
+
       {/* Nav */}
       <nav className="fixed top-0 w-full z-50 border-b border-[#1e1e2e]/50 bg-[#0a0a0f]/80 backdrop-blur-xl px-6 py-4 flex items-center justify-between">
         <div className="flex items-center gap-2">
@@ -108,7 +149,7 @@ export default function Landing() {
           <div>
             <div className="inline-flex items-center gap-2 text-xs font-mono text-[#00ff88] bg-[#00ff88]/10 border border-[#00ff88]/20 rounded-full px-3 py-1 mb-6">
               <span className="w-1.5 h-1.5 bg-[#00ff88] rounded-full animate-pulse" />
-              v0.26.0 — 76+ intelligence modules
+              v0.28.0 — 76+ intelligence modules
             </div>
 
             <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight leading-tight mb-4 font-['Instrument_Sans',sans-serif]">
@@ -151,9 +192,31 @@ export default function Landing() {
             </p>
           </div>
 
-          {/* Right — HeroGraph */}
-          <div className="flex justify-center lg:justify-end">
-            <HeroGraph size={440} className="opacity-80" />
+          {/* Right — Pixel Avatar Grid */}
+          <div className="flex flex-col items-center lg:items-end">
+            <div className="grid grid-cols-4 gap-3 mb-8 mx-auto max-w-[300px]">
+              {DEMO_AVATARS.map((demo, i) => (
+                <div key={i} className="relative group" style={{
+                  animation: `float ${3 + (i % 4) * 0.5}s ease-in-out infinite`,
+                  animationDelay: `${i * 0.2}s`,
+                }}>
+                  <GenerativeAvatar
+                    seed={{ email_hash: demo.email_hash, ...DEFAULT_SEED_PROPS }}
+                    size={64}
+                    score={demo.score}
+                    className="rounded-lg border border-[#1e1e2e] hover:border-[#00ff88]/50 transition-colors cursor-pointer"
+                  />
+                  <div className="absolute -bottom-1 -right-1 text-[8px] font-mono px-1 rounded opacity-0 group-hover:opacity-100 transition-opacity"
+                    style={{ backgroundColor: scoreColor(demo.score), color: '#000' }}>
+                    {demo.score}
+                  </div>
+                </div>
+              ))}
+            </div>
+            <p className="text-xs text-gray-500 mb-8 max-w-md mx-auto text-center">
+              Every identity gets a unique pixel avatar generated from their digital fingerprint.
+              Green = low exposure. Red = high threat. The face evolves as your digital footprint changes.
+            </p>
           </div>
         </div>
 
@@ -229,27 +292,27 @@ export default function Landing() {
             <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
               <div>
                 <div className="text-3xl md:text-4xl font-mono font-bold text-[#00ff88]">
-                  <CountUp target={76} suffix="+" />
-                </div>
-                <div className="text-xs text-gray-400 mt-2 font-mono">Intelligence modules</div>
-              </div>
-              <div>
-                <div className="text-3xl md:text-4xl font-mono font-bold text-[#00ff88]">
                   <CountUp target={51} />
                 </div>
-                <div className="text-xs text-gray-400 mt-2 font-mono">Data scrapers</div>
+                <div className="text-xs text-gray-400 mt-2 font-mono">Scrapers</div>
               </div>
               <div>
                 <div className="text-3xl md:text-4xl font-mono font-bold text-[#00ff88]">
-                  <CountUp target={8} />
+                  <CountUp target={25} />
                 </div>
-                <div className="text-xs text-gray-400 mt-2 font-mono">Fingerprint axes</div>
+                <div className="text-xs text-gray-400 mt-2 font-mono">Scanners</div>
               </div>
               <div>
-                <div className="text-3xl md:text-4xl font-mono font-bold text-white">
-                  <CountUp target={30} suffix="s" />
+                <div className="text-3xl md:text-4xl font-mono font-bold text-[#00ff88]">
+                  <CountUp target={5} suffix="B+" />
                 </div>
-                <div className="text-xs text-gray-400 mt-2 font-mono">Full scan time</div>
+                <div className="text-xs text-gray-400 mt-2 font-mono">Unique Avatars</div>
+              </div>
+              <div>
+                <div className="text-3xl md:text-4xl font-mono font-bold text-[#00ff88]">
+                  <CountUp target={3} />
+                </div>
+                <div className="text-xs text-gray-400 mt-2 font-mono">Plans</div>
               </div>
             </div>
           </div>
@@ -315,7 +378,7 @@ export default function Landing() {
             <div className="flex items-center gap-2">
               <Shield className="w-5 h-5 text-[#00ff88]" />
               <span className="font-bold font-['Instrument_Sans',sans-serif]">xpose</span>
-              <span className="text-xs text-gray-600 font-mono ml-2">v0.26.0</span>
+              <span className="text-xs text-gray-600 font-mono ml-2">v0.28.0</span>
             </div>
             <p className="text-xs text-gray-600 font-mono text-center">
               Identity Threat Intelligence · Open Source · GDPR Compliant

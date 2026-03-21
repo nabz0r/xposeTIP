@@ -5,7 +5,17 @@ import { getTargets, getScans, getFindingsStats, getFindings, createTarget, crea
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, AreaChart, Area } from 'recharts'
 import WorldHeatmap from '../components/WorldHeatmap'
 import FingerprintRadar from '../components/FingerprintRadar'
+import GenerativeAvatar from '../components/GenerativeAvatar'
 import useSSE from '../hooks/useSSE'
+
+const fallbackSeed = (email) => {
+  let hash = 0
+  for (let i = 0; i < (email || '').length; i++) {
+    hash = ((hash << 5) - hash) + email.charCodeAt(i)
+    hash |= 0
+  }
+  return { email_hash: Math.abs(hash) }
+}
 
 const severityColors = {
   critical: '#ff2244', high: '#ff8800', medium: '#ffcc00', low: '#3388ff', info: '#666688',
@@ -244,9 +254,7 @@ export default function Dashboard() {
                     {t.avatar_url ? (
                       <img src={t.avatar_url} alt="" className="w-7 h-7 rounded-full border border-[#1e1e2e] shrink-0" />
                     ) : (
-                      <div className="w-7 h-7 rounded-full bg-[#1e1e2e] flex items-center justify-center text-[10px] font-bold text-gray-500 shrink-0">
-                        {(t.email || '?')[0].toUpperCase()}
-                      </div>
+                      <GenerativeAvatar seed={t.fingerprint_avatar_seed || fallbackSeed(t.email)} size={32} score={t.exposure_score || 0} className="shrink-0" />
                     )}
                     <span className="font-mono text-xs text-gray-300 truncate">{t.primary_name || t.display_name || t.email}</span>
                   </div>

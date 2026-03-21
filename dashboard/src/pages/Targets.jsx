@@ -20,6 +20,15 @@ const scoreColor = (score) => {
   return '#00ff88'
 }
 
+const fallbackSeed = (email) => {
+  let hash = 0
+  for (let i = 0; i < (email || '').length; i++) {
+    hash = ((hash << 5) - hash) + email.charCodeAt(i)
+    hash |= 0
+  }
+  return { email_hash: Math.abs(hash) }
+}
+
 const threatColor = (score) => {
   if (score == null) return '#666688'
   if (score >= 60) return '#ff2244'
@@ -195,12 +204,8 @@ export default function Targets() {
                     <div className="flex items-center gap-3">
                       {t.avatar_url ? (
                         <img src={t.avatar_url} alt="" className="w-8 h-8 rounded-full border border-[#1e1e2e] shrink-0" />
-                      ) : t.fingerprint_avatar_seed ? (
-                        <GenerativeAvatar seed={t.fingerprint_avatar_seed} size={36} score={t.exposure_score} className="shrink-0" />
                       ) : (
-                        <div className="w-8 h-8 rounded-full bg-[#1e1e2e] flex items-center justify-center text-xs font-bold text-gray-500 shrink-0">
-                          {(t.email || '?')[0].toUpperCase()}
-                        </div>
+                        <GenerativeAvatar seed={t.fingerprint_avatar_seed || fallbackSeed(t.email)} size={36} score={t.exposure_score || 0} className="shrink-0" />
                       )}
                       <div className="min-w-0">
                         {name && <div className="text-sm font-medium truncate">{name}</div>}
