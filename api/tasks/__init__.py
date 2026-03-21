@@ -35,3 +35,27 @@ def setup_worker_logging(sender, **kwargs):
     setup_logging(redis_url=settings.REDIS_URL, container=container)
     import logging as _logging
     _logging.getLogger("api.tasks").info("xpose Worker started — Redis log handler active")
+
+
+from celery.signals import worker_process_init  # noqa: E402
+
+
+@worker_process_init.connect
+def setup_redis_logging_per_process(**kwargs):
+    """Install RedisLogHandler in each prefork child process."""
+    import os
+    import logging as _logging
+    from api.services.log_handler import RedisLogHandler
+
+    os.environ.setdefault("XPOSE_CONTAINER", "worker")
+    container = os.environ.get("XPOSE_CONTAINER", "worker")
+    handler = RedisLogHandler(redis_url=settings.REDIS_URL, container=container)
+    handler.setLevel(_logging.DEBUG)
+    handler.setFormatter(_logging.Formatter("%(message)s"))
+
+    root = _logging.getLogger()
+    if not any(isinstance(h, RedisLogHandler) for h in root.handlers):
+        root.addHandler(handler)
+        root.setLevel(_logging.DEBUG)
+
+    _logging.getLogger(__name__).info("Worker process Redis log handler active (pid=%s)", os.getpid())

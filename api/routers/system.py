@@ -149,6 +149,7 @@ async def get_system_logs(
 
 @router.delete("/logs")
 async def clear_system_logs(
+    user: User = Depends(get_current_user),
     role: str = Depends(require_role("superadmin", "admin")),
 ):
     """Clear all logs from the Redis ring buffer."""

@@ -86,7 +86,17 @@ export default function ProfileHeader({ target, findings, animScore, profileData
         <div className="flex-1 min-w-0">
           <div className="flex items-start justify-between">
             <div>
-              {displayName && <h2 className="text-xl font-semibold">{displayName}</h2>}
+              {displayName && (
+                <div className="flex items-center gap-2">
+                  <h2 className="text-xl font-semibold">{displayName}</h2>
+                  {p.confidence && (
+                    <span className="text-[10px] font-mono px-1.5 py-0.5 rounded-full bg-[#00ff88]/10 text-[#00ff88]">
+                      {Math.round(p.confidence.overall * 100)}% confidence
+                      {p.confidence.cross_verified && ' · cross-verified'}
+                    </span>
+                  )}
+                </div>
+              )}
               <p className="text-sm font-mono text-gray-400">{target.email}</p>
               {title && company && <p className="text-xs text-gray-400 mt-0.5">{title} at {company}</p>}
               {bio && <p className="text-sm text-gray-300 mt-1 line-clamp-2">{bio}</p>}

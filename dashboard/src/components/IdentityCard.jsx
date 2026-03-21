@@ -91,7 +91,7 @@ export default function IdentityCard({ profile }) {
         {est.nationalities && est.nationalities.length > 0 && (
           <div className="space-y-2">
             {est.nationalities.map((n, i) => (
-              <div key={i} className="flex items-center gap-3">
+              <div key={i} className={`flex items-center gap-3${n.probability < 0.05 ? ' opacity-50' : ''}`}>
                 <span className="text-xl">{countryFlag(n.country_code)}</span>
                 <div className="flex-1">
                   <div className="flex items-center justify-between mb-1">
@@ -110,7 +110,9 @@ export default function IdentityCard({ profile }) {
 
       {/* Footer */}
       <div className="mt-4 pt-3 border-t border-[#1e1e2e]">
-        <p className="text-[10px] text-gray-600">Based on first name analysis · demographic data</p>
+        <p className="text-[10px] text-gray-600">
+          Statistical estimation · {est.age_sample_count > 0 ? `${est.age_sample_count.toLocaleString()}+ samples · ` : ''}confidence increases with more sources
+        </p>
       </div>
     </div>
   )

@@ -123,6 +123,12 @@ def build_graph(target_id, workspace_id, session: Session):
                         site_name = name
                         break
 
+                # For scraper findings, extract platform from data
+                if f.module == "scraper_engine" and f.data:
+                    scraper_platform = f.data.get("platform", "") or f.data.get("scraper", "")
+                    if scraper_platform:
+                        site_name = scraper_platform.replace("_profile", "").replace("_scraper", "").replace("_search", "").title()
+
                 platform_node = get_or_create_identity(
                     "social_url", site_name,
                     platform=platform_domain or site_name.lower(),
@@ -130,10 +136,21 @@ def build_graph(target_id, workspace_id, session: Session):
                     source_finding_id=f.id,
                 )
 
-                # Link email → platform
+                # Link email → platform (for email indicator findings)
                 if email_value and f.indicator_type == "email":
                     get_or_create_link(
                         indicator_node.id, platform_node.id,
+                        "registered_with",
+                        source_module=f.module,
+                        evidence={"finding_id": str(f.id), "url": f.url},
+                    )
+                # Link email → platform for username-based findings (scrapers)
+                elif email_value and f.indicator_type == "username":
+                    email_node = get_or_create_identity(
+                        "email", email_value, source_module=f.module,
+                    )
+                    get_or_create_link(
+                        email_node.id, platform_node.id,
                         "registered_with",
                         source_module=f.module,
                         evidence={"finding_id": str(f.id), "url": f.url},

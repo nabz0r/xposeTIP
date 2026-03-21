@@ -17,13 +17,16 @@ logger = logging.getLogger(__name__)
 
 SCORE_WEIGHTS = {
     "breach": 0.25,
-    "social_account": 0.20,
-    "tracking": 0.15,
-    "geolocation": 0.12,
-    "data_broker": 0.10,
-    "metadata": 0.08,
-    "domain_registration": 0.05,
-    "paste": 0.05,
+    "social_account": 0.18,
+    "tracking": 0.12,
+    "geolocation": 0.10,
+    "data_broker": 0.08,
+    "metadata": 0.07,
+    "domain_registration": 0.04,
+    "paste": 0.04,
+    "identity": 0.05,
+    "archive": 0.04,
+    "intelligence": 0.03,
 }
 
 SEVERITY_MULTIPLIER = {
@@ -142,7 +145,7 @@ def compute_score(target_id, session: Session) -> tuple[int, dict]:
     known_cats = set(SCORE_WEIGHTS.keys())
     for cat, score in breakdown.items():
         if cat not in known_cats:
-            total += score * 0.03
+            total += score * 0.02
 
     # Apply bonus factors
     bonus = _compute_bonus_factors(findings)

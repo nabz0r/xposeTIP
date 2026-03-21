@@ -170,14 +170,33 @@ def aggregate_profile(target_id, workspace_id, session: Session) -> dict:
 
         # --- Social profiles ---
         if f.category == "social_account":
-            platform = data.get("platform") or data.get("network") or data.get("service") or ""
+            platform = (data.get("platform") or data.get("network") or data.get("service") or "").lower()
             url = f.url or data.get("url", "")
             username = data.get("username") or data.get("handle") or data.get("login") or ""
-            key = f"{platform}:{username or url}"
-            if key not in seen_socials and (platform or url):
+
+            # Normalize platform name
+            platform_clean = platform.replace("_profile", "").replace("_scraper", "").replace("_search", "").strip()
+            if not platform_clean and url:
+                DOMAIN_PLATFORM = {
+                    "twitter.com": "twitter", "x.com": "twitter", "instagram.com": "instagram",
+                    "facebook.com": "facebook", "github.com": "github", "linkedin.com": "linkedin",
+                    "pinterest.com": "pinterest", "reddit.com": "reddit", "youtube.com": "youtube",
+                    "tiktok.com": "tiktok", "spotify.com": "spotify", "discord.com": "discord",
+                    "steam": "steam", "keybase.io": "keybase", "medium.com": "medium",
+                    "dev.to": "devto", "gitlab.com": "gitlab", "mastodon": "mastodon",
+                    "stackoverflow.com": "stackoverflow", "imgur.com": "imgur",
+                    "about.me": "aboutme", "linktree": "linktree", "disqus.com": "disqus",
+                }
+                for domain_key, pname in DOMAIN_PLATFORM.items():
+                    if domain_key in url.lower():
+                        platform_clean = pname
+                        break
+
+            key = platform_clean or url
+            if key and key not in seen_socials:
                 seen_socials.add(key)
                 profile["social_profiles"].append({
-                    "platform": platform,
+                    "platform": platform_clean or platform,
                     "url": url,
                     "username": username,
                     "source": source,
@@ -253,6 +272,35 @@ def aggregate_profile(target_id, workspace_id, session: Session) -> dict:
 
     profile["data_sources"] = sorted(sources)
     profile["breach_summary"]["sources"] = profile["breach_summary"]["sources"][:20]
+
+    # --- Profile confidence score ---
+    name_sources = len(profile["names"])
+    avatar_sources = len(profile["avatars"])
+    total_sources = len(profile["data_sources"])
+
+    name_confidence = min(1.0, name_sources * 0.25)
+    avatar_confidence = min(1.0, avatar_sources * 0.33)
+    data_confidence = min(1.0, total_sources / 10)
+
+    name_values = [n["value"].lower().strip() for n in profile["names"]]
+    most_common_count = max((name_values.count(v) for v in set(name_values)), default=0)
+    cross_verified_bonus = min(0.2, most_common_count * 0.1)
+
+    overall_confidence = min(1.0, (
+        name_confidence * 0.30 +
+        avatar_confidence * 0.15 +
+        data_confidence * 0.40 +
+        cross_verified_bonus +
+        (0.15 if total_sources > 0 else 0.0)
+    ))
+
+    profile["confidence"] = {
+        "overall": round(overall_confidence, 2),
+        "name_sources": name_sources,
+        "avatar_sources": avatar_sources,
+        "total_sources": total_sources,
+        "cross_verified": most_common_count > 1,
+    }
 
     # Pick primary name with strict validation
     PLATFORM_NAMES = {
