@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { Plus, Code, Play, Download, Upload, X, Trash2, ToggleLeft, ToggleRight, ChevronDown, ChevronRight } from 'lucide-react'
 import { getScrapers, getScraper, createScraper, updateScraper, deleteScraper, testScraper, toggleScraper, exportScraper, importScraper } from '../lib/api'
 
-const CATEGORIES = ['social', 'breach', 'metadata', 'people_search', 'identity', 'archive']
+const CATEGORIES = ['social', 'breach', 'metadata', 'people_search', 'identity', 'archive', 'gaming']
 const INPUT_TYPES = ['email', 'username', 'domain', 'url', 'ip', 'first_name']
 const RULE_TYPES = ['json_key', 'regex', 'jsonpath']
 const SEVERITIES = ['info', 'low', 'medium', 'high', 'critical']
