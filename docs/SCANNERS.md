@@ -71,6 +71,67 @@ xpose has **25+ scanner modules** across 4 layers. Scanners are lazy-loaded via 
 
 Modules without a registered scanner are marked `implemented: false` in the API and excluded from scan dispatch.
 
+## Scraper Engine
+
+The scraper engine executes data-driven scraper definitions stored in the database.
+Unlike scanners (Python classes), scrapers are defined as JSON records with:
+- URL template with placeholders: `{email}`, `{username}`, `{domain}`, `{first_name}`, `{fullname}`
+- Extraction rules: regex or JSONPath patterns
+- Rate limiting configuration
+- Finding output mapping (title template, category, severity)
+
+Scrapers are editable via the Scrapers UI page — no code deploy needed.
+
+### Identity Estimation Scrapers
+| Scraper | API | Input | Output |
+|---------|-----|-------|--------|
+| Genderize | genderize.io | first_name | gender + probability |
+| Agify | agify.io | first_name | age estimate + sample count |
+| Nationalize | nationalize.io | first_name | top 3 nationalities + probabilities |
+
+### Archive Scrapers
+| Scraper | API | Input | Output |
+|---------|-----|-------|--------|
+| Wayback Domain | archive.org CDX | domain | first snapshot date, archive presence |
+| Wayback Count | archive.org CDX | domain | total snapshot pages |
+| Wayback Profile | archive.org CDX | username | archived Twitter profile check |
+
+### Social Profile Scrapers
+| Scraper | Input | Output |
+|---------|-------|--------|
+| Reddit | username | display name, karma, bio, avatar |
+| GitHub (scraper) | username | full profile, repos, followers, twitter |
+| Steam | username | display name, avatar, location, real name |
+| Keybase | username | display name, bio, location, avatar, proofs |
+| Medium | username | display name, bio, followers, twitter |
+| Hacker News | username | display name, karma, about |
+| Dev.to | username | display name, bio, location, github/twitter |
+| GitLab | username | display name, bio, location, avatar |
+| About.me | username | display name, bio, avatar |
+| Imgur | username | display name, avatar |
+| Mastodon | username | display name, bio, avatar, followers |
+| StackOverflow | username | display name, reputation, avatar, location |
+| Pinterest | username | display name, bio, avatar |
+| Linktree | username | display name, bio, avatar |
+| Disqus | username | display name, avatar, bio |
+
+### Breach / Enrichment Scrapers
+| Scraper | Input | Output |
+|---------|-------|--------|
+| XposedOrNot | email | breach count, exposed data, first breach |
+| LeakCheck | email | leak source count |
+| Pastebin Dumps | email | paste dump presence |
+
+### Metadata Scrapers
+| Scraper | Input | Output |
+|---------|-------|--------|
+| Gravatar (scraper) | email | display name, username, about, location, avatar |
+| crt.sh Subdomains | domain | certificate transparency subdomains |
+| SecurityTrails | domain | DNS history availability |
+| Disposable Email | domain | disposable email provider detection |
+
+Free tier limits: Genderize/Agify/Nationalize = 100 requests/day each. No API key needed.
+
 ## Adding a New Scanner
 
 See [CONTRIBUTING.md](CONTRIBUTING.md).

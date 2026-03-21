@@ -39,10 +39,14 @@ The exposure score for a US target will naturally be higher (more public data av
 than for an EU target (GDPR reduces public exposure). That's a feature, not a bug —
 it proves the point about digital exposure varying by jurisdiction.
 
-## Current version: v0.5.0
+## Current version: v0.12.0
 
-Sprint 5 complete. 17 scanners implemented, profile aggregation, SVG world map,
-toast notifications, health check system, admin polish.
+Sprint 12 complete. 25 scanners (17 implemented + 8 placeholder), 28 scrapers
+(identity, social, breach, metadata, archive, people_search), 5 intelligence
+analyzers, digital fingerprint (8-axis radar), identity estimation
+(gender/age/nationality), photo strip, IdentityCard component, profile
+aggregator with scraper data integration, source scoring, scraper engine with
+editable regex, finding deduplication (Python-side).
 
 ## Tech stack (locked)
 
@@ -56,7 +60,9 @@ toast notifications, health check system, admin polish.
 - **Graph**: D3.js force-directed (identity graph) + D3 geo (world heatmap)
 - **Map**: SVG world map with Mercator projection (replaced Leaflet in v0.5.0)
 - **Reports**: WeasyPrint (HTML→PDF) — planned
-- **OSINT**: Holehe, Sherlock (Python wrappers), plus 15 custom scanners
+- **OSINT**: Holehe, Sherlock (Python wrappers), plus 15 custom scanners + 28 data-driven scrapers
+- **Identity**: Genderize.io, Agify.io, Nationalize.io (free, no auth)
+- **Archive**: Wayback Machine CDX API (free, no auth)
 - **Breach**: HIBP API ($3.50/mo) + XposedOrNot (free)
 - **Geolocation**: ip-api.com (free) + MaxMind GeoLite2 (free, local DB)
 - **Encryption**: Fernet (AES-256) for API keys at rest
@@ -120,6 +126,27 @@ Lazy-loaded via `importlib` — missing deps don't crash the worker.
 Modules without a registered scanner are marked `implemented: false` in the API response
 and silently excluded from scan dispatch.
 
+Additionally, the scraper engine (`scraper_engine` module) executes 28 data-driven scrapers
+defined in `scripts/seed_scrapers.py` and stored in the `scrapers` DB table. These are
+editable via the Scrapers UI page without code changes.
+
+## Scraper registry (scripts/seed_scrapers.py)
+
+28 scrapers across 6 categories, all editable via UI:
+
+| Category | Count | Scrapers |
+|----------|-------|----------|
+| social | 15 | Reddit, GitHub, Steam, Keybase, Medium, HackerNews, Dev.to, GitLab, About.me, Imgur, Mastodon, StackOverflow, Pinterest, Linktree, Disqus |
+| breach | 3 | XposedOrNot, LeakCheck, Pastebin Dumps |
+| metadata | 4 | Gravatar, crt.sh subdomains, SecurityTrails, Disposable Email |
+| identity | 3 | Genderize (gender), Agify (age), Nationalize (nationality) |
+| archive | 3 | Wayback Domain History, Wayback Snapshot Count, Wayback Profile Archive |
+| people_search | 0 | (planned) |
+
+All scrapers use the ScraperEngine: URL template + regex/JSONPath extraction.
+Input types: email, username, domain, first_name.
+Transforms: email_to_username, email_to_domain, email_to_first_name, email_to_fullname, url_encode.
+
 ### Adding a new scanner
 
 1. Create scanner class inheriting `BaseScanner` (in `api/services/layerN/`)
@@ -163,6 +190,14 @@ Extracts: name, location, social profiles, breach count, credential status, repu
 
 **Important**: Excludes `geoip`/`maxmind_geo` modules from location extraction — those
 are mail server locations, not user locations.
+
+### Identity estimation (via profile aggregator)
+
+Extracted from Genderize/Agify/Nationalize scraper findings during profile aggregation.
+Stored in `target.profile_data.identity_estimation`:
+- `gender` + `gender_probability` (from Genderize.io)
+- `age` + `age_sample_count` (from Agify.io)
+- `nationalities[]` with `country_code` + `probability` (from Nationalize.io, top 3)
 
 ## API design
 
@@ -259,7 +294,10 @@ Search + filter. "Add target" modal. Click row → detail.
 
 ### Target detail (/targets/:id)
 ProfileHeader: social profiles strip, credentials leaked status, email security badge,
-reputation indicator, data sources count.
+reputation indicator, data sources count, category-labeled score breakdown.
+IdentityCard: photo strip (up to 6 avatars from multiple sources), gender with confidence
+bar, age estimation, nationality flags with probability bars. Only renders when identity
+data exists.
 Tabs: Overview | Findings | Graph | Timeline | Locations | Scans.
 - Overview: critical alerts, breach cards, social accounts, mail server locations
 - Findings: filterable table (severity/module/status), expandable rows with FindingDataCard
@@ -277,7 +315,8 @@ Scan Defaults | Profile (display_name edit).
 
 ## Frontend components
 
-- `ProfileHeader.jsx` — uses `/profile` API, shows social strip + stats
+- `ProfileHeader.jsx` — uses `/profile` API, shows social strip + stats + category-labeled breakdown
+- `IdentityCard.jsx` — photo strip + gender/age/nationality estimation display
 - `IdentityGraph.jsx` — D3 force-directed with zoom, drag, hover highlight
 - `IOCTimeline.jsx` — vertical timeline grouped by date
 - `LocationMap.jsx` — pure SVG world map (Mercator projection, animated dots)
@@ -316,13 +355,13 @@ Frontend pre-selects: all enabled+implemented L1 + recommended L2 (dns_deep, lea
 | 3 | v0.3.0 | Gravatar, Social Enricher, Google Profile, Free GeoIP, settings UI |
 | 4 | v0.4.0 | Dynamic API keys (Fernet), key validation, location mapping, scan defaults |
 | 5 | v0.5.0 | 7 new scanners, profile aggregation, health checks, SVG world map, toast system |
-| 6 | v0.6.0 | EmailRep, Epieos, FullContact scanners, enhanced findings UI |
-| 7 | v0.7.0 | Source scoring, confidence engine, FingerprintEngine, radar chart |
-| 8 | v0.8.0 | Digital fingerprint: 8-axis radar, risk labels, comparison, history |
-| 9 | v0.9.0 | Scraper engine: DB-driven scrapers, CRUD API, 13 initial scrapers |
-| 10 | v0.10.0 | Quality polish: dedup, profile names, finding details, page transitions |
-| 11 | v0.11.0 | 15 new scrapers: identity estimation, Wayback archive, social expansion, enrichment |
-| 12 | v0.12.0 | Identity Card, photo strip, profile aggregator fix, category labels |
+| 6 | v0.6.0 | Source scoring, Premium scanners, SaaS connectors, OAuth framework |
+| 7 | v0.7.0 | Intelligence engine (5 analyzers), Google OAuth audit, demo flow, scaling |
+| 8 | v0.8.0 | Digital fingerprint (8-axis radar, hash, snapshots, evolution timeline) |
+| 9 | v0.9.0 | Scraper engine: modular scrapers with editable regex in DB |
+| 10 | v0.10.0 | Quality polish, dedup, profile name fix, finding details |
+| 11 | v0.11.0 | 15 new scrapers: identity estimation, Wayback archive, social expansion (28 total) |
+| 12 | v0.12.0 | IdentityCard, photo strip, profile aggregator fix, UX polish |
 
 ## Bugs fixed (v0.5.x)
 

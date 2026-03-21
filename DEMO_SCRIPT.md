@@ -18,10 +18,12 @@
 
 ## [0:45] Profile Appears
 
-> "In 30 seconds, we found 23 exposures across 7 sources."
+> "In 30 seconds, we found 47 exposures across 10 sources."
 
-- Profile header: real name, photo, email security badge
-- Risk level banner: **HIGH** with score 42/100
+- Profile header: real photo, name, email security badge
+- **Identity estimation: Male, ~54 years old, probable Egyptian origin (21% confidence)**
+- Risk level banner: **HIGH** with score 18/100
+- Photo strip: 4 different profile pictures found across platforms
 - Accounts strip: Reddit, Steam, Keybase, Amazon, Spotify...
 - Each with platform icon and "Secure" link
 
@@ -74,7 +76,7 @@
 ## [2:30] Closing
 
 > "xpose is built in Luxembourg, GDPR compliant, runs on-premise.
-> 25 intelligence scanners, source-scored findings, automated remediation.
+> 53 intelligence modules, source-scored findings, identity estimation, automated remediation.
 > We're looking for pilot companies ready to audit their digital exposure."
 
 ## [3:00] Call to Action

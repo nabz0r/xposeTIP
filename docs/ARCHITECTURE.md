@@ -181,6 +181,24 @@ Runs automatically after each scan in `finalize_scan`:
 
 Intelligence findings are stored as `layer=4, module="intelligence"`.
 
+## Scraper Engine
+
+Parallel to the scanner plugin system, the scraper engine provides a data-driven
+approach for simple HTTP scraping tasks. Scraper definitions are stored in the
+`scrapers` DB table and executed by the `ScraperScanner` meta-scanner during scan
+orchestration.
+
+Flow: ScraperScanner → loads enabled scrapers from DB → ScraperEngine.execute()
+per scraper → HTTP request with URL template → extraction via regex/JSONPath →
+ScanResult findings
+
+New in v0.11.0: Input transforms (`email_to_first_name`, `email_to_fullname`)
+enable name-based intelligence APIs like Genderize, Agify, and Nationalize.
+
+New in v0.12.0: Profile aggregator unwraps scraper `extracted` dict, enabling
+scraper-sourced names, avatars, and identity estimation data to flow into
+the unified profile.
+
 ## Encryption
 
 - API keys encrypted at rest using **Fernet** (AES-256-CBC + HMAC-SHA256)
