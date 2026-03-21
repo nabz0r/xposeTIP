@@ -7,7 +7,9 @@ from pydantic import BaseModel, EmailStr
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from api.auth.dependencies import get_current_user, get_current_workspace, require_role
+from datetime import datetime, timezone
+
+from api.auth.dependencies import get_current_user, get_current_workspace, get_current_role, require_role
 from api.auth.security import hash_password
 from api.database import get_db
 from api.models.finding import Finding
@@ -161,6 +163,120 @@ async def delete_workspace(
     await db.delete(ws)
     await db.commit()
     return {"deleted": True}
+
+
+# ---- Plans ----
+
+@router.get("/plans")
+async def list_plans():
+    """List all available plans with their limits and features."""
+    from api.services.plan_config import PLANS
+    return {name: plan for name, plan in PLANS.items()}
+
+
+@router.get("/{workspace_id}/usage")
+async def get_workspace_usage(
+    workspace_id: str,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """Get current usage for a workspace against its plan limits."""
+    ws_id = uuid.UUID(workspace_id)
+    # Verify membership
+    result = await db.execute(
+        select(UserWorkspace).where(
+            UserWorkspace.user_id == current_user.id,
+            UserWorkspace.workspace_id == ws_id,
+        )
+    )
+    if not result.scalar_one_or_none():
+        raise HTTPException(status_code=403, detail="Not a member of this workspace")
+
+    ws_result = await db.execute(select(Workspace).where(Workspace.id == ws_id))
+    workspace = ws_result.scalar_one_or_none()
+    if not workspace:
+        raise HTTPException(status_code=404, detail="Workspace not found")
+
+    from api.services.plan_config import get_plan
+
+    plan = get_plan(workspace.plan)
+    target_count = await db.scalar(
+        select(func.count()).select_from(Target).where(Target.workspace_id == ws_id)
+    ) or 0
+
+    now = datetime.now(timezone.utc)
+    month_start = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+    scan_count = await db.scalar(
+        select(func.count()).select_from(Scan)
+        .where(Scan.workspace_id == ws_id, Scan.created_at >= month_start)
+    ) or 0
+
+    finding_count = await db.scalar(
+        select(func.count()).select_from(Finding).where(Finding.workspace_id == ws_id)
+    ) or 0
+
+    member_count = await db.scalar(
+        select(func.count()).select_from(UserWorkspace).where(UserWorkspace.workspace_id == ws_id)
+    ) or 0
+
+    return {
+        "plan": workspace.plan,
+        "plan_label": plan["label"],
+        "limits": {
+            "max_targets": plan["max_targets"],
+            "max_scans_per_month": plan["max_scans_per_month"],
+            "max_modules_per_scan": plan["max_modules_per_scan"],
+            "allowed_layers": plan["allowed_layers"],
+        },
+        "usage": {
+            "targets": target_count,
+            "scans_this_month": scan_count,
+            "total_findings": finding_count,
+            "members": member_count,
+        },
+        "features": plan["features"],
+    }
+
+
+class UpdatePlanRequest(BaseModel):
+    plan: str
+
+
+@router.patch("/{workspace_id}/plan")
+async def update_workspace_plan(
+    workspace_id: str,
+    body: UpdatePlanRequest,
+    current_user: User = Depends(get_current_user),
+    role: str = Depends(get_current_role),
+    db: AsyncSession = Depends(get_db),
+):
+    """Update workspace plan. Superadmin can set any plan."""
+    from api.services.plan_config import PLANS
+
+    if body.plan not in PLANS:
+        raise HTTPException(status_code=400, detail=f"Invalid plan. Must be one of: {list(PLANS.keys())}")
+
+    ws_id = uuid.UUID(workspace_id)
+    # Check caller is admin of this workspace
+    result = await db.execute(
+        select(UserWorkspace).where(
+            UserWorkspace.user_id == current_user.id,
+            UserWorkspace.workspace_id == ws_id,
+        )
+    )
+    membership = result.scalar_one_or_none()
+    if not membership or membership.role not in ("superadmin", "admin"):
+        raise HTTPException(status_code=403, detail="Must be admin of this workspace")
+
+    ws_result = await db.execute(select(Workspace).where(Workspace.id == ws_id))
+    workspace = ws_result.scalar_one_or_none()
+    if not workspace:
+        raise HTTPException(status_code=404, detail="Workspace not found")
+
+    workspace.plan = body.plan
+    await db.commit()
+
+    return {"id": str(workspace.id), "plan": workspace.plan}
 
 
 # ---- Members ----

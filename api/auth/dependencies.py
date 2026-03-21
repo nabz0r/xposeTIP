@@ -42,6 +42,16 @@ async def get_current_workspace(
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token")
 
 
+async def get_current_role(
+    credentials: Annotated[HTTPAuthorizationCredentials, Depends(security)],
+) -> str:
+    try:
+        payload = decode_token(credentials.credentials)
+        return payload.get("role", "user")
+    except Exception:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token")
+
+
 def require_role(*roles: str):
     async def _check(
         credentials: Annotated[HTTPAuthorizationCredentials, Depends(security)],

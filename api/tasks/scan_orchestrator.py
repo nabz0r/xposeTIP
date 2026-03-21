@@ -130,31 +130,45 @@ def finalize_scan(scan_id: str):
         except Exception:
             logger.exception("Profile aggregation failed for target %s", scan.target_id)
 
-        # Cluster personas
-        try:
-            from api.services.layer4.persona_engine import cluster_personas
-            personas = cluster_personas(scan.target_id, scan.workspace_id, session)
-            if personas:
-                profile = dict(target.profile_data or {})
-                profile["personas"] = personas
-                target.profile_data = profile
-                session.commit()
-                logger.info("Personas clustered for target %s: %d personas", scan.target_id, len(personas))
-        except Exception:
-            logger.exception("Persona clustering failed for target %s", scan.target_id)
+        # Load workspace plan + user role for feature gating
+        from api.models.workspace import Workspace
+        from api.models.user import UserWorkspace
+        from api.services.plan_config import check_feature
+        ws = session.execute(select(Workspace).where(Workspace.id == scan.workspace_id)).scalar_one_or_none()
+        plan_name = ws.plan if ws else "free"
+        # Get the role of the workspace owner (or first member) for bypass check
+        uw = session.execute(
+            select(UserWorkspace).where(UserWorkspace.workspace_id == scan.workspace_id).limit(1)
+        ).scalar_one_or_none()
+        ws_role = uw.role if uw else "user"
 
-        # Run intelligence analysis pipeline
-        try:
-            from api.services.layer4.analysis_pipeline import AnalysisPipeline
-            pipeline = AnalysisPipeline()
-            intel_count = pipeline.run(scan.target_id, scan.workspace_id, scan_id, session)
-            if intel_count:
-                logger.info("Intelligence pipeline created %d findings for target %s", intel_count, scan.target_id)
-                # Update scan findings count with intelligence findings
-                scan.findings_count = (scan.findings_count or 0) + intel_count
-                session.commit()
-        except Exception:
-            logger.exception("Intelligence pipeline failed for target %s", scan.target_id)
+        # Cluster personas (plan-gated)
+        if check_feature(plan_name, "persona_clustering", ws_role):
+            try:
+                from api.services.layer4.persona_engine import cluster_personas
+                personas = cluster_personas(scan.target_id, scan.workspace_id, session)
+                if personas:
+                    profile = dict(target.profile_data or {})
+                    profile["personas"] = personas
+                    target.profile_data = profile
+                    session.commit()
+                    logger.info("Personas clustered for target %s: %d personas", scan.target_id, len(personas))
+            except Exception:
+                logger.exception("Persona clustering failed for target %s", scan.target_id)
+
+        # Run intelligence analysis pipeline (plan-gated)
+        if check_feature(plan_name, "intelligence_pipeline", ws_role):
+            try:
+                from api.services.layer4.analysis_pipeline import AnalysisPipeline
+                pipeline = AnalysisPipeline()
+                intel_count = pipeline.run(scan.target_id, scan.workspace_id, scan_id, session)
+                if intel_count:
+                    logger.info("Intelligence pipeline created %d findings for target %s", intel_count, scan.target_id)
+                    # Update scan findings count with intelligence findings
+                    scan.findings_count = (scan.findings_count or 0) + intel_count
+                    session.commit()
+            except Exception:
+                logger.exception("Intelligence pipeline failed for target %s", scan.target_id)
 
         # Compute digital fingerprint
         try:

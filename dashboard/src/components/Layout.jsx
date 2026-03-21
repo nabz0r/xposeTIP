@@ -28,7 +28,7 @@ const pageTitles = {
 }
 
 export default function Layout() {
-  const { user, setUser, login: authLogin, logout } = useAuth()
+  const { user, setUser, login: authLogin, logout, refreshKey, triggerRefresh } = useAuth()
   const [workspaces, setWorkspaces] = useState([])
   const [showWsSwitcher, setShowWsSwitcher] = useState(false)
   const [collapsed, setCollapsed] = useState(false)
@@ -41,7 +41,7 @@ export default function Layout() {
       setUser(data)
     }).catch(() => {})
     getWorkspaces().then(setWorkspaces).catch(() => {})
-  }, [setUser])
+  }, [setUser, refreshKey])
 
   // Dynamic page title
   useEffect(() => {
@@ -84,7 +84,8 @@ export default function Layout() {
       const data = await switchWorkspace(wsId)
       authLogin(data.access_token, data.refresh_token)
       setShowWsSwitcher(false)
-      window.location.reload()
+      triggerRefresh()
+      navigate('/')
     } catch (err) {
       alert(err.message)
     }
@@ -109,6 +110,13 @@ export default function Layout() {
               className="flex items-center justify-between w-full px-3 py-2 rounded-lg bg-[#12121a] border border-[#1e1e2e] text-sm hover:border-[#00ff88]/30 transition-colors">
               <div className="truncate">
                 <span className="text-gray-300">{currentWs?.name || 'Workspace'}</span>
+                {currentWs?.plan && (
+                  <span className={`ml-1.5 text-[9px] font-mono font-bold px-1.5 py-0.5 rounded-full ${
+                    currentWs.plan === 'enterprise' ? 'bg-[#00ff88]/15 text-[#00ff88]' :
+                    currentWs.plan === 'consultant' ? 'bg-[#3388ff]/15 text-[#3388ff]' :
+                    'bg-[#666688]/15 text-[#666688]'
+                  }`}>{currentWs.plan}</span>
+                )}
               </div>
               <ChevronDown className={`w-3 h-3 text-gray-500 transition-transform ${showWsSwitcher ? 'rotate-180' : ''}`} />
             </button>
@@ -125,6 +133,13 @@ export default function Layout() {
                           style={{ backgroundColor: (roleColors[ws.role] || '#666688') + '26', color: roleColors[ws.role] || '#666688' }}>
                           {ws.role}
                         </span>
+                        {ws.plan && (
+                          <span className={`text-[9px] font-mono px-1 py-0.5 rounded ${
+                            ws.plan === 'enterprise' ? 'bg-[#00ff88]/10 text-[#00ff88]' :
+                            ws.plan === 'consultant' ? 'bg-[#3388ff]/10 text-[#3388ff]' :
+                            'bg-[#666688]/10 text-[#666688]'
+                          }`}>{ws.plan}</span>
+                        )}
                         <span className="text-[10px] text-gray-600">{ws.target_count} targets</span>
                       </div>
                     </div>

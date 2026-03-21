@@ -5,11 +5,12 @@ from pydantic import BaseModel, EmailStr
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from api.auth.dependencies import get_current_user, get_current_workspace
+from api.auth.dependencies import get_current_user, get_current_workspace, get_current_role
 from api.database import get_db
 from api.models.finding import Finding
 from api.models.target import Target
 from api.models.user import User
+from api.models.workspace import Workspace
 
 router = APIRouter()
 
@@ -38,6 +39,7 @@ async def create_target(
     body: TargetCreate,
     workspace_id: uuid.UUID = Depends(get_current_workspace),
     user: User = Depends(get_current_user),
+    role: str = Depends(get_current_role),
     db: AsyncSession = Depends(get_db),
 ):
     existing = await db.execute(
@@ -45,6 +47,18 @@ async def create_target(
     )
     if existing.scalar_one_or_none():
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Target already exists in workspace")
+
+    # Plan enforcement: check target limit
+    ws = await db.execute(select(Workspace).where(Workspace.id == workspace_id))
+    workspace = ws.scalar_one_or_none()
+    plan_name = workspace.plan if workspace else "free"
+    current_count = await db.scalar(
+        select(func.count()).select_from(Target).where(Target.workspace_id == workspace_id)
+    ) or 0
+    from api.services.plan_config import check_target_limit
+    allowed, msg = check_target_limit(plan_name, current_count, role)
+    if not allowed:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=msg)
 
     target = Target(
         workspace_id=workspace_id,

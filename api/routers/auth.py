@@ -44,13 +44,23 @@ class RefreshRequest(BaseModel):
 
 @router.post("/register", response_model=TokenResponse)
 async def register(body: RegisterRequest, db: AsyncSession = Depends(get_db)):
-    # Only allow registration if no users exist (setup wizard)
-    count = await db.scalar(select(func.count()).select_from(User))
-    if count and count > 0:
+    # Check if email already taken
+    existing = await db.execute(select(User).where(User.email == body.email))
+    if existing.scalar_one_or_none():
         raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Registration closed. Use invite flow.",
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Email already registered.",
         )
+
+    if len(body.password) < 8:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Password must be at least 8 characters.",
+        )
+
+    # First user = superadmin + enterprise workspace, rest = user + free workspace
+    user_count = await db.scalar(select(func.count()).select_from(User))
+    is_first = not user_count or user_count == 0
 
     user = User(
         email=body.email,
@@ -60,20 +70,32 @@ async def register(body: RegisterRequest, db: AsyncSession = Depends(get_db)):
     db.add(user)
     await db.flush()
 
+    if is_first:
+        role = "superadmin"
+        plan = "enterprise"
+        ws_name = "Default"
+        ws_slug = "default"
+    else:
+        role = "user"
+        plan = "free"
+        ws_name = body.display_name or body.email.split("@")[0]
+        ws_slug = ws_name.lower().replace(" ", "-")[:50] + f"-{uuid.uuid4().hex[:6]}"
+
     workspace = Workspace(
-        name="Default",
-        slug="default",
+        name=ws_name,
+        slug=ws_slug,
         owner_id=user.id,
+        plan=plan,
     )
     db.add(workspace)
     await db.flush()
 
-    membership = UserWorkspace(user_id=user.id, workspace_id=workspace.id, role="superadmin")
+    membership = UserWorkspace(user_id=user.id, workspace_id=workspace.id, role=role)
     db.add(membership)
     await db.commit()
 
     return TokenResponse(
-        access_token=create_access_token(user.id, workspace.id, "superadmin"),
+        access_token=create_access_token(user.id, workspace.id, role),
         refresh_token=create_refresh_token(user.id),
     )
 
@@ -190,7 +212,7 @@ async def me(current_user: User = Depends(get_current_user), db: AsyncSession = 
         .where(UserWorkspace.user_id == current_user.id)
     )
     workspaces = [
-        {"id": str(ws.id), "name": ws.name, "slug": ws.slug, "role": uw.role}
+        {"id": str(ws.id), "name": ws.name, "slug": ws.slug, "role": uw.role, "plan": ws.plan}
         for uw, ws in result.all()
     ]
     return {

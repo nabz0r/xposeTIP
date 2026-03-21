@@ -5,12 +5,15 @@ from pydantic import BaseModel
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from api.auth.dependencies import get_current_user, get_current_workspace
+from sqlalchemy import func
+
+from api.auth.dependencies import get_current_user, get_current_workspace, get_current_role
 from api.database import get_db
 from api.models.module import Module
 from api.models.scan import Scan
 from api.models.target import Target
 from api.models.user import User
+from api.models.workspace import Workspace
 from api.tasks.module_tasks import SCANNER_REGISTRY
 
 router = APIRouter()
@@ -26,6 +29,7 @@ async def create_scan(
     body: ScanCreate,
     workspace_id: uuid.UUID = Depends(get_current_workspace),
     user: User = Depends(get_current_user),
+    role: str = Depends(get_current_role),
     db: AsyncSession = Depends(get_db),
 ):
     # Validate target
@@ -36,9 +40,32 @@ async def create_scan(
     if not target:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Target not found")
 
+    # Plan enforcement: check scan limit
+    ws = await db.execute(select(Workspace).where(Workspace.id == workspace_id))
+    workspace = ws.scalar_one_or_none()
+    plan_name = workspace.plan if workspace else "free"
+
+    from datetime import datetime, timezone
+    now = datetime.now(timezone.utc)
+    month_start = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+    scans_this_month = await db.scalar(
+        select(func.count()).select_from(Scan)
+        .where(Scan.workspace_id == workspace_id, Scan.created_at >= month_start)
+    ) or 0
+
+    from api.services.plan_config import check_scan_limit, filter_modules_by_plan
+    allowed, msg = check_scan_limit(plan_name, scans_this_month, role)
+    if not allowed:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=msg)
+
+    # Filter modules by plan layer restrictions
+    all_modules_result = await db.execute(select(Module))
+    module_layers = {m.id: m.layer for m in all_modules_result.scalars().all()}
+    plan_filtered = filter_modules_by_plan(body.modules, plan_name, role, module_layers)
+
     # Validate modules — only keep enabled + implemented ones
     valid_modules = []
-    for mod_id in body.modules:
+    for mod_id in plan_filtered:
         result = await db.execute(select(Module).where(Module.id == mod_id, Module.enabled.is_(True)))
         if not result.scalar_one_or_none():
             raise HTTPException(

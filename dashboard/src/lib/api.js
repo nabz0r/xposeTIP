@@ -98,6 +98,11 @@ export const saveCustomKey = (data) => request('/settings/apikeys/custom', { met
 export const getDefaults = () => request('/settings/defaults')
 export const updateDefaults = (data) => request('/settings/defaults', { method: 'PUT', body: JSON.stringify(data) })
 
+// Plans
+export const getPlans = () => request('/workspaces/plans')
+export const getWorkspaceUsage = (id) => request(`/workspaces/${id}/usage`)
+export const updateWorkspacePlan = (id, plan) => request(`/workspaces/${id}/plan`, { method: 'PATCH', body: JSON.stringify({ plan }) })
+
 // Workspaces
 export const getWorkspaces = () => request('/workspaces')
 export const createWorkspace = (data) => request('/workspaces', { method: 'POST', body: JSON.stringify(data) })

@@ -5,6 +5,7 @@ const AuthContext = createContext(null)
 export function AuthProvider({ children }) {
   const [token, setToken] = useState(localStorage.getItem('xpose_token'))
   const [user, setUser] = useState(null)
+  const [refreshKey, setRefreshKey] = useState(0)
 
   const login = useCallback((accessToken, refreshToken) => {
     localStorage.setItem('xpose_token', accessToken)
@@ -19,8 +20,12 @@ export function AuthProvider({ children }) {
     setUser(null)
   }, [])
 
+  const triggerRefresh = useCallback(() => {
+    setRefreshKey(k => k + 1)
+  }, [])
+
   return (
-    <AuthContext.Provider value={{ token, user, setUser, login, logout }}>
+    <AuthContext.Provider value={{ token, user, setUser, login, logout, refreshKey, triggerRefresh }}>
       {children}
     </AuthContext.Provider>
   )
