@@ -4,6 +4,7 @@ import { Plus, Trash2, Search, Eye, Upload, Play } from 'lucide-react'
 import { getTargets, createTarget, deleteTarget, bulkImportTargets, createScan } from '../lib/api'
 import TargetQuickView from '../components/TargetQuickView'
 import GenerativeAvatar from '../components/GenerativeAvatar'
+import useSSE from '../hooks/useSSE'
 
 const FLAG = (code) => {
   if (!code) return ''
@@ -66,6 +67,7 @@ export default function Targets() {
   useEffect(() => {
     loadTargets()
   }, [search])
+  useSSE({ 'scan.completed': () => loadTargets(), 'scan.started': () => loadTargets(), 'target.updated': () => loadTargets() })
 
   async function loadTargets() {
     try {

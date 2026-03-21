@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from 'react'
 import { RefreshCw, Database, Server, Cpu, Wifi, CheckCircle, XCircle, AlertCircle, ScrollText, Users, Building2, Search, ChevronDown, ChevronRight, ShieldBan } from 'lucide-react'
-import { getSystemStats, recalculateScores, recalculateProfiles, checkAllModulesHealth, adminListUsers, adminUpdateUser, adminListWorkspaces, updateWorkspacePlan, getNameBlacklist, addNameBlacklist, removeNameBlacklist } from '../lib/api'
+import { getSystemStats, recalculateScores, recalculateProfiles, recalculateFingerprints, checkAllModulesHealth, adminListUsers, adminUpdateUser, adminListWorkspaces, updateWorkspacePlan, getNameBlacklist, addNameBlacklist, removeNameBlacklist } from '../lib/api'
 import { useAuth } from '../lib/auth'
 import LogViewer from '../components/LogViewer'
+import useSSE from '../hooks/useSSE'
 
 const statusIcon = (status) => {
   if (status === 'healthy') return <CheckCircle className="w-4 h-4 text-[#00ff88]" />
@@ -78,9 +79,11 @@ function DashboardTab() {
   const [refreshing, setRefreshing] = useState(false)
   const [recalculating, setRecalculating] = useState(false)
   const [recalcProfiles, setRecalcProfiles] = useState(false)
+  const [recalcFingerprints, setRecalcFingerprints] = useState(false)
   const [healthChecking, setHealthChecking] = useState(false)
 
   useEffect(() => { loadStats() }, [])
+  useSSE({ 'scan.completed': () => loadStats() })
 
   async function loadStats() {
     try {
@@ -143,6 +146,11 @@ function DashboardTab() {
           disabled={recalcProfiles}
           className="flex items-center gap-2 text-sm text-gray-400 hover:text-[#00ff88] disabled:opacity-50 border border-[#1e1e2e] rounded-lg px-3 py-1.5">
           {recalcProfiles ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Users className="w-4 h-4" />} Recalculate Profiles
+        </button>
+        <button onClick={async () => { setRecalcFingerprints(true); try { const r = await recalculateFingerprints(); alert(`Fingerprints: ${r.recalculated}/${r.total} recalculated`) } catch (e) { alert(e.message) } finally { setRecalcFingerprints(false) } }}
+          disabled={recalcFingerprints}
+          className="flex items-center gap-2 text-sm text-gray-400 hover:text-[#00ff88] disabled:opacity-50 border border-[#1e1e2e] rounded-lg px-3 py-1.5">
+          {recalcFingerprints ? <RefreshCw className="w-4 h-4 animate-spin" /> : <ShieldBan className="w-4 h-4" />} Recalculate Fingerprints
         </button>
         <button onClick={handleRefresh} disabled={refreshing}
           className="flex items-center gap-2 text-sm text-gray-400 hover:text-white disabled:opacity-50">

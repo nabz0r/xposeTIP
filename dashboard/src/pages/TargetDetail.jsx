@@ -10,6 +10,7 @@ import ProfileHeader from '../components/ProfileHeader'
 import IdentityCard from '../components/IdentityCard'
 import PersonaCard from '../components/PersonaCard'
 import LocationMap from '../components/LocationMap'
+import useSSE from '../hooks/useSSE'
 
 const severityColors = {
   critical: '#ff2244', high: '#ff8800', medium: '#ffcc00', low: '#3388ff', info: '#666688',
@@ -76,6 +77,10 @@ export default function TargetDetail() {
   }, [id])
 
   useEffect(() => { load() }, [load])
+  useSSE({
+    'scan.completed': (e) => { if (e.target_id === id) load() },
+    'target.updated': (e) => { if (e.target_id === id) load() },
+  })
 
   // Animate score
   useEffect(() => {

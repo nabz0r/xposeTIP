@@ -18,7 +18,7 @@ import { ToastProvider } from './components/Toast'
 
 function ProtectedRoute({ children }) {
   const { token } = useAuth()
-  if (!token) return <Navigate to="/login" replace />
+  if (!token) return <Navigate to="/welcome" replace />
   return children
 }
 

@@ -7,7 +7,7 @@ from pydantic import BaseModel
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from api.auth.dependencies import get_current_user
+from api.auth.dependencies import get_current_user, get_current_workspace
 from api.database import get_db
 from api.models.account import Account
 
@@ -60,10 +60,11 @@ class AccountResponse(BaseModel):
 async def list_accounts(
     target_id: str | None = None,
     user=Depends(get_current_user),
+    workspace_id=Depends(get_current_workspace),
     db: AsyncSession = Depends(get_db),
 ):
     """List connected accounts, optionally filtered by target."""
-    query = select(Account).where(Account.workspace_id == user["workspace_id"])
+    query = select(Account).where(Account.workspace_id == workspace_id)
     if target_id:
         query = query.where(Account.target_id == uuid.UUID(target_id))
     query = query.order_by(Account.created_at.desc())
@@ -92,6 +93,7 @@ async def list_accounts(
 async def oauth_start(
     req: OAuthStartRequest,
     user=Depends(get_current_user),
+    workspace_id=Depends(get_current_workspace),
     db: AsyncSession = Depends(get_db),
 ):
     """Generate OAuth authorization URL for a provider."""
@@ -105,7 +107,7 @@ async def oauth_start(
     sync_session = get_sync_session()
     try:
         client_id = get_workspace_api_key(
-            user["workspace_id"],
+            workspace_id,
             f"{req.provider.upper()}_CLIENT_ID",
             sync_session,
         )
@@ -132,6 +134,7 @@ async def oauth_start(
 async def oauth_callback(
     req: OAuthCallbackRequest,
     user=Depends(get_current_user),
+    workspace_id=Depends(get_current_workspace),
     db: AsyncSession = Depends(get_db),
 ):
     """Exchange OAuth code for tokens and store account."""
@@ -145,10 +148,10 @@ async def oauth_callback(
     sync_session = get_sync_session()
     try:
         client_id = get_workspace_api_key(
-            user["workspace_id"], f"{req.provider.upper()}_CLIENT_ID", sync_session,
+            workspace_id, f"{req.provider.upper()}_CLIENT_ID", sync_session,
         )
         client_secret = get_workspace_api_key(
-            user["workspace_id"], f"{req.provider.upper()}_CLIENT_SECRET", sync_session,
+            workspace_id, f"{req.provider.upper()}_CLIENT_SECRET", sync_session,
         )
     finally:
         sync_session.close()
@@ -169,7 +172,7 @@ async def oauth_callback(
     # Check if account already exists for this target+provider
     existing = await db.execute(
         select(Account).where(
-            Account.workspace_id == user["workspace_id"],
+            Account.workspace_id == workspace_id,
             Account.target_id == uuid.UUID(req.target_id),
             Account.provider == req.provider,
         )
@@ -184,7 +187,7 @@ async def oauth_callback(
         account.scopes = tokens.get("scopes", [])
     else:
         account = Account(
-            workspace_id=user["workspace_id"],
+            workspace_id=workspace_id,
             target_id=uuid.UUID(req.target_id),
             provider=req.provider,
             access_token=tokens["access_token"],
@@ -209,13 +212,14 @@ async def oauth_callback(
 async def audit_account(
     account_id: str,
     user=Depends(get_current_user),
+    workspace_id=Depends(get_current_workspace),
     db: AsyncSession = Depends(get_db),
 ):
     """Trigger an audit on a connected account."""
     result = await db.execute(
         select(Account).where(
             Account.id == uuid.UUID(account_id),
-            Account.workspace_id == user["workspace_id"],
+            Account.workspace_id == workspace_id,
         )
     )
     account = result.scalar_one_or_none()
@@ -235,10 +239,10 @@ async def audit_account(
                 sync_session = get_sync_session()
                 try:
                     client_id = get_workspace_api_key(
-                        user["workspace_id"], f"{account.provider.upper()}_CLIENT_ID", sync_session,
+                        workspace_id, f"{account.provider.upper()}_CLIENT_ID", sync_session,
                     )
                     client_secret = get_workspace_api_key(
-                        user["workspace_id"], f"{account.provider.upper()}_CLIENT_SECRET", sync_session,
+                        workspace_id, f"{account.provider.upper()}_CLIENT_SECRET", sync_session,
                     )
                 finally:
                     sync_session.close()
@@ -297,13 +301,14 @@ async def audit_account(
 async def disconnect_account(
     account_id: str,
     user=Depends(get_current_user),
+    workspace_id=Depends(get_current_workspace),
     db: AsyncSession = Depends(get_db),
 ):
     """Disconnect (delete) a connected account."""
     result = await db.execute(
         select(Account).where(
             Account.id == uuid.UUID(account_id),
-            Account.workspace_id == user["workspace_id"],
+            Account.workspace_id == workspace_id,
         )
     )
     account = result.scalar_one_or_none()

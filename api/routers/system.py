@@ -249,6 +249,54 @@ async def recalculate_profiles(
     return {"recalculated": updated, "enriched": enriched, "total": len(targets)}
 
 
+@router.post("/recalculate-fingerprints")
+async def recalculate_fingerprints(
+    role: str = Depends(require_role("superadmin", "admin")),
+    workspace_id=Depends(get_current_workspace),
+    db: AsyncSession = Depends(get_db),
+):
+    """Re-run fingerprint engine for all targets (recomputes eigenvalues + avatar_seed)."""
+    from api.tasks.utils import get_sync_session
+    from api.services.layer4.fingerprint_engine import FingerprintEngine
+    from api.models.identity import Identity, IdentityLink
+
+    targets_result = await db.execute(
+        select(Target).where(Target.workspace_id == workspace_id)
+    )
+    targets = targets_result.scalars().all()
+
+    sync = get_sync_session()
+    fp_engine = FingerprintEngine()
+    updated = 0
+    try:
+        for t in targets:
+            try:
+                findings = sync.execute(
+                    select(Finding).where(Finding.target_id == t.id)
+                ).scalars().all()
+                identities = sync.execute(
+                    select(Identity).where(Identity.target_id == t.id)
+                ).scalars().all()
+                id_set = set(i.id for i in identities)
+                all_links = sync.execute(
+                    select(IdentityLink).where(IdentityLink.workspace_id == workspace_id)
+                ).scalars().all()
+                target_links = [l for l in all_links if l.source_id in id_set or l.dest_id in id_set]
+
+                fp = fp_engine.compute(findings, identities, t.profile_data, t.email, links=target_links)
+                profile = dict(t.profile_data or {})
+                profile["fingerprint"] = fp
+                t.profile_data = profile
+                updated += 1
+            except Exception:
+                logger.exception("Fingerprint recalc failed for %s", t.id)
+        sync.commit()
+    finally:
+        sync.close()
+
+    return {"recalculated": updated, "total": len(targets)}
+
+
 # ---- Platform Admin (superadmin only) ----
 
 @router.get("/users")

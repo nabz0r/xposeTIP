@@ -87,6 +87,7 @@ export const getGraph = (targetId) => request(`/graph/${targetId}`)
 export const getSystemStats = () => request('/system/stats')
 export const recalculateScores = () => request('/system/recalculate-scores', { method: 'POST' })
 export const recalculateProfiles = () => request('/system/recalculate-profiles', { method: 'POST' })
+export const recalculateFingerprints = () => request('/system/recalculate-fingerprints', { method: 'POST' })
 export const getLogs = (params = '') => request(`/system/logs${params ? '?' + params : ''}`)
 export const clearLogs = () => request('/system/logs', { method: 'DELETE' })
 

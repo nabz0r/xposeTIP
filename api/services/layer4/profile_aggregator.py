@@ -12,6 +12,49 @@ from api.models.target import Target
 
 logger = logging.getLogger(__name__)
 
+# Avatar URL blacklist — platform logos, default images, not real profile photos
+AVATAR_BLACKLIST_PATTERNS = [
+    "telesco.pe/",
+    "telegram.org",
+    "t.me/i/",
+    "static.xx.fbcdn",
+    "default_profile",
+    "gravatar.com/avatar/00000000",
+    "/default.",
+    "placeholder",
+    "no-avatar",
+    "no_avatar",
+    "anonymous",
+]
+
+# Bio blacklist — platform slogans extracted as user bios
+BIO_BLACKLIST = [
+    "fast. secure. powerful.",
+    "a new era of messaging",
+    "join the conversation",
+    "share and stay in touch",
+    "connect with friends",
+    "see what's happening",
+    "instant messaging",
+    "cloud-based mobile",
+]
+
+
+def _is_valid_avatar(url):
+    """Check if avatar URL is a real profile photo, not a platform logo."""
+    if not url:
+        return False
+    url_lower = url.lower()
+    return not any(pattern in url_lower for pattern in AVATAR_BLACKLIST_PATTERNS)
+
+
+def _is_valid_bio(bio):
+    """Check if bio is user-written, not a platform slogan."""
+    if not bio:
+        return False
+    bio_lower = bio.strip().lower()
+    return not any(bl in bio_lower for bl in BIO_BLACKLIST)
+
 
 def _load_blacklist(session):
     """Load name blacklist from DB. Returns list of dicts."""
@@ -126,14 +169,14 @@ def aggregate_profile(target_id, workspace_id, session: Session) -> dict:
         # --- Avatars ---
         for avatar_key in ("avatar_url", "photo_url", "avatar", "picture"):
             avatar = data.get(avatar_key, "")
-            if avatar and avatar not in seen_avatars:
+            if avatar and avatar not in seen_avatars and _is_valid_avatar(avatar):
                 seen_avatars.add(avatar)
                 profile["avatars"].append({"url": avatar, "source": source})
 
         # --- Bio ---
         for bio_key in ("bio", "about", "description"):
             bio = data.get(bio_key, "")
-            if bio and not profile["bio"]:
+            if bio and not profile["bio"] and _is_valid_bio(bio):
                 profile["bio"] = bio[:500]
 
         # --- Location ---
@@ -549,13 +592,16 @@ def aggregate_profile(target_id, workspace_id, session: Session) -> dict:
     primary_avatar = None
     for source_prio in AVATAR_PRIORITY:
         for a in profile["avatars"]:
-            if a.get("source") == source_prio:
+            if a.get("source") == source_prio and _is_valid_avatar(a.get("url")):
                 primary_avatar = a["url"]
                 break
         if primary_avatar:
             break
     if not primary_avatar and profile["avatars"]:
-        primary_avatar = profile["avatars"][0]["url"]
+        for a in profile["avatars"]:
+            if _is_valid_avatar(a.get("url")):
+                primary_avatar = a["url"]
+                break
     profile["primary_avatar"] = primary_avatar
 
     # Store on target

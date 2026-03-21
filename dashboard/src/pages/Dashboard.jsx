@@ -5,6 +5,7 @@ import { getTargets, getScans, getFindingsStats, getFindings, createTarget, crea
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, AreaChart, Area } from 'recharts'
 import WorldHeatmap from '../components/WorldHeatmap'
 import FingerprintRadar from '../components/FingerprintRadar'
+import useSSE from '../hooks/useSSE'
 
 const severityColors = {
   critical: '#ff2244', high: '#ff8800', medium: '#ffcc00', low: '#3388ff', info: '#666688',
@@ -49,6 +50,7 @@ export default function Dashboard() {
   const navigate = useNavigate()
 
   useEffect(() => { loadData(); loadDefaults() }, [])
+  useSSE({ 'scan.completed': () => loadData(), 'target.updated': () => loadData() })
 
   async function loadDefaults() {
     try {

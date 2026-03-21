@@ -26,6 +26,16 @@ def launch_scan(self, scan_id: str):
         scan.started_at = datetime.now(timezone.utc)
         session.commit()
 
+        try:
+            from api.services.event_bus import publish_event
+            publish_event("scan.started", {
+                "target_id": str(scan.target_id),
+                "scan_id": str(scan_id),
+                "workspace_id": str(scan.workspace_id),
+            })
+        except Exception:
+            pass
+
         target = session.execute(select(Target).where(Target.id == scan.target_id)).scalar_one_or_none()
         if not target:
             scan.status = "failed"
@@ -139,6 +149,15 @@ def finalize_scan(scan_id: str):
             aggregate_profile(scan.target_id, scan.workspace_id, session)
         except Exception:
             logger.exception("Profile aggregation failed for target %s", scan.target_id)
+
+        try:
+            from api.services.event_bus import publish_event
+            publish_event("target.updated", {
+                "target_id": str(scan.target_id),
+                "workspace_id": str(scan.workspace_id),
+            })
+        except Exception:
+            pass
 
         # Identity enrichment — re-query with discovered name
         try:
@@ -264,6 +283,21 @@ def finalize_scan(scan_id: str):
             )
         except Exception:
             logger.exception("Fingerprint computation failed for target %s", scan.target_id)
+
+        # Publish scan.completed event for SSE
+        try:
+            from api.services.event_bus import publish_event
+            target = session.execute(select(Target).where(Target.id == scan.target_id)).scalar_one_or_none()
+            publish_event("scan.completed", {
+                "target_id": str(scan.target_id),
+                "scan_id": str(scan_id),
+                "workspace_id": str(scan.workspace_id),
+                "findings_count": scan.findings_count or 0,
+                "exposure_score": target.exposure_score if target else 0,
+                "threat_score": target.threat_score if target else 0,
+            })
+        except Exception:
+            pass
 
     except Exception:
         session.rollback()
