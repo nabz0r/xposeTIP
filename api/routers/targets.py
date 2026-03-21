@@ -371,4 +371,5 @@ def _target_dict(t: Target) -> dict:
         "fingerprint_hash": fp.get("hash") if fp else None,
         "fingerprint_score": fp.get("score") if fp else None,
         "fingerprint_risk": fp.get("risk_level") if fp else None,
+        "fingerprint_avatar_seed": fp.get("avatar_seed") if fp else None,
     }

@@ -7,6 +7,7 @@ from sqlalchemy.orm import Session
 
 from api.models.finding import Finding
 from api.models.identity import Identity, IdentityLink
+from api.services.layer4.source_scoring import get_source_reliability
 
 logger = logging.getLogger(__name__)
 
@@ -58,6 +59,10 @@ def build_graph(target_id, workspace_id, session: Session):
         ).scalar_one_or_none()
 
         if existing:
+            # Upgrade confidence if better source
+            new_conf = get_source_reliability(source_module) if source_module else 0.5
+            if new_conf > existing.confidence:
+                existing.confidence = new_conf
             return existing
 
         identity = Identity(
@@ -68,6 +73,7 @@ def build_graph(target_id, workspace_id, session: Session):
             platform=platform,
             source_module=source_module,
             source_finding=source_finding_id,
+            confidence=get_source_reliability(source_module) if source_module else 0.5,
         )
         session.add(identity)
         session.flush()
@@ -84,6 +90,11 @@ def build_graph(target_id, workspace_id, session: Session):
         ).scalar_one_or_none()
 
         if existing:
+            # Upgrade confidence if better source
+            new_conf = get_source_reliability(source_module) if source_module else 0.5
+            if new_conf > existing.confidence:
+                existing.confidence = new_conf
+                existing.source_module = source_module
             return existing
 
         link = IdentityLink(
@@ -91,6 +102,7 @@ def build_graph(target_id, workspace_id, session: Session):
             source_id=source_id,
             dest_id=dest_id,
             link_type=link_type,
+            confidence=get_source_reliability(source_module) if source_module else 0.5,
             source_module=source_module,
             evidence=evidence,
         )

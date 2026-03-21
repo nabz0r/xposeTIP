@@ -123,6 +123,16 @@ def finalize_scan(scan_id: str):
         except Exception:
             logger.exception("Graph build failed for target %s", scan.target_id)
 
+        # Propagate confidence through identity graph (PageRank)
+        try:
+            from api.services.layer4.confidence_propagator import propagate_confidence
+            node_scores = propagate_confidence(scan.target_id, scan.workspace_id, session)
+            if node_scores:
+                logger.info("Confidence propagated: %d nodes scored for target %s",
+                            len(node_scores), scan.target_id)
+        except Exception:
+            logger.exception("Confidence propagation failed for target %s", scan.target_id)
+
         # Aggregate profile data
         try:
             from api.services.layer4.profile_aggregator import aggregate_profile
@@ -190,7 +200,7 @@ def finalize_scan(scan_id: str):
         # Compute digital fingerprint
         try:
             from api.services.layer4.fingerprint_engine import FingerprintEngine
-            from api.models.identity import Identity
+            from api.models.identity import Identity, IdentityLink
 
             # Deduplicate findings: latest per (module, title) — Python-side
             raw_findings = session.execute(
@@ -207,9 +217,22 @@ def finalize_scan(scan_id: str):
                 select(Identity).where(Identity.target_id == scan.target_id)
             ).scalars().all()
 
+            # Load identity links for eigenvalue computation
+            identity_ids = [i.id for i in all_identities]
+            all_links = []
+            if identity_ids:
+                all_links = session.execute(
+                    select(IdentityLink).where(
+                        IdentityLink.workspace_id == scan.workspace_id,
+                    )
+                ).scalars().all()
+                id_set = set(identity_ids)
+                all_links = [l for l in all_links if l.source_id in id_set or l.dest_id in id_set]
+
             fp_engine = FingerprintEngine()
             fingerprint = fp_engine.compute(
-                all_findings, all_identities, target.profile_data, target.email
+                all_findings, all_identities, target.profile_data, target.email,
+                links=all_links,
             )
 
             # Save snapshot to history

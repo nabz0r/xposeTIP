@@ -39,24 +39,26 @@ The exposure score for a US target will naturally be higher (more public data av
 than for an EU target (GDPR reduces public exposure). That's a feature, not a bug —
 it proves the point about digital exposure varying by jurisdiction.
 
-## Current version: v0.25.0
+## Current version: v0.26.0
 
-Sprint 26 complete. 25 scanners (17 implemented + 8 placeholder), 51 scrapers
+Sprint 27 complete. 25 scanners (17 implemented + 8 placeholder), 51 scrapers
 across 8 categories (social, breach, metadata, people_search, identity, archive,
-gaming, music), 5 intelligence analyzers, digital fingerprint (8-axis radar), persona
-clustering engine, dual score (exposure/threat), identity estimation
-(gender/age/nationality) with re-query engine, per-field confidence with blacklist
-filtering, email name extraction + cross-reference, IdentityCard + PersonaCard,
-real-time log viewer with Redis ring buffer, plans (Free/Consultant/Enterprise)
-with enforcement, open registration, admin panel (users/workspaces management),
-quick scan from targets list, multi-workspace, RBAC, organizations, source
-scoring, Google/Microsoft OAuth framework, DB-driven name blacklist system
-(expanded: 84 rules), reworked targets list (avatar, dual score, timestamp),
-scan metadata with log download, target exposure leaderboard on dashboard,
-DNS SaaS blocklist (50+ managed domains), executive summary narrative, global
-API keys fallback, remediation toggle, findings CSV export, inherited keys
-banner, recalculate profiles button, persona username blacklist filtering,
-email_md5 URL placeholder for scraper engine.
+gaming, music), 5 intelligence analyzers, digital fingerprint (8-axis radar +
+eigenvalue topology signature), persona clustering engine, dual score
+(exposure/threat), identity estimation (gender/age/nationality) with re-query
+engine, per-field confidence with blacklist filtering + PageRank graph propagation,
+email name extraction + cross-reference, IdentityCard + PersonaCard,
+GenerativeAvatar (deterministic SVG from graph eigenvalues), real-time log viewer
+with Redis ring buffer, plans (Free/Consultant/Enterprise) with enforcement, open
+registration, admin panel (users/workspaces management), quick scan from targets
+list, multi-workspace, RBAC, organizations, source scoring, Google/Microsoft OAuth
+framework, DB-driven name blacklist system (expanded: 84 rules), reworked targets
+list (avatar/generative avatar, dual score, timestamp), scan metadata with log
+download, target exposure leaderboard on dashboard, DNS SaaS blocklist (50+
+managed domains), executive summary narrative, global API keys fallback,
+remediation toggle, findings CSV export, inherited keys banner, recalculate
+profiles button, persona username blacklist filtering, email_md5 URL placeholder
+for scraper engine.
 
 ## Tech stack (locked)
 
@@ -475,6 +477,7 @@ Frontend pre-selects: all enabled+implemented L1 + recommended L2 (dns_deep, lea
 | 24 | v0.23.0 | DNS SaaS blocklist, executive summary, global API keys, remediation toggle, CSV export |
 | 25 | v0.24.0 | Identity intelligence fix, blacklist expansion, re-query engine, email name extraction, recalculate profiles, persona cleanup |
 | 26 | v0.25.0 | 8 new scrapers: people search (3), gaming (2), social (3), email_md5 engine placeholder (43→51 total) |
+| 27 | v0.26.0 | PageRank confidence propagation, eigenvalue fingerprint, generative avatar, graph-weighted edges |
 
 ## Bugs fixed (v0.5.x)
 

@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { Plus, Trash2, Search, Eye, Upload, Play } from 'lucide-react'
 import { getTargets, createTarget, deleteTarget, bulkImportTargets, createScan } from '../lib/api'
 import TargetQuickView from '../components/TargetQuickView'
+import GenerativeAvatar from '../components/GenerativeAvatar'
 
 const FLAG = (code) => {
   if (!code) return ''
@@ -192,6 +193,8 @@ export default function Targets() {
                     <div className="flex items-center gap-3">
                       {t.avatar_url ? (
                         <img src={t.avatar_url} alt="" className="w-8 h-8 rounded-full border border-[#1e1e2e] shrink-0" />
+                      ) : t.fingerprint_avatar_seed ? (
+                        <GenerativeAvatar seed={t.fingerprint_avatar_seed} size={36} className="shrink-0" />
                       ) : (
                         <div className="w-8 h-8 rounded-full bg-[#1e1e2e] flex items-center justify-center text-xs font-bold text-gray-500 shrink-0">
                           {(t.email || '?')[0].toUpperCase()}

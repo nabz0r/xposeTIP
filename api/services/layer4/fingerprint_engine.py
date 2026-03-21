@@ -1,6 +1,7 @@
 import hashlib
 import json
 import math
+import random
 from datetime import datetime, timezone
 
 
@@ -50,15 +51,23 @@ class FingerprintEngine:
         ("high_data_leaked", "high_username_reuse"): "Highly targetable identity",
     }
 
-    def compute(self, findings: list, identities: list, profile_data: dict = None, email: str = "") -> dict:
+    def compute(self, findings: list, identities: list, profile_data: dict = None, email: str = "", links=None) -> dict:
         raw = self._extract_raw_values(findings, identities, profile_data)
         axes = self._normalize(raw)
         score = self._compute_score(axes)
         color, fill, risk = self._color_from_score(score)
         points = self._axes_to_polygon(axes, center=(340, 320), radius=180)
         scars = self._detect_scars(axes, raw)
-        fp_hash = self._compute_hash(axes, raw, email)
+
+        # Graph eigenvalues for topology signature
+        eigen = self._compute_graph_signature(identities, links or [])
+
+        # Enhanced hash: includes both axes AND graph topology
+        fp_hash = self._compute_enhanced_hash(axes, raw, email, eigen)
         label = self._semantic_label(axes)
+
+        # Avatar seed from eigenvalues + axes
+        avatar_seed = self._compute_avatar_seed(axes, eigen, email)
 
         return {
             "axes": axes,
@@ -71,6 +80,8 @@ class FingerprintEngine:
             "scars": scars,
             "label": label,
             "raw_values": raw,
+            "eigenvalues": eigen,
+            "avatar_seed": avatar_seed,
             "computed_at": datetime.now(timezone.utc).isoformat(),
         }
 
@@ -257,6 +268,139 @@ class FingerprintEngine:
             "axes": {k: round(v, 1) for k, v in sorted(axes.items())},
         }, sort_keys=True)
         return hashlib.sha256(data.encode()).hexdigest()[:8]
+
+    def _compute_enhanced_hash(self, axes, raw, email, eigenvalues):
+        """Hash that includes graph topology, not just axis values."""
+        sig = "|".join([
+            email.lower(),
+            "|".join(f"{k}:{v:.3f}" for k, v in sorted(axes.items())),
+            "|".join(f"{v:.4f}" for v in eigenvalues[:5]),
+        ])
+        return hashlib.sha256(sig.encode()).hexdigest()[:12]
+
+    def _compute_graph_signature(self, identities, links):
+        """Compute eigenvalue-based signature of the identity graph topology.
+
+        Returns a sorted list of top eigenvalues that uniquely characterize
+        the graph structure. Two people with different connection patterns
+        will have different eigenvalues.
+        """
+        if not identities or len(identities) < 2:
+            return []
+
+        # Build adjacency matrix
+        id_list = [i.id for i in identities if hasattr(i, 'id')]
+        n = len(id_list)
+        if n < 2 or n > 200:  # Safety cap
+            return []
+
+        id_to_idx = {id_: idx for idx, id_ in enumerate(id_list)}
+
+        # Initialize matrix as list of lists (avoid numpy dependency)
+        matrix = [[0.0] * n for _ in range(n)]
+
+        id_set = set(id_list)
+        relevant_links = []
+        for l in links:
+            src = getattr(l, 'source_id', None)
+            dst = getattr(l, 'dest_id', None)
+            if src in id_set and dst in id_set:
+                relevant_links.append(l)
+
+        for l in relevant_links:
+            i = id_to_idx.get(l.source_id)
+            j = id_to_idx.get(l.dest_id)
+            if i is not None and j is not None:
+                weight = getattr(l, 'confidence', 0.5) or 0.5
+                matrix[i][j] = weight
+                matrix[j][i] = weight  # Undirected for eigenvalues
+
+        # Power iteration to find top eigenvalues (no numpy needed)
+        eigenvalues = self._power_iteration_eigenvalues(matrix, n, k=min(5, n))
+
+        return eigenvalues
+
+    def _power_iteration_eigenvalues(self, matrix, n, k=5, iterations=50):
+        """Simple power iteration to approximate top-k eigenvalues.
+        No numpy dependency. Works for small graphs (<200 nodes).
+        """
+        random.seed(42)  # Deterministic
+
+        eigenvalues = []
+        # Work on a copy so deflation doesn't corrupt the original
+        mat = [row[:] for row in matrix]
+
+        for _eigen_idx in range(k):
+            # Random initial vector
+            v = [random.gauss(0, 1) for _ in range(n)]
+            norm = math.sqrt(sum(x * x for x in v))
+            v = [x / norm for x in v] if norm > 0 else v
+
+            eigenvalue = 0.0
+            for _ in range(iterations):
+                # Matrix-vector multiply
+                new_v = [0.0] * n
+                for i in range(n):
+                    for j in range(n):
+                        new_v[i] += mat[i][j] * v[j]
+
+                norm = math.sqrt(sum(x * x for x in new_v))
+                if norm < 1e-10:
+                    break
+
+                eigenvalue = norm
+                v = [x / norm for x in new_v]
+
+            eigenvalues.append(round(eigenvalue, 4))
+
+            # Deflate matrix for next eigenvalue
+            for i in range(n):
+                for j in range(n):
+                    mat[i][j] -= eigenvalue * v[i] * v[j]
+
+        return sorted(eigenvalues, reverse=True)
+
+    def _compute_avatar_seed(self, axes, eigenvalues, email):
+        """Compute a deterministic seed for avatar generation.
+        Returns a dict of parameters that feed the SVG generator.
+        """
+        # Use eigenvalues to determine shape complexity
+        complexity = len([e for e in eigenvalues if e > 0.1])
+
+        # Use axes to determine color hue and saturation
+        # High threat = warm colors, high exposure = saturated
+        threat_axes = axes.get("breaches", 0) + axes.get("data_leaked", 0)
+        exposure_axes = axes.get("accounts", 0) + axes.get("platforms", 0)
+
+        # Hash email for deterministic but unique base
+        email_hash = int(hashlib.md5(email.lower().encode()).hexdigest()[:8], 16)
+
+        # Generate shape parameters
+        num_points = max(3, min(12, complexity + 3))
+        rotation = (email_hash % 360)
+        inner_radius = 0.3 + (axes.get("security", 0) * 0.3)
+
+        # Color from graph density
+        hue = (email_hash % 60) + 120  # Green-cyan range (identity = cool)
+        if threat_axes > 0.5:
+            hue = (email_hash % 60) + 0  # Red-orange range (threatened)
+        elif exposure_axes > 0.6:
+            hue = (email_hash % 60) + 200  # Blue-purple range (exposed)
+
+        saturation = 40 + int(min(1.0, len(eigenvalues) / 5) * 40)
+        lightness = 45 + int(axes.get("accounts", 0) * 20)
+
+        return {
+            "num_points": num_points,
+            "rotation": rotation,
+            "inner_radius": round(inner_radius, 3),
+            "hue": hue,
+            "saturation": saturation,
+            "lightness": lightness,
+            "eigenvalues": eigenvalues[:5],
+            "complexity": complexity,
+            "email_hash": email_hash % 10000,
+        }
 
     def _semantic_label(self, axes):
         traits = set()

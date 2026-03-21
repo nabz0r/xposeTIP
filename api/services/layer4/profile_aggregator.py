@@ -7,6 +7,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from api.models.finding import Finding
+from api.models.identity import Identity
 from api.models.target import Target
 
 logger = logging.getLogger(__name__)
@@ -339,6 +340,20 @@ def aggregate_profile(target_id, workspace_id, session: Session) -> dict:
         "cross_verified": most_common_count > 1,
     }
 
+    # Load identity nodes with propagated confidence (from PageRank)
+    identities = session.execute(
+        select(Identity).where(
+            Identity.target_id == target_id,
+            Identity.workspace_id == workspace_id,
+        )
+    ).scalars().all()
+
+    # Map: value -> propagated_confidence
+    node_confidence_map = {}
+    for i in identities:
+        if i.value:
+            node_confidence_map[i.value.lower()] = i.confidence or 0.5
+
     # Load DB blacklist early (needed for field_confidence + name validation)
     db_blacklist = _load_blacklist(session)
 
@@ -368,15 +383,20 @@ def aggregate_profile(target_id, workspace_id, session: Session) -> dict:
                 first_names.append({"value": candidate, "source": n["source"]})
 
     if first_names:
-        unique_first = set(fn["value"].lower() for fn in first_names)
-        fn_sources = set(fn["source"] for fn in first_names)
-        most_common = max(unique_first, key=lambda v: sum(1 for fn in first_names if fn["value"].lower() == v))
-        match_count = sum(1 for fn in first_names if fn["value"].lower() == most_common)
+        # Use propagated confidence from graph if available
+        for fn in first_names:
+            fn["graph_confidence"] = node_confidence_map.get(fn["value"].lower(), 0.3)
+
+        # Best first name = highest graph confidence
+        best = max(first_names, key=lambda fn: fn.get("graph_confidence", 0))
+        fn_sources = set(fn["source"] for fn in first_names if fn["value"].lower() == best["value"].lower())
+        match_count = sum(1 for fn in first_names if fn["value"].lower() == best["value"].lower())
         field_confidence["first_name"] = {
-            "value": next(fn["value"] for fn in first_names if fn["value"].lower() == most_common),
-            "confidence": round(min(1.0, match_count * 0.3 + len(fn_sources) * 0.1), 2),
+            "value": best["value"],
+            "confidence": round(min(1.0, best["graph_confidence"] * 0.6 + len(fn_sources) * 0.15), 2),
             "sources": sorted(fn_sources),
             "source_count": len(fn_sources),
+            "graph_confidence": round(best["graph_confidence"], 2),
         }
         # Boost if matches email pattern
         if email_name_guess["first"] and field_confidence["first_name"]["value"].lower() == email_name_guess["first"].lower():
@@ -393,15 +413,19 @@ def aggregate_profile(target_id, workspace_id, session: Session) -> dict:
                 last_names.append({"value": candidate, "source": n["source"]})
 
     if last_names:
-        unique_last = set(ln["value"].lower() for ln in last_names)
-        ln_sources = set(ln["source"] for ln in last_names)
-        most_common = max(unique_last, key=lambda v: sum(1 for ln in last_names if ln["value"].lower() == v))
-        match_count = sum(1 for ln in last_names if ln["value"].lower() == most_common)
+        # Use propagated confidence from graph if available
+        for ln in last_names:
+            ln["graph_confidence"] = node_confidence_map.get(ln["value"].lower(), 0.3)
+
+        best = max(last_names, key=lambda ln: ln.get("graph_confidence", 0))
+        ln_sources = set(ln["source"] for ln in last_names if ln["value"].lower() == best["value"].lower())
+        match_count = sum(1 for ln in last_names if ln["value"].lower() == best["value"].lower())
         field_confidence["last_name"] = {
-            "value": next(ln["value"] for ln in last_names if ln["value"].lower() == most_common),
-            "confidence": round(min(1.0, match_count * 0.3 + len(ln_sources) * 0.1), 2),
+            "value": best["value"],
+            "confidence": round(min(1.0, best["graph_confidence"] * 0.6 + len(ln_sources) * 0.15), 2),
             "sources": sorted(ln_sources),
             "source_count": len(ln_sources),
+            "graph_confidence": round(best["graph_confidence"], 2),
         }
         # Boost if matches email pattern
         if email_name_guess["last"] and field_confidence["last_name"]["value"].lower() == email_name_guess["last"].lower():
