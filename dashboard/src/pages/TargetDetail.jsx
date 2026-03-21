@@ -406,7 +406,7 @@ export default function TargetDetail() {
                 {/* GenerativeAvatar — identity glyph from graph topology */}
                 {fingerprint?.avatar_seed && (
                   <div className="shrink-0 flex flex-col items-center gap-2">
-                    <GenerativeAvatar seed={fingerprint.avatar_seed} size={120} />
+                    <GenerativeAvatar seed={fingerprint.avatar_seed} size={120} score={target?.exposure_score} />
                     <span className="text-[10px] text-gray-600 font-mono">identity glyph</span>
                   </div>
                 )}
