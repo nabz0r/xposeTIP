@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Crosshair, Radar, AlertTriangle, ShieldAlert, Search } from 'lucide-react'
-import { getTargets, getScans, getFindingsStats, getFindings, createTarget, createScan, getDefaults, getFingerprint } from '../lib/api'
+import { getTargets, getScans, getFindingsStats, getFindings, createTarget, createScan, getDefaults, getFingerprint, cancelScan } from '../lib/api'
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, AreaChart, Area } from 'recharts'
 import WorldHeatmap from '../components/WorldHeatmap'
 import FingerprintRadar from '../components/FingerprintRadar'
@@ -240,6 +240,7 @@ export default function Dashboard() {
                 <th className="text-left px-5 py-3">Findings</th>
                 <th className="text-left px-5 py-3">Duration</th>
                 <th className="text-left px-5 py-3">Date</th>
+                <th className="text-right px-5 py-3">Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -257,6 +258,21 @@ export default function Dashboard() {
                   <td className="px-5 py-3 font-mono">{scan.findings_count}</td>
                   <td className="px-5 py-3 font-mono text-gray-400">{scan.duration_ms ? `${(scan.duration_ms / 1000).toFixed(1)}s` : '-'}</td>
                   <td className="px-5 py-3 text-gray-400">{scan.created_at ? new Date(scan.created_at).toLocaleDateString() : '-'}</td>
+                  <td className="px-5 py-3 text-right">
+                    {(scan.status === 'running' || scan.status === 'queued') && (
+                      <button
+                        onClick={async (e) => {
+                          e.stopPropagation()
+                          if (window.confirm('Cancel this scan?')) {
+                            try { await cancelScan(scan.id); loadData() } catch (err) { console.error('Failed to cancel:', err) }
+                          }
+                        }}
+                        className="text-xs px-2 py-1 rounded bg-[#ff2244]/10 text-[#ff2244] hover:bg-[#ff2244]/20 transition-colors"
+                      >
+                        Cancel
+                      </button>
+                    )}
+                  </td>
                 </tr>
               ))}
             </tbody>

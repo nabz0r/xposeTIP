@@ -87,7 +87,7 @@ async def list_workspaces(
 async def create_workspace(
     body: CreateWorkspaceRequest,
     current_user: User = Depends(get_current_user),
-    role: str = Depends(require_role("superadmin", "consultant")),
+    role: str = Depends(require_role("superadmin", "admin", "consultant")),
     db: AsyncSession = Depends(get_db),
 ):
     slug = _slugify(body.name)
@@ -100,7 +100,8 @@ async def create_workspace(
     db.add(workspace)
     await db.flush()
 
-    membership = UserWorkspace(user_id=current_user.id, workspace_id=workspace.id, role="admin")
+    # Inherit the role from current workspace (superadmin stays superadmin)
+    membership = UserWorkspace(user_id=current_user.id, workspace_id=workspace.id, role=role)
     db.add(membership)
     await db.commit()
 

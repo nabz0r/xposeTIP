@@ -15,6 +15,9 @@ async def lifespan(app: FastAPI):
     from api.services.log_handler import setup_logging
     setup_logging(redis_url=settings.REDIS_URL, container="api")
 
+    import logging as _logging
+    _logging.getLogger("api").info("xpose API started — Redis log handler active, v0.15.0")
+
     # Optional syslog forwarding
     if settings.SYSLOG_HOST:
         import logging

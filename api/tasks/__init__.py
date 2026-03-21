@@ -33,3 +33,5 @@ def setup_worker_logging(sender, **kwargs):
     container = os.environ.get("XPOSE_CONTAINER", "worker")
     from api.services.log_handler import setup_logging
     setup_logging(redis_url=settings.REDIS_URL, container=container)
+    import logging as _logging
+    _logging.getLogger("api.tasks").info("xpose Worker started — Redis log handler active")

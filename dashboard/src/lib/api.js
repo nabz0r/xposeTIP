@@ -67,6 +67,7 @@ export const compareFingerprints = (id, withId) => request(`/targets/${id}/finge
 export const createScan = (data) => request('/scans', { method: 'POST', body: JSON.stringify(data) })
 export const getScans = (params = '') => request(`/scans${params ? '?' + params : ''}`)
 export const getScan = (id) => request(`/scans/${id}`)
+export const cancelScan = (scanId) => request(`/scans/${scanId}/cancel`, { method: 'POST' })
 
 // Findings
 export const getFindings = (params = '') => request(`/findings${params ? '?' + params : ''}`)

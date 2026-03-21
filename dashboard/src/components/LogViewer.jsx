@@ -117,7 +117,12 @@ export default function LogViewer() {
         <div className="max-h-[600px] overflow-y-auto font-mono text-xs leading-relaxed p-1">
           {logs.length === 0 && (
             <div className="text-center text-gray-500 py-12">
-              {loading ? 'Loading logs...' : 'No log entries found'}
+              {loading ? 'Loading logs...' : (
+                <>
+                  <span className="text-lg">No logs yet</span>
+                  <p className="text-xs mt-1">Run a scan to generate log entries. Logs appear in real-time.</p>
+                </>
+              )}
             </div>
           )}
           {[...logs].reverse().map((entry, i) => (
