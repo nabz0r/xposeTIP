@@ -92,13 +92,16 @@ DEFAULT_BLACKLIST = [
 def seed_blacklist():
     engine = create_engine(settings.DATABASE_URL.replace("+asyncpg", ""))
     with Session(engine) as session:
+        # Case-insensitive dedup: load all existing patterns
+        existing_patterns = {
+            row.pattern.lower()
+            for row in session.execute(select(NameBlacklist)).scalars().all()
+        }
+
         created = 0
         skipped = 0
         for entry in DEFAULT_BLACKLIST:
-            existing = session.execute(
-                select(NameBlacklist).where(NameBlacklist.pattern == entry["pattern"])
-            ).scalar_one_or_none()
-            if existing:
+            if entry["pattern"].lower() in existing_patterns:
                 skipped += 1
                 continue
             session.add(NameBlacklist(
@@ -106,6 +109,7 @@ def seed_blacklist():
                 type=entry["type"],
                 reason=entry["reason"],
             ))
+            existing_patterns.add(entry["pattern"].lower())
             created += 1
         session.commit()
         print(f"Name blacklist seeded: {created} created, {skipped} skipped (already exist)")

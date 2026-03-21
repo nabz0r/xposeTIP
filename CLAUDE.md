@@ -41,7 +41,7 @@ it proves the point about digital exposure varying by jurisdiction.
 
 ## Current version: v0.28.0
 
-Sprint 29 complete. 25 scanners (17 implemented + 8 placeholder), 51 scrapers
+Sprint 30 complete. 25 scanners (17 implemented + 8 placeholder), 51 scrapers
 across 8 categories (social, breach, metadata, people_search, identity, archive,
 gaming, music), 5 intelligence analyzers, digital fingerprint (8-axis radar +
 eigenvalue topology signature), persona clustering engine, dual score
@@ -489,6 +489,7 @@ Frontend pre-selects: all enabled+implemented L1 + recommended L2 (dns_deep, lea
 | 27 | v0.26.0 | PageRank confidence propagation, eigenvalue fingerprint, generative avatar, graph-weighted edges |
 | 28 | v0.27.0 | Landing page redesign (cyberpunk aesthetic, HeroGraph, CountUp, pricing), README.md, DEMO_SCRIPT.md |
 | 29 | v0.28.0 | SSE real-time updates, avatar/bio blacklist, accounts 500 fix, landing route, recalculate fingerprints |
+| 30 | v0.28.0 | Avatar pipeline fix (stored fingerprint), GenerativeAvatar placement, SSE disabled, stability |
 
 ## Bugs fixed (v0.5.x)
 

@@ -10,6 +10,7 @@ import ProfileHeader from '../components/ProfileHeader'
 import IdentityCard from '../components/IdentityCard'
 import PersonaCard from '../components/PersonaCard'
 import LocationMap from '../components/LocationMap'
+import GenerativeAvatar from '../components/GenerativeAvatar'
 import useSSE from '../hooks/useSSE'
 
 const severityColors = {
@@ -402,6 +403,13 @@ export default function TargetDetail() {
             <div className="bg-[#12121a] border border-[#1e1e2e] rounded-xl p-5">
               <h3 className="text-xs font-semibold uppercase tracking-wider text-gray-500 mb-4">Digital Fingerprint</h3>
               <div className="flex flex-col lg:flex-row items-center gap-6">
+                {/* GenerativeAvatar — identity glyph from graph topology */}
+                {fingerprint?.avatar_seed && (
+                  <div className="shrink-0 flex flex-col items-center gap-2">
+                    <GenerativeAvatar seed={fingerprint.avatar_seed} size={120} />
+                    <span className="text-[10px] text-gray-600 font-mono">identity glyph</span>
+                  </div>
+                )}
                 <div className="flex-1 flex justify-center">
                   <FingerprintRadar fingerprint={fingerprint} size="large" animate={true} />
                 </div>

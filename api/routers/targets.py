@@ -273,9 +273,16 @@ async def get_fingerprint(
     user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
-    """Return current fingerprint computed from findings."""
+    """Return stored fingerprint (includes eigenvalues + avatar_seed).
+    Falls back to live recompute if no stored fingerprint exists."""
     target = await _get_target(db, target_id, workspace_id)
 
+    # First: return stored fingerprint (has avatar_seed from finalize_scan)
+    stored_fp = (target.profile_data or {}).get("fingerprint")
+    if stored_fp and stored_fp.get("avatar_seed"):
+        return stored_fp
+
+    # Fallback: recompute with links (for targets scanned before eigenvalue support)
     import asyncio
     from api.tasks.utils import get_sync_session
     from api.services.layer4.fingerprint_engine import FingerprintEngine
@@ -285,6 +292,7 @@ async def get_fingerprint(
         try:
             from api.models.finding import Finding as F
             from api.models.identity import Identity as I
+            from api.models.identity import IdentityLink as IL
             # Deduplicate: latest finding per (module, title) — Python-side
             all_findings = session.execute(
                 select(F).where(F.target_id == target_id, F.workspace_id == workspace_id)
@@ -299,8 +307,16 @@ async def get_fingerprint(
             identities = session.execute(
                 select(I).where(I.target_id == target_id, I.workspace_id == workspace_id)
             ).scalars().all()
+
+            # Load links for eigenvalue computation
+            id_set = set(i.id for i in identities)
+            all_links = session.execute(
+                select(IL).where(IL.workspace_id == workspace_id)
+            ).scalars().all()
+            target_links = [l for l in all_links if l.source_id in id_set or l.dest_id in id_set]
+
             engine = FingerprintEngine()
-            return engine.compute(findings, identities, target.profile_data, target.email)
+            return engine.compute(findings, identities, target.profile_data, target.email, links=target_links)
         finally:
             session.close()
 

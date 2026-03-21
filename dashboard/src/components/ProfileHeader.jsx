@@ -2,8 +2,6 @@ import { useEffect, useState } from 'react'
 import { Globe, MapPin, Building2, Github, ExternalLink, Shield, AlertTriangle, Link2 } from 'lucide-react'
 import { getTargetProfile, getFingerprint } from '../lib/api'
 import FingerprintRadar from './FingerprintRadar'
-import GenerativeAvatar from './GenerativeAvatar'
-
 const scoreColor = (score) => {
   if (score == null) return '#666688'
   if (score >= 61) return '#ff2244'
@@ -111,11 +109,9 @@ export default function ProfileHeader({ target, findings, animScore, profileData
         <div className="shrink-0">
           {avatarUrl ? (
             <img src={avatarUrl} alt="" className="w-20 h-20 rounded-full border-2 border-[#1e1e2e]" />
-          ) : fingerprint?.avatar_seed ? (
-            <GenerativeAvatar seed={fingerprint.avatar_seed} size={80} className="rounded-full" />
           ) : (
             <div className="w-20 h-20 rounded-full bg-[#1e1e2e] flex items-center justify-center text-2xl font-bold text-gray-500">
-              {(target.email || '?')[0].toUpperCase()}
+              {(displayName || target.email || '?')[0].toUpperCase()}
             </div>
           )}
         </div>
