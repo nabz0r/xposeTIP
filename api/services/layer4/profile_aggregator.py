@@ -51,6 +51,13 @@ def aggregate_profile(target_id, workspace_id, session: Session) -> dict:
         "domains": [],
         "first_seen": None,
         "data_sources": [],
+        "identity_estimation": {
+            "gender": None,
+            "gender_probability": None,
+            "age": None,
+            "age_sample_count": None,
+            "nationalities": [],
+        },
     }
 
     seen_names = set()
@@ -63,7 +70,12 @@ def aggregate_profile(target_id, workspace_id, session: Session) -> dict:
 
     for f in findings:
         data = f.data or {}
-        source = data.get("source") or f.module
+        # Scraper findings nest extracted fields under "extracted" key — flatten them
+        if "extracted" in data and isinstance(data["extracted"], dict):
+            for k, v in data["extracted"].items():
+                if k not in data and v is not None:
+                    data[k] = v
+        source = data.get("source") or data.get("scraper") or f.module
         sources.add(source)
 
         # --- Names ---
@@ -107,6 +119,48 @@ def aggregate_profile(target_id, workspace_id, session: Session) -> dict:
             profile["age_range"] = data["age_range"]
         if data.get("gender") and not profile["gender"]:
             profile["gender"] = data["gender"]
+
+        # --- Identity estimation (Genderize/Agify/Nationalize) ---
+        if f.module == "scraper_engine":
+            scraper_name = data.get("scraper", "")
+
+            # Genderize
+            if scraper_name == "genderize" and data.get("gender"):
+                est = profile["identity_estimation"]
+                if not est["gender"]:
+                    est["gender"] = data["gender"]
+                    try:
+                        est["gender_probability"] = float(data.get("probability", 0))
+                    except (TypeError, ValueError):
+                        est["gender_probability"] = None
+
+            # Agify
+            if scraper_name == "agify" and data.get("age"):
+                est = profile["identity_estimation"]
+                if not est["age"]:
+                    try:
+                        est["age"] = int(data["age"])
+                    except (TypeError, ValueError):
+                        pass
+                    try:
+                        est["age_sample_count"] = int(data.get("sample_count", 0))
+                    except (TypeError, ValueError):
+                        pass
+
+            # Nationalize
+            if scraper_name == "nationalize" and data.get("top_country"):
+                est = profile["identity_estimation"]
+                if not est["nationalities"]:
+                    nats = []
+                    for prefix in ["top", "second", "third"]:
+                        cc = data.get(f"{prefix}_country")
+                        prob = data.get(f"{prefix}_probability")
+                        if cc:
+                            try:
+                                nats.append({"country_code": cc, "probability": float(prob or 0)})
+                            except (TypeError, ValueError):
+                                nats.append({"country_code": cc, "probability": 0})
+                    est["nationalities"] = nats
 
         # --- Website ---
         if data.get("blog") and not profile["website"]:
@@ -231,7 +285,7 @@ def aggregate_profile(target_id, workspace_id, session: Session) -> dict:
                 return False
         return True
 
-    NAME_PRIORITY = ["google_audit", "fullcontact", "github_deep", "social_enricher", "gravatar", "epieos", "emailrep"]
+    NAME_PRIORITY = ["google_audit", "fullcontact", "github_deep", "social_enricher", "gravatar", "epieos", "emailrep", "scraper_engine"]
     primary_name = None
     for source_prio in NAME_PRIORITY:
         for n in profile["names"]:
@@ -249,7 +303,7 @@ def aggregate_profile(target_id, workspace_id, session: Session) -> dict:
 
     # Pick primary avatar with priority:
     # 1. Google OAuth, 2. Gravatar (non-default), 3. GitHub, 4. FullContact, 5. Others
-    AVATAR_PRIORITY = ["google_audit", "gravatar", "github_deep", "social_enricher", "fullcontact", "epieos"]
+    AVATAR_PRIORITY = ["google_audit", "gravatar", "github_deep", "social_enricher", "fullcontact", "epieos", "scraper_engine"]
     primary_avatar = None
     for source_prio in AVATAR_PRIORITY:
         for a in profile["avatars"]:

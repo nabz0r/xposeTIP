@@ -1,12 +1,13 @@
 import React, { useEffect, useState, useCallback, useRef, Fragment } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import { Radar, ChevronDown, ChevronRight, ExternalLink, Lock, CheckCircle, Filter, Shield, AlertTriangle, Globe, Link2, Unlink } from 'lucide-react'
-import { getTarget, getFindings, getScans, createScan, getModules, getScan, getGraph, patchFinding, getTargetSources, getAccounts, startOAuth, auditAccount, disconnectAccount, getFingerprint, getFingerprintHistory } from '../lib/api'
+import { getTarget, getFindings, getScans, createScan, getModules, getScan, getGraph, patchFinding, getTargetSources, getAccounts, startOAuth, auditAccount, disconnectAccount, getFingerprint, getFingerprintHistory, getTargetProfile } from '../lib/api'
 import IdentityGraph from '../components/IdentityGraph'
 import FingerprintRadar, { FingerprintTimeline } from '../components/FingerprintRadar'
 import PlatformIcon, { getRemediationLink } from '../components/PlatformIcon'
 import IOCTimeline from '../components/IOCTimeline'
 import ProfileHeader from '../components/ProfileHeader'
+import IdentityCard from '../components/IdentityCard'
 import LocationMap from '../components/LocationMap'
 
 const severityColors = {
@@ -49,6 +50,7 @@ export default function TargetDetail() {
   const [auditingAccount, setAuditingAccount] = useState(null)
   const [fingerprint, setFingerprint] = useState(null)
   const [fpHistory, setFpHistory] = useState([])
+  const [profile, setProfile] = useState(null)
   // Filters
   const [sevFilter, setSevFilter] = useState('all')
   const [modFilter, setModFilter] = useState('all')
@@ -68,6 +70,7 @@ export default function TargetDetail() {
       setTarget(t)
       setFindings(f.items || [])
       setScans(s.items || [])
+      getTargetProfile(id).then(setProfile).catch(() => setProfile(null))
     } catch {}
   }, [id])
 
@@ -237,7 +240,7 @@ export default function TargetDetail() {
       {/* Profile Header */}
       <div className="flex items-start gap-4">
         <div className="flex-1">
-          <ProfileHeader target={target} findings={findings} animScore={animScore} />
+          <ProfileHeader target={target} findings={findings} animScore={animScore} profileData={profile} />
         </div>
         <button onClick={() => setShowScanModal(true)}
           className="shrink-0 flex items-center gap-2 bg-[#00ff88] text-black font-semibold rounded-lg px-4 py-2.5 text-sm hover:bg-[#00ff88]/90 mt-2">
@@ -348,6 +351,9 @@ export default function TargetDetail() {
               </div>
             </div>
           )}
+
+          {/* Identity Estimation */}
+          <IdentityCard profile={profile} />
 
           {/* Digital Fingerprint */}
           {fingerprint && (

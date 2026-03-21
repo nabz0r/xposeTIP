@@ -16,16 +16,19 @@ const repColor = (level) => {
   return '#ff8800'
 }
 
-export default function ProfileHeader({ target, findings, animScore }) {
-  const [profile, setProfile] = useState(null)
+export default function ProfileHeader({ target, findings, animScore, profileData }) {
+  const [localProfile, setLocalProfile] = useState(null)
   const [fingerprint, setFingerprint] = useState(null)
+  const profile = profileData || localProfile
 
   useEffect(() => {
     if (target?.id) {
-      getTargetProfile(target.id).then(setProfile).catch(() => setProfile(null))
+      if (!profileData) {
+        getTargetProfile(target.id).then(setLocalProfile).catch(() => setLocalProfile(null))
+      }
       getFingerprint(target.id).then(setFingerprint).catch(() => setFingerprint(null))
     }
-  }, [target?.id, target?.last_scanned])
+  }, [target?.id, target?.last_scanned, profileData])
 
   // Fallback to findings-based extraction if profile not available
   const p = profile || {}
@@ -52,6 +55,18 @@ export default function ProfileHeader({ target, findings, animScore }) {
   const credentialsLeaked = p.breach_summary?.credentials_leaked || false
 
   const breakdown = target.score_breakdown || p.score_breakdown || {}
+
+  const CATEGORY_LABELS = {
+    social_account: 'Social Exposure',
+    breach: 'Breach Risk',
+    metadata: 'Metadata Leakage',
+    intelligence: 'Intelligence Findings',
+    geolocation: 'Geo Exposure',
+    tracking: 'Tracking',
+    data_broker: 'Data Brokers',
+    identity: 'Identity Intel',
+    archive: 'Archive History',
+  }
 
   return (
     <div className="bg-[#12121a] border border-[#1e1e2e] rounded-xl p-6">
@@ -188,7 +203,7 @@ export default function ProfileHeader({ target, findings, animScore }) {
           {Object.entries(breakdown).sort((a, b) => b[1] - a[1]).map(([cat, score]) => (
             <div key={cat} className="space-y-1">
               <div className="flex justify-between text-xs">
-                <span className="text-gray-400">{cat.replace(/_/g, ' ')}</span>
+                <span className="text-gray-400">{CATEGORY_LABELS[cat] || cat.replace(/_/g, ' ')}</span>
                 <span className="font-mono text-gray-300">{score}</span>
               </div>
               <div className="h-1.5 bg-[#1e1e2e] rounded-full overflow-hidden">

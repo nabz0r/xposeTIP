@@ -322,6 +322,7 @@ Frontend pre-selects: all enabled+implemented L1 + recommended L2 (dns_deep, lea
 | 9 | v0.9.0 | Scraper engine: DB-driven scrapers, CRUD API, 13 initial scrapers |
 | 10 | v0.10.0 | Quality polish: dedup, profile names, finding details, page transitions |
 | 11 | v0.11.0 | 15 new scrapers: identity estimation, Wayback archive, social expansion, enrichment |
+| 12 | v0.12.0 | Identity Card, photo strip, profile aggregator fix, category labels |
 
 ## Bugs fixed (v0.5.x)
 
