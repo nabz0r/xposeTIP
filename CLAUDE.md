@@ -39,22 +39,23 @@ The exposure score for a US target will naturally be higher (more public data av
 than for an EU target (GDPR reduces public exposure). That's a feature, not a bug —
 it proves the point about digital exposure varying by jurisdiction.
 
-## Current version: v0.23.0
+## Current version: v0.24.0
 
-Sprint 24 complete. 25 scanners (17 implemented + 8 placeholder), 43 scrapers
+Sprint 25 complete. 25 scanners (17 implemented + 8 placeholder), 43 scrapers
 across 7 categories (social, breach, metadata, people_search, identity, archive,
 gaming), 5 intelligence analyzers, digital fingerprint (8-axis radar), persona
 clustering engine, dual score (exposure/threat), identity estimation
-(gender/age/nationality), per-field confidence, IdentityCard + PersonaCard,
+(gender/age/nationality) with re-query engine, per-field confidence with blacklist
+filtering, email name extraction + cross-reference, IdentityCard + PersonaCard,
 real-time log viewer with Redis ring buffer, plans (Free/Consultant/Enterprise)
 with enforcement, open registration, admin panel (users/workspaces management),
 quick scan from targets list, multi-workspace, RBAC, organizations, source
-scoring, Google/Microsoft OAuth framework, DB-driven name blacklist system,
-reworked targets list (avatar, dual score, timestamp), scan metadata with
-log download, target exposure leaderboard on dashboard, DNS SaaS blocklist
-(50+ managed domains), executive summary narrative, global API keys fallback,
-remediation toggle (resolved/dismissed/false_positive/monitoring), Plan & Billing
-moved to Organization page, findings CSV export, inherited keys banner.
+scoring, Google/Microsoft OAuth framework, DB-driven name blacklist system
+(expanded: 84 rules), reworked targets list (avatar, dual score, timestamp),
+scan metadata with log download, target exposure leaderboard on dashboard,
+DNS SaaS blocklist (50+ managed domains), executive summary narrative, global
+API keys fallback, remediation toggle, findings CSV export, inherited keys
+banner, recalculate profiles button, persona username blacklist filtering.
 
 ## Tech stack (locked)
 
@@ -470,6 +471,7 @@ Frontend pre-selects: all enabled+implemented L1 + recommended L2 (dns_deep, lea
 | 22 | v0.21.1 | Documentation update (v0.14.0 → v0.21.0) — zero code changes |
 | 23 | v0.22.0 | Name blacklist system, targets rework, quality polish, scan metadata |
 | 24 | v0.23.0 | DNS SaaS blocklist, executive summary, global API keys, remediation toggle, CSV export |
+| 25 | v0.24.0 | Identity intelligence fix, blacklist expansion, re-query engine, email name extraction, recalculate profiles, persona cleanup |
 
 ## Bugs fixed (v0.5.x)
 

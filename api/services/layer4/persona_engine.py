@@ -13,6 +13,47 @@ from api.models.identity import Identity
 
 logger = logging.getLogger(__name__)
 
+# Hardcoded fallback blacklist for usernames
+_USERNAME_BLACKLIST = {
+    "unknown", "user", "admin", "test", "null", "none", "default", "anonymous",
+    "noreply", "no-reply", "support", "info", "contact", "hello", "postmaster",
+    "webmaster", "mailer-daemon",
+}
+
+
+def _load_username_blacklist(session: Session) -> list[dict]:
+    """Load name blacklist from DB for username filtering."""
+    try:
+        from api.models.name_blacklist import NameBlacklist
+        rows = session.execute(select(NameBlacklist)).scalars().all()
+        return [{"pattern": r.pattern, "type": r.type} for r in rows]
+    except Exception:
+        return []
+
+
+def _is_valid_username(username: str, db_blacklist: list[dict]) -> bool:
+    """Check username against blacklist. Returns True if valid."""
+    val = username.strip().lower()
+    if len(val) < 2:
+        return False
+    # DB blacklist
+    for entry in db_blacklist:
+        p = entry["pattern"].lower()
+        if entry["type"] == "exact" and val == p:
+            return False
+        if entry["type"] == "contains" and p in val:
+            return False
+        if entry["type"] == "regex":
+            try:
+                if re.match(entry["pattern"], username, re.IGNORECASE):
+                    return False
+            except Exception:
+                pass
+    # Hardcoded fallback
+    if val in _USERNAME_BLACKLIST:
+        return False
+    return True
+
 
 def cluster_personas(target_id, workspace_id, session: Session) -> list[dict]:
     """
@@ -21,6 +62,8 @@ def cluster_personas(target_id, workspace_id, session: Session) -> list[dict]:
 
     Returns list of persona dicts.
     """
+    db_blacklist = _load_username_blacklist(session)
+
     findings = session.execute(
         select(Finding).where(
             Finding.target_id == target_id,
@@ -51,6 +94,10 @@ def cluster_personas(target_id, workspace_id, session: Session) -> list[dict]:
             username = (f.indicator_value or "").strip()
 
         if not username or len(username) < 2:
+            continue
+
+        # Filter through blacklist
+        if not _is_valid_username(username, db_blacklist):
             continue
 
         platform = (

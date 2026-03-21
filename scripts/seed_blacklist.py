@@ -59,6 +59,28 @@ DEFAULT_BLACKLIST = [
     {"pattern": "^\\d+$", "type": "regex", "reason": "Pure numbers"},
     {"pattern": "^.{1,2}$", "type": "regex", "reason": "Too short (1-2 chars)"},
     {"pattern": "^[a-z0-9_\\-\\.]+$", "type": "regex", "reason": "Looks like a username (all lowercase+digits)"},
+    {"pattern": "^@", "type": "regex", "reason": "Username with @ prefix"},
+    {"pattern": "^Telegram\\b", "type": "regex", "reason": "Telegram anything"},
+    {"pattern": "^WhatsApp\\b", "type": "regex", "reason": "WhatsApp anything"},
+    {"pattern": "^Signal\\b", "type": "regex", "reason": "Signal anything"},
+    {"pattern": "^Discord\\b", "type": "regex", "reason": "Discord anything"},
+    # Exact — browsers and platforms
+    {"pattern": "eventbrite", "type": "exact", "reason": "Event platform"},
+    {"pattern": "firefox", "type": "exact", "reason": "Browser"},
+    {"pattern": "chrome", "type": "exact", "reason": "Browser"},
+    {"pattern": "safari", "type": "exact", "reason": "Browser"},
+    {"pattern": "opera", "type": "exact", "reason": "Browser"},
+    {"pattern": "no-reply", "type": "exact", "reason": "No-reply address"},
+    {"pattern": "postmaster", "type": "exact", "reason": "System address"},
+    {"pattern": "webmaster", "type": "exact", "reason": "System address"},
+    {"pattern": "mailer-daemon", "type": "exact", "reason": "System address"},
+    {"pattern": "info", "type": "exact", "reason": "Generic address"},
+    {"pattern": "contact", "type": "exact", "reason": "Generic address"},
+    {"pattern": "hello", "type": "exact", "reason": "Generic address"},
+    # Contains — messaging slogans
+    {"pattern": "a new era of messaging", "type": "contains", "reason": "Telegram slogan"},
+    {"pattern": "fast. secure. powerful", "type": "contains", "reason": "Telegram slogan"},
+    {"pattern": "\u2013 a new era", "type": "contains", "reason": "Telegram title variant"},
 ]
 
 

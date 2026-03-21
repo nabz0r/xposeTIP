@@ -202,6 +202,53 @@ async def recalculate_scores(
     return {"recalculated": updated, "total": len(targets)}
 
 
+@router.post("/recalculate-profiles")
+async def recalculate_profiles(
+    role: str = Depends(require_role("superadmin", "admin")),
+    workspace_id=Depends(get_current_workspace),
+    db: AsyncSession = Depends(get_db),
+):
+    """Re-run profile aggregation + identity enrichment for all targets."""
+    from api.tasks.utils import get_sync_session
+    from api.services.layer4.profile_aggregator import aggregate_profile
+    from api.services.layer4.identity_enricher import enrich_identity
+
+    targets_result = await db.execute(
+        select(Target).where(Target.workspace_id == workspace_id)
+    )
+    targets = targets_result.scalars().all()
+
+    sync_session = get_sync_session()
+    updated = 0
+    enriched = 0
+    try:
+        for t in targets:
+            try:
+                aggregate_profile(t.id, workspace_id, sync_session)
+                updated += 1
+
+                # Re-read target after aggregation
+                target = sync_session.execute(
+                    select(Target).where(Target.id == t.id)
+                ).scalar_one_or_none()
+                if target:
+                    profile = dict(target.profile_data or {})
+                    est = profile.get("identity_estimation", {})
+                    if not est.get("gender") or not est.get("age"):
+                        updated_est = enrich_identity(profile, target.email)
+                        if updated_est and (updated_est.get("gender") or updated_est.get("age")):
+                            profile["identity_estimation"] = updated_est
+                            target.profile_data = profile
+                            enriched += 1
+            except Exception:
+                logger.exception("Failed to recalculate profile for target %s", t.id)
+        sync_session.commit()
+    finally:
+        sync_session.close()
+
+    return {"recalculated": updated, "enriched": enriched, "total": len(targets)}
+
+
 # ---- Platform Admin (superadmin only) ----
 
 @router.get("/users")

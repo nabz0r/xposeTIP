@@ -130,6 +130,23 @@ def finalize_scan(scan_id: str):
         except Exception:
             logger.exception("Profile aggregation failed for target %s", scan.target_id)
 
+        # Identity enrichment — re-query with discovered name
+        try:
+            from api.services.layer4.identity_enricher import enrich_identity
+            target = session.execute(select(Target).where(Target.id == scan.target_id)).scalar_one_or_none()
+            if target:
+                profile = dict(target.profile_data or {})
+                est = profile.get("identity_estimation", {})
+                if not est.get("gender") or not est.get("age"):
+                    updated_est = enrich_identity(profile, target.email)
+                    if updated_est and (updated_est.get("gender") or updated_est.get("age")):
+                        profile["identity_estimation"] = updated_est
+                        target.profile_data = profile
+                        session.commit()
+                        logger.info("Identity enriched for %s with discovered name", target.email)
+        except Exception:
+            logger.exception("Identity enrichment failed for target %s", scan.target_id)
+
         # Load workspace plan + user role for feature gating
         from api.models.workspace import Workspace
         from api.models.user import UserWorkspace

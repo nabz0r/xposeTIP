@@ -339,15 +339,33 @@ def aggregate_profile(target_id, workspace_id, session: Session) -> dict:
         "cross_verified": most_common_count > 1,
     }
 
+    # Load DB blacklist early (needed for field_confidence + name validation)
+    db_blacklist = _load_blacklist(session)
+
+    # --- Parse potential name from email prefix ---
+    _email = session.execute(
+        select(Target.email).where(Target.id == target_id, Target.workspace_id == workspace_id)
+    ).scalar_one_or_none() or ""
+    _prefix = _email.split("@")[0] if "@" in _email else _email
+    _cleaned = re.sub(r"\d+", "", _prefix)
+    _name_parts = [p for p in re.split(r"[._\-]", _cleaned) if len(p) >= 2]
+    email_name_guess = {
+        "first": _name_parts[0].capitalize() if len(_name_parts) >= 1 else None,
+        "last": _name_parts[-1].capitalize() if len(_name_parts) >= 2 else None,
+        "full": " ".join(p.capitalize() for p in _name_parts) if len(_name_parts) >= 2 else None,
+    }
+
     # --- Per-field confidence ---
     field_confidence = {}
 
-    # First name confidence
+    # First name confidence — filter candidates through blacklist
     first_names = []
     for n in profile["names"]:
         parts = n["value"].strip().split()
         if parts:
-            first_names.append({"value": parts[0], "source": n["source"]})
+            candidate = parts[0]
+            if len(candidate) >= 2 and _is_valid_name_db(candidate, db_blacklist):
+                first_names.append({"value": candidate, "source": n["source"]})
 
     if first_names:
         unique_first = set(fn["value"].lower() for fn in first_names)
@@ -360,13 +378,19 @@ def aggregate_profile(target_id, workspace_id, session: Session) -> dict:
             "sources": sorted(fn_sources),
             "source_count": len(fn_sources),
         }
+        # Boost if matches email pattern
+        if email_name_guess["first"] and field_confidence["first_name"]["value"].lower() == email_name_guess["first"].lower():
+            field_confidence["first_name"]["confidence"] = round(min(1.0, field_confidence["first_name"]["confidence"] + 0.20), 2)
+            field_confidence["first_name"]["sources"].append("email_pattern_match")
 
-    # Last name confidence
+    # Last name confidence — filter candidates through blacklist
     last_names = []
     for n in profile["names"]:
         parts = n["value"].strip().split()
         if len(parts) >= 2:
-            last_names.append({"value": parts[-1], "source": n["source"]})
+            candidate = parts[-1]
+            if len(candidate) >= 2 and _is_valid_name_db(candidate, db_blacklist):
+                last_names.append({"value": candidate, "source": n["source"]})
 
     if last_names:
         unique_last = set(ln["value"].lower() for ln in last_names)
@@ -379,6 +403,10 @@ def aggregate_profile(target_id, workspace_id, session: Session) -> dict:
             "sources": sorted(ln_sources),
             "source_count": len(ln_sources),
         }
+        # Boost if matches email pattern
+        if email_name_guess["last"] and field_confidence["last_name"]["value"].lower() == email_name_guess["last"].lower():
+            field_confidence["last_name"]["confidence"] = round(min(1.0, field_confidence["last_name"]["confidence"] + 0.20), 2)
+            field_confidence["last_name"]["sources"].append("email_pattern_match")
 
     # Gender confidence (from identity_estimation)
     est = profile.get("identity_estimation", {})
@@ -422,9 +450,6 @@ def aggregate_profile(target_id, workspace_id, session: Session) -> dict:
         }
 
     profile["field_confidence"] = field_confidence
-
-    # Load DB blacklist (falls back to hardcoded if DB empty/unavailable)
-    db_blacklist = _load_blacklist(session)
 
     # Pick primary name with strict validation
     PLATFORM_NAMES = {
@@ -486,6 +511,12 @@ def aggregate_profile(target_id, workspace_id, session: Session) -> dict:
             if _is_valid_name(n["value"]):
                 primary_name = n["value"].strip()
                 break
+    # Fallback: use email guess if no name found from scanners
+    if not primary_name and email_name_guess["full"]:
+        if _is_valid_name(email_name_guess["full"]):
+            primary_name = email_name_guess["full"]
+            profile["names"].append({"value": email_name_guess["full"], "source": "email_pattern"})
+            profile["confidence"]["overall"] = max(profile.get("confidence", {}).get("overall", 0), 0.25)
     profile["primary_name"] = primary_name
 
     # Pick primary avatar with priority:

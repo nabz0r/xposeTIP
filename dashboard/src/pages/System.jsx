@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import { RefreshCw, Database, Server, Cpu, Wifi, CheckCircle, XCircle, AlertCircle, ScrollText, Users, Building2, Search, ChevronDown, ChevronRight, ShieldBan } from 'lucide-react'
-import { getSystemStats, recalculateScores, checkAllModulesHealth, adminListUsers, adminUpdateUser, adminListWorkspaces, updateWorkspacePlan, getNameBlacklist, addNameBlacklist, removeNameBlacklist } from '../lib/api'
+import { getSystemStats, recalculateScores, recalculateProfiles, checkAllModulesHealth, adminListUsers, adminUpdateUser, adminListWorkspaces, updateWorkspacePlan, getNameBlacklist, addNameBlacklist, removeNameBlacklist } from '../lib/api'
 import { useAuth } from '../lib/auth'
 import LogViewer from '../components/LogViewer'
 
@@ -77,6 +77,7 @@ function DashboardTab() {
   const [loading, setLoading] = useState(true)
   const [refreshing, setRefreshing] = useState(false)
   const [recalculating, setRecalculating] = useState(false)
+  const [recalcProfiles, setRecalcProfiles] = useState(false)
   const [healthChecking, setHealthChecking] = useState(false)
 
   useEffect(() => { loadStats() }, [])
@@ -137,6 +138,11 @@ function DashboardTab() {
           disabled={recalculating}
           className="flex items-center gap-2 text-sm text-gray-400 hover:text-[#00ff88] disabled:opacity-50 border border-[#1e1e2e] rounded-lg px-3 py-1.5">
           {recalculating ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Database className="w-4 h-4" />} Recalculate Scores
+        </button>
+        <button onClick={async () => { setRecalcProfiles(true); try { const r = await recalculateProfiles(); alert(`Profiles: ${r.recalculated}/${r.total} updated, ${r.enriched} enriched`) } catch (e) { alert(e.message) } finally { setRecalcProfiles(false) } }}
+          disabled={recalcProfiles}
+          className="flex items-center gap-2 text-sm text-gray-400 hover:text-[#00ff88] disabled:opacity-50 border border-[#1e1e2e] rounded-lg px-3 py-1.5">
+          {recalcProfiles ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Users className="w-4 h-4" />} Recalculate Profiles
         </button>
         <button onClick={handleRefresh} disabled={refreshing}
           className="flex items-center gap-2 text-sm text-gray-400 hover:text-white disabled:opacity-50">
