@@ -103,10 +103,19 @@ def propagate_confidence(target_id, workspace_id, session: Session) -> dict:
             logger.debug("PageRank converged after %d iterations (delta=%.4f)", iteration + 1, max_delta)
             break
 
-    # Normalize: scale so max = 1.0
-    max_score = max(scores.values()) if scores else 1.0
-    if max_score > 0:
-        scores = {k: round(v / max_score, 4) for k, v in scores.items()}
+    # Normalize to [0.1, 1.0] range to preserve relative differences
+    if scores:
+        min_score = min(scores.values())
+        max_score = max(scores.values())
+        score_range = max_score - min_score
+        if score_range > 0.001:
+            # Scale to [0.1, 1.0] preserving relative differences
+            scores = {k: round(0.1 + 0.9 * (v - min_score) / score_range, 4)
+                      for k, v in scores.items()}
+        else:
+            # All scores nearly equal — scale up so they're meaningful
+            scores = {k: round(min(1.0, v * len(scores)), 4)
+                      for k, v in scores.items()}
 
     # Update identity nodes in DB with propagated confidence
     for identity in identities:

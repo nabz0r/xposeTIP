@@ -69,6 +69,12 @@ def _is_valid_persona_name(name):
     return True
 
 
+_PLATFORM_BLACKLIST = {
+    "lastpass", "office365", "1password", "bitwarden", "dashlane", "keepass",
+    "nordpass", "firefox", "chrome", "safari", "edge", "opera",
+}
+
+
 def _cluster_from_graph(identities, graph_context, db_blacklist):
     """Build personas from graph clusters. Each cluster = one persona."""
     personas = []
@@ -93,12 +99,17 @@ def _cluster_from_graph(identities, graph_context, db_blacklist):
                     if plat_clean:
                         cluster_platforms.add(plat_clean)
 
+        # Filter out non-platform entries (password managers, browsers)
+        cluster_platforms = {p for p in cluster_platforms if p.lower() not in _PLATFORM_BLACKLIST}
+
         if not cluster_usernames:
             continue
 
-        # Pick highest-confidence username as label
+        # Pick highest-confidence username as label, prefer valid persona names
+        valid_usernames = [u for u in cluster_usernames if _is_valid_persona_name(u)]
+        label_candidates = valid_usernames if valid_usernames else list(cluster_usernames)
         best_username = max(
-            cluster_usernames,
+            label_candidates,
             key=lambda u: node_scores.get(
                 next((i.id for i in identities if i.value == u), None), 0
             )

@@ -41,6 +41,31 @@ def build_graph(target_id, workspace_id, session: Session):
     if not findings:
         return
 
+    # Clean up stale identity graph data before rebuilding
+    # Delete ALL existing identity links for this target so we rebuild fresh
+    existing_ids = session.execute(
+        select(Identity.id).where(
+            Identity.target_id == target_id,
+            Identity.workspace_id == workspace_id,
+        )
+    ).scalars().all()
+    if existing_ids:
+        id_set_cleanup = set(existing_ids)
+        old_links = session.execute(
+            select(IdentityLink).where(
+                IdentityLink.workspace_id == workspace_id,
+            )
+        ).scalars().all()
+        for lnk in old_links:
+            if lnk.source_id in id_set_cleanup or lnk.dest_id in id_set_cleanup:
+                session.delete(lnk)
+        # Also delete identity nodes — they'll be recreated
+        for iid in existing_ids:
+            identity_obj = session.get(Identity, iid)
+            if identity_obj:
+                session.delete(identity_obj)
+        session.flush()
+
     # Ensure the target email identity node exists
     email_finding = next(
         (f for f in findings if f.indicator_type == "email" and f.indicator_value),
@@ -203,9 +228,35 @@ def build_graph(target_id, workspace_id, session: Session):
                 if k not in data and v is not None:
                     data[k] = v
 
+        # Name validation constants for graph nodes
+        _NAME_PLATFORM_BLACKLIST = {
+            "lastpass", "office365", "spotify", "eventbrite", "firefox", "telegram",
+            "chrome", "safari", "1password", "bitwarden", "dashlane", "nordpass",
+            "keepass", "reddit", "github", "twitter", "instagram", "facebook",
+        }
+
         for name_field in ("name", "display_name", "full_name", "realname"):
             name_val = data.get(name_field)
             if name_val and isinstance(name_val, str) and len(name_val.strip()) >= 3:
+                name_clean = name_val.strip()
+
+                # Reject single-letter last initial: "Steffen H." → reject
+                parts = name_clean.split()
+                if len(parts) >= 2 and len(parts[-1].rstrip('.')) <= 1:
+                    continue
+                # Reject single-letter first initial: "J. Smith"
+                if parts and (len(parts[0]) == 1 or (len(parts[0]) == 2 and parts[0].endswith('.'))):
+                    continue
+                # Reject "'s profile" patterns: "stheis's profile"
+                if "'s profile" in name_clean.lower() or name_clean.lower().endswith(" profile"):
+                    continue
+                # Reject platform names
+                if name_clean.lower() in _NAME_PLATFORM_BLACKLIST:
+                    continue
+                # Reject too-short single words
+                if len(parts) == 1 and len(parts[0]) < 4:
+                    continue
+
                 # Lazy-load blacklist once
                 if not hasattr(build_graph, '_blacklist'):
                     try:
@@ -216,20 +267,31 @@ def build_graph(target_id, workspace_id, session: Session):
                         build_graph._blacklist = []
                         build_graph._is_valid = lambda n, b: len(n.strip()) >= 3
 
-                if build_graph._is_valid(name_val, build_graph._blacklist):
+                if build_graph._is_valid(name_clean, build_graph._blacklist):
                     name_node = get_or_create_identity(
-                        "name", name_val.strip(),
+                        "name", name_clean,
                         platform=f.module,
                         source_module=f.module,
                         source_finding_id=f.id,
                     )
+                    # Link name to finding's indicator — but ONLY if indicator is a
+                    # username (not email). email→name should be "associated_with".
                     if f.indicator_value and f.indicator_type:
-                        get_or_create_link(
-                            indicator_node.id, name_node.id,
-                            "identified_as",
-                            source_module=f.module,
-                            evidence={"name": name_val, "finding_id": str(f.id)},
-                        )
+                        if f.indicator_type == "username":
+                            get_or_create_link(
+                                indicator_node.id, name_node.id,
+                                "identified_as",
+                                source_module=f.module,
+                                evidence={"name": name_clean, "finding_id": str(f.id)},
+                            )
+                        elif f.indicator_type == "email" and email_value:
+                            # email→name is a weaker signal
+                            get_or_create_link(
+                                indicator_node.id, name_node.id,
+                                "associated_with",
+                                source_module=f.module,
+                                evidence={"name": name_clean, "finding_id": str(f.id)},
+                            )
 
         # Extract location nodes
         for loc_field in ("location", "country", "city"):

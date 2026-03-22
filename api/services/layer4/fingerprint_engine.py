@@ -330,6 +330,52 @@ class FingerprintEngine:
                                 "label": _event_label(field, source, title, data),
                             })
 
+            # Fallback: extract dates from finding TITLES
+            # e.g. "Found in Dailymotion breach (2019-10-20)"
+            title_dates = re.findall(r'(\d{4}-\d{2}-\d{2})', title)
+            for td in title_dates:
+                dt = _parse_timestamp(td)
+                if dt and dt < now and dt.year >= 1990:
+                    age = (now - dt).days / 365.25
+                    email_age = max(email_age, age)
+                    timeline_events.append({
+                        "date": dt.isoformat(),
+                        "type": "breach" if "breach" in title.lower() else "activity",
+                        "source": source,
+                        "label": title[:60],
+                    })
+
+            # Fallback: year-only from titles: "Found in X breach (2019)"
+            if not title_dates:
+                year_matches = re.findall(r'\b(20[0-2]\d)\b', title)
+                for ym in year_matches:
+                    dt = _parse_timestamp(ym)
+                    if dt and dt < now:
+                        age = (now - dt).days / 365.25
+                        email_age = max(email_age, age)
+                        timeline_events.append({
+                            "date": dt.isoformat(),
+                            "type": "breach" if "breach" in title.lower() else "activity",
+                            "source": source,
+                            "label": title[:60],
+                        })
+
+            # Check 'extracted' field (IntelX, scraper results) for timestamps
+            extracted = data.get("extracted")
+            if isinstance(extracted, dict):
+                for ek, ev in extracted.items():
+                    if isinstance(ev, str):
+                        dt = _parse_timestamp(ev)
+                        if dt and dt < now and dt.year >= 1990:
+                            age = (now - dt).days / 365.25
+                            email_age = max(email_age, age)
+                            timeline_events.append({
+                                "date": dt.isoformat(),
+                                "type": "activity",
+                                "source": source,
+                                "label": f"Data from {source}: {ek}",
+                            })
+
         # Cap email_age by domain launch date (no Gmail account before 2004, etc.)
         domain = email.split("@")[-1].lower() if "@" in email else ""
         if domain in _DOMAIN_LAUNCH_DATES:
