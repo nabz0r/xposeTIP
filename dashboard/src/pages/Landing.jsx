@@ -631,12 +631,14 @@ export default function Landing() {
             <div className="flex items-center gap-2">
               <Shield className="w-5 h-5 text-[#00ff88]" />
               <span className="font-bold font-['Instrument_Sans',sans-serif]">xpose</span>
-              <span className="text-xs text-gray-600 font-mono ml-2">v0.28.0</span>
+              <span className="text-xs text-gray-600 font-mono ml-2">v0.42.0</span>
             </div>
             <p className="text-xs text-gray-600 font-mono text-center">
               Identity Threat Intelligence · Open Source · GDPR Compliant
             </p>
             <div className="flex items-center gap-4 text-xs text-gray-500">
+              <a href="/architecture" className="hover:text-white transition-colors">How it works</a>
+              <a href="/architecture#roadmap" className="hover:text-white transition-colors">Roadmap</a>
               <a href="https://github.com/nabz0r/xposeTIP" className="hover:text-white transition-colors">GitHub</a>
               <a href="/login" className="hover:text-white transition-colors">Sign in</a>
             </div>

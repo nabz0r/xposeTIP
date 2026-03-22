@@ -13,6 +13,7 @@ import Scrapers from './pages/Scrapers'
 import System from './pages/System'
 import Organization from './pages/Organization'
 import Landing from './pages/Landing'
+import Architecture from './pages/Architecture'
 import { AuthProvider, useAuth } from './lib/auth'
 import { ToastProvider } from './components/Toast'
 
@@ -29,6 +30,7 @@ function App() {
       <BrowserRouter>
         <Routes>
           <Route path="/welcome" element={<Landing />} />
+          <Route path="/architecture" element={<Architecture />} />
           <Route path="/login" element={<Login />} />
           <Route path="/setup" element={<Setup />} />
           <Route path="/" element={<ProtectedRoute><Layout /></ProtectedRoute>}>
