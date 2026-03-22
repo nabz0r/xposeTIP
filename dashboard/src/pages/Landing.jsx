@@ -2,7 +2,6 @@ import { useState, useRef, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../lib/auth'
 import { Shield, Radar, ArrowRight, Check, KeyRound, Users, Globe, AtSign, Fingerprint, Mail } from 'lucide-react'
-import CountUp from '../components/CountUp'
 import GenerativeAvatar from '../components/GenerativeAvatar'
 
 // ─── Scroll reveal hook ───
@@ -28,6 +27,44 @@ function Section({ children, className = '' }) {
     } ${className}`}>
       {children}
     </section>
+  )
+}
+
+// ─── Live Counter ───
+function LiveCounter() {
+  const [count, setCount] = useState(4_237_891_442)
+  const ref = useRef(null)
+  const [started, setStarted] = useState(false)
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      ([entry]) => { if (entry.isIntersecting) setStarted(true) },
+      { threshold: 0.3 }
+    )
+    if (ref.current) observer.observe(ref.current)
+    return () => observer.disconnect()
+  }, [])
+
+  useEffect(() => {
+    if (!started) return
+    const interval = setInterval(() => {
+      setCount(c => c + Math.floor(Math.random() * 3) + 12)
+    }, 1000)
+    return () => clearInterval(interval)
+  }, [started])
+
+  return (
+    <div ref={ref}>
+      <div className="text-6xl md:text-8xl font-mono font-bold text-[#ff2244] tabular-nums">
+        {count.toLocaleString()}
+      </div>
+      <p className="text-lg text-gray-400 mt-4">
+        records leaked — and counting.
+      </p>
+      <p className="text-sm text-gray-600 mt-2">
+        +13 every second. While you're reading this.
+      </p>
+    </div>
   )
 }
 
@@ -395,13 +432,8 @@ export default function Landing() {
       {/* ═══════════════════ Section 2: THE PROBLEM ═══════════════════ */}
       <Section className="py-32">
         <div className="max-w-3xl mx-auto px-6 text-center">
-          <div className="text-5xl md:text-6xl font-mono font-bold text-[#ff2244] mb-6">
-            <CountUp target={4100000000} separator="," />
-          </div>
-          <p className="text-lg md:text-xl text-gray-400 mb-4">
-            records leaked in 2024.
-          </p>
-          <p className="text-lg md:text-xl text-gray-300 leading-relaxed max-w-xl mx-auto">
+          <LiveCounter />
+          <p className="text-lg md:text-xl text-gray-300 leading-relaxed max-w-xl mx-auto mt-8">
             Your email is probably in there. An attacker can find your name, your accounts,
             your habits — in 30 seconds.
           </p>

@@ -2,7 +2,125 @@ import hashlib
 import json
 import math
 import random
+import re
 from datetime import datetime, timezone
+
+# ---------------------------------------------------------------------------
+# Timestamp harvesting helpers (used by _extract_raw_values for email_age +
+# life timeline generation)
+# ---------------------------------------------------------------------------
+
+_TIMESTAMP_FIELDS = [
+    "BreachDate", "breach_date", "date", "AddedDate", "added_date",
+    "created_at", "createdAt", "created", "creation_date",
+    "ModifiedDate", "modified_date", "updated_at",
+    "first_seen", "last_seen", "registered", "registration_date",
+    "joined", "joined_date", "signup_date",
+    "timestamp", "snapshot_date", "earliest_snapshot",
+    "published_at", "pub_date",
+]
+
+
+def _parse_timestamp(value) -> datetime | None:
+    """Parse a timestamp from various formats found in OSINT findings."""
+    if value is None:
+        return None
+
+    # Already a datetime
+    if isinstance(value, datetime):
+        return value
+
+    # Numeric — unix epoch (seconds or milliseconds)
+    if isinstance(value, (int, float)):
+        try:
+            if value > 1e12:
+                return datetime.fromtimestamp(value / 1000)
+            if value > 1e8:
+                return datetime.fromtimestamp(value)
+        except (OSError, ValueError):
+            pass
+        return None
+
+    if not isinstance(value, str):
+        return None
+
+    s = value.strip()
+    if not s:
+        return None
+
+    # Wayback Machine 14-digit format: 20150301120000
+    if re.match(r"^\d{14}$", s):
+        try:
+            return datetime.strptime(s, "%Y%m%d%H%M%S")
+        except ValueError:
+            pass
+
+    # ISO-ish formats
+    for fmt in (
+        "%Y-%m-%dT%H:%M:%S.%fZ",
+        "%Y-%m-%dT%H:%M:%SZ",
+        "%Y-%m-%dT%H:%M:%S%z",
+        "%Y-%m-%dT%H:%M:%S",
+        "%Y-%m-%d %H:%M:%S",
+        "%Y-%m-%d",
+        "%d/%m/%Y",
+        "%m/%d/%Y",
+    ):
+        try:
+            return datetime.strptime(s, fmt)
+        except ValueError:
+            continue
+
+    # Partial date: just a year like "2014" or "2014-06"
+    m = re.match(r"^(\d{4})(?:-(\d{1,2}))?$", s)
+    if m:
+        year = int(m.group(1))
+        month = int(m.group(2)) if m.group(2) else 1
+        if 1990 <= year <= 2100 and 1 <= month <= 12:
+            return datetime(year, month, 1)
+
+    return None
+
+
+def _classify_event(field: str, source: str, title: str) -> str:
+    """Classify a timeline event by type based on field name and source."""
+    field_l = field.lower()
+    source_l = source.lower()
+    title_l = title.lower()
+
+    if "breach" in field_l or "breach" in source_l or "breach" in title_l:
+        return "breach"
+    if field_l in ("created_at", "createdAt", "created", "creation_date",
+                   "registered", "registration_date", "joined", "joined_date",
+                   "signup_date"):
+        return "account_created"
+    if "snapshot" in field_l or "wayback" in source_l or "archive" in source_l:
+        return "archive"
+    if field_l in ("first_seen",):
+        return "first_seen"
+    return "activity"
+
+
+def _event_label(field: str, source: str, title: str, data: dict) -> str:
+    """Generate a human-readable label for a timeline event."""
+    platform = data.get("platform", data.get("network", data.get("service", "")))
+    breach_name = data.get("Name", data.get("name", data.get("breach_name", "")))
+
+    etype = _classify_event(field, source, title)
+
+    if etype == "breach" and breach_name:
+        return f"Exposed in {breach_name} breach"
+    if etype == "account_created" and platform:
+        return f"Account created on {platform}"
+    if etype == "archive":
+        return f"Archived by {source or 'Wayback Machine'}"
+    if etype == "first_seen" and platform:
+        return f"First seen on {platform}"
+    if platform:
+        return f"Activity on {platform}"
+    if title:
+        return title
+    return f"{source}: {field}"
 
 
 class FingerprintEngine:
@@ -82,6 +200,7 @@ class FingerprintEngine:
             "raw_values": raw,
             "eigenvalues": eigen,
             "avatar_seed": avatar_seed,
+            "timeline_events": raw.pop("timeline_events", []),
             "computed_at": datetime.now(timezone.utc).isoformat(),
         }
 
@@ -135,24 +254,41 @@ class FingerprintEngine:
             if "DataClasses" in data:
                 data_types.update(data["DataClasses"])
 
-        # Email age
+        # Email age — infer from ALL timestamps in findings
         email_age = 0
+        timeline_events = []
+        now = datetime.now()
+
         for f in findings:
             data = f.data if isinstance(f.data, dict) else {}
-            if "first_seen" in data:
-                try:
-                    first = datetime.strptime(str(data["first_seen"]), "%m/%d/%Y")
-                    email_age = max(email_age, (datetime.now() - first).days / 365)
-                except (ValueError, TypeError):
-                    pass
-            if "details" in data and isinstance(data["details"], dict):
-                fs = data["details"].get("first_seen")
-                if fs:
-                    try:
-                        first = datetime.strptime(str(fs), "%m/%d/%Y")
-                        email_age = max(email_age, (datetime.now() - first).days / 365)
-                    except (ValueError, TypeError):
-                        pass
+            source = getattr(f, "module", "") or ""
+            title = getattr(f, "title", "") or ""
+
+            for field in _TIMESTAMP_FIELDS:
+                if field in data:
+                    dt = _parse_timestamp(data[field])
+                    if dt and dt < now and dt.year >= 1990:
+                        age = (now - dt).days / 365.25
+                        email_age = max(email_age, age)
+                        timeline_events.append({
+                            "date": dt.isoformat(),
+                            "type": _classify_event(field, source, title),
+                            "source": source,
+                            "label": _event_label(field, source, title, data),
+                        })
+
+                if "details" in data and isinstance(data["details"], dict):
+                    if field in data["details"]:
+                        dt = _parse_timestamp(data["details"][field])
+                        if dt and dt < now and dt.year >= 1990:
+                            age = (now - dt).days / 365.25
+                            email_age = max(email_age, age)
+                            timeline_events.append({
+                                "date": dt.isoformat(),
+                                "type": _classify_event(field, source, title),
+                                "source": source,
+                                "label": _event_label(field, source, title, data),
+                            })
 
         # Security posture weaknesses
         security_issues = 0
@@ -169,6 +305,15 @@ class FingerprintEngine:
             if "security: weak" in title:
                 security_issues += 2
 
+        # Deduplicate and sort timeline events
+        seen_events = set()
+        unique_events = []
+        for ev in sorted(timeline_events, key=lambda e: e["date"]):
+            key = (ev["date"][:10], ev["type"], ev["source"])
+            if key not in seen_events:
+                seen_events.add(key)
+                unique_events.append(ev)
+
         return {
             "accounts": len(accounts),
             "platforms": len(platforms),
@@ -178,6 +323,7 @@ class FingerprintEngine:
             "data_leaked": len(data_types),
             "email_age_years": round(email_age, 1),
             "security_weak": security_issues,
+            "timeline_events": unique_events,
         }
 
     def _normalize(self, raw):

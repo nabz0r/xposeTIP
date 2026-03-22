@@ -11,6 +11,7 @@ import IdentityCard from '../components/IdentityCard'
 import PersonaCard from '../components/PersonaCard'
 import LocationMap from '../components/LocationMap'
 import GenerativeAvatar from '../components/GenerativeAvatar'
+import LifeTimeline from '../components/LifeTimeline'
 import useSSE from '../hooks/useSSE'
 
 const severityColors = {
@@ -430,6 +431,14 @@ export default function TargetDetail() {
           {/* Identity Estimation */}
           <IdentityCard profile={profile} />
 
+          {/* Life Timeline — chronological digital history */}
+          {profile?.life_timeline?.length > 0 && (
+            <div className="bg-[#12121a] border border-[#1e1e2e] rounded-xl p-5">
+              <h3 className="text-xs font-semibold uppercase tracking-wider text-gray-500 mb-4">Digital Life Timeline</h3>
+              <LifeTimeline events={profile.life_timeline} compact={false} />
+            </div>
+          )}
+
           {/* Persona Clusters */}
           <PersonaCard personas={profile?.personas} />
 
@@ -844,7 +853,20 @@ export default function TargetDetail() {
       {activeTab === 'graph' && <IdentityGraph data={graphData} personas={profile?.personas || []} />}
 
       {/* Timeline Tab */}
-      {activeTab === 'timeline' && <IOCTimeline findings={findings} />}
+      {activeTab === 'timeline' && (
+        <div className="space-y-6">
+          {profile?.life_timeline?.length > 0 && (
+            <div className="bg-[#12121a] border border-[#1e1e2e] rounded-xl p-5">
+              <h3 className="text-xs font-semibold uppercase tracking-wider text-gray-500 mb-4">Life Timeline</h3>
+              <LifeTimeline events={profile.life_timeline} />
+            </div>
+          )}
+          <div className="bg-[#12121a] border border-[#1e1e2e] rounded-xl p-5">
+            <h3 className="text-xs font-semibold uppercase tracking-wider text-gray-500 mb-4">IOC Timeline</h3>
+            <IOCTimeline findings={findings} />
+          </div>
+        </div>
+      )}
 
       {/* Locations Tab */}
       {activeTab === 'locations' && <LocationMap findings={findings} />}

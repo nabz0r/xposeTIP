@@ -296,6 +296,12 @@ def finalize_scan(scan_id: str):
             # Save current fingerprint in profile_data
             profile = dict(target.profile_data or {})
             profile["fingerprint"] = fingerprint
+
+            # Store life timeline from fingerprint timestamp harvesting
+            timeline = fingerprint.get("timeline_events", [])
+            if timeline:
+                profile["life_timeline"] = timeline
+
             target.profile_data = profile
 
             session.commit()
