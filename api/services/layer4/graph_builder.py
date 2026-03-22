@@ -28,6 +28,25 @@ URL_PLATFORM_MAP = {
     "discord.com": "Discord",
 }
 
+# Axe 4: Non-social platforms to filter from graph nodes
+_NON_SOCIAL_PLATFORMS = {
+    "lastpass", "office365", "1password", "bitwarden", "dashlane", "nordpass",
+    "keepass", "firefox", "chrome", "safari", "eventbrite", "booking",
+}
+
+
+def _match_url_platform(url):
+    """Axe 5: Proper domain matching — check if URL host ends with a known domain."""
+    if not url:
+        return None, None
+    url_lower = url.lower()
+    # Strip protocol
+    host = url_lower.split("://", 1)[-1].split("/", 1)[0].split("?", 1)[0]
+    for domain, name in URL_PLATFORM_MAP.items():
+        if host == domain or host.endswith("." + domain):
+            return domain, name
+    return None, None
+
 
 def build_graph(target_id, workspace_id, session: Session):
     """Build/update identity graph from findings for a target."""
@@ -140,13 +159,67 @@ def build_graph(target_id, workspace_id, session: Session):
 
     # Process each finding
     for f in findings:
+        fdata = f.data if isinstance(f.data, dict) else {}
+        indicator_node = None
+
         # Create identity for the indicator
         if f.indicator_value and f.indicator_type:
+            # Axe 2: Skip URL-value indicator nodes (social_url type has URLs as values — noise)
+            if f.indicator_type == "social_url":
+                # Axe 1b: social_url indicators (username_hunter) → extract username + link email→platform
+                extracted_username = fdata.get("username")
+                extracted_platform = fdata.get("platform", "").replace("_profile", "").replace("_scraper", "").replace("_search", "").strip()
+
+                if extracted_username and extracted_platform:
+                    # Axe 4: Skip non-social platforms
+                    if extracted_platform.lower() in _NON_SOCIAL_PLATFORMS:
+                        continue
+
+                    # Create username node
+                    username_node = get_or_create_identity(
+                        "username", extracted_username,
+                        platform=extracted_platform,
+                        source_module=f.module,
+                        source_finding_id=f.id,
+                    )
+                    # Axe 3: Normalize social_url value with .title()
+                    platform_node = get_or_create_identity(
+                        "social_url", extracted_platform.title(),
+                        platform=extracted_platform.lower(),
+                        source_module=f.module,
+                        source_finding_id=f.id,
+                    )
+                    # Link email → platform (registered_with)
+                    if email_value:
+                        email_node = get_or_create_identity(
+                            "email", email_value, source_module=f.module,
+                        )
+                        get_or_create_link(
+                            email_node.id, platform_node.id,
+                            "registered_with",
+                            source_module=f.module,
+                            evidence={"finding_id": str(f.id), "url": f.url},
+                        )
+                        # Link email → username (same_person)
+                        get_or_create_link(
+                            email_node.id, username_node.id,
+                            "same_person",
+                            source_module=f.module,
+                        )
+                    # Link username → platform (identified_as)
+                    get_or_create_link(
+                        username_node.id, platform_node.id,
+                        "identified_as",
+                        source_module=f.module,
+                        evidence={"finding_id": str(f.id), "url": f.url},
+                    )
+                    indicator_node = username_node
+                continue
+
             platform = None
             if f.indicator_type == "email":
                 platform = f.indicator_value.split("@")[1] if "@" in f.indicator_value else None
             elif f.indicator_type == "username":
-                fdata = f.data if isinstance(f.data, dict) else {}
                 platform = (
                     fdata.get("platform") or
                     fdata.get("name") or  # holehe uses "name"
@@ -167,22 +240,52 @@ def build_graph(target_id, workspace_id, session: Session):
             # Social account findings → create platform node + link
             if f.category == "social_account":
                 site_name = f.title.split(" on ")[-1] if " on " in f.title else f.module
-                platform_domain = None
-                for domain, name in URL_PLATFORM_MAP.items():
-                    if name.lower() == site_name.lower() or domain in (f.url or "").lower():
-                        platform_domain = domain
-                        site_name = name
-                        break
+                # Axe 5: Proper domain matching via helper
+                platform_domain, matched_name = _match_url_platform(f.url)
+                if matched_name:
+                    site_name = matched_name
+                elif not platform_domain:
+                    # Fallback: match by site_name
+                    for domain, name in URL_PLATFORM_MAP.items():
+                        if name.lower() == site_name.lower():
+                            platform_domain = domain
+                            site_name = name
+                            break
 
                 # For scraper findings, extract platform from data
-                if f.module == "scraper_engine" and f.data:
-                    scraper_platform = f.data.get("platform", "") or f.data.get("scraper", "")
+                if f.module == "scraper_engine" and fdata:
+                    scraper_platform = fdata.get("platform", "") or fdata.get("scraper", "")
                     if scraper_platform:
+                        # Axe 4: Skip non-social platforms
+                        if scraper_platform.lower().replace("_profile", "").replace("_scraper", "").strip() in _NON_SOCIAL_PLATFORMS:
+                            continue
                         site_name = scraper_platform.replace("_profile", "").replace("_scraper", "").replace("_search", "").title()
 
+                # Axe 1: Extract username from f.data for social_account findings
+                data_username = fdata.get("username")
+                if data_username and isinstance(data_username, str) and len(data_username.strip()) >= 2:
+                    username_node = get_or_create_identity(
+                        "username", data_username.strip(),
+                        platform=site_name.lower() if site_name else f.module,
+                        source_module=f.module,
+                        source_finding_id=f.id,
+                    )
+                    # Link username → name (identified_as) handled in name extraction below
+                    # Link email → username (same_person)
+                    if email_value:
+                        email_node = get_or_create_identity(
+                            "email", email_value, source_module=f.module,
+                        )
+                        get_or_create_link(
+                            email_node.id, username_node.id,
+                            "same_person",
+                            source_module=f.module,
+                        )
+
+                # Axe 3: Normalize social_url value with .title()
                 platform_node = get_or_create_identity(
-                    "social_url", site_name,
-                    platform=platform_domain or site_name.lower(),
+                    "social_url", site_name.title() if site_name else f.module.title(),
+                    platform=platform_domain or site_name.lower() if site_name else f.module,
                     source_module=f.module,
                     source_finding_id=f.id,
                 )
@@ -209,7 +312,7 @@ def build_graph(target_id, workspace_id, session: Session):
 
             # Breach findings → create breach node + link
             elif f.category == "breach":
-                breach_name = f.data.get("Name", f.title) if f.data else f.title
+                breach_name = fdata.get("Name", f.title) if fdata else f.title
                 breach_node = get_or_create_identity(
                     "breach", breach_name,
                     platform="haveibeenpwned.com",
@@ -236,7 +339,7 @@ def build_graph(target_id, workspace_id, session: Session):
                 )
 
         # Extract name nodes from finding data
-        data = f.data if isinstance(f.data, dict) else {}
+        data = fdata.copy()
         if "extracted" in data and isinstance(data["extracted"], dict):
             for k, v in data["extracted"].items():
                 if k not in data and v is not None:
@@ -290,7 +393,7 @@ def build_graph(target_id, workspace_id, session: Session):
                     )
                     # Link name to finding's indicator — but ONLY if indicator is a
                     # username (not email). email→name should be "associated_with".
-                    if f.indicator_value and f.indicator_type:
+                    if indicator_node and f.indicator_value and f.indicator_type:
                         if f.indicator_type == "username":
                             get_or_create_link(
                                 indicator_node.id, name_node.id,
@@ -318,7 +421,7 @@ def build_graph(target_id, workspace_id, session: Session):
                     "location", loc_val.strip(),
                     source_module=f.module,
                 )
-                if f.indicator_value and f.indicator_type:
+                if indicator_node and f.indicator_value and f.indicator_type:
                     get_or_create_link(
                         indicator_node.id, loc_node.id,
                         "located_in",
