@@ -14,7 +14,7 @@ export default function WorldHeatmap({ findings }) {
   // Extract country counts from findings
   const countryCounts = {}
   for (const f of (findings || [])) {
-    const cc = f.data?.country_code || f.data?.country
+    const cc = f.data?.country_code || f.data?.countryCode || f.data?.country
     if (cc) {
       const key = cc.length === 2 ? cc.toUpperCase() : cc
       countryCounts[key] = (countryCounts[key] || 0) + 1
@@ -84,9 +84,9 @@ export default function WorldHeatmap({ findings }) {
       <h3 className="text-sm font-semibold mb-3">Geographic Exposure</h3>
       {!hasData && (
         <div className="text-center py-6 text-gray-500 text-sm">
-          Geographic exposure mapping requires the MaxMind GeoIP module.
+          No geographic data available for this workspace.
           <br />
-          <span className="text-xs text-gray-600">Configure your MaxMind license key in Settings &rarr; API Keys.</span>
+          <span className="text-xs text-gray-600">Geographic data is extracted from mail server IP locations.</span>
         </div>
       )}
       <div className="relative">

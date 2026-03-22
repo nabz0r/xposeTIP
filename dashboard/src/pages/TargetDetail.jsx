@@ -241,7 +241,7 @@ export default function TargetDetail() {
   const layers = [...new Set(implementedModules.map(m => m.layer))].sort()
 
   // Overview data
-  const breachFindings = findings.filter(f => f.category === 'breach' && !(f.title || '').toLowerCase().includes('not configured') && !(f.title || '').toLowerCase().includes('api key'))
+  const breachFindings = findings.filter(f => (f.category === 'breach' || f.category === 'breach_risk') && !(f.title || '').toLowerCase().includes('not configured') && !(f.title || '').toLowerCase().includes('api key'))
   const socialFindings = findings.filter(f => f.category === 'social_account')
   const geoFindings = findings.filter(f => f.category === 'geolocation')
   const intelFindings = findings.filter(f => f.module === 'intelligence')
@@ -350,7 +350,7 @@ export default function TargetDetail() {
         {['overview', 'findings', 'graph', 'timeline', 'locations', 'accounts', 'scans'].map(tab => (
           <button key={tab} onClick={() => setActiveTab(tab)}
             className={`px-4 py-2 text-sm capitalize transition-colors ${activeTab === tab ? 'text-[#00ff88] border-b-2 border-[#00ff88]' : 'text-gray-400 hover:text-white'}`}>
-            {tab} {tab === 'findings' ? `(${findings.length})` : tab === 'scans' ? `(${scans.length})` : tab === 'accounts' ? `(${accounts.length})` : ''}
+            {tab} {tab === 'findings' ? `(${findings.length})` : tab === 'scans' ? `(${scans.length})` : tab === 'accounts' ? `(${socialFindings.length + accounts.length})` : ''}
           </button>
         ))}
       </div>
@@ -873,7 +873,60 @@ export default function TargetDetail() {
 
       {/* Accounts Tab */}
       {activeTab === 'accounts' && (
-        <div className="space-y-4">
+        <div className="space-y-6">
+          {/* Detected Social Accounts */}
+          {socialFindings.length > 0 && (
+            <div>
+              <h3 className="text-xs font-semibold uppercase tracking-wider text-gray-500 mb-3">
+                Detected Accounts ({socialFindings.length})
+              </h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                {socialFindings.map((f, i) => {
+                  const d = f.data || {}
+                  const platform = d.platform || d.scraper || f.title?.split(' on ')?.pop() || f.module
+                  const username = d.username || d.display_name || f.indicator_value || ''
+                  const avatar = d.avatar_url || d.avatar || d.profile_image || null
+                  const url = f.url || d.profile_url || null
+
+                  return (
+                    <div key={i} className="bg-[#12121a] border border-[#1e1e2e] rounded-xl p-3 hover:border-[#00ff88]/20 transition-colors">
+                      <div className="flex items-center gap-3">
+                        {avatar ? (
+                          <img src={avatar} alt="" className="w-8 h-8 rounded-full object-cover" />
+                        ) : (
+                          <div className="w-8 h-8 rounded-full bg-[#3388ff]/15 flex items-center justify-center text-[#3388ff] text-xs font-bold">
+                            {(platform || '?')[0]?.toUpperCase()}
+                          </div>
+                        )}
+                        <div className="flex-1 min-w-0">
+                          <div className="text-sm font-medium truncate capitalize">{platform?.replace(/_/g, ' ')}</div>
+                          {username && <div className="text-xs text-gray-500 font-mono truncate">@{username}</div>}
+                        </div>
+                        {url && (
+                          <a href={url} target="_blank" rel="noopener noreferrer" className="text-gray-500 hover:text-[#00ff88] transition-colors">
+                            <ExternalLink className="w-3.5 h-3.5" />
+                          </a>
+                        )}
+                      </div>
+                      <div className="mt-2 flex items-center gap-2">
+                        <div className="flex-1 h-1 bg-[#1e1e2e] rounded-full">
+                          <div className="h-1 bg-[#00ff88] rounded-full" style={{ width: `${(f.confidence || 0.5) * 100}%` }} />
+                        </div>
+                        <span className="text-[10px] text-gray-600">{Math.round((f.confidence || 0.5) * 100)}%</span>
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+            </div>
+          )}
+
+          {/* OAuth Audit Section */}
+          <div>
+            <h3 className="text-xs font-semibold uppercase tracking-wider text-gray-500 mb-3">
+              OAuth Audit
+            </h3>
+          <div className="space-y-4">
           <div className="flex items-center justify-between">
             <h3 className="text-sm font-semibold text-gray-300">Connected Accounts</h3>
             <div className="flex gap-2">
@@ -958,6 +1011,8 @@ export default function TargetDetail() {
               ))}
             </div>
           )}
+        </div>
+        </div>
         </div>
       )}
 

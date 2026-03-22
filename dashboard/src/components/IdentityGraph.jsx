@@ -122,7 +122,7 @@ export default function IdentityGraph({ data, personas = [] }) {
       })
       .attr('stroke-opacity', 0.6)
 
-    // Edge labels
+    // Edge labels — hidden by default, shown on hover
     const linkLabel = g.append('g')
       .selectAll('text')
       .data(links)
@@ -130,7 +130,18 @@ export default function IdentityGraph({ data, personas = [] }) {
       .attr('font-size', 8)
       .attr('fill', '#666688')
       .attr('text-anchor', 'middle')
+      .attr('opacity', 0)
       .text(d => d.type.replace(/_/g, ' '))
+
+    // Show edge labels on hover
+    link.on('mouseover', function(event, d) {
+      linkLabel.filter(l => l === d).attr('opacity', 1)
+      d3.select(this).attr('stroke-opacity', 1).attr('stroke', '#555')
+    })
+    .on('mouseout', function(event, d) {
+      linkLabel.filter(l => l === d).attr('opacity', 0)
+      d3.select(this).attr('stroke-opacity', 0.6).attr('stroke', '#1e1e2e')
+    })
 
     // Nodes
     const node = g.append('g')
@@ -238,6 +249,7 @@ export default function IdentityGraph({ data, personas = [] }) {
   return (
     <div className="relative" ref={containerRef} style={{ minHeight: 500 }}>
       <svg ref={svgRef} className="w-full" style={{ minHeight: 500, background: '#0a0a0f', borderRadius: 12 }} />
+      <div className="text-[10px] text-gray-600 mt-1 text-center">Scroll to zoom · Drag to pan · Click node for details</div>
 
       {/* Type Legend */}
       <div className="absolute top-3 left-3 bg-[#12121a]/90 border border-[#1e1e2e] rounded-lg p-3 text-xs space-y-1">
