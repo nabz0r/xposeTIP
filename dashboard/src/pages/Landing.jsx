@@ -1,30 +1,48 @@
 import { useState, useRef, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../lib/auth'
-import { Shield, Radar, Lock, Globe, Zap, Eye, Database, Network, Users, ChevronRight, ArrowRight, Check } from 'lucide-react'
-import HeroGraph from '../components/HeroGraph'
+import { Shield, Radar, ArrowRight, Check, KeyRound, Users, Globe, AtSign, Fingerprint, Mail } from 'lucide-react'
 import CountUp from '../components/CountUp'
 import GenerativeAvatar from '../components/GenerativeAvatar'
 
-const DEMO_AVATARS = [
-    { email_hash: 12345, score: 5 },
-    { email_hash: 67890, score: 15 },
-    { email_hash: 11111, score: 25 },
-    { email_hash: 22222, score: 35 },
-    { email_hash: 33333, score: 45 },
-    { email_hash: 44444, score: 55 },
-    { email_hash: 55555, score: 65 },
-    { email_hash: 66666, score: 75 },
-    { email_hash: 77777, score: 85 },
-    { email_hash: 88888, score: 95 },
-    { email_hash: 99999, score: 10 },
-    { email_hash: 10101, score: 30 },
-    { email_hash: 20202, score: 50 },
-    { email_hash: 30303, score: 70 },
-    { email_hash: 40404, score: 90 },
-    { email_hash: 50505, score: 20 },
-]
+// ─── Scroll reveal hook ───
+function useScrollReveal() {
+  const ref = useRef(null)
+  const [visible, setVisible] = useState(false)
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      ([entry]) => { if (entry.isIntersecting) setVisible(true) },
+      { threshold: 0.15 }
+    )
+    if (ref.current) observer.observe(ref.current)
+    return () => observer.disconnect()
+  }, [])
+  return [ref, visible]
+}
 
+function Section({ children, className = '' }) {
+  const [ref, visible] = useScrollReveal()
+  return (
+    <section ref={ref} className={`transition-all duration-700 ${
+      visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
+    } ${className}`}>
+      {children}
+    </section>
+  )
+}
+
+// ─── Constants ───
+const DEMO_AVATARS = [
+  { email_hash: 12345, score: 15 },
+  { email_hash: 67890, score: 35 },
+  { email_hash: 33333, score: 55 },
+  { email_hash: 44444, score: 72 },
+  { email_hash: 55555, score: 25 },
+  { email_hash: 77777, score: 85 },
+  { email_hash: 88888, score: 45 },
+  { email_hash: 10101, score: 65 },
+  { email_hash: 20202, score: 92 },
+]
 const DEFAULT_SEED_PROPS = { hue: 140, num_points: 6, rotation: 45, saturation: 70, lightness: 50, inner_radius: 0.5, complexity: 3 }
 
 const scoreColor = (score) => {
@@ -42,37 +60,29 @@ const sevColor = (sev) => {
   return { bg: 'bg-[#3388ff]/20', text: 'text-[#3388ff]' }
 }
 
-const FEATURES = [
-  { icon: Radar, title: 'Deep OSINT Scanning', desc: '25+ intelligence modules scan breaches, social networks, code repos, DNS, and public databases in 30 seconds.' },
-  { icon: Network, title: 'Identity Graph', desc: 'Force-directed graph maps every connection between your accounts, usernames, and exposed data points.' },
-  { icon: Eye, title: 'Digital Fingerprint', desc: '8-axis radar chart quantifies your exposure. Eigenvalue topology creates a unique identity signature.' },
-  { icon: Database, title: 'Breach Intelligence', desc: 'Cross-references HIBP, XposedOrNot, and paste sites. Shows exactly which credentials leaked and when.' },
-  { icon: Users, title: 'Identity Avatars', desc: 'Every email gets a unique 32x32 pixel face. 5.4 billion combinations. The avatar evolves with exposure — calm green at low risk, alarmed red with glitch at high threat.' },
-  { icon: Lock, title: 'Actionable Remediation', desc: 'Every finding includes step-by-step remediation. Track progress as you reduce your attack surface.' },
+const PHASES = [
+  { until: 15, msg: 'Starting scan...' },
+  { until: 40, msg: 'Checking breach databases...' },
+  { until: 80, msg: 'Scanning social networks...' },
+  { until: 120, msg: 'Analyzing DNS & email security...' },
+  { until: 180, msg: 'Cross-referencing usernames...' },
+  { until: 240, msg: 'Building your identity profile...' },
+  { until: 300, msg: 'Finalizing results...' },
 ]
 
-const PLANS = [
-  {
-    name: 'Free', price: '€0', period: '/forever', accent: '#666688',
-    features: ['1 target', '5 scans/month', 'Layer 1 scanners', 'Basic exposure score', 'Identity graph'],
-    cta: 'Start free', href: '/setup',
-  },
-  {
-    name: 'Consultant', price: '€49', period: '/month', accent: '#00ff88', popular: true,
-    features: ['25 targets', '100 scans/month', 'Layer 1 + Layer 2', 'Persona clustering', 'Multi-workspace', 'PDF reports', 'CSV export'],
-    cta: 'Start trial', href: '/setup?plan=consultant',
-  },
-  {
-    name: 'Enterprise', price: '€199', period: '/month', accent: '#3388ff',
-    features: ['Unlimited targets', 'Unlimited scans', 'All layers', 'Intelligence pipeline', 'API access', 'Priority support', 'Custom modules'],
-    cta: 'Contact sales', href: '/setup?plan=enterprise',
-  },
+const EXPOSURES = [
+  { icon: KeyRound, title: 'Leaked passwords', desc: 'Your email in breach databases. Which passwords were exposed. When.' },
+  { icon: Users, title: 'Social accounts', desc: 'Every platform where your email or username is registered. Even ones you forgot.' },
+  { icon: Globe, title: 'Personal information', desc: 'Name, age, location, employer — publicly available from social profiles and data brokers.' },
+  { icon: AtSign, title: 'Username patterns', desc: 'Same username on 7 platforms? That\'s a credential stuffing target.' },
+  { icon: Fingerprint, title: 'Digital footprint', desc: 'Archived pages, old profiles, data you deleted but the internet remembers.' },
+  { icon: Mail, title: 'Email security', desc: 'SPF, DMARC, DKIM — can someone send emails pretending to be you?' },
 ]
 
-const STEPS = [
-  { num: '01', title: 'Enter an email', desc: 'Any email address — yours, a client\'s, or a test target. No account needed for a quick scan.' },
-  { num: '02', title: 'We scan everything', desc: '25+ modules query breaches, social networks, DNS, metadata, archives, and public databases in parallel.' },
-  { num: '03', title: 'See your exposure', desc: 'Identity graph, exposure score, persona clusters, and step-by-step remediation — all in one dashboard.' },
+const AUDIENCES = [
+  { label: 'Individual', desc: 'Check your own exposure.', price: 'Free forever.', href: '/setup', cta: 'Start free' },
+  { label: 'Security consultant', desc: 'Audit clients at scale.', price: '€49/month.', href: '/setup?plan=consultant', cta: 'Start trial' },
+  { label: 'Organization', desc: 'Protect your team.', price: '€199/month.', href: '/setup?plan=enterprise', cta: 'Contact sales' },
 ]
 
 function hashEmail(email) {
@@ -84,6 +94,39 @@ function hashEmail(email) {
   return Math.abs(hash)
 }
 
+// ─── Scan Form Component (reused in hero + final CTA) ───
+function ScanForm({ email, setEmail, loading, error, onSubmit }) {
+  return (
+    <div>
+      <form onSubmit={onSubmit} className="flex gap-3 max-w-md">
+        <input
+          type="email"
+          value={email}
+          onChange={e => setEmail(e.target.value)}
+          placeholder="you@email.com"
+          className="flex-1 bg-[#12121a] border border-[#1e1e2e] rounded-lg px-4 py-3.5 text-sm focus:outline-none focus:border-[#00ff88]/50 font-mono placeholder-gray-600 transition-colors"
+        />
+        <button
+          type="submit"
+          disabled={loading}
+          className="bg-[#00ff88] text-black font-semibold rounded-lg px-6 py-3.5 text-sm hover:bg-[#00ff88]/90 disabled:opacity-50 flex items-center gap-2 transition-all group"
+        >
+          {loading ? (
+            <Radar className="w-4 h-4 animate-spin" />
+          ) : (
+            <>
+              Scan now
+              <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" />
+            </>
+          )}
+        </button>
+      </form>
+      {error && <p className="text-xs text-[#ff2244] mt-2">{error}</p>}
+    </div>
+  )
+}
+
+// ─── Main Component ───
 export default function Landing() {
   const [email, setEmail] = useState('')
   const [loading, setLoading] = useState(false)
@@ -142,7 +185,7 @@ export default function Landing() {
         return
       }
 
-      // Poll for results
+      // Poll for results — 300s max
       const scanId = data.scan_id
       let attempts = 0
       pollRef.current = setInterval(async () => {
@@ -156,7 +199,7 @@ export default function Landing() {
             pollRef.current = null
             setQuickResult(statusData)
             setLoading(false)
-          } else if (attempts >= 90) {
+          } else if (attempts >= 300) {
             clearInterval(pollRef.current)
             pollRef.current = null
             setError('Scan taking longer than expected. Create an account to see results.')
@@ -176,6 +219,8 @@ export default function Landing() {
     }
   }
 
+  const phaseMsg = PHASES.find(p => pollCount < p.until)?.msg || 'Finalizing results...'
+
   return (
     <div className="min-h-screen bg-[#0a0a0f] text-white overflow-x-hidden">
       <style>{`
@@ -189,7 +234,7 @@ export default function Landing() {
         }
       `}</style>
 
-      {/* Nav */}
+      {/* ─── Nav ─── */}
       <nav className="fixed top-0 w-full z-50 border-b border-[#1e1e2e]/50 bg-[#0a0a0f]/80 backdrop-blur-xl px-6 py-4 flex items-center justify-between">
         <div className="flex items-center gap-2">
           <Shield className="w-6 h-6 text-[#00ff88]" />
@@ -203,81 +248,56 @@ export default function Landing() {
         </div>
       </nav>
 
-      {/* ═══════════════════ Section 1: Hero ═══════════════════ */}
+      {/* ═══════════════════ Section 1: Hero — THE HOOK ═══════════════════ */}
       <section className="min-h-screen flex items-center justify-center relative pt-16">
         {/* Background grid */}
-        <div className="absolute inset-0 opacity-[0.03]" style={{
+        <div className="absolute inset-0 opacity-[0.02]" style={{
           backgroundImage: 'linear-gradient(#00ff88 1px, transparent 1px), linear-gradient(90deg, #00ff88 1px, transparent 1px)',
           backgroundSize: '60px 60px',
         }} />
 
-        <div className="max-w-7xl mx-auto px-6 grid lg:grid-cols-2 gap-12 items-center relative z-10">
-          {/* Left — Copy + form */}
-          <div>
-            <div className="inline-flex items-center gap-2 text-xs font-mono text-[#00ff88] bg-[#00ff88]/10 border border-[#00ff88]/20 rounded-full px-3 py-1 mb-6">
+        <div className="max-w-7xl mx-auto px-6 grid lg:grid-cols-[1fr_auto] gap-16 items-center relative z-10">
+          {/* Left — Copy */}
+          <div className="max-w-2xl">
+            <div className="inline-flex items-center gap-2 text-xs font-mono text-[#00ff88]/70 mb-8">
               <span className="w-1.5 h-1.5 bg-[#00ff88] rounded-full animate-pulse" />
-              v0.28.0 — 76+ intelligence modules
+              Free · No account needed
             </div>
 
-            <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight leading-tight mb-4 font-['Instrument_Sans',sans-serif]">
-              What does the internet know about{' '}
-              <span className="text-[#00ff88]">you</span>?
+            <h1 className="text-5xl md:text-6xl lg:text-7xl font-bold tracking-tight leading-[1.1] mb-6 font-['Instrument_Sans',sans-serif]">
+              Your name.<br />
+              Your accounts.<br />
+              Your passwords.<br />
+              <span className="text-gray-500">All of this is public.</span>
             </h1>
 
-            <p className="text-lg text-gray-400 mb-8 max-w-lg leading-relaxed">
-              Identity Threat Intelligence platform. 25 scanners, 71 scrapers,
-              graph-based intelligence engine. See your complete digital exposure in 30 seconds.
+            <div className="mb-8">
+              <ScanForm email={email} setEmail={setEmail} loading={loading} error={error} onSubmit={handleQuickScan} />
+            </div>
+
+            <p className="text-sm text-gray-600">
+              Takes 30 seconds. We'll show you everything an attacker already knows.
             </p>
 
-            {/* Scan form */}
-            <form onSubmit={handleQuickScan} className="flex gap-3 max-w-md mb-3">
-              <input
-                type="email"
-                value={email}
-                onChange={e => setEmail(e.target.value)}
-                placeholder="you@email.com"
-                className="flex-1 bg-[#12121a] border border-[#1e1e2e] rounded-lg px-4 py-3.5 text-sm focus:outline-none focus:border-[#00ff88]/50 font-mono placeholder-gray-600 transition-colors"
-              />
-              <button
-                type="submit"
-                disabled={loading}
-                className="bg-[#00ff88] text-black font-semibold rounded-lg px-6 py-3.5 text-sm hover:bg-[#00ff88]/90 disabled:opacity-50 flex items-center gap-2 transition-all group"
-              >
-                {loading ? (
-                  <Radar className="w-4 h-4 animate-spin" />
-                ) : (
-                  <>
-                    <Radar className="w-4 h-4" /> Scan
-                    <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" />
-                  </>
-                )}
-              </button>
-            </form>
-            {error && <p className="text-xs text-[#ff2244] mb-2">{error}</p>}
-            <p className="text-xs text-gray-600 font-mono">
-              No account required for quick scan · GDPR compliant
-            </p>
-
-            {/* Loading animation with progress */}
+            {/* Loading with phase messages */}
             {loading && !quickResult && (
-              <div className="mt-8 text-center">
-                <Radar className="w-8 h-8 text-[#00ff88] animate-spin mx-auto mb-3" />
-                <p className="text-sm text-gray-400">
-                  {pollCount < 10 ? 'Starting scan...'
-                    : pollCount < 30 ? 'Checking email reputation...'
-                    : pollCount < 50 ? 'Scanning social networks...'
-                    : pollCount < 70 ? 'Analyzing DNS records...'
-                    : 'Finalizing results...'}
-                </p>
-                <p className="text-xs text-gray-600 mt-1">
-                  {pollCount}/90 seconds
-                </p>
+              <div className="mt-10">
+                <div className="flex items-center gap-3 mb-2">
+                  <Radar className="w-5 h-5 text-[#00ff88] animate-spin" />
+                  <span className="text-sm text-gray-300">{phaseMsg}</span>
+                </div>
+                <div className="w-full max-w-md bg-[#1e1e2e] rounded-full h-1 overflow-hidden">
+                  <div
+                    className="h-full bg-[#00ff88] rounded-full transition-all duration-1000"
+                    style={{ width: `${Math.min((pollCount / 300) * 100, 100)}%` }}
+                  />
+                </div>
               </div>
             )}
 
             {/* Quick Result Teaser */}
             {quickResult && (
-              <div className="bg-[#12121a] border border-[#1e1e2e] rounded-xl p-6 max-w-lg mt-6" style={{ animation: 'fadeInUp 0.5s ease-out' }}>
+              <div className="bg-[#12121a] border border-[#1e1e2e] rounded-xl p-6 max-w-lg mt-8" style={{ animation: 'fadeInUp 0.5s ease-out' }}>
                 <div className="flex items-center gap-4 mb-4">
                   <GenerativeAvatar
                     seed={quickResult.teaser.avatar_seed || { email_hash: hashEmail(quickResult.email) }}
@@ -344,39 +364,24 @@ export default function Landing() {
                     </a>
                   </div>
                 </div>
-
-                <p className="text-center text-xs text-gray-600 mt-4">
-                  Full scan includes 71 scrapers, persona clustering, identity estimation, and remediation plan.
-                </p>
               </div>
             )}
           </div>
 
-          {/* Right — Pixel Avatar Grid */}
-          <div className="flex flex-col items-center lg:items-end">
-            <div className="grid grid-cols-4 gap-3 mb-8 mx-auto max-w-[300px]">
-              {DEMO_AVATARS.map((demo, i) => (
-                <div key={i} className="relative group" style={{
-                  animation: `float ${3 + (i % 4) * 0.5}s ease-in-out infinite`,
-                  animationDelay: `${i * 0.2}s`,
-                }}>
-                  <GenerativeAvatar
-                    seed={{ email_hash: demo.email_hash, ...DEFAULT_SEED_PROPS }}
-                    size={64}
-                    score={demo.score}
-                    className="rounded-lg border border-[#1e1e2e] hover:border-[#00ff88]/50 transition-colors cursor-pointer"
-                  />
-                  <div className="absolute -bottom-1 -right-1 text-[8px] font-mono px-1 rounded opacity-0 group-hover:opacity-100 transition-opacity"
-                    style={{ backgroundColor: scoreColor(demo.score), color: '#000' }}>
-                    {demo.score}
-                  </div>
-                </div>
-              ))}
-            </div>
-            <p className="text-xs text-gray-500 mb-8 max-w-md mx-auto text-center">
-              Every identity gets a unique pixel avatar generated from their digital fingerprint.
-              Green = low exposure. Red = high threat. The face evolves as your digital footprint changes.
-            </p>
+          {/* Right — Ambient avatar grid (3x3) */}
+          <div className="hidden lg:grid grid-cols-3 gap-2 opacity-40">
+            {DEMO_AVATARS.map((demo, i) => (
+              <div key={i} style={{
+                animation: `float ${3 + (i % 3) * 0.7}s ease-in-out infinite`,
+                animationDelay: `${i * 0.3}s`,
+              }}>
+                <GenerativeAvatar
+                  seed={{ email_hash: demo.email_hash, ...DEFAULT_SEED_PROPS }}
+                  size={48}
+                  score={demo.score}
+                />
+              </div>
+            ))}
           </div>
         </div>
 
@@ -387,151 +392,207 @@ export default function Landing() {
         </div>
       </section>
 
-      {/* ═══════════════════ Section 2: How it works ═══════════════════ */}
-      <section className="min-h-screen flex items-center justify-center py-24 relative">
-        <div className="max-w-5xl mx-auto px-6">
-          <div className="text-center mb-16">
-            <span className="text-xs font-mono text-[#00ff88] tracking-widest uppercase">How it works</span>
-            <h2 className="text-3xl md:text-4xl font-bold mt-3 font-['Instrument_Sans',sans-serif]">
-              Three steps to full visibility
-            </h2>
+      {/* ═══════════════════ Section 2: THE PROBLEM ═══════════════════ */}
+      <Section className="py-32">
+        <div className="max-w-3xl mx-auto px-6 text-center">
+          <div className="text-5xl md:text-6xl font-mono font-bold text-[#ff2244] mb-6">
+            <CountUp target={4100000000} separator="," />
           </div>
+          <p className="text-lg md:text-xl text-gray-400 mb-4">
+            records leaked in 2024.
+          </p>
+          <p className="text-lg md:text-xl text-gray-300 leading-relaxed max-w-xl mx-auto">
+            Your email is probably in there. An attacker can find your name, your accounts,
+            your habits — in 30 seconds.
+          </p>
+          <p className="text-lg md:text-xl text-gray-300 leading-relaxed mt-6 max-w-xl mx-auto">
+            We know because <span className="text-white font-semibold">we do the same thing</span>.
+            <br />
+            The difference? We show you how to fix it.
+          </p>
+        </div>
+      </Section>
 
-          <div className="grid md:grid-cols-3 gap-8">
-            {STEPS.map((step, i) => (
-              <div key={step.num} className="relative group">
-                {/* Connector line */}
-                {i < 2 && (
-                  <div className="hidden md:block absolute top-8 left-[60%] w-[80%] h-px bg-gradient-to-r from-[#1e1e2e] to-[#1e1e2e]/0" />
-                )}
-                <div className="bg-[#12121a] border border-[#1e1e2e] rounded-xl p-6 hover:border-[#00ff88]/20 transition-all duration-300 group-hover:shadow-[0_0_30px_rgba(0,255,136,0.05)]">
-                  <span className="text-4xl font-bold font-mono text-[#00ff88]/20 group-hover:text-[#00ff88]/40 transition-colors">{step.num}</span>
-                  <h3 className="text-lg font-semibold mt-2 mb-2">{step.title}</h3>
-                  <p className="text-sm text-gray-400 leading-relaxed">{step.desc}</p>
+      {/* ═══════════════════ Section 3: WHAT WE FIND ═══════════════════ */}
+      <Section className="py-32">
+        <div className="max-w-4xl mx-auto px-6">
+          <h2 className="text-3xl md:text-4xl font-bold text-center mb-16 font-['Instrument_Sans',sans-serif]">
+            What we look for
+          </h2>
+
+          <div className="grid md:grid-cols-2 gap-8">
+            {EXPOSURES.map(({ icon: Icon, title, desc }) => (
+              <div key={title} className="flex gap-4">
+                <div className="w-10 h-10 rounded-lg bg-[#1e1e2e] flex items-center justify-center shrink-0">
+                  <Icon className="w-5 h-5 text-gray-400" />
+                </div>
+                <div>
+                  <h3 className="text-sm font-semibold mb-1">{title}</h3>
+                  <p className="text-sm text-gray-500 leading-relaxed">{desc}</p>
                 </div>
               </div>
             ))}
           </div>
         </div>
-      </section>
+      </Section>
 
-      {/* ═══════════════════ Section 3: Features Grid ═══════════════════ */}
-      <section className="min-h-screen flex items-center justify-center py-24 relative">
-        <div className="max-w-6xl mx-auto px-6">
-          <div className="text-center mb-16">
-            <span className="text-xs font-mono text-[#00ff88] tracking-widest uppercase">Capabilities</span>
-            <h2 className="text-3xl md:text-4xl font-bold mt-3 font-['Instrument_Sans',sans-serif]">
-              Intelligence-grade OSINT
-            </h2>
-            <p className="text-gray-400 mt-3 max-w-lg mx-auto">
-              Professional tools with consumer-grade UX. Every finding is an Identity IOC.
-            </p>
-          </div>
+      {/* ═══════════════════ Section 4: HOW IT WORKS ═══════════════════ */}
+      <Section className="py-32">
+        <div className="max-w-4xl mx-auto px-6">
+          <h2 className="text-3xl md:text-4xl font-bold text-center mb-16 font-['Instrument_Sans',sans-serif]">
+            How it works
+          </h2>
 
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {FEATURES.map(({ icon: Icon, title, desc }) => (
-              <div key={title} className="bg-[#12121a] border border-[#1e1e2e] rounded-xl p-6 hover:border-[#00ff88]/20 transition-all duration-300 group hover:shadow-[0_0_30px_rgba(0,255,136,0.05)]">
-                <div className="w-10 h-10 rounded-lg bg-[#00ff88]/10 flex items-center justify-center mb-4 group-hover:bg-[#00ff88]/15 transition-colors">
-                  <Icon className="w-5 h-5 text-[#00ff88]" />
-                </div>
-                <h3 className="text-sm font-semibold mb-2">{title}</h3>
-                <p className="text-xs text-gray-400 leading-relaxed">{desc}</p>
-              </div>
-            ))}
+          <div className="grid md:grid-cols-3 gap-8 text-center">
+            <div>
+              <div className="text-5xl font-mono font-bold text-[#00ff88]/20 mb-3">01</div>
+              <h3 className="text-lg font-semibold mb-1">Enter your email</h3>
+              <p className="text-sm text-gray-500">30 seconds</p>
+            </div>
+            <div>
+              <div className="text-5xl font-mono font-bold text-[#00ff88]/20 mb-3">02</div>
+              <h3 className="text-lg font-semibold mb-1">We scan 70+ sources</h3>
+              <p className="text-sm text-gray-500">In parallel</p>
+            </div>
+            <div>
+              <div className="text-5xl font-mono font-bold text-[#00ff88]/20 mb-3">03</div>
+              <h3 className="text-lg font-semibold mb-1">See what's exposed</h3>
+              <p className="text-sm text-gray-500">+ how to fix it</p>
+            </div>
           </div>
         </div>
-      </section>
+      </Section>
 
-      {/* ═══════════════════ Section 4: Stats Counter ═══════════════════ */}
-      <section className="py-24 relative">
-        <div className="max-w-5xl mx-auto px-6">
-          <div className="bg-[#12121a] border border-[#1e1e2e] rounded-2xl p-12 relative overflow-hidden">
-            {/* Background accent */}
-            <div className="absolute top-0 left-1/2 -translate-x-1/2 w-96 h-px bg-gradient-to-r from-transparent via-[#00ff88]/30 to-transparent" />
+      {/* ═══════════════════ Section 5: MOCK RESULT PREVIEW ═══════════════════ */}
+      <Section className="py-32">
+        <div className="max-w-3xl mx-auto px-6">
+          <h2 className="text-3xl md:text-4xl font-bold text-center mb-16 font-['Instrument_Sans',sans-serif]">
+            What you'll see
+          </h2>
 
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
+          <div className="bg-[#12121a] border border-[#1e1e2e] rounded-xl p-6 md:p-8 max-w-lg mx-auto">
+            <div className="flex items-center gap-4 mb-5">
+              <GenerativeAvatar
+                seed={{ email_hash: 314159, ...DEFAULT_SEED_PROPS }}
+                size={56}
+                score={34}
+              />
               <div>
-                <div className="text-3xl md:text-4xl font-mono font-bold text-[#00ff88]">
-                  <CountUp target={71} />
+                <div className="font-semibold">John Smith</div>
+                <div className="text-xs text-gray-500 font-mono">john.smith@gmail.com</div>
+              </div>
+            </div>
+
+            <div className="flex gap-6 mb-5">
+              <div>
+                <div className="text-[10px] text-gray-500 uppercase tracking-wider mb-1">Exposure</div>
+                <div className="flex items-center gap-2">
+                  <div className="text-xl font-mono font-bold text-[#ff8800]">34</div>
+                  <div className="w-24 bg-[#1e1e2e] rounded-full h-1.5">
+                    <div className="h-full bg-[#ff8800] rounded-full" style={{ width: '34%' }} />
+                  </div>
                 </div>
-                <div className="text-xs text-gray-400 mt-2 font-mono">Scrapers</div>
               </div>
               <div>
-                <div className="text-3xl md:text-4xl font-mono font-bold text-[#00ff88]">
-                  <CountUp target={25} />
+                <div className="text-[10px] text-gray-500 uppercase tracking-wider mb-1">Threat</div>
+                <div className="flex items-center gap-2">
+                  <div className="text-xl font-mono font-bold text-[#3388ff]">22</div>
+                  <div className="w-24 bg-[#1e1e2e] rounded-full h-1.5">
+                    <div className="h-full bg-[#3388ff] rounded-full" style={{ width: '22%' }} />
+                  </div>
                 </div>
-                <div className="text-xs text-gray-400 mt-2 font-mono">Scanners</div>
               </div>
-              <div>
-                <div className="text-3xl md:text-4xl font-mono font-bold text-[#00ff88]">
-                  <CountUp target={5} suffix="B+" />
-                </div>
-                <div className="text-xs text-gray-400 mt-2 font-mono">Unique Avatars</div>
+            </div>
+
+            <div className="space-y-2.5 mb-4">
+              <div className="flex items-center gap-2 text-sm">
+                <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-[#ff2244]/20 text-[#ff2244]">high</span>
+                <span className="text-gray-300">1 breach found (LinkedIn 2021)</span>
               </div>
-              <div>
-                <div className="text-3xl md:text-4xl font-mono font-bold text-[#00ff88]">
-                  <CountUp target={3} />
-                </div>
-                <div className="text-xs text-gray-400 mt-2 font-mono">Plans</div>
+              <div className="flex items-center gap-2 text-sm">
+                <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-[#ffcc00]/20 text-[#ffcc00]">medium</span>
+                <span className="text-gray-300">12 social accounts detected</span>
+              </div>
+              <div className="flex items-center gap-2 text-sm">
+                <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-[#ffcc00]/20 text-[#ffcc00]">medium</span>
+                <span className="text-gray-300">Username "jsmith" reused on 5 platforms</span>
+              </div>
+            </div>
+
+            <div className="relative">
+              <div className="space-y-2 blur-sm select-none">
+                {[1,2,3].map(i => (
+                  <div key={i} className="flex items-center gap-2 text-sm">
+                    <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-gray-800 text-gray-600">low</span>
+                    <span className="text-gray-600">Additional finding — sign up to view</span>
+                  </div>
+                ))}
+              </div>
+              <div className="absolute inset-0 flex items-center justify-center">
+                <a href="/setup"
+                  className="bg-[#00ff88] text-black font-bold rounded-lg px-6 py-2.5 text-sm hover:bg-[#00ff88]/90 transition-all hover:scale-105 shadow-lg shadow-[#00ff88]/20">
+                  See your full report — Free
+                </a>
               </div>
             </div>
           </div>
         </div>
-      </section>
+      </Section>
 
-      {/* ═══════════════════ Section 5: Pricing ═══════════════════ */}
-      <section className="min-h-screen flex items-center justify-center py-24 relative">
-        <div className="max-w-5xl mx-auto px-6">
-          <div className="text-center mb-16">
-            <span className="text-xs font-mono text-[#00ff88] tracking-widest uppercase">Pricing</span>
-            <h2 className="text-3xl md:text-4xl font-bold mt-3 font-['Instrument_Sans',sans-serif]">
-              Simple, transparent pricing
-            </h2>
-          </div>
+      {/* ═══════════════════ Section 6: WHO IT'S FOR ═══════════════════ */}
+      <Section className="py-32">
+        <div className="max-w-4xl mx-auto px-6">
+          <h2 className="text-3xl md:text-4xl font-bold text-center mb-16 font-['Instrument_Sans',sans-serif]">
+            Built for
+          </h2>
 
           <div className="grid md:grid-cols-3 gap-6">
-            {PLANS.map(plan => (
-              <div key={plan.name}
-                className={`bg-[#12121a] border rounded-xl p-6 relative transition-all duration-300 hover:shadow-[0_0_30px_rgba(0,255,136,0.05)] ${
-                  plan.popular ? 'border-[#00ff88]/40 shadow-[0_0_40px_rgba(0,255,136,0.08)]' : 'border-[#1e1e2e] hover:border-[#1e1e2e]'
-                }`}
-              >
-                {plan.popular && (
-                  <div className="absolute -top-3 left-1/2 -translate-x-1/2 text-[10px] font-mono font-semibold bg-[#00ff88] text-black px-3 py-1 rounded-full">
-                    MOST POPULAR
-                  </div>
-                )}
-                <div className="mb-6">
-                  <h3 className="text-lg font-semibold" style={{ color: plan.accent }}>{plan.name}</h3>
-                  <div className="flex items-baseline gap-1 mt-2">
-                    <span className="text-3xl font-bold font-mono">{plan.price}</span>
-                    <span className="text-sm text-gray-500">{plan.period}</span>
-                  </div>
-                </div>
-                <ul className="space-y-3 mb-8">
-                  {plan.features.map(f => (
-                    <li key={f} className="flex items-center gap-2 text-sm text-gray-300">
-                      <Check className="w-3.5 h-3.5 shrink-0" style={{ color: plan.accent }} />
-                      {f}
-                    </li>
-                  ))}
-                </ul>
-                <a href={plan.href}
-                  className={`block text-center text-sm font-semibold rounded-lg py-2.5 transition-all ${
-                    plan.popular
-                      ? 'bg-[#00ff88] text-black hover:bg-[#00ff88]/90'
-                      : 'border border-[#1e1e2e] text-gray-300 hover:border-gray-500'
-                  }`}
-                >
-                  {plan.cta}
+            {AUDIENCES.map(a => (
+              <div key={a.label} className="bg-[#12121a] border border-[#1e1e2e] rounded-xl p-6 text-center hover:border-[#1e1e2e] transition-all">
+                <h3 className="text-lg font-semibold mb-2">{a.label}</h3>
+                <p className="text-sm text-gray-400 mb-1">{a.desc}</p>
+                <p className="text-sm text-[#00ff88] font-mono mb-5">{a.price}</p>
+                <a href={a.href}
+                  className="inline-block text-sm font-semibold border border-[#1e1e2e] text-gray-300 hover:border-gray-500 rounded-lg px-5 py-2 transition-colors">
+                  {a.cta}
                 </a>
               </div>
             ))}
           </div>
         </div>
-      </section>
+      </Section>
 
-      {/* ═══════════════════ Section 6: Footer ═══════════════════ */}
+      {/* ═══════════════════ Section 7: TRUST ═══════════════════ */}
+      <Section className="py-20">
+        <div className="max-w-3xl mx-auto px-6 text-center">
+          <p className="text-sm text-gray-500 leading-relaxed">
+            Built in Luxembourg <span className="inline-block">🇱🇺</span> · GDPR compliant · Open source · On-premise ready
+          </p>
+          <p className="text-sm text-gray-600 mt-2">
+            71 intelligence sources · PageRank confidence engine · Your data stays yours.
+          </p>
+        </div>
+      </Section>
+
+      {/* ═══════════════════ Section 8: FINAL CTA ═══════════════════ */}
+      <Section className="py-32">
+        <div className="max-w-3xl mx-auto px-6 text-center">
+          <h2 className="text-3xl md:text-4xl font-bold mb-6 font-['Instrument_Sans',sans-serif]">
+            What does an attacker already know about{' '}
+            <span className="text-[#00ff88]">you</span>?
+          </h2>
+
+          <div className="flex justify-center mb-4">
+            <ScanForm email={email} setEmail={setEmail} loading={loading} error={error} onSubmit={handleQuickScan} />
+          </div>
+
+          <p className="text-sm text-gray-600">
+            Free. No credit card. Results in 30 seconds.
+          </p>
+        </div>
+      </Section>
+
+      {/* ─── Footer ─── */}
       <footer className="border-t border-[#1e1e2e] py-12">
         <div className="max-w-5xl mx-auto px-6">
           <div className="flex flex-col md:flex-row items-center justify-between gap-4">
