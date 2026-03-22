@@ -249,18 +249,28 @@ export default function Dashboard() {
               const thrColor = (t.threat_score || 0) >= 60 ? '#ff2244' : (t.threat_score || 0) >= 30 ? '#ff8800' : '#00ff88'
               return (
                 <div key={t.id} onClick={() => navigate(`/targets/${t.id}`)}
-                  className="flex items-center justify-between px-5 py-3 cursor-pointer hover:bg-white/[0.03] transition-colors">
-                  <div className="flex items-center gap-3 min-w-0">
-                    {t.avatar_url ? (
-                      <img src={t.avatar_url} alt="" className="w-7 h-7 rounded-full border border-[#1e1e2e] shrink-0" />
-                    ) : (
-                      <GenerativeAvatar seed={t.fingerprint_avatar_seed || fallbackSeed(t.email)} size={32} score={t.exposure_score || 0} className="shrink-0" />
-                    )}
-                    <span className="font-mono text-xs text-gray-300 truncate">{t.primary_name || t.display_name || t.email}</span>
+                  className="flex items-center gap-3 px-5 py-3 cursor-pointer hover:bg-white/[0.03] transition-colors">
+                  {/* Pixel avatar */}
+                  <GenerativeAvatar seed={t.fingerprint_avatar_seed || fallbackSeed(t.email)} size={32} score={t.exposure_score || 0} className="shrink-0" />
+                  {/* Real photo */}
+                  {t.avatar_url && (
+                    <img src={t.avatar_url} alt="" className="w-8 h-8 rounded-full border border-[#1e1e2e] shrink-0" />
+                  )}
+                  {/* Name + email */}
+                  <div className="flex-1 min-w-0">
+                    <div className="text-sm font-medium truncate">{t.primary_name || t.display_name || t.email}</div>
+                    {(t.primary_name || t.display_name) && <div className="text-[10px] text-gray-600 font-mono truncate">{t.email}</div>}
                   </div>
-                  <div className="flex items-center gap-4 text-xs font-mono shrink-0">
-                    <span style={{ color: expColor }}>Exp: {t.exposure_score}</span>
-                    <span style={{ color: thrColor }}>Threat: {t.threat_score ?? '-'}</span>
+                  {/* Mini radar */}
+                  {t.fingerprint_axes && (
+                    <div className="shrink-0">
+                      <FingerprintRadar fingerprint={{ axes: t.fingerprint_axes, color: '#00ff88', fill_color: 'rgba(0,255,136,0.1)' }} size="small" />
+                    </div>
+                  )}
+                  {/* Scores */}
+                  <div className="shrink-0 text-right">
+                    <div className="text-xs font-mono" style={{ color: expColor }}>Exp: {t.exposure_score || 0}</div>
+                    <div className="text-xs font-mono" style={{ color: thrColor }}>Thr: {t.threat_score ?? '-'}</div>
                   </div>
                 </div>
               )

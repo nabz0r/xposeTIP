@@ -46,8 +46,32 @@ class ScraperScanner(BaseScanner):
             first_name = name_parts[0].lower() if name_parts else username
             inputs = {"email": email, "username": username, "domain": domain, "first_name": first_name}
 
-            for scraper in scrapers:
+            # Write scraper progress to Redis
+            scan_id = kwargs.get("scan_id")
+            redis_client = None
+            if scan_id:
+                try:
+                    import redis as r
+                    from api.config import settings
+                    import json as _json
+                    redis_client = r.from_url(settings.REDIS_URL)
+                except Exception:
+                    pass
+
+            total_scrapers = len(scrapers)
+            for idx, scraper in enumerate(scrapers):
                 input_value = inputs.get(scraper.input_type, email)
+
+                # Update Redis progress
+                if redis_client and scan_id:
+                    try:
+                        redis_client.setex(
+                            f"scan:{scan_id}:scraper_progress",
+                            300,
+                            _json.dumps({"current": idx + 1, "total": total_scrapers, "current_name": scraper.display_name or scraper.name}),
+                        )
+                    except Exception:
+                        pass
 
                 try:
                     result = await engine.execute(scraper.to_dict(), input_value)

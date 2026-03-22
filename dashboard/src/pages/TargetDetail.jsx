@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useCallback, useRef, Fragment } from 'react'
 import { useParams, Link } from 'react-router-dom'
-import { Radar, ChevronDown, ChevronRight, ExternalLink, Lock, CheckCircle, Filter, Shield, AlertTriangle, Globe, Link2, Unlink, XCircle } from 'lucide-react'
-import { getTarget, getFindings, getScans, createScan, getModules, getScan, getGraph, patchFinding, getTargetSources, getAccounts, startOAuth, auditAccount, disconnectAccount, getFingerprint, getFingerprintHistory, getTargetProfile, cancelScan, getLogs, getFindingsStats } from '../lib/api'
+import { Radar, ChevronDown, ChevronRight, ExternalLink, Lock, CheckCircle, Filter, Shield, AlertTriangle, Globe, Link2, Unlink, XCircle, ArrowRightLeft } from 'lucide-react'
+import { getTarget, getFindings, getScans, createScan, getModules, getScan, getGraph, patchFinding, getTargetSources, getAccounts, startOAuth, auditAccount, disconnectAccount, getFingerprint, getFingerprintHistory, getTargetProfile, cancelScan, getLogs, getFindingsStats, getWorkspaces, moveTarget } from '../lib/api'
 import IdentityGraph from '../components/IdentityGraph'
 import FingerprintRadar, { FingerprintTimeline } from '../components/FingerprintRadar'
 import PlatformIcon, { getRemediationLink } from '../components/PlatformIcon'
@@ -62,6 +62,9 @@ export default function TargetDetail() {
   // Score animation
   const [animScore, setAnimScore] = useState(0)
   const pollRef = useRef(null)
+  // Move target
+  const [workspaces, setWorkspaces] = useState([])
+  const [showMoveMenu, setShowMoveMenu] = useState(false)
 
   const load = useCallback(async () => {
     try {
@@ -170,7 +173,19 @@ export default function TargetDetail() {
       const recommended = ['dns_deep', 'leaked_domains', 'geoip']
       setSelectedModules(m.filter(mod => mod.enabled && mod.implemented && (mod.layer === 1 || recommended.includes(mod.id))).map(mod => mod.id))
     }).catch(() => {})
+    getWorkspaces().then(ws => setWorkspaces(ws.items || ws || [])).catch(() => {})
   }, [])
+
+  async function handleMoveTarget(destWsId) {
+    try {
+      await moveTarget(id, destWsId)
+      setShowMoveMenu(false)
+      alert('Target moved successfully')
+      window.location.href = '/targets'
+    } catch (err) {
+      alert(err.message)
+    }
+  }
 
   async function handleScan() {
     if (selectedModules.length === 0) return
@@ -249,10 +264,30 @@ export default function TargetDetail() {
         <div className="flex-1">
           <ProfileHeader target={target} findings={findings} animScore={animScore} profileData={profile} />
         </div>
-        <button onClick={() => setShowScanModal(true)}
-          className="shrink-0 flex items-center gap-2 bg-[#00ff88] text-black font-semibold rounded-lg px-4 py-2.5 text-sm hover:bg-[#00ff88]/90 mt-2">
-          <Radar className="w-4 h-4" /> New Scan
-        </button>
+        <div className="shrink-0 flex items-center gap-2 mt-2">
+          {workspaces.length > 1 && (
+            <div className="relative">
+              <button onClick={() => setShowMoveMenu(!showMoveMenu)}
+                className="flex items-center gap-1.5 text-xs px-3 py-2.5 border border-[#1e1e2e] rounded-lg text-gray-400 hover:text-white transition-colors">
+                <ArrowRightLeft className="w-3 h-3" /> Move
+              </button>
+              {showMoveMenu && (
+                <div className="absolute right-0 mt-1 bg-[#12121a] border border-[#1e1e2e] rounded-lg py-1 z-50 min-w-[200px] shadow-xl">
+                  {workspaces.filter(ws => ws.id !== target?.workspace_id).map(ws => (
+                    <button key={ws.id} onClick={() => handleMoveTarget(ws.id)}
+                      className="w-full text-left px-4 py-2 text-sm text-gray-300 hover:bg-[#1e1e2e] transition-colors">
+                      Move to {ws.name}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+          <button onClick={() => setShowScanModal(true)}
+            className="flex items-center gap-2 bg-[#00ff88] text-black font-semibold rounded-lg px-4 py-2.5 text-sm hover:bg-[#00ff88]/90">
+            <Radar className="w-4 h-4" /> New Scan
+          </button>
+        </div>
       </div>
 
       {/* Live scan progress */}

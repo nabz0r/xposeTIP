@@ -143,6 +143,10 @@ def run_module(self, scan_id: str, module_id: str, email: str):
             if key:
                 scanner_kwargs["api_key"] = key
 
+        # Pass scan_id to scraper_engine for progress tracking
+        if module_id == "scraper_engine":
+            scanner_kwargs["scan_id"] = scan_id
+
         # Run async scanner in sync context
         loop = asyncio.new_event_loop()
         try:

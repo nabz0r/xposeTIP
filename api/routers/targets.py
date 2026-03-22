@@ -2,7 +2,7 @@ import uuid
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from pydantic import BaseModel, EmailStr
-from sqlalchemy import func, select
+from sqlalchemy import func, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from api.auth.dependencies import get_current_user, get_current_workspace, get_current_role
@@ -256,6 +256,48 @@ async def delete_target(
     await db.commit()
 
 
+@router.patch("/{target_id}/move")
+async def move_target(
+    target_id: uuid.UUID,
+    body: dict,
+    workspace_id: uuid.UUID = Depends(get_current_workspace),
+    user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """Move a target (+ findings + scans + identities) to another workspace."""
+    target = await _get_target(db, target_id, workspace_id)
+    new_ws_id = uuid.UUID(body["workspace_id"])
+
+    # Verify user has access to destination workspace
+    from api.models.user import UserWorkspace
+    dest_membership = await db.execute(
+        select(UserWorkspace).where(
+            UserWorkspace.user_id == user.id,
+            UserWorkspace.workspace_id == new_ws_id,
+        )
+    )
+    dest_member = dest_membership.scalar_one_or_none()
+    if not dest_member or dest_member.role not in ("superadmin", "admin"):
+        raise HTTPException(status_code=403, detail="Must be admin in destination workspace")
+
+    # Move target + related data
+    target.workspace_id = new_ws_id
+    await db.execute(
+        update(Finding).where(Finding.target_id == target_id).values(workspace_id=new_ws_id)
+    )
+    from api.models.scan import Scan
+    await db.execute(
+        update(Scan).where(Scan.target_id == target_id).values(workspace_id=new_ws_id)
+    )
+    from api.models.identity import Identity
+    await db.execute(
+        update(Identity).where(Identity.target_id == target_id).values(workspace_id=new_ws_id)
+    )
+
+    await db.commit()
+    return {"moved": True, "target_id": str(target_id), "new_workspace_id": str(new_ws_id)}
+
+
 async def _get_target(db: AsyncSession, target_id: uuid.UUID, workspace_id: uuid.UUID) -> Target:
     result = await db.execute(
         select(Target).where(Target.id == target_id, Target.workspace_id == workspace_id)
@@ -388,4 +430,5 @@ def _target_dict(t: Target) -> dict:
         "fingerprint_score": fp.get("score") if fp else None,
         "fingerprint_risk": fp.get("risk_level") if fp else None,
         "fingerprint_avatar_seed": fp.get("avatar_seed") if fp else None,
+        "fingerprint_axes": fp.get("axes") if fp else None,
     }

@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react'
-import { RefreshCw, Database, Server, Cpu, Wifi, CheckCircle, XCircle, AlertCircle, ScrollText, Users, Building2, Search, ChevronDown, ChevronRight, ShieldBan } from 'lucide-react'
-import { getSystemStats, recalculateScores, recalculateProfiles, recalculateFingerprints, checkAllModulesHealth, adminListUsers, adminUpdateUser, adminListWorkspaces, updateWorkspacePlan, getNameBlacklist, addNameBlacklist, removeNameBlacklist } from '../lib/api'
+import { RefreshCw, Database, Server, Cpu, Wifi, CheckCircle, XCircle, AlertCircle, ScrollText, Users, Building2, Search, ChevronDown, ChevronRight, ShieldBan, HeartPulse, Puzzle, LayoutDashboard, Info } from 'lucide-react'
+import { getSystemStats, recalculateScores, recalculateProfiles, recalculateFingerprints, checkAllModulesHealth, adminListUsers, adminUpdateUser, adminListWorkspaces, updateWorkspacePlan, getNameBlacklist, addNameBlacklist, removeNameBlacklist, patchModule } from '../lib/api'
 import { useAuth } from '../lib/auth'
 import LogViewer from '../components/LogViewer'
 import useSSE from '../hooks/useSSE'
@@ -73,14 +73,11 @@ function InfraCard({ name, data }) {
   )
 }
 
+// ===================== Dashboard Tab (lightweight — DB counts + recent scans only) =====================
 function DashboardTab() {
   const [stats, setStats] = useState(null)
   const [loading, setLoading] = useState(true)
   const [refreshing, setRefreshing] = useState(false)
-  const [recalculating, setRecalculating] = useState(false)
-  const [recalcProfiles, setRecalcProfiles] = useState(false)
-  const [recalcFingerprints, setRecalcFingerprints] = useState(false)
-  const [healthChecking, setHealthChecking] = useState(false)
 
   useEffect(() => { loadStats() }, [])
   useSSE({ 'scan.completed': () => loadStats() })
@@ -97,15 +94,10 @@ function DashboardTab() {
     }
   }
 
-  function handleRefresh() {
-    setRefreshing(true)
-    loadStats()
-  }
-
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64 text-gray-500">
-        <RefreshCw className="w-5 h-5 animate-spin mr-2" /> Loading system stats...
+        <RefreshCw className="w-5 h-5 animate-spin mr-2" /> Loading stats...
       </div>
     )
   }
@@ -122,50 +114,11 @@ function DashboardTab() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-end gap-3">
-        <button onClick={async () => {
-            setHealthChecking(true)
-            try {
-              const r = await checkAllModulesHealth()
-              const healthy = r.results.filter(m => m.health_status === 'healthy').length
-              alert(`Health checks done: ${healthy}/${r.total} healthy`)
-              loadStats()
-            } catch (e) { alert(e.message) }
-            finally { setHealthChecking(false) }
-          }}
-          disabled={healthChecking}
-          className="flex items-center gap-2 text-sm text-gray-400 hover:text-[#00ff88] disabled:opacity-50 border border-[#1e1e2e] rounded-lg px-3 py-1.5">
-          {healthChecking ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Cpu className="w-4 h-4" />} Run Health Checks
-        </button>
-        <button onClick={async () => { setRecalculating(true); try { const r = await recalculateScores(); alert(`Recalculated ${r.recalculated}/${r.total} targets`) } catch (e) { alert(e.message) } finally { setRecalculating(false) } }}
-          disabled={recalculating}
-          className="flex items-center gap-2 text-sm text-gray-400 hover:text-[#00ff88] disabled:opacity-50 border border-[#1e1e2e] rounded-lg px-3 py-1.5">
-          {recalculating ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Database className="w-4 h-4" />} Recalculate Scores
-        </button>
-        <button onClick={async () => { setRecalcProfiles(true); try { const r = await recalculateProfiles(); alert(`Profiles: ${r.recalculated}/${r.total} updated, ${r.enriched} enriched`) } catch (e) { alert(e.message) } finally { setRecalcProfiles(false) } }}
-          disabled={recalcProfiles}
-          className="flex items-center gap-2 text-sm text-gray-400 hover:text-[#00ff88] disabled:opacity-50 border border-[#1e1e2e] rounded-lg px-3 py-1.5">
-          {recalcProfiles ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Users className="w-4 h-4" />} Recalculate Profiles
-        </button>
-        <button onClick={async () => { setRecalcFingerprints(true); try { const r = await recalculateFingerprints(); alert(`Fingerprints: ${r.recalculated}/${r.total} recalculated`) } catch (e) { alert(e.message) } finally { setRecalcFingerprints(false) } }}
-          disabled={recalcFingerprints}
-          className="flex items-center gap-2 text-sm text-gray-400 hover:text-[#00ff88] disabled:opacity-50 border border-[#1e1e2e] rounded-lg px-3 py-1.5">
-          {recalcFingerprints ? <RefreshCw className="w-4 h-4 animate-spin" /> : <ShieldBan className="w-4 h-4" />} Recalculate Fingerprints
-        </button>
-        <button onClick={handleRefresh} disabled={refreshing}
+      <div className="flex items-center justify-end">
+        <button onClick={() => { setRefreshing(true); loadStats() }} disabled={refreshing}
           className="flex items-center gap-2 text-sm text-gray-400 hover:text-white disabled:opacity-50">
           <RefreshCw className={`w-4 h-4 ${refreshing ? 'animate-spin' : ''}`} /> Refresh
         </button>
-      </div>
-
-      {/* Infrastructure Health */}
-      <div>
-        <h2 className="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-3">Infrastructure Health</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          {Object.entries(stats.infrastructure || {}).map(([name, data]) => (
-            <InfraCard key={name} name={name} data={data} />
-          ))}
-        </div>
       </div>
 
       {/* Database Explorer */}
@@ -184,60 +137,6 @@ function DashboardTab() {
                 <tr key={table} className={`border-t border-[#1e1e2e] ${i % 2 === 1 ? 'bg-white/[0.02]' : ''}`}>
                   <td className="px-5 py-3 font-mono">{table}</td>
                   <td className="px-5 py-3 font-mono text-right">{data.count.toLocaleString()}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </div>
-
-      {/* Module Health Matrix */}
-      <div>
-        <h2 className="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-3">Module Health Matrix</h2>
-        <div className="bg-[#12121a] border border-[#1e1e2e] rounded-xl overflow-hidden">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="text-xs text-gray-500 uppercase tracking-wider border-b border-[#1e1e2e]">
-                <th className="text-left px-5 py-3">Module</th>
-                <th className="text-left px-5 py-3">Layer</th>
-                <th className="text-left px-5 py-3">Status</th>
-                <th className="text-left px-5 py-3">Health</th>
-                <th className="text-right px-5 py-3">Findings</th>
-                <th className="text-left px-5 py-3">Last Check</th>
-              </tr>
-            </thead>
-            <tbody>
-              {(stats.modules || []).map((m, i) => (
-                <tr key={m.id} className={`border-t border-[#1e1e2e] ${i % 2 === 1 ? 'bg-white/[0.02]' : ''}`}>
-                  <td className="px-5 py-3">
-                    <div className="font-mono text-xs">{m.id}</div>
-                    <div className="text-[10px] text-gray-500">{m.display_name}</div>
-                  </td>
-                  <td className="px-5 py-3">
-                    <span className="text-xs font-mono bg-[#1e1e2e] px-2 py-0.5 rounded">L{m.layer}</span>
-                  </td>
-                  <td className="px-5 py-3">
-                    <div className="flex items-center gap-2">
-                      {m.enabled ? (
-                        <span className="text-xs text-[#00ff88]">Enabled</span>
-                      ) : (
-                        <span className="text-xs text-gray-500">Disabled</span>
-                      )}
-                      {!m.implemented && (
-                        <span className="text-[10px] bg-[#ffcc00]/15 text-[#ffcc00] px-1.5 py-0.5 rounded">No scanner</span>
-                      )}
-                    </div>
-                  </td>
-                  <td className="px-5 py-3">
-                    <span className="inline-flex items-center gap-1.5 text-xs">
-                      {statusIcon(m.health_status === 'unknown' ? 'warning' : m.health_status === 'healthy' ? 'healthy' : 'unhealthy')}
-                      <span className="text-gray-400">{m.health_status}</span>
-                    </span>
-                  </td>
-                  <td className="px-5 py-3 text-right font-mono">{m.findings_count}</td>
-                  <td className="px-5 py-3 text-gray-500 text-xs">
-                    {m.last_health ? new Date(m.last_health).toLocaleString() : 'Never'}
-                  </td>
                 </tr>
               ))}
             </tbody>
@@ -284,6 +183,249 @@ function DashboardTab() {
           </div>
         </div>
       )}
+    </div>
+  )
+}
+
+// ===================== Health Tab (infra cards + action buttons) =====================
+function HealthTab() {
+  const [stats, setStats] = useState(null)
+  const [loading, setLoading] = useState(true)
+  const [refreshing, setRefreshing] = useState(false)
+  const [recalculating, setRecalculating] = useState(false)
+  const [recalcProfiles, setRecalcProfiles] = useState(false)
+  const [recalcFingerprints, setRecalcFingerprints] = useState(false)
+  const [healthChecking, setHealthChecking] = useState(false)
+
+  useEffect(() => { loadStats() }, [])
+
+  async function loadStats() {
+    try {
+      const data = await getSystemStats()
+      setStats(data)
+    } catch (err) {
+      console.error('Failed to load health stats:', err)
+    } finally {
+      setLoading(false)
+      setRefreshing(false)
+    }
+  }
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64 text-gray-500">
+        <RefreshCw className="w-5 h-5 animate-spin mr-2" /> Loading health data...
+      </div>
+    )
+  }
+
+  if (!stats) {
+    return (
+      <div className="text-center py-16 text-gray-500">
+        <XCircle className="w-12 h-12 mx-auto mb-4 text-[#ff2244]/30" />
+        <p>Failed to load health data.</p>
+      </div>
+    )
+  }
+
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center justify-end gap-3 flex-wrap">
+        <button onClick={async () => {
+            setHealthChecking(true)
+            try {
+              const r = await checkAllModulesHealth()
+              const healthy = r.results.filter(m => m.health_status === 'healthy').length
+              alert(`Health checks done: ${healthy}/${r.total} healthy`)
+              loadStats()
+            } catch (e) { alert(e.message) }
+            finally { setHealthChecking(false) }
+          }}
+          disabled={healthChecking}
+          className="flex items-center gap-2 text-sm text-gray-400 hover:text-[#00ff88] disabled:opacity-50 border border-[#1e1e2e] rounded-lg px-3 py-1.5">
+          {healthChecking ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Cpu className="w-4 h-4" />} Run Health Checks
+        </button>
+        <button onClick={async () => { setRecalculating(true); try { const r = await recalculateScores(); alert(`Recalculated ${r.recalculated}/${r.total} targets`) } catch (e) { alert(e.message) } finally { setRecalculating(false) } }}
+          disabled={recalculating}
+          className="flex items-center gap-2 text-sm text-gray-400 hover:text-[#00ff88] disabled:opacity-50 border border-[#1e1e2e] rounded-lg px-3 py-1.5">
+          {recalculating ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Database className="w-4 h-4" />} Recalculate Scores
+        </button>
+        <button onClick={async () => { setRecalcProfiles(true); try { const r = await recalculateProfiles(); alert(`Profiles: ${r.recalculated}/${r.total} updated, ${r.enriched} enriched`) } catch (e) { alert(e.message) } finally { setRecalcProfiles(false) } }}
+          disabled={recalcProfiles}
+          className="flex items-center gap-2 text-sm text-gray-400 hover:text-[#00ff88] disabled:opacity-50 border border-[#1e1e2e] rounded-lg px-3 py-1.5">
+          {recalcProfiles ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Users className="w-4 h-4" />} Recalculate Profiles
+        </button>
+        <button onClick={async () => { setRecalcFingerprints(true); try { const r = await recalculateFingerprints(); alert(`Fingerprints: ${r.recalculated}/${r.total} recalculated`) } catch (e) { alert(e.message) } finally { setRecalcFingerprints(false) } }}
+          disabled={recalcFingerprints}
+          className="flex items-center gap-2 text-sm text-gray-400 hover:text-[#00ff88] disabled:opacity-50 border border-[#1e1e2e] rounded-lg px-3 py-1.5">
+          {recalcFingerprints ? <RefreshCw className="w-4 h-4 animate-spin" /> : <ShieldBan className="w-4 h-4" />} Recalculate Fingerprints
+        </button>
+        <button onClick={() => { setRefreshing(true); loadStats() }} disabled={refreshing}
+          className="flex items-center gap-2 text-sm text-gray-400 hover:text-white disabled:opacity-50">
+          <RefreshCw className={`w-4 h-4 ${refreshing ? 'animate-spin' : ''}`} /> Refresh
+        </button>
+      </div>
+
+      {/* Infrastructure Health */}
+      <div>
+        <h2 className="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-3">Infrastructure Health</h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          {Object.entries(stats.infrastructure || {}).map(([name, data]) => (
+            <InfraCard key={name} name={name} data={data} />
+          ))}
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// ===================== Modules Tab (matrix + inspector) =====================
+function ModulesTab() {
+  const [stats, setStats] = useState(null)
+  const [loading, setLoading] = useState(true)
+  const [expandedModule, setExpandedModule] = useState(null)
+
+  useEffect(() => { loadModules() }, [])
+
+  async function loadModules() {
+    try {
+      const data = await getSystemStats()
+      setStats(data)
+    } catch (err) {
+      console.error('Failed to load module data:', err)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  async function handleToggle(m) {
+    try {
+      await patchModule(m.id, { enabled: !m.enabled })
+      loadModules()
+    } catch (err) { alert(err.message) }
+  }
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64 text-gray-500">
+        <RefreshCw className="w-5 h-5 animate-spin mr-2" /> Loading modules...
+      </div>
+    )
+  }
+
+  const modules = stats?.modules || []
+
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center justify-between">
+        <span className="text-xs text-gray-500 uppercase tracking-wider font-semibold">Module Health Matrix ({modules.length})</span>
+        <button onClick={() => { setLoading(true); loadModules() }}
+          className="flex items-center gap-2 text-sm text-gray-400 hover:text-white">
+          <RefreshCw className="w-4 h-4" /> Refresh
+        </button>
+      </div>
+
+      <div className="bg-[#12121a] border border-[#1e1e2e] rounded-xl overflow-hidden">
+        <table className="w-full text-sm">
+          <thead>
+            <tr className="text-xs text-gray-500 uppercase tracking-wider border-b border-[#1e1e2e]">
+              <th className="text-left px-5 py-3 w-8"></th>
+              <th className="text-left px-5 py-3">Module</th>
+              <th className="text-left px-5 py-3">Layer</th>
+              <th className="text-left px-5 py-3">Status</th>
+              <th className="text-left px-5 py-3">Health</th>
+              <th className="text-right px-5 py-3">Findings</th>
+              <th className="text-left px-5 py-3">Last Check</th>
+            </tr>
+          </thead>
+          <tbody>
+            {modules.map((m, i) => {
+              const isExpanded = expandedModule === m.id
+              return (
+                <React.Fragment key={m.id}>
+                  <tr
+                    onClick={() => setExpandedModule(isExpanded ? null : m.id)}
+                    className={`border-t border-[#1e1e2e] cursor-pointer hover:bg-white/[0.03] ${i % 2 === 1 ? 'bg-white/[0.02]' : ''}`}
+                  >
+                    <td className="px-5 py-3 text-gray-500">
+                      {isExpanded ? <ChevronDown className="w-3 h-3" /> : <ChevronRight className="w-3 h-3" />}
+                    </td>
+                    <td className="px-5 py-3">
+                      <div className="font-mono text-xs">{m.id}</div>
+                      <div className="text-[10px] text-gray-500">{m.display_name}</div>
+                    </td>
+                    <td className="px-5 py-3">
+                      <span className="text-xs font-mono bg-[#1e1e2e] px-2 py-0.5 rounded">L{m.layer}</span>
+                    </td>
+                    <td className="px-5 py-3">
+                      <div className="flex items-center gap-2">
+                        {m.enabled ? (
+                          <span className="text-xs text-[#00ff88]">Enabled</span>
+                        ) : (
+                          <span className="text-xs text-gray-500">Disabled</span>
+                        )}
+                        {!m.implemented && (
+                          <span className="text-[10px] bg-[#ffcc00]/15 text-[#ffcc00] px-1.5 py-0.5 rounded">No scanner</span>
+                        )}
+                      </div>
+                    </td>
+                    <td className="px-5 py-3">
+                      <span className="inline-flex items-center gap-1.5 text-xs">
+                        {statusIcon(m.health_status === 'unknown' ? 'warning' : m.health_status === 'healthy' ? 'healthy' : 'unhealthy')}
+                        <span className="text-gray-400">{m.health_status}</span>
+                      </span>
+                    </td>
+                    <td className="px-5 py-3 text-right font-mono">{m.findings_count}</td>
+                    <td className="px-5 py-3 text-gray-500 text-xs">
+                      {m.last_health ? new Date(m.last_health).toLocaleString() : 'Never'}
+                    </td>
+                  </tr>
+                  {isExpanded && (
+                    <tr className="border-t border-[#1e1e2e]/50">
+                      <td colSpan={7} className="px-10 py-4 bg-[#0a0a0f]">
+                        <div className="grid grid-cols-2 gap-6">
+                          <div>
+                            <p className="text-xs text-gray-500 mb-1">Description</p>
+                            <p className="text-sm text-gray-300">{m.description || 'No description available'}</p>
+                            <p className="text-xs text-gray-500 mt-3 mb-1">Category</p>
+                            <p className="text-sm text-gray-300">{m.category || 'general'}</p>
+                            <p className="text-xs text-gray-500 mt-3 mb-1">API Key Required</p>
+                            <p className="text-sm text-gray-300">
+                              {m.requires_key ? (
+                                <span className="text-[#ffcc00]">Yes — {m.key_name || 'API key'}</span>
+                              ) : (
+                                <span className="text-[#00ff88]">No — free</span>
+                              )}
+                            </p>
+                          </div>
+                          <div>
+                            <p className="text-xs text-gray-500 mb-1">Statistics</p>
+                            <p className="text-sm text-gray-300">Total findings: <span className="font-mono">{m.findings_count}</span></p>
+                            <p className="text-sm text-gray-300">Success rate: <span className="font-mono">{m.success_rate || 'N/A'}</span></p>
+                            <p className="text-sm text-gray-300">Avg response: <span className="font-mono">{m.avg_response_ms ? `${m.avg_response_ms}ms` : 'N/A'}</span></p>
+                            <div className="mt-4">
+                              <button
+                                onClick={(e) => { e.stopPropagation(); handleToggle(m) }}
+                                className={`text-xs px-3 py-1.5 rounded-lg font-medium ${
+                                  m.enabled
+                                    ? 'bg-[#ff2244]/15 text-[#ff2244] hover:bg-[#ff2244]/25'
+                                    : 'bg-[#00ff88]/15 text-[#00ff88] hover:bg-[#00ff88]/25'
+                                } transition-colors`}
+                              >
+                                {m.enabled ? 'Disable Module' : 'Enable Module'}
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      </td>
+                    </tr>
+                  )}
+                </React.Fragment>
+              )
+            })}
+          </tbody>
+        </table>
+      </div>
     </div>
   )
 }
@@ -659,7 +801,9 @@ export default function System() {
   })()
 
   const TABS = [
-    { id: 'dashboard', label: 'Dashboard', icon: Server },
+    { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
+    { id: 'health', label: 'Health', icon: HeartPulse },
+    { id: 'modules', label: 'Modules', icon: Puzzle },
     { id: 'logs', label: 'Logs', icon: ScrollText },
     ...(isSuperAdmin ? [
       { id: 'users', label: 'Users', icon: Users },
@@ -695,6 +839,8 @@ export default function System() {
 
       {/* Tab content */}
       {activeTab === 'dashboard' && <DashboardTab />}
+      {activeTab === 'health' && <HealthTab />}
+      {activeTab === 'modules' && <ModulesTab />}
       {activeTab === 'logs' && <LogViewer />}
       {activeTab === 'users' && isSuperAdmin && <UsersTab />}
       {activeTab === 'workspaces' && isSuperAdmin && <WorkspacesTab />}

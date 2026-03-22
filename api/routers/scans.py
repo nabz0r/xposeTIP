@@ -180,6 +180,24 @@ async def cancel_scan(
     return _scan_dict(scan)
 
 
+@router.get("/{scan_id}/scraper-progress")
+async def scraper_progress(
+    scan_id: uuid.UUID,
+    workspace_id: uuid.UUID = Depends(get_current_workspace),
+    user: User = Depends(get_current_user),
+):
+    """Get scraper sub-progress for a running scan."""
+    import json
+    import redis as r
+    from api.config import settings
+    redis = r.from_url(settings.REDIS_URL)
+    key = f"scan:{scan_id}:scraper_progress"
+    data = redis.get(key)
+    if data:
+        return json.loads(data)
+    return {"current": 0, "total": 0, "current_name": ""}
+
+
 def _scan_dict(s: Scan, target_email: str = None) -> dict:
     return {
         "id": str(s.id),

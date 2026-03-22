@@ -75,11 +75,21 @@ const STEPS = [
   { num: '03', title: 'See your exposure', desc: 'Identity graph, exposure score, persona clusters, and step-by-step remediation — all in one dashboard.' },
 ]
 
+function hashEmail(email) {
+  let hash = 0
+  for (let i = 0; i < (email || '').length; i++) {
+    hash = ((hash << 5) - hash) + email.charCodeAt(i)
+    hash |= 0
+  }
+  return Math.abs(hash)
+}
+
 export default function Landing() {
   const [email, setEmail] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [quickResult, setQuickResult] = useState(null)
+  const [pollCount, setPollCount] = useState(0)
   const { token } = useAuth()
   const navigate = useNavigate()
   const pollRef = useRef(null)
@@ -97,6 +107,7 @@ export default function Landing() {
     setError('')
     setLoading(true)
     setQuickResult(null)
+    setPollCount(0)
 
     if (token) {
       navigate(`/targets?scan=${encodeURIComponent(email)}`)
@@ -136,6 +147,7 @@ export default function Landing() {
       let attempts = 0
       pollRef.current = setInterval(async () => {
         attempts++
+        setPollCount(attempts)
         try {
           const statusResp = await fetch(`/api/v1/scan/quick/${scanId}/status`)
           const statusData = await statusResp.json()
@@ -144,7 +156,7 @@ export default function Landing() {
             pollRef.current = null
             setQuickResult(statusData)
             setLoading(false)
-          } else if (attempts >= 40) {
+          } else if (attempts >= 90) {
             clearInterval(pollRef.current)
             pollRef.current = null
             setError('Scan taking longer than expected. Create an account to see results.')
@@ -246,12 +258,20 @@ export default function Landing() {
               No account required for quick scan · GDPR compliant
             </p>
 
-            {/* Loading animation */}
+            {/* Loading animation with progress */}
             {loading && !quickResult && (
-              <div className="mt-6 text-center">
+              <div className="mt-8 text-center">
                 <Radar className="w-8 h-8 text-[#00ff88] animate-spin mx-auto mb-3" />
-                <p className="text-sm text-gray-400">Scanning 5 modules...</p>
-                <p className="text-xs text-gray-600 mt-1">Results in ~20 seconds</p>
+                <p className="text-sm text-gray-400">
+                  {pollCount < 10 ? 'Starting scan...'
+                    : pollCount < 30 ? 'Checking email reputation...'
+                    : pollCount < 50 ? 'Scanning social networks...'
+                    : pollCount < 70 ? 'Analyzing DNS records...'
+                    : 'Finalizing results...'}
+                </p>
+                <p className="text-xs text-gray-600 mt-1">
+                  {pollCount}/90 seconds
+                </p>
               </div>
             )}
 
@@ -259,13 +279,11 @@ export default function Landing() {
             {quickResult && (
               <div className="bg-[#12121a] border border-[#1e1e2e] rounded-xl p-6 max-w-lg mt-6" style={{ animation: 'fadeInUp 0.5s ease-out' }}>
                 <div className="flex items-center gap-4 mb-4">
-                  {quickResult.teaser.avatar_seed ? (
-                    <GenerativeAvatar seed={quickResult.teaser.avatar_seed} size={64} score={quickResult.teaser.exposure_score} />
-                  ) : (
-                    <div className="w-16 h-16 rounded-lg bg-[#1e1e2e] flex items-center justify-center text-2xl font-bold text-gray-500">
-                      {(quickResult.email || '?')[0].toUpperCase()}
-                    </div>
-                  )}
+                  <GenerativeAvatar
+                    seed={quickResult.teaser.avatar_seed || { email_hash: hashEmail(quickResult.email) }}
+                    size={64}
+                    score={quickResult.teaser.exposure_score || 0}
+                  />
                   <div>
                     <h3 className="text-lg font-semibold">
                       {quickResult.teaser.display_name || quickResult.email}
