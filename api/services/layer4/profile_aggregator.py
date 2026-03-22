@@ -44,6 +44,15 @@ BIO_BLACKLIST = [
     "linktree",
     "discover and stream music",
     "your next favorite track",
+    # Telegram platform descriptions
+    "telegram is a cloud-based",
+    "telegram messenger",
+    "pure instant messaging",
+    "simple, fast, secure",
+    "synced across all your devices",
+    "sending messages",
+    "telegram lets you",
+    "powerful, fast, and secure",
 ]
 
 
@@ -80,6 +89,11 @@ def _is_valid_name_db(name_val, blacklist):
         return False
     val = name_val.strip()
     val_lower = val.lower()
+
+    # Reject single-letter initials like "J.", "A Smith", or "J Smith"
+    parts = val.split()
+    if parts and (len(parts[0]) == 1 or (len(parts[0]) == 2 and parts[0].endswith("."))):
+        return False
 
     for entry in blacklist:
         pattern = entry["pattern"].lower()

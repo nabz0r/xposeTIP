@@ -249,5 +249,62 @@ def build_graph(target_id, workspace_id, session: Session):
                         source_module=f.module,
                     )
 
+    # --- Catch-all: ensure EVERY node links to the email anchor ---
+    # This guarantees graph connectivity for PageRank propagation.
+    if email_value:
+        email_anchor = get_or_create_identity(
+            "email", email_value, source_module="graph_builder",
+        )
+        all_identities = session.execute(
+            select(Identity).where(
+                Identity.workspace_id == workspace_id,
+                Identity.target_id == target_id,
+            )
+        ).scalars().all()
+
+        # Build set of nodes already linked to anything
+        linked_nodes = set()
+        all_links = session.execute(
+            select(IdentityLink).where(
+                IdentityLink.workspace_id == workspace_id,
+            )
+        ).scalars().all()
+        id_set = {i.id for i in all_identities}
+        for lnk in all_links:
+            if lnk.source_id in id_set:
+                linked_nodes.add(lnk.source_id)
+            if lnk.dest_id in id_set:
+                linked_nodes.add(lnk.dest_id)
+
+        # Connect orphan nodes to email anchor
+        for identity in all_identities:
+            if identity.id == email_anchor.id:
+                continue
+            if identity.id not in linked_nodes:
+                get_or_create_link(
+                    email_anchor.id, identity.id,
+                    "associated_with",
+                    source_module="graph_builder",
+                )
+
+        # Also link username → name nodes when both exist in the graph
+        username_nodes = [i for i in all_identities if i.type == "username"]
+        name_nodes = [i for i in all_identities if i.type == "name"]
+        for unode in username_nodes:
+            for nnode in name_nodes:
+                # Check if already linked
+                already = any(
+                    (lnk.source_id == unode.id and lnk.dest_id == nnode.id) or
+                    (lnk.source_id == nnode.id and lnk.dest_id == unode.id)
+                    for lnk in all_links
+                    if lnk.source_id in id_set and lnk.dest_id in id_set
+                )
+                if not already:
+                    get_or_create_link(
+                        unode.id, nnode.id,
+                        "identified_as",
+                        source_module="graph_builder",
+                    )
+
     session.commit()
     logger.info("Graph built for target %s", target_id)

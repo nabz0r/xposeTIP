@@ -71,8 +71,13 @@ def _cluster_from_graph(identities, graph_context, db_blacklist):
             if i.id in cluster_nodes:
                 if i.type == "username" and _is_valid_username(i.value or "", db_blacklist):
                     cluster_usernames.add(i.value)
-                if i.platform:
-                    cluster_platforms.add(i.platform)
+                plat = i.platform or ""
+                # Skip generic module names — not real platforms
+                if plat and plat not in ("scraper_engine", "graph_builder", "unknown"):
+                    # Clean scraper suffixes
+                    plat_clean = plat.replace("_profile", "").replace("_scraper", "").replace("_search", "").strip()
+                    if plat_clean:
+                        cluster_platforms.add(plat_clean)
 
         if not cluster_usernames:
             continue
@@ -195,6 +200,12 @@ def cluster_personas(target_id, workspace_id, session: Session, graph_context=No
             data.get("platform") or data.get("network") or
             data.get("service") or ""
         ).lower().replace("_profile", "").replace("_scraper", "").replace("_search", "").strip()
+
+        # Scraper engine: extract actual platform from scraper name or data
+        if not platform and f.module == "scraper_engine":
+            scraper_name = data.get("scraper", "")
+            if scraper_name:
+                platform = scraper_name.replace("_profile", "").replace("_scraper", "").replace("_search", "").strip()
 
         if not platform and f.url:
             import urllib.parse
