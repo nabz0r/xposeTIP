@@ -94,6 +94,9 @@ def _is_valid_name_db(name_val, blacklist):
     parts = val.split()
     if parts and (len(parts[0]) == 1 or (len(parts[0]) == 2 and parts[0].endswith("."))):
         return False
+    # Reject single-letter last name initials like "Steffen H.", "John D."
+    if len(parts) >= 2 and len(parts[-1].rstrip(".")) <= 1:
+        return False
 
     for entry in blacklist:
         pattern = entry["pattern"].lower()

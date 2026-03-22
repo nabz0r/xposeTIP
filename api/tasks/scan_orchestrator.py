@@ -73,10 +73,16 @@ def _build_graph_context(target_id, workspace_id, session):
     visited = set()
     clusters = []
 
+    # Only use STRONG edges for clustering (not associated_with/located_in)
+    # associated_with = catch-all links that connect everything to email anchor
+    # Good for PageRank propagation, toxic for persona clustering
+    WEAK_EDGE_TYPES = {"associated_with", "located_in"}
+
     adj = defaultdict(set)
     for l in relevant_links:
-        adj[l.source_id].add(l.dest_id)
-        adj[l.dest_id].add(l.source_id)
+        if getattr(l, "link_type", None) not in WEAK_EDGE_TYPES:
+            adj[l.source_id].add(l.dest_id)
+            adj[l.dest_id].add(l.source_id)
 
     for start_id in id_set:
         if start_id in visited:
@@ -277,6 +283,25 @@ def finalize_scan(scan_id: str):
             aggregate_profile(scan.target_id, scan.workspace_id, session, graph_context=graph_context)
         except Exception:
             logger.exception("Profile aggregation failed for target %s", scan.target_id)
+
+        # Force bio rejection for Telegram slogans and similar noise
+        try:
+            target = session.execute(select(Target).where(Target.id == scan.target_id)).scalar_one_or_none()
+            if target:
+                profile = dict(target.profile_data or {})
+                bio = profile.get("bio", "")
+                _BIO_REJECT = [
+                    "you can contact", "contact @", "right away",
+                    "fast. secure. powerful", "a new era of messaging",
+                    "telegram is a cloud", "telegram messenger",
+                    "pure instant messaging", "simple, fast, secure",
+                ]
+                if bio and any(p in bio.lower() for p in _BIO_REJECT):
+                    profile["bio"] = None
+                    target.profile_data = profile
+                    session.commit()
+        except Exception:
+            logger.exception("Bio cleanup failed for target %s", scan.target_id)
 
         # Force blacklist check on target.display_name
         try:

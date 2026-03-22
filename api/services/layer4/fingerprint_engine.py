@@ -299,6 +299,11 @@ class FingerprintEngine:
             if source in _DOMAIN_AGE_MODULES:
                 continue
 
+            # Skip findings about the DOMAIN, not the USER (e.g. "Domain reputation: ...")
+            title_lower = title.lower()
+            if "domain reputation" in title_lower or "domain age" in title_lower or "domain registr" in title_lower:
+                continue
+
             for field in _TIMESTAMP_FIELDS:
                 if field in data:
                     dt = _parse_timestamp(data[field])

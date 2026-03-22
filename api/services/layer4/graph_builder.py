@@ -287,24 +287,8 @@ def build_graph(target_id, workspace_id, session: Session):
                     source_module="graph_builder",
                 )
 
-        # Also link username → name nodes when both exist in the graph
-        username_nodes = [i for i in all_identities if i.type == "username"]
-        name_nodes = [i for i in all_identities if i.type == "name"]
-        for unode in username_nodes:
-            for nnode in name_nodes:
-                # Check if already linked
-                already = any(
-                    (lnk.source_id == unode.id and lnk.dest_id == nnode.id) or
-                    (lnk.source_id == nnode.id and lnk.dest_id == unode.id)
-                    for lnk in all_links
-                    if lnk.source_id in id_set and lnk.dest_id in id_set
-                )
-                if not already:
-                    get_or_create_link(
-                        unode.id, nnode.id,
-                        "identified_as",
-                        source_module="graph_builder",
-                    )
+        # NOTE: username→name links are created per-finding above (identified_as)
+        # Do NOT add N×N cross-linking here — it creates false persona merges
 
     session.commit()
     logger.info("Graph built for target %s", target_id)

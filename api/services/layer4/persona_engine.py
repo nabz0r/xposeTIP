@@ -55,6 +55,20 @@ def _is_valid_username(username: str, db_blacklist: list[dict]) -> bool:
     return True
 
 
+def _is_valid_persona_name(name):
+    """Reject platform names and single-letter initials."""
+    if not name or len(name) < 3:
+        return False
+    parts = name.strip().split()
+    # Reject single-letter last initial: "Steffen H.", "John D."
+    if len(parts) >= 2 and len(parts[-1].rstrip(".")) <= 1:
+        return False
+    # Reject single-letter first initial: "J. Smith"
+    if parts and (len(parts[0]) == 1 or (len(parts[0]) == 2 and parts[0].endswith("."))):
+        return False
+    return True
+
+
 def _cluster_from_graph(identities, graph_context, db_blacklist):
     """Build personas from graph clusters. Each cluster = one persona."""
     personas = []
