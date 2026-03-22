@@ -1586,19 +1586,36 @@ DEFAULT_SCRAPERS = [
 
 async def seed():
     async with async_session() as session:
+        created = 0
+        updated = 0
+        seen_names = set()
+        duplicates = []
+
         for scraper_data in DEFAULT_SCRAPERS:
+            name = scraper_data["name"]
+            if name in seen_names:
+                duplicates.append(name)
+                continue
+            seen_names.add(name)
+
             result = await session.execute(
-                select(Scraper).where(Scraper.name == scraper_data["name"])
+                select(Scraper).where(Scraper.name == name)
             )
             existing = result.scalar_one_or_none()
             if existing:
                 for key, value in scraper_data.items():
                     if key != "name":
                         setattr(existing, key, value)
+                updated += 1
             else:
                 session.add(Scraper(**scraper_data))
+                created += 1
+
         await session.commit()
-        print(f"Seeded {len(DEFAULT_SCRAPERS)} scrapers.")
+
+        if duplicates:
+            print(f"WARNING: {len(duplicates)} duplicate scraper names in DEFAULT_SCRAPERS: {duplicates}")
+        print(f"Seeded {len(DEFAULT_SCRAPERS)} scraper definitions ({created} created, {updated} updated, {len(duplicates)} duplicates skipped).")
 
 
 if __name__ == "__main__":

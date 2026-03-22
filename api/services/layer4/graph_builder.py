@@ -196,5 +196,58 @@ def build_graph(target_id, workspace_id, session: Session):
                     source_module=f.module,
                 )
 
+        # Extract name nodes from finding data
+        data = f.data if isinstance(f.data, dict) else {}
+        if "extracted" in data and isinstance(data["extracted"], dict):
+            for k, v in data["extracted"].items():
+                if k not in data and v is not None:
+                    data[k] = v
+
+        for name_field in ("name", "display_name", "full_name", "realname"):
+            name_val = data.get(name_field)
+            if name_val and isinstance(name_val, str) and len(name_val.strip()) >= 3:
+                # Lazy-load blacklist once
+                if not hasattr(build_graph, '_blacklist'):
+                    try:
+                        from api.services.layer4.profile_aggregator import _load_blacklist, _is_valid_name_db
+                        build_graph._blacklist = _load_blacklist(session)
+                        build_graph._is_valid = _is_valid_name_db
+                    except Exception:
+                        build_graph._blacklist = []
+                        build_graph._is_valid = lambda n, b: len(n.strip()) >= 3
+
+                if build_graph._is_valid(name_val, build_graph._blacklist):
+                    name_node = get_or_create_identity(
+                        "name", name_val.strip(),
+                        platform=f.module,
+                        source_module=f.module,
+                        source_finding_id=f.id,
+                    )
+                    if f.indicator_value and f.indicator_type:
+                        get_or_create_link(
+                            indicator_node.id, name_node.id,
+                            "identified_as",
+                            source_module=f.module,
+                            evidence={"name": name_val, "finding_id": str(f.id)},
+                        )
+
+        # Extract location nodes
+        for loc_field in ("location", "country", "city"):
+            loc_val = data.get(loc_field)
+            if loc_val and isinstance(loc_val, str) and len(loc_val.strip()) >= 2:
+                # Skip geoip module locations (mail server, not user)
+                if f.module in ("geoip", "maxmind_geo"):
+                    continue
+                loc_node = get_or_create_identity(
+                    "location", loc_val.strip(),
+                    source_module=f.module,
+                )
+                if f.indicator_value and f.indicator_type:
+                    get_or_create_link(
+                        indicator_node.id, loc_node.id,
+                        "located_in",
+                        source_module=f.module,
+                    )
+
     session.commit()
     logger.info("Graph built for target %s", target_id)

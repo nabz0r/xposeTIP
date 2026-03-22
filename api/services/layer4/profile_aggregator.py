@@ -599,20 +599,28 @@ def aggregate_profile(target_id, workspace_id, session: Session, graph_context=N
             return False
         return True
 
-    NAME_PRIORITY = ["google_audit", "fullcontact", "github_deep", "social_enricher", "gravatar", "epieos", "emailrep", "scraper_engine"]
+    # Composite score name resolution: graph_confidence * 0.5 + source_reliability * 0.3 + count * 0.1
+    from api.services.layer4.source_scoring import get_source_reliability as _get_src_rel
+
+    # Count how many sources confirm each name
+    name_counts = {}
+    for n in profile["names"]:
+        key = n["value"].strip().lower()
+        name_counts[key] = name_counts.get(key, 0) + 1
+
+    # Score each name candidate
+    for n in profile["names"]:
+        graph_conf = node_confidence_map.get(n["value"].strip().lower(), 0.3)
+        source_rel = _get_src_rel(n.get("source", ""))
+        count_bonus = name_counts.get(n["value"].strip().lower(), 1) * 0.1
+        n["composite_score"] = graph_conf * 0.5 + source_rel * 0.3 + count_bonus
+
+    # Filter through blacklist + validation, pick highest composite score
+    valid_names = [n for n in profile["names"] if _is_valid_name(n["value"])]
     primary_name = None
-    for source_prio in NAME_PRIORITY:
-        for n in profile["names"]:
-            if n.get("source") == source_prio and _is_valid_name(n["value"]):
-                primary_name = n["value"].strip()
-                break
-        if primary_name:
-            break
-    if not primary_name and profile["names"]:
-        for n in profile["names"]:
-            if _is_valid_name(n["value"]):
-                primary_name = n["value"].strip()
-                break
+    if valid_names:
+        best = max(valid_names, key=lambda n: n.get("composite_score", 0))
+        primary_name = best["value"].strip()
     # Fallback: use email guess if no name found from scanners
     if not primary_name and email_name_guess["full"]:
         if _is_valid_name(email_name_guess["full"]):

@@ -278,6 +278,24 @@ def finalize_scan(scan_id: str):
         except Exception:
             logger.exception("Profile aggregation failed for target %s", scan.target_id)
 
+        # Force blacklist check on target.display_name
+        try:
+            from api.services.layer4.profile_aggregator import _load_blacklist, _is_valid_name_db
+            target = session.execute(select(Target).where(Target.id == scan.target_id)).scalar_one_or_none()
+            if target:
+                blacklist = _load_blacklist(session)
+                profile = dict(target.profile_data or {})
+                primary = profile.get("primary_name", "")
+
+                if primary and _is_valid_name_db(primary, blacklist):
+                    target.display_name = primary
+                elif target.display_name and not _is_valid_name_db(target.display_name, blacklist):
+                    target.display_name = None
+
+                session.commit()
+        except Exception:
+            logger.exception("Display name validation failed for %s", scan.target_id)
+
         # Store quick_teaser in profile_data (for landing page freemium flow)
         try:
             target = session.execute(select(Target).where(Target.id == scan.target_id)).scalar_one_or_none()

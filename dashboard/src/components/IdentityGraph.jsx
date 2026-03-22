@@ -10,6 +10,8 @@ const nodeColors = {
   username: '#ff8800',
   ip: '#ffcc00',
   paste: '#ff4466',
+  name: '#00ddcc',
+  location: '#cc88ff',
 }
 
 const CLUSTER_COLORS = [
@@ -181,7 +183,7 @@ export default function IdentityGraph({ data, personas = [] }) {
       .attr('font-size', d => getDynamicRadius(d) * 0.7)
       .attr('fill', d => getNodeColor(d))
       .text(d => {
-        const icons = { email: '@', social_url: '🔗', breach: '⚠', domain: '🌐', username: '👤', ip: '📍', paste: '📋' }
+        const icons = { email: '@', social_url: '🔗', breach: '⚠', domain: '🌐', username: '👤', ip: '📍', paste: '📋', name: '🏷', location: '📍' }
         return icons[d.type] || '•'
       })
 

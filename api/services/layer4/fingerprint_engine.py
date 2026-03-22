@@ -20,6 +20,18 @@ _TIMESTAMP_FIELDS = [
     "published_at", "pub_date",
 ]
 
+# Modules whose timestamps refer to DOMAIN age, not USER account age
+_DOMAIN_AGE_MODULES = {"dns_deep", "whois_lookup", "domain_analyzer", "crt_sh"}
+
+# Caps: no email account can predate the service launch
+_DOMAIN_LAUNCH_DATES = {
+    "gmail.com": 2004, "googlemail.com": 2004,
+    "outlook.com": 2012, "hotmail.com": 1996, "live.com": 2005,
+    "yahoo.com": 1997, "protonmail.com": 2014, "proton.me": 2022,
+    "icloud.com": 2011, "me.com": 2008,
+    "tutanota.com": 2011, "fastmail.com": 1999,
+}
+
 
 def _parse_timestamp(value) -> datetime | None:
     """Parse a timestamp from various formats found in OSINT findings."""
@@ -170,7 +182,7 @@ class FingerprintEngine:
     }
 
     def compute(self, findings: list, identities: list, profile_data: dict = None, email: str = "", links=None, graph_context=None) -> dict:
-        raw = self._extract_raw_values(findings, identities, profile_data)
+        raw = self._extract_raw_values(findings, identities, profile_data, email=email)
         axes = self._normalize(raw)
         score = self._compute_score(axes)
         color, fill, risk = self._color_from_score(score)
@@ -223,7 +235,7 @@ class FingerprintEngine:
 
         return result
 
-    def _extract_raw_values(self, findings, identities, profile_data):
+    def _extract_raw_values(self, findings, identities, profile_data, email=""):
         accounts = set()
         platforms = set()
         for f in findings:
@@ -283,6 +295,10 @@ class FingerprintEngine:
             source = getattr(f, "module", "") or ""
             title = getattr(f, "title", "") or ""
 
+            # Skip domain-related modules — their dates are domain registration, not user activity
+            if source in _DOMAIN_AGE_MODULES:
+                continue
+
             for field in _TIMESTAMP_FIELDS:
                 if field in data:
                     dt = _parse_timestamp(data[field])
@@ -308,6 +324,14 @@ class FingerprintEngine:
                                 "source": source,
                                 "label": _event_label(field, source, title, data),
                             })
+
+        # Cap email_age by domain launch date (no Gmail account before 2004, etc.)
+        domain = email.split("@")[-1].lower() if "@" in email else ""
+        if domain in _DOMAIN_LAUNCH_DATES:
+            max_age = now.year - _DOMAIN_LAUNCH_DATES[domain]
+            email_age = min(email_age, max_age)
+        # Global sanity cap: no email account is older than 30 years
+        email_age = min(email_age, 30)
 
         # Security posture weaknesses
         security_issues = 0

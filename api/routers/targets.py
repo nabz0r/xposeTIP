@@ -407,15 +407,24 @@ async def compare_fingerprints(
     }
 
 
+_QUICK_REJECT_NAMES = {
+    "lastpass", "office365", "eventbrite", "spotify", "firefox", "chrome",
+    "safari", "office", "1password", "bitwarden", "dashlane", "nordpass",
+}
+
+
 def _target_dict(t: Target) -> dict:
     fp = (t.profile_data or {}).get("fingerprint") if t.profile_data else None
     profile = t.profile_data or {}
+    display = t.display_name or profile.get("primary_name", "")
+    if display and display.strip().lower() in _QUICK_REJECT_NAMES:
+        display = None
     return {
         "id": str(t.id),
         "email": t.email,
-        "display_name": t.display_name,
+        "display_name": display,
         "avatar_url": t.avatar_url,
-        "primary_name": profile.get("primary_name"),
+        "primary_name": profile.get("primary_name") if display else None,
         "country_code": t.country_code,
         "status": t.status,
         "exposure_score": t.exposure_score,
