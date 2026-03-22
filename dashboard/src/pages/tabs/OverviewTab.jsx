@@ -1,0 +1,330 @@
+import React from 'react'
+import { Shield, AlertTriangle, Globe, Radar } from 'lucide-react'
+import FingerprintRadar, { FingerprintTimeline } from '../../components/FingerprintRadar'
+import PlatformIcon from '../../components/PlatformIcon'
+import IdentityCard from '../../components/IdentityCard'
+import PersonaCard from '../../components/PersonaCard'
+import GenerativeAvatar from '../../components/GenerativeAvatar'
+import LifeTimeline from '../../components/LifeTimeline'
+
+const severityColors = {
+  critical: '#ff2244', high: '#ff8800', medium: '#ffcc00', low: '#3388ff', info: '#666688',
+}
+
+const scoreColor = (score) => {
+  if (score == null) return '#666688'
+  if (score >= 61) return '#ff2244'
+  if (score >= 31) return '#ff8800'
+  return '#00ff88'
+}
+
+export default function OverviewTab({ target, findings, profile, fingerprint, fpHistory, sourcesData, socialFindings, breachFindings, geoFindings, riskAssessment, remediations, criticalCount, setActiveTab, setShowScanModal }) {
+  return (
+    <div className="space-y-4">
+      {/* Risk Dashboard */}
+      {riskAssessment && (
+        <div className={`rounded-xl p-5 border ${
+          riskAssessment.data?.risk_level === 'CRITICAL' ? 'bg-[#ff2244]/10 border-[#ff2244]/30' :
+          riskAssessment.data?.risk_level === 'HIGH' ? 'bg-[#ff8800]/10 border-[#ff8800]/30' :
+          riskAssessment.data?.risk_level === 'MODERATE' ? 'bg-[#ffcc00]/10 border-[#ffcc00]/30' :
+          'bg-[#00ff88]/10 border-[#00ff88]/30'
+        }`}>
+          <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center gap-3">
+              <Shield className={`w-6 h-6 ${
+                riskAssessment.data?.risk_level === 'CRITICAL' ? 'text-[#ff2244]' :
+                riskAssessment.data?.risk_level === 'HIGH' ? 'text-[#ff8800]' :
+                riskAssessment.data?.risk_level === 'MODERATE' ? 'text-[#ffcc00]' :
+                'text-[#00ff88]'
+              }`} />
+              <div>
+                <h3 className="text-sm font-semibold">RISK LEVEL: {riskAssessment.data?.risk_level}</h3>
+                <p className="text-xs text-gray-400">{riskAssessment.data?.summary || {
+                  CRITICAL: 'This identity is severely compromised. Immediate action required.',
+                  HIGH: 'Significant exposure detected. Multiple risks need attention.',
+                  MODERATE: 'Some exposure found. Recommended improvements available.',
+                  LOW: 'Minimal exposure. Good digital hygiene.',
+                }[riskAssessment.data?.risk_level] || ''}</p>
+              </div>
+            </div>
+            <div className="flex gap-4 text-right">
+              <div>
+                <div className="text-2xl font-mono font-bold" style={{ color: scoreColor(target.exposure_score) }}>
+                  {target.exposure_score ?? '-'}
+                </div>
+                <div className="text-[10px] text-gray-500 uppercase">Exposure</div>
+              </div>
+              <div>
+                <div className="text-2xl font-mono font-bold" style={{ color: (target.threat_score ?? 0) >= 61 ? '#ff2244' : (target.threat_score ?? 0) >= 31 ? '#ff8800' : '#00ff88' }}>
+                  {target.threat_score ?? 0}
+                </div>
+                <div className="text-[10px] text-gray-500 uppercase">Threat</div>
+              </div>
+            </div>
+          </div>
+          {/* Progress bar */}
+          <div className="h-2 bg-[#0a0a0f] rounded-full overflow-hidden mb-4">
+            <div className="h-full rounded-full transition-all duration-1000"
+              style={{ width: `${target.exposure_score || 0}%`, backgroundColor: scoreColor(target.exposure_score) }} />
+          </div>
+          {/* Stat pills */}
+          <div className="flex gap-3 mb-4">
+            {[
+              { label: 'Accounts', value: socialFindings.length, color: '#3388ff' },
+              { label: 'Breaches', value: breachFindings.length, color: '#ff2244' },
+              { label: 'Findings', value: findings.length, color: '#ffcc00' },
+              { label: 'Sources', value: sourcesData?.sources?.length || 0, color: '#666688' },
+            ].map(s => (
+              <div key={s.label} className="flex-1 bg-[#0a0a0f] rounded-lg p-3 text-center">
+                <div className="text-lg font-mono font-bold" style={{ color: s.color }}>{s.value}</div>
+                <div className="text-[10px] text-gray-500 uppercase">{s.label}</div>
+              </div>
+            ))}
+          </div>
+          {/* Executive Summary */}
+          {riskAssessment?.data?.executive_summary && (
+            <div className="bg-[#0a0a0f] rounded-lg p-4 mt-4">
+              <h4 className="text-[10px] uppercase tracking-wider text-gray-500 mb-2">Executive Summary</h4>
+              <p className="text-sm text-gray-300 leading-relaxed">{riskAssessment.data.executive_summary}</p>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Identity Estimation */}
+      <IdentityCard profile={profile} />
+
+      {/* Life Timeline — chronological digital history */}
+      {profile?.life_timeline?.length > 0 && (
+        <div className="bg-[#12121a] border border-[#1e1e2e] rounded-xl p-5">
+          <h3 className="text-xs font-semibold uppercase tracking-wider text-gray-500 mb-4">Digital Life Timeline</h3>
+          <LifeTimeline events={profile.life_timeline} compact={false} />
+        </div>
+      )}
+
+      {/* Persona Clusters */}
+      <PersonaCard personas={profile?.personas} />
+
+      {/* Digital Fingerprint */}
+      {fingerprint && (
+        <div className="bg-[#12121a] border border-[#1e1e2e] rounded-xl p-5">
+          <h3 className="text-xs font-semibold uppercase tracking-wider text-gray-500 mb-4">Digital Fingerprint</h3>
+          <div className="flex flex-col lg:flex-row items-center gap-6">
+            {/* GenerativeAvatar — identity glyph from graph topology */}
+            {fingerprint?.avatar_seed && (
+              <div className="shrink-0 flex flex-col items-center gap-2">
+                <GenerativeAvatar seed={fingerprint.avatar_seed} size={120} score={target?.exposure_score} />
+                <span className="text-[10px] text-gray-600 font-mono">identity glyph</span>
+              </div>
+            )}
+            <div className="flex-1 flex justify-center">
+              <FingerprintRadar fingerprint={fingerprint} size="large" animate={true} />
+            </div>
+            <div className="w-full lg:w-64 space-y-2">
+              {Object.entries(fingerprint.axes || {}).map(([key, val]) => {
+                const rawKey = key === 'email_age' ? 'email_age_years' : key === 'security' ? 'security_weak' : key
+                const rawVal = fingerprint.raw_values?.[rawKey] ?? 0
+                return (
+                  <div key={key} className="space-y-0.5">
+                    <div className="flex justify-between text-[10px]">
+                      <span className="text-gray-400">{key.replace(/_/g, ' ')}</span>
+                      <span className="font-mono" style={{ color: fingerprint.color }}>{rawVal}</span>
+                    </div>
+                    <div className="h-1.5 bg-[#0a0a0f] rounded-full overflow-hidden">
+                      <div className="h-full rounded-full transition-all duration-700"
+                        style={{ width: `${(val * 100).toFixed(0)}%`, backgroundColor: fingerprint.color }} />
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Fingerprint Evolution */}
+      {fpHistory.length > 1 && (
+        <div className="bg-[#12121a] border border-[#1e1e2e] rounded-xl p-5">
+          <FingerprintTimeline snapshots={fpHistory} />
+        </div>
+      )}
+
+      {/* Remediation Actions */}
+      {remediations.length > 0 && (
+        <div>
+          <h3 className="text-xs font-semibold uppercase tracking-wider text-gray-500 mb-3">
+            Top Actions Required ({remediations.length})
+          </h3>
+          <div className="space-y-2">
+            {remediations.slice(0, 7).map((r, i) => (
+              <div key={i} className="bg-[#12121a] border border-[#1e1e2e] rounded-lg p-3 hover:border-[#00ff88]/20 transition-colors">
+                <div className="flex items-start gap-3">
+                  <span className={`inline-block text-[10px] font-bold px-1.5 py-0.5 rounded-full mt-0.5 ${
+                    r.priority === 'critical' ? 'bg-[#ff2244]/20 text-[#ff2244]' :
+                    r.priority === 'high' ? 'bg-[#ff8800]/20 text-[#ff8800]' :
+                    'bg-[#ffcc00]/20 text-[#ffcc00]'
+                  }`}>{i + 1}</span>
+                  <div className="flex-1 min-w-0">
+                    <div className="text-sm font-medium">{r.action}</div>
+                    {r.finding && <p className="text-[10px] text-gray-500 mt-0.5">{r.finding}</p>}
+                    {r.steps && (
+                      <div className="flex flex-wrap gap-1 mt-1.5">
+                        {r.steps.slice(0, 3).map((step, j) => (
+                          <span key={j} className="text-[10px] px-1.5 py-0.5 rounded bg-[#1e1e2e] text-gray-400">{step}</span>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                  {r.link && (
+                    <a href={r.link} target="_blank" rel="noreferrer"
+                       className="text-[10px] px-2 py-1 rounded bg-[#00ff88]/10 text-[#00ff88] hover:bg-[#00ff88]/20 shrink-0">
+                      Secure
+                    </a>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Critical alerts (fallback when no risk assessment yet) */}
+      {!riskAssessment && criticalCount > 0 && (
+        <div className="bg-[#ff2244]/10 border border-[#ff2244]/30 rounded-xl p-4 flex items-start gap-3">
+          <AlertTriangle className="w-5 h-5 text-[#ff2244] shrink-0 mt-0.5" />
+          <div>
+            <h3 className="text-sm font-semibold text-[#ff2244]">{criticalCount} Critical/High findings</h3>
+            <p className="text-xs text-gray-400 mt-1">This identity has severe exposure requiring immediate attention.</p>
+          </div>
+        </div>
+      )}
+
+      {/* Breach summary cards */}
+      {breachFindings.length > 0 && (
+        <div>
+          <h3 className="text-xs font-semibold uppercase tracking-wider text-gray-500 mb-3">Breaches ({breachFindings.length})</h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+            {breachFindings.slice(0, 6).map(f => (
+              <div key={f.id} className="bg-[#12121a] border border-[#1e1e2e] rounded-lg p-3 hover:border-[#ff2244]/30 transition-colors">
+                <div className="flex items-center gap-2 mb-1">
+                  <span className="inline-block text-[10px] font-medium px-1.5 py-0.5 rounded-full"
+                    style={{ backgroundColor: (severityColors[f.severity] || '#666688') + '26', color: severityColors[f.severity] }}>
+                    {f.severity}
+                  </span>
+                  <span className="text-sm font-medium truncate">{f.title}</span>
+                </div>
+                <p className="text-xs text-gray-400 line-clamp-2">{f.description}</p>
+                {f.data?.DataClasses && (
+                  <div className="flex flex-wrap gap-1 mt-2">
+                    {f.data.DataClasses.slice(0, 4).map(dc => (
+                      <span key={dc} className="text-[10px] px-1.5 py-0.5 rounded bg-[#ff2244]/10 text-[#ff8800]">{dc}</span>
+                    ))}
+                    {f.data.DataClasses.length > 4 && <span className="text-[10px] text-gray-500">+{f.data.DataClasses.length - 4}</span>}
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+          {breachFindings.length > 6 && (
+            <button onClick={() => setActiveTab('findings')} className="text-xs text-[#3388ff] hover:underline mt-2">
+              View all {breachFindings.length} breaches
+            </button>
+          )}
+        </div>
+      )}
+
+      {/* Social accounts with PlatformIcon */}
+      {socialFindings.length > 0 && (
+        <div>
+          <h3 className="text-xs font-semibold uppercase tracking-wider text-gray-500 mb-3">Accounts ({socialFindings.length})</h3>
+          <div className="flex flex-wrap gap-2">
+            {socialFindings.slice(0, 15).map(f => {
+              const platform = f.data?.platform || f.data?.network || f.data?.service || f.title?.split(' on ')?.[1] || f.module
+              const username = f.data?.username || f.data?.handle || f.data?.login || ''
+              return (
+                <PlatformIcon key={f.id} platform={platform} username={username} url={f.url} />
+              )
+            })}
+            {socialFindings.length > 15 && (
+              <button onClick={() => setActiveTab('findings')} className="text-xs text-gray-500 self-center ml-1">
+                +{socialFindings.length - 15} more
+              </button>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Geo summary */}
+      {geoFindings.length > 0 && (
+        <div>
+          <h3 className="text-xs font-semibold uppercase tracking-wider text-gray-500 mb-3">Mail Server Locations</h3>
+          <p className="text-[10px] text-gray-600 mb-2">These are mail server locations, not the user's physical location.</p>
+          <div className="flex flex-wrap gap-2">
+            {geoFindings.map(f => (
+              <span key={f.id} className="inline-flex items-center gap-1.5 text-xs px-2.5 py-1.5 rounded-lg bg-[#12121a] border border-[#1e1e2e]">
+                <Globe className="w-3 h-3 text-[#3388ff]" />
+                {f.data?.city}, {f.data?.country}
+                <span className="text-gray-500">({f.data?.ip})</span>
+              </span>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Source reliability */}
+      {sourcesData?.sources?.length > 0 && (
+        <div>
+          <h3 className="text-xs font-semibold uppercase tracking-wider text-gray-500 mb-3">
+            Sources ({sourcesData.sources.length})
+            {sourcesData.overall_confidence > 0 && (
+              <span className="ml-2 text-[10px] font-normal normal-case text-gray-600">
+                Overall confidence: {Math.round(sourcesData.overall_confidence * 100)}%
+                {sourcesData.cross_verified_count > 0 && ` | ${sourcesData.cross_verified_count} cross-verified`}
+              </span>
+            )}
+          </h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
+            {sourcesData.sources.map(s => {
+              const relColor = s.reliability >= 0.8 ? '#00ff88' : s.reliability >= 0.6 ? '#ffcc00' : '#ff8800'
+              const pct = Math.round(s.reliability * 100)
+              return (
+                <div key={s.module} className="bg-[#12121a] border border-[#1e1e2e] rounded-lg p-3 flex items-center gap-3">
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs font-mono font-medium truncate">{s.module}</span>
+                      <span className="text-[10px] px-1.5 py-0.5 rounded-full font-mono"
+                        style={{ backgroundColor: relColor + '20', color: relColor }}>
+                        {pct}%
+                      </span>
+                    </div>
+                    <div className="mt-1.5 h-1.5 rounded-full bg-[#0a0a0f] overflow-hidden">
+                      <div className="h-full rounded-full transition-all" style={{ width: `${pct}%`, backgroundColor: relColor }} />
+                    </div>
+                    <div className="flex gap-3 mt-1 text-[10px] text-gray-500">
+                      <span>{s.findings_count} findings</span>
+                      <span>{s.verified_count} verified</span>
+                      <span>avg {Math.round(s.avg_confidence * 100)}%</span>
+                    </div>
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* Empty state */}
+      {findings.length === 0 && (
+        <div className="bg-[#12121a] border border-[#1e1e2e] rounded-xl p-12 text-center">
+          <Shield className="w-12 h-12 text-gray-600 mx-auto mb-3" />
+          <h3 className="text-lg font-medium text-gray-300">No intelligence yet</h3>
+          <p className="text-sm text-gray-500 mt-1 mb-4">Launch a scan to discover this identity's digital exposure.</p>
+          <button onClick={() => setShowScanModal(true)}
+            className="inline-flex items-center gap-2 bg-[#00ff88] text-black font-semibold rounded-lg px-6 py-2.5 text-sm hover:bg-[#00ff88]/90">
+            <Radar className="w-4 h-4" /> Launch First Scan
+          </button>
+        </div>
+      )}
+    </div>
+  )
+}
