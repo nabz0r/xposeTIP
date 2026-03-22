@@ -99,8 +99,12 @@ def _is_valid_name_db(name_val, blacklist):
     return True
 
 
-def aggregate_profile(target_id, workspace_id, session: Session) -> dict:
-    """Build a unified profile from all findings for a target. Sync for Celery."""
+def aggregate_profile(target_id, workspace_id, session: Session, graph_context=None) -> dict:
+    """Build a unified profile from all findings for a target. Sync for Celery.
+
+    If graph_context is provided, uses pre-computed node confidence map
+    instead of querying identity nodes from DB.
+    """
     # Deduplicate: keep latest finding per (module, title) — Python-side
     all_findings = session.execute(
         select(Finding).where(
@@ -391,18 +395,24 @@ def aggregate_profile(target_id, workspace_id, session: Session) -> dict:
     }
 
     # Load identity nodes with propagated confidence (from PageRank)
-    identities = session.execute(
-        select(Identity).where(
-            Identity.target_id == target_id,
-            Identity.workspace_id == workspace_id,
-        )
-    ).scalars().all()
-
-    # Map: value -> propagated_confidence
-    node_confidence_map = {}
-    for i in identities:
-        if i.value:
-            node_confidence_map[i.value.lower()] = i.confidence or 0.5
+    # Use graph_context if available, else load from DB (existing behavior)
+    if graph_context:
+        node_confidence_map = {
+            v["value"].lower(): v["confidence"]
+            for v in graph_context["node_map"].values()
+            if v.get("value")
+        }
+    else:
+        identities = session.execute(
+            select(Identity).where(
+                Identity.target_id == target_id,
+                Identity.workspace_id == workspace_id,
+            )
+        ).scalars().all()
+        node_confidence_map = {}
+        for i in identities:
+            if i.value:
+                node_confidence_map[i.value.lower()] = i.confidence or 0.5
 
     # Load DB blacklist early (needed for field_confidence + name validation)
     db_blacklist = _load_blacklist(session)
@@ -437,6 +447,15 @@ def aggregate_profile(target_id, workspace_id, session: Session) -> dict:
         for fn in first_names:
             fn["graph_confidence"] = node_confidence_map.get(fn["value"].lower(), 0.3)
 
+        # Boost names that appear in the top graph cluster
+        if graph_context and graph_context.get("clusters"):
+            top_cluster = graph_context["clusters"][0]
+            top_cluster_nodes = set(top_cluster["nodes"])
+            for fn in first_names:
+                node_info = graph_context["node_map"].get(fn["value"].lower())
+                if node_info and node_info["id"] in top_cluster_nodes:
+                    fn["graph_confidence"] = fn.get("graph_confidence", 0) + 0.15
+
         # Best first name = highest graph confidence
         best = max(first_names, key=lambda fn: fn.get("graph_confidence", 0))
         fn_sources = set(fn["source"] for fn in first_names if fn["value"].lower() == best["value"].lower())
@@ -466,6 +485,15 @@ def aggregate_profile(target_id, workspace_id, session: Session) -> dict:
         # Use propagated confidence from graph if available
         for ln in last_names:
             ln["graph_confidence"] = node_confidence_map.get(ln["value"].lower(), 0.3)
+
+        # Boost names in top graph cluster
+        if graph_context and graph_context.get("clusters"):
+            top_cluster = graph_context["clusters"][0]
+            top_cluster_nodes = set(top_cluster["nodes"])
+            for ln in last_names:
+                node_info = graph_context["node_map"].get(ln["value"].lower())
+                if node_info and node_info["id"] in top_cluster_nodes:
+                    ln["graph_confidence"] = ln.get("graph_confidence", 0) + 0.15
 
         best = max(last_names, key=lambda ln: ln.get("graph_confidence", 0))
         ln_sources = set(ln["source"] for ln in last_names if ln["value"].lower() == best["value"].lower())

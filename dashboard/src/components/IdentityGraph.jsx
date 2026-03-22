@@ -12,19 +12,11 @@ const nodeColors = {
   paste: '#ff4466',
 }
 
-const nodeRadius = {
-  email: 18,
-  social_url: 12,
-  breach: 14,
-  domain: 12,
-  username: 12,
-  ip: 10,
-  paste: 10,
-}
-
-const PERSONA_COLORS = [
+const CLUSTER_COLORS = [
   '#00ff88', '#3388ff', '#ff8800', '#aa55ff', '#ffcc00', '#ff4466', '#00ddcc',
 ]
+
+const PERSONA_COLORS = CLUSTER_COLORS
 
 export default function IdentityGraph({ data, personas = [] }) {
   const svgRef = useRef()
@@ -41,8 +33,13 @@ export default function IdentityGraph({ data, personas = [] }) {
   }
 
   const getNodeColor = (node) => {
-    if (node.type === 'email') return '#00ff88'
+    if (node.type === 'email') return '#ffffff'  // Email = white anchor
     if (node.type === 'breach') return '#ff2244'
+    // Use graph cluster_id for coloring (Markov chain integration)
+    if (node.cluster_id !== undefined && node.cluster_id !== null) {
+      return CLUSTER_COLORS[node.cluster_id % CLUSTER_COLORS.length]
+    }
+    // Fallback to persona coloring
     const personaId = node.metadata?.persona
     if (personaId) {
       const idx = parseInt(personaId.replace('persona_', '')) || 0
@@ -52,9 +49,11 @@ export default function IdentityGraph({ data, personas = [] }) {
   }
 
   const getDynamicRadius = (node) => {
-    const base = nodeRadius[node.type] || 10
+    // Size proportional to PageRank confidence
+    const conf = node.confidence || 0.5
+    const base = 4 + conf * 16  // 4px at 0 → 20px at 1.0
     const edges = edgeCounts[node.id] || 0
-    return base + Math.min(edges * 2, 12)
+    return Math.max(base, 6) + Math.min(edges * 1.5, 8)
   }
 
   // Get connected nodes for detail panel
@@ -109,13 +108,16 @@ export default function IdentityGraph({ data, personas = [] }) {
       .force('center', d3.forceCenter(width / 2, height / 2))
       .force('collision', d3.forceCollide().radius(d => getDynamicRadius(d) + 5))
 
-    // Edges
+    // Edges — width by transition probability (Markov chain weight)
     const link = g.append('g')
       .selectAll('line')
       .data(links)
       .join('line')
       .attr('stroke', '#1e1e2e')
-      .attr('stroke-width', d => Math.max(1, d.confidence * 2.5))
+      .attr('stroke-width', d => {
+        const prob = d.transition_probability || d.confidence || 0.1
+        return 0.5 + prob * 4  // 0.5px at 0 → 4.5px at 1.0
+      })
       .attr('stroke-opacity', 0.6)
 
     // Edge labels
@@ -166,6 +168,7 @@ export default function IdentityGraph({ data, personas = [] }) {
       .attr('font-size', 10)
       .attr('fill', '#888')
       .attr('font-family', 'JetBrains Mono, monospace')
+      .attr('opacity', d => (d.confidence || 0) > 0.4 ? 1 : 0.4)
       .text(d => {
         const v = d.value
         return v.length > 20 ? v.slice(0, 18) + '…' : v
@@ -259,9 +262,19 @@ export default function IdentityGraph({ data, personas = [] }) {
       )}
 
       {/* Stats */}
-      <div className="absolute top-3 right-3 bg-[#12121a]/90 border border-[#1e1e2e] rounded-lg p-3 text-xs text-gray-400">
+      <div className="absolute top-3 right-3 bg-[#12121a]/90 border border-[#1e1e2e] rounded-lg p-3 text-xs text-gray-400 space-y-0.5">
         <div>{data.stats.total_nodes} nodes</div>
         <div>{data.stats.total_edges} edges</div>
+        {data.stats.clusters > 0 && (
+          <div className="pt-1 border-t border-[#1e1e2e] mt-1">{data.stats.clusters} cluster{data.stats.clusters !== 1 ? 's' : ''}</div>
+        )}
+        {data.graph_clusters?.length > 0 && data.graph_clusters.map((c, i) => (
+          <div key={c.id} className="flex items-center gap-1.5">
+            <span className="w-2 h-2 rounded-full" style={{ backgroundColor: CLUSTER_COLORS[i % CLUSTER_COLORS.length] }} />
+            <span>{c.node_count} nodes</span>
+            <span className="text-gray-600">{(c.confidence * 100).toFixed(0)}%</span>
+          </div>
+        ))}
       </div>
 
       {/* Detail panel */}
@@ -279,11 +292,24 @@ export default function IdentityGraph({ data, personas = [] }) {
             </div>
             <button onClick={() => setSelected(null)} className="text-gray-500 hover:text-white text-sm">✕</button>
           </div>
-          <div className="mt-2 grid grid-cols-4 gap-4 text-xs text-gray-400">
+          <div className="mt-2 grid grid-cols-5 gap-4 text-xs text-gray-400">
             <div><span className="text-gray-500">Type:</span> {selected.type}</div>
             <div><span className="text-gray-500">Platform:</span> {selected.platform || '-'}</div>
             <div><span className="text-gray-500">Module:</span> {selected.source_module || '-'}</div>
-            <div><span className="text-gray-500">Confidence:</span> {((selected.confidence || 0) * 100).toFixed(0)}%</div>
+            <div>
+              <span className="text-gray-500">Confidence:</span>{' '}
+              <span style={{ color: (selected.confidence || 0) > 0.6 ? '#00ff88' : (selected.confidence || 0) > 0.3 ? '#ffcc00' : '#ff8800' }}>
+                {((selected.confidence || 0) * 100).toFixed(0)}%
+              </span>
+            </div>
+            {selected.cluster_id !== undefined && selected.cluster_id !== null && (
+              <div>
+                <span className="text-gray-500">Cluster:</span>{' '}
+                <span style={{ color: CLUSTER_COLORS[selected.cluster_id % CLUSTER_COLORS.length] }}>
+                  #{selected.cluster_id}
+                </span>
+              </div>
+            )}
           </div>
           {connectedNodes.length > 0 && (
             <div className="mt-2 pt-2 border-t border-[#1e1e2e]">

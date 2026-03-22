@@ -1,5 +1,6 @@
 import logging
 import uuid
+from collections import defaultdict
 from datetime import datetime, timezone
 
 from celery import chord
@@ -9,6 +10,122 @@ from api.tasks import celery_app
 from api.tasks.utils import get_sync_session
 
 logger = logging.getLogger(__name__)
+
+
+def _build_graph_context(target_id, workspace_id, session):
+    """Build the unified graph context after PageRank.
+
+    Returns a dict that ALL downstream services can read.
+    No service should query graph data independently after this.
+    """
+    from api.models.identity import Identity, IdentityLink
+
+    # Load all nodes with propagated confidence
+    identities = session.execute(
+        select(Identity).where(
+            Identity.target_id == target_id,
+            Identity.workspace_id == workspace_id,
+        )
+    ).scalars().all()
+
+    id_set = set(i.id for i in identities)
+
+    # Load all edges
+    links = session.execute(
+        select(IdentityLink).where(
+            IdentityLink.workspace_id == workspace_id,
+        )
+    ).scalars().all()
+    relevant_links = [l for l in links if l.source_id in id_set and l.dest_id in id_set]
+
+    # 1. Node scores (from PageRank — already updated in DB)
+    node_scores = {i.id: i.confidence or 0.0 for i in identities}
+
+    # 2. Node map: value → {type, confidence, platform, id}
+    node_map = {}
+    for i in identities:
+        key = i.value.lower().strip() if i.value else ""
+        if key:
+            if key not in node_map or (i.confidence or 0) > node_map[key].get("confidence", 0):
+                node_map[key] = {
+                    "id": i.id,
+                    "type": i.type,
+                    "confidence": i.confidence or 0.0,
+                    "platform": i.platform,
+                    "value": i.value,
+                }
+
+    # 3. Transition matrix: node_id → {dest_id: transition_probability}
+    outgoing = defaultdict(list)
+    for l in relevant_links:
+        outgoing[l.source_id].append((l.dest_id, l.confidence or 0.5))
+
+    transition_matrix = {}
+    for src_id, dests in outgoing.items():
+        total_weight = sum(w for _, w in dests)
+        if total_weight > 0:
+            transition_matrix[src_id] = {
+                dest_id: round(w / total_weight, 4)
+                for dest_id, w in dests
+            }
+
+    # 4. Graph clusters (connected components via BFS)
+    visited = set()
+    clusters = []
+
+    adj = defaultdict(set)
+    for l in relevant_links:
+        adj[l.source_id].add(l.dest_id)
+        adj[l.dest_id].add(l.source_id)
+
+    for start_id in id_set:
+        if start_id in visited:
+            continue
+        component = set()
+        queue = [start_id]
+        while queue:
+            node = queue.pop(0)
+            if node in visited:
+                continue
+            visited.add(node)
+            component.add(node)
+            for neighbor in adj.get(node, []):
+                if neighbor not in visited and neighbor in id_set:
+                    queue.append(neighbor)
+
+        if len(component) >= 2:
+            cluster_conf = sum(node_scores.get(n, 0) for n in component) / len(component)
+            internal_edges = [l for l in relevant_links
+                             if l.source_id in component and l.dest_id in component]
+            max_edges = len(component) * (len(component) - 1)
+            density = len(internal_edges) / max_edges if max_edges > 0 else 0
+
+            type_counts = defaultdict(int)
+            for n in component:
+                for i in identities:
+                    if i.id == n:
+                        type_counts[i.type] += 1
+
+            clusters.append({
+                "nodes": list(component),
+                "node_count": len(component),
+                "confidence": round(cluster_conf, 4),
+                "density": round(density, 4),
+                "internal_edges": len(internal_edges),
+                "dominant_type": max(type_counts, key=type_counts.get) if type_counts else "unknown",
+            })
+
+    clusters.sort(key=lambda c: c["confidence"], reverse=True)
+
+    return {
+        "node_scores": node_scores,
+        "node_map": node_map,
+        "transition_matrix": transition_matrix,
+        "clusters": clusters,
+        "identities": identities,
+        "links": relevant_links,
+        "edge_count": len(relevant_links),
+    }
 
 
 @celery_app.task(name="api.tasks.scan_orchestrator.launch_scan", bind=True)
@@ -113,20 +230,7 @@ def finalize_scan(scan_id: str):
         except Exception:
             logger.exception("Cross-verification failed for target %s", scan.target_id)
 
-        # Compute exposure score (separate transaction so scan status is visible)
-        try:
-            from api.services.layer4.score_engine import compute_score
-            score, threat, breakdown = compute_score(scan.target_id, session)
-            logger.info("Score for target %s: exposure=%d, threat=%d", scan.target_id, score, threat)
-        except Exception:
-            logger.exception("Score computation failed for target %s", scan.target_id)
-            # Ensure score is at least 0 on failure
-            if target:
-                target.exposure_score = target.exposure_score or 0
-                target.score_breakdown = target.score_breakdown or {}
-                session.commit()
-
-        # Build identity graph (separate transaction)
+        # Build identity graph FIRST (needed for graph_context)
         try:
             from api.services.layer4.graph_builder import build_graph
             build_graph(scan.target_id, scan.workspace_id, session)
@@ -143,10 +247,34 @@ def finalize_scan(scan_id: str):
         except Exception:
             logger.exception("Confidence propagation failed for target %s", scan.target_id)
 
-        # Aggregate profile data
+        # Build graph_context — the unified intelligence layer
+        graph_context = None
+        try:
+            graph_context = _build_graph_context(scan.target_id, scan.workspace_id, session)
+            logger.info("Graph context built: %d nodes, %d edges, %d clusters",
+                        len(graph_context.get("node_scores", {})),
+                        graph_context.get("edge_count", 0),
+                        len(graph_context.get("clusters", [])))
+        except Exception:
+            logger.exception("Graph context build failed — downstream services will use fallback")
+
+        # Compute exposure score (now WITH graph_context)
+        try:
+            from api.services.layer4.score_engine import compute_score
+            score, threat, breakdown = compute_score(scan.target_id, session, graph_context=graph_context)
+            logger.info("Score for target %s: exposure=%d, threat=%d", scan.target_id, score, threat)
+        except Exception:
+            logger.exception("Score computation failed for target %s", scan.target_id)
+            # Ensure score is at least 0 on failure
+            if target:
+                target.exposure_score = target.exposure_score or 0
+                target.score_breakdown = target.score_breakdown or {}
+                session.commit()
+
+        # Aggregate profile data (with graph_context)
         try:
             from api.services.layer4.profile_aggregator import aggregate_profile
-            aggregate_profile(scan.target_id, scan.workspace_id, session)
+            aggregate_profile(scan.target_id, scan.workspace_id, session, graph_context=graph_context)
         except Exception:
             logger.exception("Profile aggregation failed for target %s", scan.target_id)
 
@@ -215,7 +343,7 @@ def finalize_scan(scan_id: str):
         if check_feature(plan_name, "persona_clustering", ws_role):
             try:
                 from api.services.layer4.persona_engine import cluster_personas
-                personas = cluster_personas(scan.target_id, scan.workspace_id, session)
+                personas = cluster_personas(scan.target_id, scan.workspace_id, session, graph_context=graph_context)
                 if personas:
                     profile = dict(target.profile_data or {})
                     profile["personas"] = personas
@@ -274,7 +402,7 @@ def finalize_scan(scan_id: str):
             fp_engine = FingerprintEngine()
             fingerprint = fp_engine.compute(
                 all_findings, all_identities, target.profile_data, target.email,
-                links=all_links,
+                links=all_links, graph_context=graph_context,
             )
 
             # Save snapshot to history
@@ -301,6 +429,18 @@ def finalize_scan(scan_id: str):
             timeline = fingerprint.get("timeline_events", [])
             if timeline:
                 profile["life_timeline"] = timeline
+
+            # Store graph_context summary for frontend
+            if graph_context:
+                ns = graph_context.get("node_scores", {})
+                gc = graph_context.get("clusters", [])
+                profile["graph_context_summary"] = {
+                    "cluster_count": len(gc),
+                    "total_nodes": len(ns),
+                    "total_edges": graph_context.get("edge_count", 0),
+                    "top_cluster_confidence": gc[0]["confidence"] if gc else 0,
+                    "avg_node_confidence": round(sum(ns.values()) / len(ns), 4) if ns else 0,
+                }
 
             target.profile_data = profile
 

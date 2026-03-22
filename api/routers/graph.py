@@ -60,6 +60,18 @@ async def get_graph(
         for i in identities
     ]
 
+    # Build transition probability map for edge weighting
+    from collections import defaultdict
+    outgoing = defaultdict(list)
+    for l in links:
+        outgoing[l.source_id].append((l.dest_id, l.confidence or 0.5))
+    transition_map = {}
+    for src_id, dests in outgoing.items():
+        total = sum(w for _, w in dests)
+        if total > 0:
+            for dest_id, w in dests:
+                transition_map[(str(src_id), str(dest_id))] = round(w / total, 4)
+
     edges = [
         {
             "source": str(l.source_id),
@@ -67,12 +79,53 @@ async def get_graph(
             "type": l.link_type,
             "confidence": l.confidence,
             "source_module": l.source_module,
+            "transition_probability": transition_map.get((str(l.source_id), str(l.dest_id)), 0),
         }
         for l in links
     ]
 
-    # Count unique clusters (connected components approximation)
-    clusters = len(set(n["type"] for n in nodes)) if nodes else 0
+    # Build graph clusters via BFS
+    id_set = {i.id for i in identities}
+    adj = defaultdict(set)
+    for l in links:
+        if l.source_id in id_set and l.dest_id in id_set:
+            adj[l.source_id].add(l.dest_id)
+            adj[l.dest_id].add(l.source_id)
+
+    visited = set()
+    graph_clusters = []
+    cluster_idx = 0
+    node_cluster_map = {}
+
+    for start_id in id_set:
+        if start_id in visited:
+            continue
+        component = set()
+        queue = [start_id]
+        while queue:
+            n = queue.pop(0)
+            if n in visited:
+                continue
+            visited.add(n)
+            component.add(n)
+            for neighbor in adj.get(n, []):
+                if neighbor not in visited and neighbor in id_set:
+                    queue.append(neighbor)
+
+        if len(component) >= 2:
+            for n in component:
+                node_cluster_map[str(n)] = cluster_idx
+            avg_conf = sum((i.confidence or 0) for i in identities if i.id in component) / len(component)
+            graph_clusters.append({
+                "id": cluster_idx,
+                "node_count": len(component),
+                "confidence": round(avg_conf, 4),
+            })
+            cluster_idx += 1
+
+    # Annotate nodes with cluster_id
+    for n in nodes:
+        n["cluster_id"] = node_cluster_map.get(n["id"])
 
     return {
         "nodes": nodes,
@@ -80,6 +133,7 @@ async def get_graph(
         "stats": {
             "total_nodes": len(nodes),
             "total_edges": len(edges),
-            "clusters": clusters,
+            "clusters": len(graph_clusters),
         },
+        "graph_clusters": graph_clusters,
     }

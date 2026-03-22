@@ -169,7 +169,7 @@ class FingerprintEngine:
         ("high_data_leaked", "high_username_reuse"): "Highly targetable identity",
     }
 
-    def compute(self, findings: list, identities: list, profile_data: dict = None, email: str = "", links=None) -> dict:
+    def compute(self, findings: list, identities: list, profile_data: dict = None, email: str = "", links=None, graph_context=None) -> dict:
         raw = self._extract_raw_values(findings, identities, profile_data)
         axes = self._normalize(raw)
         score = self._compute_score(axes)
@@ -187,7 +187,7 @@ class FingerprintEngine:
         # Avatar seed from eigenvalues + axes
         avatar_seed = self._compute_avatar_seed(axes, eigen, email)
 
-        return {
+        result = {
             "axes": axes,
             "points": points,
             "color": color,
@@ -203,6 +203,25 @@ class FingerprintEngine:
             "timeline_events": raw.pop("timeline_events", []),
             "computed_at": datetime.now(timezone.utc).isoformat(),
         }
+
+        # Graph intelligence metrics (when graph_context is available)
+        if graph_context:
+            clusters = graph_context.get("clusters", [])
+            ns = graph_context.get("node_scores", {})
+            if clusters:
+                avg_cluster_conf = sum(c["confidence"] for c in clusters) / len(clusters)
+            else:
+                avg_cluster_conf = 0
+            result["graph_intelligence"] = {
+                "cluster_count": len(clusters),
+                "avg_cluster_confidence": round(avg_cluster_conf, 4),
+                "max_cluster_density": round(max((c["density"] for c in clusters), default=0), 4),
+                "total_nodes": len(ns),
+                "total_edges": graph_context.get("edge_count", 0),
+                "avg_node_confidence": round(sum(ns.values()) / len(ns), 4) if ns else 0,
+            }
+
+        return result
 
     def _extract_raw_values(self, findings, identities, profile_data):
         accounts = set()

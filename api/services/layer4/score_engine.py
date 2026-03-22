@@ -113,10 +113,27 @@ def _compute_bonus_factors(findings: list) -> int:
     return bonus
 
 
-def compute_score(target_id, session: Session) -> tuple[int, int, dict]:
+def _get_finding_graph_confidence(finding, graph_context):
+    """Get the graph confidence for a finding by matching its indicator value."""
+    node_map = graph_context.get("node_map", {})
+    # Try indicator value
+    if finding.indicator_value:
+        node = node_map.get(finding.indicator_value.lower().strip())
+        if node:
+            return node["confidence"]
+    # Try title keywords
+    title = (finding.title or "").lower()
+    for key, node in node_map.items():
+        if key in title:
+            return node["confidence"]
+    return 0.5  # Default: neutral
+
+
+def compute_score(target_id, session: Session, graph_context=None) -> tuple[int, int, dict]:
     """Compute exposure (0-100) and threat (0-100) scores and category breakdown.
 
     Returns (exposure_score, threat_score, breakdown).
+    If graph_context is provided, findings are weighted by graph node confidence.
     """
     # Deduplicate: keep latest finding per (module, title) — Python-side
     all_findings = session.execute(
@@ -145,6 +162,12 @@ def compute_score(target_id, session: Session) -> tuple[int, int, dict]:
 
         # v2: effective score = severity * confidence * source_reliability
         effective = sev_mult * confidence * source_rel
+
+        # v3: weight by graph node confidence if available
+        if graph_context:
+            node_conf = _get_finding_graph_confidence(f, graph_context)
+            effective *= (0.5 + node_conf * 0.5)  # 0.5x at 0 confidence → 1.0x at full
+
         category_scores[cat] += effective
         category_counts[cat] += 1
 

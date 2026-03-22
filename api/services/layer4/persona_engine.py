@@ -55,15 +55,106 @@ def _is_valid_username(username: str, db_blacklist: list[dict]) -> bool:
     return True
 
 
-def cluster_personas(target_id, workspace_id, session: Session) -> list[dict]:
+def _cluster_from_graph(identities, graph_context, db_blacklist):
+    """Build personas from graph clusters. Each cluster = one persona."""
+    personas = []
+    clusters = graph_context["clusters"]
+    node_scores = graph_context["node_scores"]
+
+    for idx, cluster in enumerate(clusters):
+        cluster_nodes = set(cluster["nodes"])
+
+        # Find username nodes in this cluster
+        cluster_usernames = set()
+        cluster_platforms = set()
+        for i in identities:
+            if i.id in cluster_nodes:
+                if i.type == "username" and _is_valid_username(i.value or "", db_blacklist):
+                    cluster_usernames.add(i.value)
+                if i.platform:
+                    cluster_platforms.add(i.platform)
+
+        if not cluster_usernames:
+            continue
+
+        # Pick highest-confidence username as label
+        best_username = max(
+            cluster_usernames,
+            key=lambda u: node_scores.get(
+                next((i.id for i in identities if i.value == u), None), 0
+            )
+        )
+
+        risk_indicators = []
+        if len(cluster_usernames) > 1:
+            risk_indicators.append(f"username reuse across {len(cluster_platforms)} platforms")
+
+        variants = [u for u in cluster_usernames if u != best_username]
+        if variants:
+            risk_indicators.append(f"username variants detected ({', '.join(sorted(variants)[:3])})")
+
+        personas.append({
+            "id": f"persona_{idx}",
+            "label": best_username,
+            "usernames": sorted(cluster_usernames),
+            "platforms": sorted(cluster_platforms),
+            "accounts_count": len(cluster_platforms),
+            "confidence": cluster["confidence"],
+            "density": cluster["density"],
+            "is_primary": idx == 0,
+            "risk_indicators": risk_indicators,
+            "graph_cluster_size": cluster["node_count"],
+        })
+
+    return personas
+
+
+def cluster_personas(target_id, workspace_id, session: Session, graph_context=None) -> list[dict]:
     """
-    Cluster identity nodes into personas based on username similarity,
-    platform overlap, and temporal proximity.
+    Cluster identity nodes into personas.
+
+    Uses graph clusters if graph_context is available (Markov chain integration),
+    else falls back to SequenceMatcher-based clustering.
 
     Returns list of persona dicts.
     """
     db_blacklist = _load_username_blacklist(session)
 
+    # Load identities (from graph_context or DB)
+    if graph_context and graph_context.get("identities"):
+        identities = graph_context["identities"]
+    else:
+        identities = session.execute(
+            select(Identity).where(
+                Identity.target_id == target_id,
+                Identity.workspace_id == workspace_id,
+            )
+        ).scalars().all()
+
+    # GRAPH-BASED clustering: use connected components
+    if graph_context and graph_context.get("clusters"):
+        personas = _cluster_from_graph(identities, graph_context, db_blacklist)
+        if personas:
+            # Tag identities in DB with persona ID
+            persona_label_map = {}
+            for p in personas:
+                for uname in p["usernames"]:
+                    persona_label_map[uname.lower()] = p["id"]
+
+            for identity in identities:
+                if identity.value and identity.value.lower() in persona_label_map:
+                    meta = dict(identity.metadata_ or {})
+                    meta["persona"] = persona_label_map[identity.value.lower()]
+                    identity.metadata_ = meta
+
+            session.commit()
+            logger.info(
+                "Persona clustering (graph) for target %s: %d personas from %d clusters",
+                target_id, len(personas), len(graph_context["clusters"]),
+            )
+            return personas
+
+    # FALLBACK: SequenceMatcher-based clustering (existing behavior)
     findings = session.execute(
         select(Finding).where(
             Finding.target_id == target_id,
@@ -197,13 +288,6 @@ def cluster_personas(target_id, workspace_id, session: Session) -> list[dict]:
         personas[0]["is_primary"] = True
 
     # Tag identities in DB with persona ID
-    identities = session.execute(
-        select(Identity).where(
-            Identity.target_id == target_id,
-            Identity.workspace_id == workspace_id,
-        )
-    ).scalars().all()
-
     persona_label_map = {}
     for p in personas:
         for uname in p["usernames"]:
