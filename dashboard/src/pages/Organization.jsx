@@ -257,7 +257,9 @@ export default function Organization() {
                   <tr className="text-xs text-gray-500 uppercase tracking-wider border-b border-[#1e1e2e]">
                     <th className="text-left px-5 py-3">User</th>
                     <th className="text-left px-5 py-3">Role</th>
+                    <th className="text-left px-5 py-3">Status</th>
                     <th className="text-left px-5 py-3">Joined</th>
+                    <th className="text-left px-5 py-3">Last Login</th>
                     {isAdmin && <th className="text-left px-5 py-3">Actions</th>}
                   </tr>
                 </thead>
@@ -288,8 +290,18 @@ export default function Organization() {
                           </span>
                         )}
                       </td>
-                      <td className="px-5 py-3 text-gray-500 text-xs">
+                      <td className="px-5 py-3">
+                        {m.last_login ? (
+                          <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-[#00ff88]/15 text-[#00ff88]">active</span>
+                        ) : (
+                          <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-[#666688]/15 text-[#666688]">invited</span>
+                        )}
+                      </td>
+                      <td className="px-5 py-3 text-gray-500 text-xs font-mono">
                         {m.joined_at ? new Date(m.joined_at).toLocaleDateString() : '-'}
+                      </td>
+                      <td className="px-5 py-3 text-gray-500 text-xs font-mono">
+                        {m.last_login ? new Date(m.last_login).toLocaleDateString() : 'Never'}
                       </td>
                       {isAdmin && (
                         <td className="px-5 py-3">

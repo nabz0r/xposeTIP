@@ -115,6 +115,32 @@ async def register(body: RegisterRequest, db: AsyncSession = Depends(get_db)):
 
     membership = UserWorkspace(user_id=user.id, workspace_id=workspace.id, role=role)
     db.add(membership)
+    await db.flush()
+
+    # Transfer any public quick-scan target to the user's new workspace
+    try:
+        from api.models.target import Target
+        from api.models.finding import Finding
+        from api.models.scan import Scan
+        from sqlalchemy import update as sa_update
+        public_ws = await db.execute(select(Workspace).where(Workspace.slug == "public"))
+        public_ws = public_ws.scalar_one_or_none()
+        if public_ws:
+            existing_target = await db.execute(
+                select(Target).where(Target.email == body.email, Target.workspace_id == public_ws.id)
+            )
+            transfer_target = existing_target.scalar_one_or_none()
+            if transfer_target:
+                transfer_target.workspace_id = workspace.id
+                await db.execute(
+                    sa_update(Finding).where(Finding.target_id == transfer_target.id).values(workspace_id=workspace.id)
+                )
+                await db.execute(
+                    sa_update(Scan).where(Scan.target_id == transfer_target.id).values(workspace_id=workspace.id)
+                )
+    except Exception:
+        pass  # Non-critical: user can rescan
+
     await db.commit()
 
     return TokenResponse(

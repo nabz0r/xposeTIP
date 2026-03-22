@@ -150,6 +150,29 @@ def finalize_scan(scan_id: str):
         except Exception:
             logger.exception("Profile aggregation failed for target %s", scan.target_id)
 
+        # Store quick_teaser in profile_data (for landing page freemium flow)
+        try:
+            target = session.execute(select(Target).where(Target.id == scan.target_id)).scalar_one_or_none()
+            if target:
+                all_scan_findings = session.execute(
+                    select(Finding).where(Finding.scan_id == scan.id)
+                    .order_by(Finding.severity)
+                ).scalars().all()
+                sev_order = {"critical": 0, "high": 1, "medium": 2, "low": 3, "info": 4}
+                sorted_findings = sorted(all_scan_findings, key=lambda f: sev_order.get(f.severity, 5))
+                profile = dict(target.profile_data or {})
+                profile["quick_teaser"] = {
+                    "top_findings": [
+                        {"title": f.title, "severity": f.severity, "category": f.category}
+                        for f in sorted_findings[:3]
+                    ],
+                    "total_findings": len(all_scan_findings),
+                }
+                target.profile_data = profile
+                session.commit()
+        except Exception:
+            logger.exception("Quick teaser generation failed for target %s", scan.target_id)
+
         try:
             from api.services.event_bus import publish_event
             publish_event("target.updated", {

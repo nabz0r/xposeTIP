@@ -70,7 +70,7 @@ class ScraperTest(BaseModel):
 async def list_scrapers(
     category: str | None = None,
     page: int = Query(1, ge=1),
-    per_page: int = Query(50, ge=1, le=200),
+    per_page: int = Query(200, ge=1, le=500),
     workspace_id: uuid.UUID = Depends(get_current_workspace),
     user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),

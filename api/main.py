@@ -75,67 +75,154 @@ app.include_router(events.router, prefix="/api/v1/events", tags=["events"])
 
 @app.post("/api/v1/scan/quick")
 async def quick_scan(request_body: dict):
-    """Quick scan endpoint — no auth required, limited modules, rate limited.
+    """Quick scan endpoint — no auth required, limited modules, rate limited by IP.
 
-    For the landing page demo. Runs only fast, free scanners.
-    Returns results inline (not async).
+    Creates target in 'public' workspace, dispatches async scan via Celery,
+    returns scan_id for polling. Cached results returned immediately if recent.
     """
-    import asyncio
-    from datetime import datetime, timezone, timedelta
+    from datetime import datetime, timezone
+    from fastapi import HTTPException
+    from sqlalchemy import select as sa_select
+    from api.database import async_session
+    from api.models.workspace import Workspace
+    from api.models.target import Target
+    from api.models.scan import Scan
 
-    email = request_body.get("email", "").strip()
+    email = (request_body.get("email") or "").strip().lower()
     if not email or "@" not in email:
-        from fastapi import HTTPException
         raise HTTPException(status_code=400, detail="Valid email required")
 
-    # Rate limit: check Redis for IP-based limiting
+    # Rate limit via Redis (5 scans/hour/email)
     try:
         import redis as r
         rc = r.from_url(settings.REDIS_URL)
-        # Simple rate limit: 5 scans per hour per email
         key = f"quickscan:{email}"
         count = rc.incr(key)
         if count == 1:
             rc.expire(key, 3600)
         if count > 5:
-            from fastapi import HTTPException
-            raise HTTPException(status_code=429, detail="Rate limit: max 5 quick scans per email per hour")
+            rc.close()
+            raise HTTPException(status_code=429, detail="Rate limit: 3 quick scans per hour. Create a free account for more.")
         rc.close()
+    except HTTPException:
+        raise
     except Exception:
-        pass  # If Redis fails, allow the scan
+        pass
 
-    # Run only fast, free modules synchronously
-    quick_modules = ["email_validator", "dns_deep", "geoip"]
-    all_findings = []
+    QUICK_MODULES = ["email_validator", "dns_deep", "holehe", "gravatar", "geoip"]
 
-    for module_id in quick_modules:
-        try:
-            from api.tasks.module_tasks import _get_scanner
-            scanner = _get_scanner(module_id)
-            if not scanner:
-                continue
-            loop = asyncio.new_event_loop()
-            try:
-                results = loop.run_until_complete(scanner.scan(email))
-            finally:
-                loop.close()
-            for result in results:
-                all_findings.append({
-                    "module": result.module,
-                    "severity": result.severity,
-                    "title": result.title,
-                    "description": result.description,
-                    "category": result.category,
-                })
-        except Exception:
-            pass
+    async with async_session() as db:
+        # Get or create public workspace
+        result = await db.execute(sa_select(Workspace).where(Workspace.slug == "public"))
+        public_ws = result.scalar_one_or_none()
+        if not public_ws:
+            public_ws = Workspace(name="Quick Scans", slug="public", plan="free")
+            db.add(public_ws)
+            await db.flush()
+
+        # Check if target already exists in public workspace
+        result = await db.execute(
+            sa_select(Target).where(Target.email == email, Target.workspace_id == public_ws.id)
+        )
+        target = result.scalar_one_or_none()
+
+        # If recently scanned, return cached teaser
+        if target and target.profile_data and target.last_scanned:
+            age = (datetime.now(timezone.utc) - target.last_scanned).total_seconds()
+            if age < 86400:
+                await db.commit()
+                return _build_teaser(target)
+
+        if not target:
+            target = Target(email=email, workspace_id=public_ws.id, status="pending")
+            db.add(target)
+            await db.flush()
+
+        # Create scan with limited modules
+        scan = Scan(
+            target_id=target.id,
+            workspace_id=public_ws.id,
+            status="pending",
+            modules=QUICK_MODULES,
+            module_progress={m: "queued" for m in QUICK_MODULES},
+        )
+        db.add(scan)
+        target.status = "scanning"
+        await db.commit()
+
+        scan_id = str(scan.id)
+        target_id = str(target.id)
+
+    # Dispatch Celery task
+    try:
+        from api.tasks.scan_orchestrator import launch_scan
+        launch_scan.delay(scan_id)
+    except Exception:
+        pass
 
     return {
+        "status": "scanning",
+        "target_id": target_id,
+        "scan_id": scan_id,
         "email": email,
-        "findings": all_findings,
-        "total": len(all_findings),
-        "modules_run": quick_modules,
-        "note": "Quick scan — sign up for full 25-module analysis",
+        "message": "Scan started. Results in ~20 seconds.",
+    }
+
+
+@app.get("/api/v1/scan/quick/{scan_id}/status")
+async def quick_scan_status(scan_id: str):
+    """Poll quick scan status — no auth required."""
+    import uuid as _uuid
+    from fastapi import HTTPException
+    from sqlalchemy import select as sa_select
+    from api.database import async_session
+    from api.models.scan import Scan
+    from api.models.target import Target
+
+    async with async_session() as db:
+        result = await db.execute(sa_select(Scan).where(Scan.id == _uuid.UUID(scan_id)))
+        scan = result.scalar_one_or_none()
+        if not scan:
+            raise HTTPException(status_code=404, detail="Scan not found")
+
+        if scan.status not in ("completed", "failed"):
+            return {"status": scan.status, "scan_id": str(scan.id)}
+
+        result = await db.execute(sa_select(Target).where(Target.id == scan.target_id))
+        target = result.scalar_one_or_none()
+        if not target:
+            return {"status": "completed", "scan_id": str(scan.id)}
+
+        return _build_teaser(target)
+
+
+def _build_teaser(target):
+    """Build teaser response for quick scan — limited data with upsell."""
+    profile = target.profile_data or {}
+    fp = profile.get("fingerprint", {})
+    teaser = profile.get("quick_teaser", {})
+
+    return {
+        "status": "completed",
+        "target_id": str(target.id),
+        "email": target.email,
+        "teaser": {
+            "display_name": profile.get("primary_name", ""),
+            "avatar_seed": fp.get("avatar_seed"),
+            "exposure_score": target.exposure_score or 0,
+            "threat_score": target.threat_score or 0,
+            "fingerprint_axes": fp.get("axes", {}),
+            "fingerprint_risk": fp.get("risk_level", "LOW"),
+            "accounts_count": len(profile.get("social_profiles", [])),
+            "sources_count": len(profile.get("data_sources", [])),
+            "top_findings": teaser.get("top_findings", []),
+            "total_findings": teaser.get("total_findings", 0),
+        },
+        "upsell": {
+            "message": "Create a free account to see the full report",
+            "features": ["Identity estimation", "Persona clustering", "Digital fingerprint", "Remediation plan"],
+            "cta_url": f"/setup?email={target.email}",
+        },
     }
 
 

@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../lib/auth'
 import { Shield, Radar, Lock, Globe, Zap, Eye, Database, Network, Users, ChevronRight, ArrowRight, Check } from 'lucide-react'
@@ -35,12 +35,19 @@ const scoreColor = (score) => {
   return '#00ff88'
 }
 
+const sevColor = (sev) => {
+  if (sev === 'critical') return { bg: 'bg-[#ff2244]/20', text: 'text-[#ff2244]' }
+  if (sev === 'high') return { bg: 'bg-[#ff8800]/20', text: 'text-[#ff8800]' }
+  if (sev === 'medium') return { bg: 'bg-[#ffcc00]/20', text: 'text-[#ffcc00]' }
+  return { bg: 'bg-[#3388ff]/20', text: 'text-[#3388ff]' }
+}
+
 const FEATURES = [
   { icon: Radar, title: 'Deep OSINT Scanning', desc: '25+ intelligence modules scan breaches, social networks, code repos, DNS, and public databases in 30 seconds.' },
   { icon: Network, title: 'Identity Graph', desc: 'Force-directed graph maps every connection between your accounts, usernames, and exposed data points.' },
   { icon: Eye, title: 'Digital Fingerprint', desc: '8-axis radar chart quantifies your exposure. Eigenvalue topology creates a unique identity signature.' },
   { icon: Database, title: 'Breach Intelligence', desc: 'Cross-references HIBP, XposedOrNot, and paste sites. Shows exactly which credentials leaked and when.' },
-  { icon: Users, title: 'Identity Avatars', desc: 'Every email gets a unique 32×32 pixel face. 5.4 billion combinations. The avatar evolves with exposure — calm green at low risk, alarmed red with glitch at high threat.' },
+  { icon: Users, title: 'Identity Avatars', desc: 'Every email gets a unique 32x32 pixel face. 5.4 billion combinations. The avatar evolves with exposure — calm green at low risk, alarmed red with glitch at high threat.' },
   { icon: Lock, title: 'Actionable Remediation', desc: 'Every finding includes step-by-step remediation. Track progress as you reduce your attack surface.' },
 ]
 
@@ -72,8 +79,14 @@ export default function Landing() {
   const [email, setEmail] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const [quickResult, setQuickResult] = useState(null)
   const { token } = useAuth()
   const navigate = useNavigate()
+  const pollRef = useRef(null)
+
+  useEffect(() => {
+    return () => { if (pollRef.current) clearInterval(pollRef.current) }
+  }, [])
 
   async function handleQuickScan(e) {
     e.preventDefault()
@@ -83,6 +96,7 @@ export default function Landing() {
     }
     setError('')
     setLoading(true)
+    setQuickResult(null)
 
     if (token) {
       navigate(`/targets?scan=${encodeURIComponent(email)}`)
@@ -95,16 +109,57 @@ export default function Landing() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email }),
       })
+
+      if (resp.status === 429) {
+        setError('Rate limit reached. Create a free account for unlimited scans.')
+        setLoading(false)
+        return
+      }
+
       if (!resp.ok) {
         const data = await resp.json().catch(() => ({}))
         setError(data.detail || 'Scan failed. Try again.')
         setLoading(false)
         return
       }
-      navigate(`/login?email=${encodeURIComponent(email)}`)
+
+      const data = await resp.json()
+
+      if (data.status === 'completed') {
+        setQuickResult(data)
+        setLoading(false)
+        return
+      }
+
+      // Poll for results
+      const scanId = data.scan_id
+      let attempts = 0
+      pollRef.current = setInterval(async () => {
+        attempts++
+        try {
+          const statusResp = await fetch(`/api/v1/scan/quick/${scanId}/status`)
+          const statusData = await statusResp.json()
+          if (statusData.status === 'completed') {
+            clearInterval(pollRef.current)
+            pollRef.current = null
+            setQuickResult(statusData)
+            setLoading(false)
+          } else if (attempts >= 40) {
+            clearInterval(pollRef.current)
+            pollRef.current = null
+            setError('Scan taking longer than expected. Create an account to see results.')
+            setLoading(false)
+          }
+        } catch {
+          clearInterval(pollRef.current)
+          pollRef.current = null
+          setError('Connection error')
+          setLoading(false)
+        }
+      }, 1000)
+
     } catch {
       setError('Network error. Try again.')
-    } finally {
       setLoading(false)
     }
   }
@@ -158,7 +213,7 @@ export default function Landing() {
             </h1>
 
             <p className="text-lg text-gray-400 mb-8 max-w-lg leading-relaxed">
-              Identity Threat Intelligence platform. 25 scanners, 51 scrapers,
+              Identity Threat Intelligence platform. 25 scanners, 71 scrapers,
               graph-based intelligence engine. See your complete digital exposure in 30 seconds.
             </p>
 
@@ -190,6 +245,93 @@ export default function Landing() {
             <p className="text-xs text-gray-600 font-mono">
               No account required for quick scan · GDPR compliant
             </p>
+
+            {/* Loading animation */}
+            {loading && !quickResult && (
+              <div className="mt-6 text-center">
+                <Radar className="w-8 h-8 text-[#00ff88] animate-spin mx-auto mb-3" />
+                <p className="text-sm text-gray-400">Scanning 5 modules...</p>
+                <p className="text-xs text-gray-600 mt-1">Results in ~20 seconds</p>
+              </div>
+            )}
+
+            {/* Quick Result Teaser */}
+            {quickResult && (
+              <div className="bg-[#12121a] border border-[#1e1e2e] rounded-xl p-6 max-w-lg mt-6" style={{ animation: 'fadeInUp 0.5s ease-out' }}>
+                <div className="flex items-center gap-4 mb-4">
+                  {quickResult.teaser.avatar_seed ? (
+                    <GenerativeAvatar seed={quickResult.teaser.avatar_seed} size={64} score={quickResult.teaser.exposure_score} />
+                  ) : (
+                    <div className="w-16 h-16 rounded-lg bg-[#1e1e2e] flex items-center justify-center text-2xl font-bold text-gray-500">
+                      {(quickResult.email || '?')[0].toUpperCase()}
+                    </div>
+                  )}
+                  <div>
+                    <h3 className="text-lg font-semibold">
+                      {quickResult.teaser.display_name || quickResult.email}
+                    </h3>
+                    <div className="flex gap-3 text-sm mt-1">
+                      <span style={{ color: scoreColor(quickResult.teaser.exposure_score) }}>
+                        Exposure: {quickResult.teaser.exposure_score}
+                      </span>
+                      <span style={{ color: scoreColor(quickResult.teaser.threat_score) }}>
+                        Threat: {quickResult.teaser.threat_score}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-3 gap-3 mb-4">
+                  <div className="bg-[#0a0a0f] rounded-lg p-3 text-center">
+                    <div className="text-xl font-mono font-bold text-[#00ff88]">{quickResult.teaser.accounts_count}</div>
+                    <div className="text-[10px] text-gray-500">Accounts</div>
+                  </div>
+                  <div className="bg-[#0a0a0f] rounded-lg p-3 text-center">
+                    <div className="text-xl font-mono font-bold text-[#ffcc00]">{quickResult.teaser.sources_count}</div>
+                    <div className="text-[10px] text-gray-500">Sources</div>
+                  </div>
+                  <div className="bg-[#0a0a0f] rounded-lg p-3 text-center">
+                    <div className="text-xl font-mono font-bold">{quickResult.teaser.fingerprint_risk}</div>
+                    <div className="text-[10px] text-gray-500">Risk Level</div>
+                  </div>
+                </div>
+
+                {/* Top findings visible */}
+                <div className="space-y-2 mb-3">
+                  {(quickResult.teaser.top_findings || []).slice(0, 3).map((f, i) => {
+                    const c = sevColor(f.severity)
+                    return (
+                      <div key={i} className="flex items-center gap-2 text-sm">
+                        <span className={`text-[10px] px-1.5 py-0.5 rounded-full ${c.bg} ${c.text}`}>{f.severity}</span>
+                        <span className="text-gray-300 truncate">{f.title}</span>
+                      </div>
+                    )
+                  })}
+                </div>
+
+                {/* Blurred findings (upsell) */}
+                <div className="relative">
+                  <div className="space-y-2 blur-sm select-none">
+                    {[1,2,3,4,5].map(i => (
+                      <div key={i} className="flex items-center gap-2 text-sm">
+                        <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-gray-800 text-gray-600">medium</span>
+                        <span className="text-gray-600">Finding detail hidden — create account to view</span>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <a href={quickResult.upsell?.cta_url || `/setup?email=${encodeURIComponent(email)}`}
+                       className="bg-[#00ff88] text-black font-bold rounded-lg px-6 py-3 text-sm hover:bg-[#00ff88]/90 transition-all hover:scale-105 shadow-lg shadow-[#00ff88]/20">
+                      See full report — Free
+                    </a>
+                  </div>
+                </div>
+
+                <p className="text-center text-xs text-gray-600 mt-4">
+                  Full scan includes 71 scrapers, persona clustering, identity estimation, and remediation plan.
+                </p>
+              </div>
+            )}
           </div>
 
           {/* Right — Pixel Avatar Grid */}
@@ -292,7 +434,7 @@ export default function Landing() {
             <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
               <div>
                 <div className="text-3xl md:text-4xl font-mono font-bold text-[#00ff88]">
-                  <CountUp target={51} />
+                  <CountUp target={71} />
                 </div>
                 <div className="text-xs text-gray-400 mt-2 font-mono">Scrapers</div>
               </div>
