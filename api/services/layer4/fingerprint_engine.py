@@ -285,6 +285,28 @@ class FingerprintEngine:
             if "DataClasses" in data:
                 data_types.update(data["DataClasses"])
 
+            # Parse LeakCheck-style breach findings
+            # extracted.sources is a Python repr string: "[{'name': 'X', 'date': 'Y'}]"
+            extracted = data.get("extracted")
+            if isinstance(extracted, dict):
+                sources_str = extracted.get("sources", "")
+                if isinstance(sources_str, str) and sources_str.startswith("["):
+                    try:
+                        import ast
+                        sources_list = ast.literal_eval(sources_str)
+                        if isinstance(sources_list, list):
+                            for src in sources_list:
+                                if isinstance(src, dict) and src.get("name"):
+                                    data_types.add(f"breach:{src['name']}")
+                    except (ValueError, SyntaxError):
+                        pass
+
+            # Holehe: confirmed registration = email exposed on that platform
+            if getattr(f, "module", "") == "holehe" and data.get("exists") is True:
+                platform_name = data.get("name", "")
+                if platform_name:
+                    data_types.add(f"email_registered:{platform_name}")
+
         # Email age — infer from ALL timestamps in findings
         email_age = 0
         timeline_events = []
@@ -375,6 +397,30 @@ class FingerprintEngine:
                                 "source": source,
                                 "label": f"Data from {source}: {ek}",
                             })
+
+                # Parse LeakCheck-style sources for breach dates
+                # sources is a Python repr string: "[{'name': 'X', 'date': '2024-08'}]"
+                sources_str = extracted.get("sources", "")
+                if isinstance(sources_str, str) and sources_str.startswith("["):
+                    try:
+                        import ast
+                        sources_list = ast.literal_eval(sources_str)
+                        if isinstance(sources_list, list):
+                            for src in sources_list:
+                                if isinstance(src, dict) and src.get("date"):
+                                    dt = _parse_timestamp(src["date"])
+                                    if dt and dt < now and dt.year >= 1990:
+                                        age = (now - dt).days / 365.25
+                                        email_age = max(email_age, age)
+                                        breach_name = src.get("name", "Unknown")
+                                        timeline_events.append({
+                                            "date": dt.isoformat(),
+                                            "type": "breach",
+                                            "source": source,
+                                            "label": f"Exposed in {breach_name} breach",
+                                        })
+                    except (ValueError, SyntaxError):
+                        pass
 
         # Cap email_age by domain launch date (no Gmail account before 2004, etc.)
         domain = email.split("@")[-1].lower() if "@" in email else ""

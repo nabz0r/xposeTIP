@@ -91,6 +91,11 @@ def _cluster_from_graph(identities, graph_context, db_blacklist):
             if i.id in cluster_nodes:
                 if i.type == "username" and _is_valid_username(i.value or "", db_blacklist):
                     cluster_usernames.add(i.value)
+                # Collect platforms from social_url nodes (e.g. "Steam", "Medium")
+                if i.type == "social_url":
+                    url_plat = (i.platform or i.value or "").strip()
+                    if url_plat and url_plat.lower() not in _PLATFORM_BLACKLIST:
+                        cluster_platforms.add(url_plat)
                 plat = i.platform or ""
                 # Skip generic module names — not real platforms
                 if plat and plat not in ("scraper_engine", "graph_builder", "unknown"):

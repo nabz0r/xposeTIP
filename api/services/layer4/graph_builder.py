@@ -88,6 +88,9 @@ def build_graph(target_id, workspace_id, session: Session):
             new_conf = get_source_reliability(source_module) if source_module else 0.5
             if new_conf > existing.confidence:
                 existing.confidence = new_conf
+            # Upgrade platform if current is missing or generic
+            if platform and (not existing.platform or existing.platform in ("unknown", "scraper_engine", "graph_builder")):
+                existing.platform = platform
             return existing
 
         identity = Identity(
@@ -142,6 +145,17 @@ def build_graph(target_id, workspace_id, session: Session):
             platform = None
             if f.indicator_type == "email":
                 platform = f.indicator_value.split("@")[1] if "@" in f.indicator_value else None
+            elif f.indicator_type == "username":
+                fdata = f.data if isinstance(f.data, dict) else {}
+                platform = (
+                    fdata.get("platform") or
+                    fdata.get("name") or  # holehe uses "name"
+                    fdata.get("network") or
+                    fdata.get("service") or
+                    None
+                )
+                if platform:
+                    platform = platform.replace("_profile", "").replace("_scraper", "").replace("_search", "").strip()
 
             indicator_node = get_or_create_identity(
                 f.indicator_type, f.indicator_value,
@@ -353,4 +367,19 @@ def build_graph(target_id, workspace_id, session: Session):
         # Do NOT add N×N cross-linking here — it creates false persona merges
 
     session.commit()
-    logger.info("Graph built for target %s", target_id)
+
+    # Debug: verify links persisted after commit
+    from sqlalchemy import func as sa_func
+    link_count = session.execute(
+        select(sa_func.count()).select_from(IdentityLink).where(
+            IdentityLink.workspace_id == workspace_id,
+        )
+    ).scalar()
+    node_count = session.execute(
+        select(sa_func.count()).select_from(Identity).where(
+            Identity.target_id == target_id,
+            Identity.workspace_id == workspace_id,
+        )
+    ).scalar()
+    logger.info("GRAPH_DEBUG: %d identity_links, %d identity_nodes in DB after commit for target %s",
+                link_count, node_count, target_id)

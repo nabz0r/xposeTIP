@@ -13,12 +13,22 @@ logger = logging.getLogger(__name__)
 
 
 def _build_graph_context(target_id, workspace_id, session):
+    from sqlalchemy import func as sa_func
     """Build the unified graph context after PageRank.
 
     Returns a dict that ALL downstream services can read.
     No service should query graph data independently after this.
     """
     from api.models.identity import Identity, IdentityLink
+
+    # Debug: verify links exist at start of graph_context build
+    link_count = session.execute(
+        select(sa_func.count()).select_from(IdentityLink).where(
+            IdentityLink.workspace_id == workspace_id,
+        )
+    ).scalar()
+    logger.info("GRAPH_DEBUG: %d identity_links at start of _build_graph_context for target %s",
+                link_count, target_id)
 
     # Load all nodes with propagated confidence
     identities = session.execute(
@@ -235,6 +245,7 @@ def finalize_scan(scan_id: str):
                 logger.info("Cross-verified %d findings for target %s", cv_count, scan.target_id)
         except Exception:
             logger.exception("Cross-verification failed for target %s", scan.target_id)
+        logger.info("PIPELINE[%s]: cross_verify done", scan.target_id)
 
         # Build identity graph FIRST (needed for graph_context)
         try:
@@ -242,8 +253,10 @@ def finalize_scan(scan_id: str):
             build_graph(scan.target_id, scan.workspace_id, session)
         except Exception:
             logger.exception("Graph build failed for target %s", scan.target_id)
+        logger.info("PIPELINE[%s]: graph_builder done", scan.target_id)
 
         # Propagate confidence through identity graph (PageRank)
+        node_scores = None
         try:
             from api.services.layer4.confidence_propagator import propagate_confidence
             node_scores = propagate_confidence(scan.target_id, scan.workspace_id, session)
@@ -252,6 +265,8 @@ def finalize_scan(scan_id: str):
                             len(node_scores), scan.target_id)
         except Exception:
             logger.exception("Confidence propagation failed for target %s", scan.target_id)
+        logger.info("PIPELINE[%s]: pagerank done — %d nodes",
+                    scan.target_id, len(node_scores) if node_scores else 0)
 
         # Build graph_context — the unified intelligence layer
         graph_context = None
@@ -263,6 +278,12 @@ def finalize_scan(scan_id: str):
                         len(graph_context.get("clusters", [])))
         except Exception:
             logger.exception("Graph context build failed — downstream services will use fallback")
+        if graph_context:
+            logger.info("PIPELINE[%s]: graph_context — %d nodes, %d edges, %d clusters",
+                        scan.target_id,
+                        len(graph_context.get("node_scores", {})),
+                        graph_context.get("edge_count", 0),
+                        len(graph_context.get("clusters", [])))
 
         # Compute exposure score (now WITH graph_context)
         try:
@@ -276,6 +297,10 @@ def finalize_scan(scan_id: str):
                 target.exposure_score = target.exposure_score or 0
                 target.score_breakdown = target.score_breakdown or {}
                 session.commit()
+        logger.info("PIPELINE[%s]: score — exposure=%s, threat=%s",
+                    scan.target_id,
+                    getattr(target, 'exposure_score', '?') if target else '?',
+                    getattr(target, 'threat_score', '?') if target else '?')
 
         # Aggregate profile data (with graph_context)
         try:
@@ -283,6 +308,7 @@ def finalize_scan(scan_id: str):
             aggregate_profile(scan.target_id, scan.workspace_id, session, graph_context=graph_context)
         except Exception:
             logger.exception("Profile aggregation failed for target %s", scan.target_id)
+        logger.info("PIPELINE[%s]: profile_aggregator done", scan.target_id)
 
         # Force bio rejection for Telegram slogans and similar noise
         try:
@@ -371,16 +397,22 @@ def finalize_scan(scan_id: str):
             logger.exception("Identity enrichment failed for target %s", scan.target_id)
 
         # Load workspace plan + user role for feature gating
-        from api.models.workspace import Workspace
-        from api.models.user import UserWorkspace
-        from api.services.plan_config import check_feature
-        ws = session.execute(select(Workspace).where(Workspace.id == scan.workspace_id)).scalar_one_or_none()
-        plan_name = ws.plan if ws else "free"
-        # Get the role of the workspace owner (or first member) for bypass check
-        uw = session.execute(
-            select(UserWorkspace).where(UserWorkspace.workspace_id == scan.workspace_id).limit(1)
-        ).scalar_one_or_none()
-        ws_role = uw.role if uw else "user"
+        try:
+            from api.models.workspace import Workspace
+            from api.models.user import UserWorkspace
+            from api.services.plan_config import check_feature
+            ws = session.execute(select(Workspace).where(Workspace.id == scan.workspace_id)).scalar_one_or_none()
+            plan_name = ws.plan if ws else "free"
+            # Get the role of the workspace owner (or first member) for bypass check
+            uw = session.execute(
+                select(UserWorkspace).where(UserWorkspace.workspace_id == scan.workspace_id).limit(1)
+            ).scalar_one_or_none()
+            ws_role = uw.role if uw else "user"
+        except Exception:
+            logger.exception("Failed to load workspace plan for target %s", scan.target_id)
+            plan_name = "free"
+            ws_role = "user"
+            from api.services.plan_config import check_feature
 
         # Cluster personas (plan-gated)
         if check_feature(plan_name, "persona_clustering", ws_role):
@@ -395,6 +427,8 @@ def finalize_scan(scan_id: str):
                     logger.info("Personas clustered for target %s: %d personas", scan.target_id, len(personas))
             except Exception:
                 logger.exception("Persona clustering failed for target %s", scan.target_id)
+            logger.info("PIPELINE[%s]: personas — %d",
+                        scan.target_id, len(personas) if personas else 0)
 
         # Run intelligence analysis pipeline (plan-gated)
         if check_feature(plan_name, "intelligence_pipeline", ws_role):
@@ -495,6 +529,7 @@ def finalize_scan(scan_id: str):
             )
         except Exception:
             logger.exception("Fingerprint computation failed for target %s", scan.target_id)
+        logger.info("PIPELINE[%s]: fingerprint done", scan.target_id)
 
         # Publish scan.completed event for SSE
         try:

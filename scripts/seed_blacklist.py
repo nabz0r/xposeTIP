@@ -82,6 +82,7 @@ DEFAULT_BLACKLIST = [
     {"pattern": "fast. secure. powerful", "type": "contains", "reason": "Telegram slogan"},
     {"pattern": "\u2013 a new era", "type": "contains", "reason": "Telegram title variant"},
     # Sprint 29 additions
+    {"pattern": "booking", "type": "contains", "reason": "Travel platform"},
     {"pattern": "spotify", "type": "exact", "reason": "Music platform"},
     {"pattern": "keepass", "type": "exact", "reason": "Password manager"},
     {"pattern": "edge", "type": "exact", "reason": "Browser"},
