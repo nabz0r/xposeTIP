@@ -344,7 +344,7 @@ export default function TargetDetail() {
 
       {activeTab === 'photos' && <PhotosTab profile={profile} target={target} />}
 
-      {activeTab === 'locations' && <LocationMap findings={findings} />}
+      {activeTab === 'locations' && <LocationMap findings={findings} userLocations={profile?.user_locations} />}
 
       {activeTab === 'accounts' && (
         <AccountsTab

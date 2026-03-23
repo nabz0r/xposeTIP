@@ -2224,6 +2224,29 @@ DEFAULT_SCRAPERS = [
         "rate_limit_requests": 5,
         "rate_limit_window": 30,
     },
+    # === TIMEZONE INFERENCE (Sprint 55) ===
+    {
+        "name": "github_timezone",
+        "display_name": "GitHub Timezone Inference",
+        "description": "Infer timezone from GitHub public activity timestamps",
+        "category": "metadata",
+        "url_template": "https://api.github.com/users/{username}/events/public?per_page=30",
+        "input_type": "username",
+        "input_transform": "email_to_username",
+        "method": "GET",
+        "headers": {"Accept": "application/vnd.github.v3+json"},
+        "success_indicator": "\"created_at\"",
+        "not_found_indicators": ["Not Found", "\"message\""],
+        "extraction_rules": [
+            {"field": "last_activity", "type": "json_key", "pattern": "0.created_at"},
+            {"field": "activity_type", "type": "json_key", "pattern": "0.type"},
+        ],
+        "finding_title_template": "GitHub: public activity detected for {username}",
+        "finding_category": "metadata",
+        "finding_severity": "info",
+        "rate_limit_requests": 10,
+        "rate_limit_window": 60,
+    },
 ]
 
 

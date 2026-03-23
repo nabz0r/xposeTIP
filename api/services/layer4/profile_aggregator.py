@@ -9,6 +9,7 @@ from sqlalchemy.orm import Session
 from api.models.finding import Finding
 from api.models.identity import Identity
 from api.models.target import Target
+from api.services.layer4.source_scoring import get_source_reliability
 
 logger = logging.getLogger(__name__)
 
@@ -114,6 +115,99 @@ def _is_valid_name_db(name_val, blacklist):
                 pass
 
     return True
+
+
+# --- Static geocoding tables (zero API calls) ---
+COUNTRY_COORDS = {
+    "germany": {"lat": 51.1657, "lon": 10.4515, "country": "Germany"},
+    "france": {"lat": 46.2276, "lon": 2.2137, "country": "France"},
+    "luxembourg": {"lat": 49.8153, "lon": 6.1296, "country": "Luxembourg"},
+    "united states": {"lat": 37.0902, "lon": -95.7129, "country": "United States"},
+    "united kingdom": {"lat": 55.3781, "lon": -3.4360, "country": "United Kingdom"},
+    "canada": {"lat": 56.1304, "lon": -106.3468, "country": "Canada"},
+    "india": {"lat": 20.5937, "lon": 78.9629, "country": "India"},
+    "russia": {"lat": 61.5240, "lon": 105.3188, "country": "Russia"},
+    "philippines": {"lat": 12.8797, "lon": 121.7740, "country": "Philippines"},
+    "japan": {"lat": 36.2048, "lon": 138.2529, "country": "Japan"},
+    "australia": {"lat": -25.2744, "lon": 133.7751, "country": "Australia"},
+    "brazil": {"lat": -14.2350, "lon": -51.9253, "country": "Brazil"},
+    "netherlands": {"lat": 52.1326, "lon": 5.2913, "country": "Netherlands"},
+    "belgium": {"lat": 50.5039, "lon": 4.4699, "country": "Belgium"},
+    "switzerland": {"lat": 46.8182, "lon": 8.2275, "country": "Switzerland"},
+    "spain": {"lat": 40.4637, "lon": -3.7492, "country": "Spain"},
+    "italy": {"lat": 41.8719, "lon": 12.5674, "country": "Italy"},
+    "portugal": {"lat": 39.3999, "lon": -8.2245, "country": "Portugal"},
+    "poland": {"lat": 51.9194, "lon": 19.1451, "country": "Poland"},
+    "sweden": {"lat": 60.1282, "lon": 18.6435, "country": "Sweden"},
+    "norway": {"lat": 60.4720, "lon": 8.4689, "country": "Norway"},
+    "denmark": {"lat": 56.2639, "lon": 9.5018, "country": "Denmark"},
+    "finland": {"lat": 61.9241, "lon": 25.7482, "country": "Finland"},
+    "ireland": {"lat": 53.1424, "lon": -7.6921, "country": "Ireland"},
+    "austria": {"lat": 47.5162, "lon": 14.5501, "country": "Austria"},
+    "china": {"lat": 35.8617, "lon": 104.1954, "country": "China"},
+    "south korea": {"lat": 35.9078, "lon": 127.7669, "country": "South Korea"},
+    "singapore": {"lat": 1.3521, "lon": 103.8198, "country": "Singapore"},
+    "lithuania": {"lat": 55.1694, "lon": 23.8813, "country": "Lithuania"},
+    "romania": {"lat": 45.9432, "lon": 24.9668, "country": "Romania"},
+}
+
+CITY_COORDS = {
+    "san francisco": {"lat": 37.7749, "lon": -122.4194, "city": "San Francisco", "country": "United States"},
+    "new york": {"lat": 40.7128, "lon": -74.0060, "city": "New York", "country": "United States"},
+    "london": {"lat": 51.5074, "lon": -0.1278, "city": "London", "country": "United Kingdom"},
+    "paris": {"lat": 48.8566, "lon": 2.3522, "city": "Paris", "country": "France"},
+    "berlin": {"lat": 52.5200, "lon": 13.4050, "city": "Berlin", "country": "Germany"},
+    "munich": {"lat": 48.1351, "lon": 11.5820, "city": "Munich", "country": "Germany"},
+    "frankfurt": {"lat": 50.1109, "lon": 8.6821, "city": "Frankfurt", "country": "Germany"},
+    "mountain view": {"lat": 37.3861, "lon": -122.0839, "city": "Mountain View", "country": "United States"},
+    "luxembourg": {"lat": 49.6117, "lon": 6.1300, "city": "Luxembourg", "country": "Luxembourg"},
+    "brighton": {"lat": 50.8225, "lon": -0.1372, "city": "Brighton", "country": "United Kingdom"},
+    "moscow": {"lat": 55.7558, "lon": 37.6173, "city": "Moscow", "country": "Russia"},
+    "mumbai": {"lat": 19.0760, "lon": 72.8777, "city": "Mumbai", "country": "India"},
+    "montreal": {"lat": 45.5017, "lon": -73.5673, "city": "Montreal", "country": "Canada"},
+    "toronto": {"lat": 43.6532, "lon": -79.3832, "city": "Toronto", "country": "Canada"},
+    "minneapolis": {"lat": 44.9778, "lon": -93.2650, "city": "Minneapolis", "country": "United States"},
+    "los angeles": {"lat": 34.0522, "lon": -118.2437, "city": "Los Angeles", "country": "United States"},
+    "cedar rapids": {"lat": 41.9779, "lon": -91.6656, "city": "Cedar Rapids", "country": "United States"},
+    "amsterdam": {"lat": 52.3676, "lon": 4.9041, "city": "Amsterdam", "country": "Netherlands"},
+    "tokyo": {"lat": 35.6762, "lon": 139.6503, "city": "Tokyo", "country": "Japan"},
+    "sydney": {"lat": -33.8688, "lon": 151.2093, "city": "Sydney", "country": "Australia"},
+}
+
+_COUNTRY_CODE_MAP = {
+    "us": "united states", "gb": "united kingdom", "uk": "united kingdom",
+    "de": "germany", "fr": "france", "lu": "luxembourg", "ca": "canada",
+    "in": "india", "ru": "russia", "jp": "japan", "au": "australia",
+    "nl": "netherlands", "be": "belgium", "ch": "switzerland",
+    "es": "spain", "it": "italy", "lt": "lithuania", "ro": "romania",
+    "ph": "philippines", "cn": "china", "kr": "south korea", "sg": "singapore",
+    "br": "brazil", "pt": "portugal", "pl": "poland", "se": "sweden",
+    "no": "norway", "dk": "denmark", "fi": "finland", "ie": "ireland",
+    "at": "austria",
+}
+
+
+def _geocode_location(loc_string):
+    """Static geocoding — no API calls. Returns dict with lat/lon or None."""
+    loc = loc_string.lower().strip()
+
+    # Try city match first (more specific)
+    for city_key, coords in CITY_COORDS.items():
+        if city_key in loc:
+            return dict(coords)
+
+    # Try country match
+    for country_key, coords in COUNTRY_COORDS.items():
+        if country_key in loc:
+            return dict(coords)
+
+    # Try 2-letter country code
+    if len(loc) == 2:
+        country = _COUNTRY_CODE_MAP.get(loc)
+        if country and country in COUNTRY_COORDS:
+            return dict(COUNTRY_COORDS[country])
+
+    return None
 
 
 def aggregate_profile(target_id, workspace_id, session: Session, graph_context=None) -> dict:
@@ -390,6 +484,66 @@ def aggregate_profile(target_id, workspace_id, session: Session, graph_context=N
 
     profile["data_sources"] = sorted(sources)
     profile["breach_summary"]["sources"] = profile["breach_summary"]["sources"][:20]
+
+    # --- Harvest self-reported user locations from scraper findings ---
+    user_locations = []
+    seen_user_locs = set()
+
+    for f in findings:
+        source = f.module or ""
+        data_raw = f.data or {}
+
+        # Skip geoip — it's server location, not user location
+        if source in ("geoip", "maxmind_geo"):
+            continue
+
+        # Check all possible location fields
+        loc = None
+        for key in ("location", "city", "country"):
+            val = data_raw.get(key)
+            if val and isinstance(val, str) and len(val.strip()) >= 2:
+                loc = val.strip()
+                break
+
+        # Also check extracted dict
+        if not loc:
+            extracted = data_raw.get("extracted")
+            if isinstance(extracted, dict):
+                for key in ("location", "city", "country"):
+                    val = extracted.get(key)
+                    if val and isinstance(val, str) and len(val.strip()) >= 2:
+                        loc = val.strip()
+                        break
+
+        if not loc:
+            continue
+
+        # Reject URLs, XML, very short codes
+        if loc.startswith("http") or loc.startswith("<") or loc.startswith("]"):
+            continue
+        if "CDATA" in loc or "xml" in loc.lower():
+            continue
+        if len(loc) < 3 and loc.upper() not in _COUNTRY_CODE_MAP:
+            continue
+
+        loc_key = loc.lower().strip()
+        if loc_key in seen_user_locs:
+            continue
+        seen_user_locs.add(loc_key)
+
+        entry = {
+            "location": loc,
+            "source": source,
+            "type": "self_reported",
+            "confidence": get_source_reliability(source),
+        }
+        # Static geocode
+        coords = _geocode_location(loc)
+        if coords:
+            entry.update(coords)
+        user_locations.append(entry)
+
+    profile["user_locations"] = user_locations
 
     # --- Profile confidence score ---
     name_sources = len(profile["names"])

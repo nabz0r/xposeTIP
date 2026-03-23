@@ -26,31 +26,48 @@ const WORLD_PATH =
   'M740,220L770,215L800,225L810,250L800,270L780,280L760,275L745,260L740,240Z ' + // Australia
   'M630,170L645,175L655,185L650,200L635,195L625,185Z' // Indonesia
 
-export default function LocationMap({ findings }) {
+export default function LocationMap({ findings, userLocations }) {
   const geoFindings = useMemo(
     () => findings.filter(f => f.category === 'geolocation' && f.data?.latitude && f.data?.longitude),
     [findings]
   )
 
-  if (geoFindings.length === 0) {
+  // User-reported locations from profile_data.user_locations (self-reported, high value)
+  const userPoints = useMemo(() => {
+    if (!userLocations?.length) return []
+    return userLocations
+      .filter(u => u.lat && u.lon)
+      .map((u, i) => {
+        const [x, y] = project(u.lat, u.lon)
+        return { x, y, label: u.city || u.location || u.country || '?', source: u.source, type: 'self_reported', index: i }
+      })
+  }, [userLocations])
+
+  // Server locations from GeoIP findings (low value)
+  const serverPoints = useMemo(() => {
+    return geoFindings.map((f, i) => {
+      const [x, y] = project(f.data.latitude, f.data.longitude)
+      return { x, y, label: `${f.data.city || '?'}, ${f.data.country || '?'}`, source: f.data.isp || 'GeoIP', type: 'server', finding: f, index: i }
+    })
+  }, [geoFindings])
+
+  const hasData = userPoints.length > 0 || serverPoints.length > 0
+
+  if (!hasData) {
     return (
       <div className="bg-[#12121a] border border-[#1e1e2e] rounded-xl p-8 text-center">
-        <p className="text-gray-500 text-sm">No geolocation data available. Run the GeoIP or DNS Intelligence module to map mail server locations.</p>
+        <p className="text-gray-500 text-sm">No geolocation data available. Run a scan to discover location data from profiles and mail servers.</p>
       </div>
     )
   }
-
-  const points = geoFindings.map((f, i) => {
-    const [x, y] = project(f.data.latitude, f.data.longitude)
-    return { x, y, finding: f, index: i }
-  })
 
   return (
     <div className="bg-[#12121a] border border-[#1e1e2e] rounded-xl overflow-hidden">
       <div className="px-5 py-3 border-b border-[#1e1e2e] flex items-center gap-2">
         <Globe className="w-4 h-4 text-[#3388ff]" />
-        <span className="text-sm font-semibold">Mail Server Locations</span>
-        <span className="text-[10px] text-gray-600 ml-2">These are mail server locations, not the user's physical location.</span>
+        <span className="text-sm font-semibold">Locations</span>
+        {userPoints.length > 0 && <span className="text-[10px] text-[#00ff88] ml-2">{userPoints.length} self-reported</span>}
+        {serverPoints.length > 0 && <span className="text-[10px] text-gray-600 ml-2">{serverPoints.length} mail server{serverPoints.length > 1 ? 's' : ''}</span>}
       </div>
       <div className="p-4">
         <svg viewBox="0 0 960 480" className="w-full" style={{ maxHeight: '400px' }}>
@@ -68,35 +85,64 @@ export default function LocationMap({ findings }) {
           {/* World outline */}
           <path d={WORLD_PATH} fill="#1a1a2e" stroke="#2a2a3e" strokeWidth="1" opacity="0.8" />
 
-          {/* Pulse rings for each point */}
-          {points.map((p, i) => (
-            <g key={`pulse-${i}`}>
+          {/* Server location pulse rings (dim) */}
+          {serverPoints.map((p, i) => (
+            <g key={`srv-pulse-${i}`} opacity="0.3">
               <circle cx={p.x} cy={p.y} r="20" fill="none" stroke="#3388ff" strokeWidth="1" opacity="0.3">
                 <animate attributeName="r" from="8" to="30" dur="2s" repeatCount="indefinite" />
-                <animate attributeName="opacity" from="0.5" to="0" dur="2s" repeatCount="indefinite" />
+                <animate attributeName="opacity" from="0.3" to="0" dur="2s" repeatCount="indefinite" />
               </circle>
-              <circle cx={p.x} cy={p.y} r="12" fill="none" stroke="#3388ff" strokeWidth="0.5" opacity="0.2">
+            </g>
+          ))}
+
+          {/* User location pulse rings (bright) */}
+          {userPoints.map((p, i) => (
+            <g key={`usr-pulse-${i}`}>
+              <circle cx={p.x} cy={p.y} r="20" fill="none" stroke="#00ff88" strokeWidth="1.5" opacity="0.5">
+                <animate attributeName="r" from="8" to="30" dur="2s" repeatCount="indefinite" />
+                <animate attributeName="opacity" from="0.6" to="0" dur="2s" repeatCount="indefinite" />
+              </circle>
+              <circle cx={p.x} cy={p.y} r="12" fill="none" stroke="#00ff88" strokeWidth="0.5" opacity="0.3">
                 <animate attributeName="r" from="6" to="20" dur="2s" begin="0.5s" repeatCount="indefinite" />
                 <animate attributeName="opacity" from="0.4" to="0" dur="2s" begin="0.5s" repeatCount="indefinite" />
               </circle>
             </g>
           ))}
 
-          {/* Location dots */}
-          {points.map((p, i) => (
-            <g key={`dot-${i}`}>
-              <circle cx={p.x} cy={p.y} r="6" fill="#3388ff" opacity="0.3" />
-              <circle cx={p.x} cy={p.y} r="4" fill="#3388ff" />
-              <circle cx={p.x} cy={p.y} r="1.5" fill="#ffffff" />
+          {/* Server location dots (dim blue) */}
+          {serverPoints.map((p, i) => (
+            <g key={`srv-dot-${i}`} opacity="0.4">
+              <circle cx={p.x} cy={p.y} r="5" fill="#3388ff" opacity="0.3" />
+              <circle cx={p.x} cy={p.y} r="3" fill="#3388ff" />
+              <circle cx={p.x} cy={p.y} r="1" fill="#ffffff" />
             </g>
           ))}
 
-          {/* Labels */}
-          {points.map((p, i) => (
-            <g key={`label-${i}`}>
-              <rect x={p.x + 10} y={p.y - 14} width={Math.max(80, (p.finding.data.city?.length || 0) * 7 + 20)} height="20" rx="4" fill="#12121a" stroke="#1e1e2e" strokeWidth="1" />
-              <text x={p.x + 16} y={p.y} fill="#e0e0e0" fontSize="10" fontFamily="monospace">
-                {p.finding.data.city}, {p.finding.data.country}
+          {/* User location dots (bright green) */}
+          {userPoints.map((p, i) => (
+            <g key={`usr-dot-${i}`}>
+              <circle cx={p.x} cy={p.y} r="7" fill="#00ff88" opacity="0.3" />
+              <circle cx={p.x} cy={p.y} r="5" fill="#00ff88" />
+              <circle cx={p.x} cy={p.y} r="2" fill="#ffffff" />
+            </g>
+          ))}
+
+          {/* User location labels */}
+          {userPoints.map((p, i) => (
+            <g key={`usr-label-${i}`}>
+              <rect x={p.x + 12} y={p.y - 14} width={Math.max(80, (p.label?.length || 0) * 7 + 20)} height="20" rx="4" fill="#12121a" stroke="#00ff88" strokeWidth="1" opacity="0.9" />
+              <text x={p.x + 18} y={p.y} fill="#00ff88" fontSize="10" fontFamily="monospace">
+                {p.label}
+              </text>
+            </g>
+          ))}
+
+          {/* Server location labels */}
+          {serverPoints.map((p, i) => (
+            <g key={`srv-label-${i}`} opacity="0.5">
+              <rect x={p.x + 10} y={p.y - 14} width={Math.max(80, (p.label?.length || 0) * 7 + 20)} height="20" rx="4" fill="#12121a" stroke="#1e1e2e" strokeWidth="1" />
+              <text x={p.x + 16} y={p.y} fill="#666688" fontSize="10" fontFamily="monospace">
+                {p.label} (server)
               </text>
             </g>
           ))}
@@ -105,11 +151,31 @@ export default function LocationMap({ findings }) {
       {/* Legend */}
       <div className="px-4 py-3 border-t border-[#1e1e2e]">
         <div className="flex flex-wrap gap-4 text-xs text-gray-400">
-          {geoFindings.map((f, i) => (
-            <span key={i} className="inline-flex items-center gap-1.5">
+          {userPoints.length > 0 && (
+            <span className="inline-flex items-center gap-1.5 text-[#00ff88]">
+              <span className="w-2 h-2 rounded-full bg-[#00ff88]" />
+              Self-reported locations
+            </span>
+          )}
+          {serverPoints.length > 0 && (
+            <span className="inline-flex items-center gap-1.5 text-gray-600">
+              <span className="w-2 h-2 rounded-full bg-[#3388ff] opacity-50" />
+              Mail server locations (GeoIP)
+            </span>
+          )}
+        </div>
+        <div className="flex flex-wrap gap-4 text-xs text-gray-400 mt-2">
+          {userPoints.map((p, i) => (
+            <span key={`ul-${i}`} className="inline-flex items-center gap-1.5">
+              <span className="w-2 h-2 rounded-full bg-[#00ff88]" />
+              {p.label} — {p.source}
+            </span>
+          ))}
+          {serverPoints.map((p, i) => (
+            <span key={`sl-${i}`} className="inline-flex items-center gap-1.5 opacity-50">
               <span className="w-2 h-2 rounded-full bg-[#3388ff]" />
-              {f.data.city}, {f.data.country} — {f.data.ip}
-              {f.data.isp && <span className="text-gray-600">({f.data.isp})</span>}
+              {p.label} — {p.finding?.data?.ip || 'server'}
+              {p.finding?.data?.isp && <span className="text-gray-600">({p.finding.data.isp})</span>}
             </span>
           ))}
         </div>

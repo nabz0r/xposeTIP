@@ -61,6 +61,23 @@ def _is_valid_extracted_username(username: str) -> bool:
     return True
 
 
+def _is_valid_location(loc_val: str) -> bool:
+    """Reject garbage location values (URLs, XML fragments, ambiguous codes)."""
+    v = loc_val.strip()
+    if not v or len(v) < 2:
+        return False
+    if v.startswith("http"):
+        return False
+    if v.startswith("<") or v.startswith("]"):
+        return False
+    if "CDATA" in v or "xml" in v.lower():
+        return False
+    # Single char is never a location
+    if len(v) == 1:
+        return False
+    return True
+
+
 def _match_url_platform(url):
     """Axe 5: Proper domain matching — check if URL host ends with a known domain."""
     if not url:
@@ -488,6 +505,9 @@ def build_graph(target_id, workspace_id, session: Session):
             if loc_val and isinstance(loc_val, str) and len(loc_val.strip()) >= 2:
                 # Skip geoip module locations (mail server, not user)
                 if f.module in ("geoip", "maxmind_geo"):
+                    continue
+                # Reject URLs, XML fragments, ambiguous codes
+                if not _is_valid_location(loc_val):
                     continue
                 loc_node = get_or_create_identity(
                     "location", loc_val.strip(),

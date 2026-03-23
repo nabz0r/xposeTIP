@@ -323,14 +323,31 @@ class FingerprintEngine:
             if cat == "breach" and "not configured" not in title.lower():
                 breaches += 1
 
-        # Geo spread
-        countries = set()
+        # Geo spread — prioritize self-reported locations over server locations
+        countries_user = set()    # From profiles, scrapers — HIGH value
+        countries_server = set()  # From geoip — LOW value
         for f in findings:
             data = f.data if isinstance(f.data, dict) else {}
-            if "country" in data:
-                countries.add(str(data["country"]))
-            if "countryCode" in data:
-                countries.add(str(data["countryCode"]))
+            source = getattr(f, "module", "") or ""
+
+            country = data.get("country") or data.get("countryCode") or ""
+            if not country:
+                extracted = data.get("extracted")
+                if isinstance(extracted, dict):
+                    country = extracted.get("country") or extracted.get("location") or ""
+
+            if country and isinstance(country, str) and len(country.strip()) >= 2:
+                # Skip URLs and XML
+                if country.startswith("http") or country.startswith("<"):
+                    continue
+
+                if source in ("geoip", "maxmind_geo"):
+                    countries_server.add(country.strip().lower())
+                else:
+                    countries_user.add(country.strip().lower())
+
+        # User-reported countries worth 1 each, server countries worth 0.25
+        geo_spread_value = len(countries_user) + len(countries_server) * 0.25
 
         # Data types leaked
         data_types = set()
@@ -515,7 +532,7 @@ class FingerprintEngine:
             "platforms": len(platforms),
             "username_reuse": reused,
             "breaches": breaches,
-            "geo_spread": len(countries),
+            "geo_spread": geo_spread_value,
             "data_leaked": len(data_types),
             "email_age_years": round(email_age, 1),
             "security_weak": security_issues,
