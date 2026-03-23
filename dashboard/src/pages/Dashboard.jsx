@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Crosshair, Radar, AlertTriangle, ShieldAlert, Search } from 'lucide-react'
+import { useAuth } from '../lib/auth'
 import { getTargets, getScans, getFindingsStats, getFindings, createTarget, createScan, getDefaults, getFingerprint, cancelScan } from '../lib/api'
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, AreaChart, Area } from 'recharts'
 import WorldHeatmap from '../components/WorldHeatmap'
@@ -46,6 +47,7 @@ const CustomTooltip = ({ active, payload, label }) => {
 }
 
 export default function Dashboard() {
+  const { refreshKey } = useAuth()
   const [stats, setStats] = useState({ targets: 0, scans: 0, findings: 0, critical: 0, high: 0 })
   const [recentScans, setRecentScans] = useState([])
   const [severityData, setSeverityData] = useState([])
@@ -59,7 +61,7 @@ export default function Dashboard() {
   const [defaultModules, setDefaultModules] = useState(['email_validator', 'holehe', 'emailrep', 'gravatar', 'epieos', 'github_deep', 'dns_deep'])
   const navigate = useNavigate()
 
-  useEffect(() => { loadData(); loadDefaults() }, [])
+  useEffect(() => { loadData(); loadDefaults() }, [refreshKey])
   useSSE({ 'scan.completed': () => loadData(), 'target.updated': () => loadData() })
 
   async function loadDefaults() {

@@ -86,6 +86,16 @@ export default function Scrapers() {
     } catch {}
   }
 
+  async function handleToggleCategory(enable) {
+    const categoryScrapers = scrapers.filter(s => s.category === catFilter)
+    for (const s of categoryScrapers) {
+      if (s.enabled !== enable) {
+        await toggleScraper(s.id)
+      }
+    }
+    loadScrapers()
+  }
+
   async function handleDelete(id) {
     if (!confirm('Delete this scraper?')) return
     try {
@@ -140,6 +150,12 @@ export default function Scrapers() {
     }))
   }
 
+  const categoryCounts = {}
+  scrapers.forEach(s => {
+    const cat = s.category || 'other'
+    categoryCounts[cat] = (categoryCounts[cat] || 0) + 1
+  })
+
   const filtered = catFilter === 'all' ? scrapers : scrapers.filter(s => s.category === catFilter)
 
   return (
@@ -160,14 +176,28 @@ export default function Scrapers() {
       </div>
 
       {/* Category filter */}
-      <div className="flex gap-2">
+      <div className="flex flex-wrap gap-2">
         {['all', ...CATEGORIES].map(c => (
           <button key={c} onClick={() => setCatFilter(c)}
             className={`text-xs px-3 py-1.5 rounded-full capitalize ${catFilter === c ? 'bg-[#00ff88]/20 text-[#00ff88]' : 'bg-[#12121a] text-gray-400 hover:text-white'}`}>
-            {c}
+            {c === 'all' ? `All (${scrapers.length})` : `${c.replace('_', ' ')} (${categoryCounts[c] || 0})`}
           </button>
         ))}
       </div>
+
+      {/* Toggle all in category */}
+      {catFilter !== 'all' && (
+        <div className="flex items-center gap-2">
+          <button onClick={() => handleToggleCategory(true)}
+            className="text-xs bg-[#00ff88]/20 text-[#00ff88] px-3 py-1 rounded hover:bg-[#00ff88]/30">
+            Enable All {catFilter.replace('_', ' ')}
+          </button>
+          <button onClick={() => handleToggleCategory(false)}
+            className="text-xs bg-red-500/20 text-red-400 px-3 py-1 rounded hover:bg-red-500/30">
+            Disable All {catFilter.replace('_', ' ')}
+          </button>
+        </div>
+      )}
 
       <div className="flex gap-4">
         {/* List */}

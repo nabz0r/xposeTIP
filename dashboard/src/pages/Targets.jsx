@@ -152,7 +152,7 @@ export default function Targets() {
   }
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 pb-8">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold">Targets <span className="text-sm text-gray-500 font-normal ml-2">{total}</span></h1>
         <div className="flex gap-2">
@@ -178,7 +178,7 @@ export default function Targets() {
       </div>
 
       {/* Table */}
-      <div className="bg-[#12121a] border border-[#1e1e2e] rounded-xl overflow-hidden">
+      <div className="bg-[#12121a] border border-[#1e1e2e] rounded-xl overflow-x-hidden">
         <table className="w-full text-sm">
           <thead>
             <tr className="text-xs text-gray-500 uppercase tracking-wider border-b border-[#1e1e2e]">

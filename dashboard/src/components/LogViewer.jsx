@@ -1,5 +1,5 @@
 import { useEffect, useState, useRef } from 'react'
-import { RefreshCw, Trash2, Pause, Play, Filter } from 'lucide-react'
+import { RefreshCw, Trash2, Pause, Play, Filter, Download } from 'lucide-react'
 import { getLogs, clearLogs } from '../lib/api'
 
 const LEVEL_COLORS = {
@@ -54,6 +54,19 @@ export default function LogViewer() {
     }
   }, [autoRefresh, filterLevel, filterContainer, limit])
 
+  function handleDownloadLogs() {
+    const data = JSON.stringify(logs, null, 2)
+    const blob = new Blob([data], { type: 'application/json' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    const container = filterContainer || 'all'
+    const level = filterLevel || 'all'
+    a.href = url
+    a.download = `xpose-logs-${container}-${level}-${new Date().toISOString().slice(0, 19)}.json`
+    a.click()
+    URL.revokeObjectURL(url)
+  }
+
   async function handleClear() {
     if (!confirm('Clear all logs from the buffer?')) return
     try {
@@ -104,6 +117,11 @@ export default function LogViewer() {
           <button onClick={fetchLogs}
             className="flex items-center gap-1.5 text-xs text-gray-400 hover:text-white border border-[#1e1e2e] rounded-lg px-3 py-1.5">
             <RefreshCw className={`w-3 h-3 ${loading ? 'animate-spin' : ''}`} /> Refresh
+          </button>
+          <button onClick={handleDownloadLogs}
+            className="flex items-center gap-1.5 text-xs text-gray-400 hover:text-white border border-[#1e1e2e] rounded-lg px-3 py-1.5"
+            title="Download logs as JSON">
+            <Download className="w-3 h-3" /> Download
           </button>
           <button onClick={handleClear}
             className="flex items-center gap-1.5 text-xs text-[#ff2244] hover:text-[#ff4466] border border-[#1e1e2e] rounded-lg px-3 py-1.5">
