@@ -386,9 +386,19 @@ def finalize_scan(scan_id: str):
             if target:
                 profile = dict(target.profile_data or {})
                 est = profile.get("identity_estimation", {})
-                if not est.get("gender") or not est.get("age"):
+                # Re-query if gender/age missing OR nationalities are low-confidence garbage
+                max_nat_prob = max(
+                    (n.get("probability", 0) for n in est.get("nationalities", [{}]) if isinstance(n, dict)),
+                    default=0,
+                )
+                should_enrich = (
+                    not est.get("gender")
+                    or not est.get("age")
+                    or max_nat_prob < 0.15
+                )
+                if should_enrich:
                     updated_est = enrich_identity(profile, target.email)
-                    if updated_est and (updated_est.get("gender") or updated_est.get("age")):
+                    if updated_est and (updated_est.get("gender") or updated_est.get("age") or updated_est.get("nationalities")):
                         profile["identity_estimation"] = updated_est
                         target.profile_data = profile
                         session.commit()

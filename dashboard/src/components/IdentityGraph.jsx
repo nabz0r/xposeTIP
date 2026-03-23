@@ -53,9 +53,9 @@ export default function IdentityGraph({ data, personas = [] }) {
   const getDynamicRadius = (node) => {
     // Size proportional to PageRank confidence
     const conf = node.confidence || 0.5
-    const base = 4 + conf * 16  // 4px at 0 → 20px at 1.0
+    const base = 6 + conf * 18  // 6px at 0 → 24px at 1.0
     const edges = edgeCounts[node.id] || 0
-    return Math.max(base, 6) + Math.min(edges * 1.5, 8)
+    return Math.max(base, 8) + Math.min(edges * 2, 10)
   }
 
   // Get connected nodes for detail panel
@@ -178,10 +178,18 @@ export default function IdentityGraph({ data, personas = [] }) {
     node.append('text')
       .attr('dy', d => getDynamicRadius(d) + 14)
       .attr('text-anchor', 'middle')
-      .attr('font-size', 10)
+      .attr('font-size', d => {
+        const edges = edgeCounts[d.id] || 0
+        return edges >= 5 ? 12 : edges >= 2 ? 11 : 10
+      })
       .attr('fill', '#888')
       .attr('font-family', 'JetBrains Mono, monospace')
-      .attr('opacity', d => (d.confidence || 0) > 0.4 ? 1 : 0.4)
+      .attr('opacity', d => {
+        const edges = edgeCounts[d.id] || 0
+        if (edges >= 3) return 1
+        if ((d.confidence || 0) > 0.3) return 0.8
+        return 0.4
+      })
       .text(d => {
         const v = d.value
         return v.length > 20 ? v.slice(0, 18) + '…' : v
@@ -229,6 +237,41 @@ export default function IdentityGraph({ data, personas = [] }) {
         .attr('x', d => (d.source.x + d.target.x) / 2)
         .attr('y', d => (d.source.y + d.target.y) / 2)
       node.attr('transform', d => `translate(${d.x},${d.y})`)
+    })
+
+    // Auto zoom-to-fit after simulation stabilizes
+    simulation.on('end', () => {
+      let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity
+      data.nodes.forEach(d => {
+        if (d.x < minX) minX = d.x
+        if (d.x > maxX) maxX = d.x
+        if (d.y < minY) minY = d.y
+        if (d.y > maxY) maxY = d.y
+      })
+
+      const padding = 60
+      const graphWidth = maxX - minX + padding * 2
+      const graphHeight = maxY - minY + padding * 2
+
+      if (graphWidth > 0 && graphHeight > 0) {
+        const scale = Math.min(
+          width / graphWidth,
+          height / graphHeight,
+          2.0
+        ) * 0.9
+
+        const centerX = (minX + maxX) / 2
+        const centerY = (minY + maxY) / 2
+
+        const transform = d3.zoomIdentity
+          .translate(width / 2, height / 2)
+          .scale(scale)
+          .translate(-centerX, -centerY)
+
+        svg.transition()
+          .duration(750)
+          .call(zoom.transform, transform)
+      }
     })
 
     return () => simulation.stop()

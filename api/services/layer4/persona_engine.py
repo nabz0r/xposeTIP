@@ -75,6 +75,31 @@ _PLATFORM_BLACKLIST = {
 }
 
 
+def _is_valid_extracted_username(username: str) -> bool:
+    """Same validation as graph_builder — reject noisy values."""
+    u = username.strip()
+    if len(u) < 2:
+        return False
+    if "'s " in u.lower() or u.lower().endswith("'s") or "profile" in u.lower():
+        return False
+    parts = u.split()
+    if len(parts) >= 2:
+        if len(parts[-1].rstrip('.')) <= 1:
+            return False
+        if len(parts[0].rstrip('.')) <= 1:
+            return False
+    if u.count('.') >= 2:
+        return False
+    if '@' in u:
+        return False
+    # Full names → not usernames
+    if ' ' in u:
+        words = [p for p in u.split() if p]
+        if len(words) >= 2 and all(w[0].isupper() for w in words):
+            return False
+    return True
+
+
 def _cluster_from_graph(identities, graph_context, db_blacklist):
     """Build personas from graph clusters. Each cluster = one persona."""
     personas = []
@@ -127,13 +152,19 @@ def _cluster_from_graph(identities, graph_context, db_blacklist):
             len(cluster_platforms), sorted(cluster_platforms)[:10],
         )
 
-        if not cluster_usernames:
+        # Sprint 50: Accept clusters with usernames OR names (not just usernames)
+        if not cluster_usernames and not cluster_names:
             continue
 
-        # Pick highest-confidence username as label, prefer valid persona names
-        valid_usernames = [u for u in cluster_usernames if _is_valid_persona_name(u)]
-        label_candidates = valid_usernames if valid_usernames else list(cluster_usernames)
-        best_username = max(
+        # Pick best label: prefer username, then name
+        if cluster_usernames:
+            valid_usernames = [u for u in cluster_usernames if _is_valid_persona_name(u)]
+            label_candidates = valid_usernames if valid_usernames else list(cluster_usernames)
+        else:
+            valid_names = [n for n in cluster_names if _is_valid_persona_name(n)]
+            label_candidates = valid_names if valid_names else list(cluster_names)
+
+        best_label = max(
             label_candidates,
             key=lambda u: node_scores.get(
                 next((i.id for i in identities if i.value == u), None), 0
@@ -144,14 +175,16 @@ def _cluster_from_graph(identities, graph_context, db_blacklist):
         if len(cluster_usernames) > 1:
             risk_indicators.append(f"username reuse across {len(cluster_platforms)} platforms")
 
-        variants = [u for u in cluster_usernames if u != best_username]
+        variants = [u for u in cluster_usernames if u != best_label]
         if variants:
             risk_indicators.append(f"username variants detected ({', '.join(sorted(variants)[:3])})")
 
+        all_identifiers = sorted(cluster_usernames | cluster_names)
+
         personas.append({
             "id": f"persona_{idx}",
-            "label": best_username,
-            "usernames": sorted(cluster_usernames),
+            "label": best_label,
+            "usernames": sorted(cluster_usernames) if cluster_usernames else sorted(cluster_names),
             "platforms": sorted(cluster_platforms),
             "accounts_count": len(cluster_platforms),
             "confidence": cluster["confidence"],
@@ -159,6 +192,7 @@ def _cluster_from_graph(identities, graph_context, db_blacklist):
             "is_primary": idx == 0,
             "risk_indicators": risk_indicators,
             "graph_cluster_size": cluster["node_count"],
+            "names": sorted(cluster_names),
         })
 
     return personas
@@ -190,11 +224,13 @@ def cluster_personas(target_id, workspace_id, session: Session, graph_context=No
     if graph_context and graph_context.get("clusters"):
         personas = _cluster_from_graph(identities, graph_context, db_blacklist)
         if personas:
-            # Tag identities in DB with persona ID
+            # Tag identities in DB with persona ID (usernames + names)
             persona_label_map = {}
             for p in personas:
                 for uname in p["usernames"]:
                     persona_label_map[uname.lower()] = p["id"]
+                for nm in p.get("names", []):
+                    persona_label_map[nm.lower()] = p["id"]
 
             for identity in identities:
                 if identity.value and identity.value.lower() in persona_label_map:
@@ -244,6 +280,9 @@ def cluster_personas(target_id, workspace_id, session: Session, graph_context=No
 
         # Filter through blacklist
         if not _is_valid_username(username, db_blacklist):
+            continue
+        # Sprint 50: reject noisy usernames (profile suffixes, domain handles, full names)
+        if not _is_valid_extracted_username(username):
             continue
 
         platform = (

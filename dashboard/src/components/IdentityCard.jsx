@@ -87,11 +87,11 @@ export default function IdentityCard({ profile }) {
           </div>
         )}
 
-        {/* Nationalities */}
-        {est.nationalities && est.nationalities.length > 0 && (
+        {/* Nationalities — filter out garbage (<5% probability) */}
+        {est.nationalities && est.nationalities.filter(n => n.probability >= 0.05).length > 0 && (
           <div className="space-y-2">
-            {est.nationalities.map((n, i) => (
-              <div key={i} className={`flex items-center gap-3${n.probability < 0.05 ? ' opacity-50' : ''}`}>
+            {est.nationalities.filter(n => n.probability >= 0.05).map((n, i) => (
+              <div key={i} className="flex items-center gap-3">
                 <span className="text-xl">{countryFlag(n.country_code)}</span>
                 <div className="flex-1">
                   <div className="flex items-center justify-between mb-1">
