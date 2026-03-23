@@ -429,7 +429,7 @@ def finalize_scan(scan_id: str):
         if check_feature(plan_name, "persona_clustering", ws_role):
             try:
                 from api.services.layer4.persona_engine import cluster_personas
-                personas = cluster_personas(scan.target_id, scan.workspace_id, session, graph_context=graph_context)
+                personas = cluster_personas(scan.target_id, scan.workspace_id, session, graph_context=graph_context, profile_data=dict(target.profile_data or {}))
                 if personas:
                     profile = dict(target.profile_data or {})
                     profile["personas"] = personas

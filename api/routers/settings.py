@@ -52,6 +52,10 @@ KEY_DESCRIPTIONS = {
     "HIBP_API_KEY": "HaveIBeenPwned — breach + paste detection ($3.50/mo)",
     "MAXMIND_LICENSE": "MaxMind GeoLite2 — IP geolocation database (free tier)",
     "FULLCONTACT_API_KEY": "FullContact — person enrichment, social profiles, demographics",
+    "PROXYCURL_API_KEY": "ProxyCurl — LinkedIn profile enrichment ($0.01/lookup)",
+    "ROCKETREACH_API_KEY": "RocketReach — email to LinkedIn lookup (paid)",
+    "GOOGLE_CSE_API_KEY": "Google Custom Search — LinkedIn discovery (100 free/day)",
+    "GOOGLE_CSE_ID": "Google Custom Search Engine ID (free)",
 }
 
 

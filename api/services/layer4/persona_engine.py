@@ -180,11 +180,27 @@ def _cluster_from_graph(identities, graph_context, db_blacklist):
             if variants:
                 risk_indicators.append(f"username variants detected ({', '.join(sorted(variants)[:3])})")
 
-            all_identifiers = sorted(cluster_usernames | cluster_names)
+            # Determine display_name from cluster names (prefer highest confidence)
+            if cluster_names:
+                valid_cnames = [n for n in cluster_names if _is_valid_persona_name(n)]
+                name_pool = valid_cnames if valid_cnames else list(cluster_names)
+                best_display = max(
+                    name_pool,
+                    key=lambda n: node_scores.get(
+                        next((i.id for i in identities if i.value == n and i.type == "name"), None), 0
+                    ),
+                )
+                display_name = best_display
+                aliases = sorted(cluster_names - {best_display})
+            else:
+                display_name = best_label
+                aliases = []
 
             personas.append({
                 "id": f"persona_{idx}",
                 "label": best_label,
+                "display_name": display_name,
+                "aliases": aliases,
                 "usernames": sorted(cluster_usernames) if cluster_usernames else sorted(cluster_names),
                 "platforms": sorted(cluster_platforms),
                 "accounts_count": len(cluster_platforms),
@@ -203,7 +219,7 @@ def _cluster_from_graph(identities, graph_context, db_blacklist):
         return []
 
 
-def cluster_personas(target_id, workspace_id, session: Session, graph_context=None) -> list[dict]:
+def cluster_personas(target_id, workspace_id, session: Session, graph_context=None, profile_data=None) -> list[dict]:
     """
     Cluster identity nodes into personas.
 
@@ -379,9 +395,10 @@ def cluster_personas(target_id, workspace_id, session: Session, graph_context=No
 
         label = max(cluster, key=lambda u: len(username_platforms[u]))
 
-        source_diversity = min(1.0, len(all_sources) / 5)
-        platform_consistency = min(1.0, len(all_platforms) / 3)
-        confidence = round((source_diversity * 0.6 + platform_consistency * 0.4), 2)
+        platform_score = min(1.0, len(all_platforms) / 8)
+        source_score = min(1.0, len(all_sources) / 4)
+        username_score = min(1.0, len(cluster) / 3)
+        confidence = round(platform_score * 0.5 + source_score * 0.3 + username_score * 0.2, 2)
 
         risk = []
         if len(all_platforms) >= 3:
@@ -392,7 +409,10 @@ def cluster_personas(target_id, workspace_id, session: Session, graph_context=No
         personas.append({
             "id": f"persona_{idx}",
             "label": label,
+            "display_name": label,
+            "aliases": [],
             "usernames": sorted(cluster),
+            "names": [],
             "platforms": sorted(all_platforms),
             "accounts_count": len(all_platforms),
             "urls": all_urls[:10],
@@ -405,6 +425,14 @@ def cluster_personas(target_id, workspace_id, session: Session, graph_context=No
     if personas:
         personas.sort(key=lambda p: p["accounts_count"], reverse=True)
         personas[0]["is_primary"] = True
+
+    # Enhance primary persona with profile primary_name
+    primary_name = (profile_data or {}).get("primary_name", "")
+    if primary_name and personas:
+        for p in personas:
+            if p["is_primary"]:
+                p["display_name"] = primary_name
+                break
 
     # Tag identities in DB with persona ID
     persona_label_map = {}

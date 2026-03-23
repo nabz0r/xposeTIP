@@ -143,4 +143,37 @@ ALL_API_SERVICES = [
         "free": True,
         "module": "microsoft_audit",
     },
+    # LinkedIn Intelligence (Sprint 51)
+    {
+        "key": "PROXYCURL_API_KEY",
+        "name": "ProxyCurl",
+        "description": "LinkedIn profile enrichment — name, title, company, connections ($0.01/lookup)",
+        "url": "https://nubela.co/proxycurl/pricing",
+        "free": False,
+        "module": "proxycurl_linkedin",
+    },
+    {
+        "key": "ROCKETREACH_API_KEY",
+        "name": "RocketReach",
+        "description": "Email → LinkedIn, company, title, phone (paid)",
+        "url": "https://rocketreach.co/signup",
+        "free": False,
+        "module": "rocketreach_lookup",
+    },
+    {
+        "key": "GOOGLE_CSE_API_KEY",
+        "name": "Google Custom Search",
+        "description": "Google search API for LinkedIn profile discovery (100 free/day)",
+        "url": "https://developers.google.com/custom-search/v1/introduction",
+        "free": True,
+        "module": "google_linkedin_search",
+    },
+    {
+        "key": "GOOGLE_CSE_ID",
+        "name": "Google Custom Search Engine ID",
+        "description": "CSE ID configured to search LinkedIn (free)",
+        "url": "https://programmablesearchengine.google.com/",
+        "free": True,
+        "module": "google_linkedin_search",
+    },
 ]

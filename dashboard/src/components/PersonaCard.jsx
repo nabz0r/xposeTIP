@@ -20,7 +20,14 @@ export default function PersonaCard({ personas }) {
             <div className="flex items-center justify-between mb-2">
               <div className="flex items-center gap-2">
                 <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: PERSONA_COLORS[i % PERSONA_COLORS.length] }} />
-                <span className="font-mono text-sm font-semibold text-gray-200">@{p.label}</span>
+                <div className="flex flex-col">
+                  <span className="text-sm font-semibold text-gray-200">
+                    {p.display_name && p.display_name !== p.label ? p.display_name : `@${p.label}`}
+                  </span>
+                  {p.display_name && p.display_name !== p.label && (
+                    <span className="text-[10px] font-mono text-gray-500">@{p.label}</span>
+                  )}
+                </div>
                 {p.is_primary && (
                   <span className="text-[10px] font-mono px-1.5 py-0.5 rounded-full bg-[#00ff88]/10 text-[#00ff88]">Primary</span>
                 )}
@@ -30,6 +37,13 @@ export default function PersonaCard({ personas }) {
               </div>
               <span className="text-[10px] font-mono text-gray-500">{Math.round(p.confidence * 100)}% confidence</span>
             </div>
+
+            {/* Aliases */}
+            {p.aliases && p.aliases.length > 0 && (
+              <div className="text-[10px] text-gray-500 mb-2">
+                Also known as: {p.aliases.join(', ')}
+              </div>
+            )}
 
             {/* Platform pills */}
             <div className="flex flex-wrap gap-1.5 mb-2">
