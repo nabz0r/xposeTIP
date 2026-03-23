@@ -388,7 +388,7 @@ def aggregate_profile(target_id, workspace_id, session: Session, graph_context=N
                 logger.debug("Name rejected by _clean_name_value: %r (source=%s)", raw.strip(), source)
             if name and name not in seen_names:
                 seen_names.add(name)
-                profile["names"].append({"value": name, "source": source, "email_verified": is_email_verified})
+                profile["names"].append({"value": name, "source": source, "module": f.module, "email_verified": is_email_verified})
 
         # --- Avatars ---
         for avatar_key in ("avatar_url", "photo_url", "avatar", "picture", "profile_image", "image_url"):
@@ -901,12 +901,14 @@ def aggregate_profile(target_id, workspace_id, session: Session, graph_context=N
     # Score each name candidate
     for n in profile["names"]:
         graph_conf = node_confidence_map.get(n["value"].strip().lower(), 0.3)
-        source_rel = _get_src_rel(n.get("source", ""))
+        name_module = n.get("module", n.get("source", ""))
+        scraper_name = n.get("source", "")
+        source_rel = _get_src_rel(name_module, scraper_name=scraper_name)
         count_bonus = name_counts.get(n["value"].strip().lower(), 1) * 0.1
 
         # Axe 3: source method penalty — username-guessed vs email-verified
         method_adj = 0.0
-        src_finding = _find_finding_for_name(findings, n["value"], n.get("source", ""))
+        src_finding = _find_finding_for_name(findings, n["value"], scraper_name)
         if src_finding:
             ind_type = getattr(src_finding, "indicator_type", None) or ""
             # Username-guessed: indicator_type is username or social_url

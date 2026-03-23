@@ -65,9 +65,31 @@ SOURCE_RELIABILITY = {
 # Default reliability for unknown/new modules
 DEFAULT_RELIABILITY = 0.50
 
+# Per-scraper reliability overrides for scraper_engine findings
+# These scrapers have higher data quality than the generic 0.60
+SCRAPER_RELIABILITY_OVERRIDES = {
+    "github_user_api": 0.85,      # Official API, structured JSON
+    "github_scraper": 0.80,       # GitHub profile page
+    "gitlab_profile": 0.75,       # GitLab profile
+    "keybase_profile": 0.80,      # Keybase is identity-verified
+    "mailcheck_email": 0.85,      # Email validation API
+    "dns_txt_saas": 0.90,         # DNS records are facts
+    "rdap_domain": 0.90,          # RDAP is authoritative
+    "dns_dmarc_check": 0.90,      # DNS records are facts
+    "leakcheck_public": 0.80,     # Breach data
+    "emailrep_breaches": 0.80,    # Breach aggregator
+}
 
-def get_source_reliability(module_id: str) -> float:
-    """Get the reliability weight for a scanner module."""
+
+def get_source_reliability(module_id: str, scraper_name: str | None = None) -> float:
+    """Get the reliability weight for a scanner module.
+
+    For scraper_engine findings, pass scraper_name to get per-scraper overrides.
+    """
+    if module_id == "scraper_engine" and scraper_name:
+        override = SCRAPER_RELIABILITY_OVERRIDES.get(scraper_name)
+        if override:
+            return override
     return SOURCE_RELIABILITY.get(module_id, DEFAULT_RELIABILITY)
 
 
