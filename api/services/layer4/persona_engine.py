@@ -26,7 +26,7 @@ def _load_username_blacklist(session: Session) -> list[dict]:
     try:
         from api.models.name_blacklist import NameBlacklist
         rows = session.execute(select(NameBlacklist)).scalars().all()
-        return [{"pattern": r.pattern, "type": r.type} for r in rows]
+        return [{"pattern": r.pattern, "type": r.type} for r in rows if r.type != "regex"]
     except Exception:
         return []
 
