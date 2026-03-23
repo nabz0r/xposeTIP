@@ -195,11 +195,20 @@ def aggregate_profile(target_id, workspace_id, session: Session, graph_context=N
                 profile["names"].append({"value": name, "source": source})
 
         # --- Avatars ---
-        for avatar_key in ("avatar_url", "photo_url", "avatar", "picture"):
+        for avatar_key in ("avatar_url", "photo_url", "avatar", "picture", "profile_image", "image_url"):
             avatar = data.get(avatar_key, "")
             if avatar and avatar not in seen_avatars and _is_valid_avatar(avatar):
                 seen_avatars.add(avatar)
                 profile["avatars"].append({"url": avatar, "source": source})
+        # Also check nested structures (profile_data, extracted, details)
+        for nested_key in ("profile_data", "extracted", "details"):
+            nested = data.get(nested_key)
+            if isinstance(nested, dict):
+                for avatar_key in ("avatar_url", "photo_url", "avatar", "picture", "profile_image", "image_url"):
+                    avatar = nested.get(avatar_key, "")
+                    if avatar and avatar not in seen_avatars and _is_valid_avatar(avatar):
+                        seen_avatars.add(avatar)
+                        profile["avatars"].append({"url": avatar, "source": source})
 
         # --- Bio ---
         for bio_key in ("bio", "about", "description"):

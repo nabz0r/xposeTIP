@@ -76,7 +76,7 @@ def propagate_confidence(target_id, workspace_id, session: Session) -> dict:
         max_delta = 0.0
 
         for node_id in id_set:
-            # Base score (1 - damping) spread equally + damping * incoming weighted sum
+            # Personalized PageRank: teleport always returns to seed (email node)
             incoming_sum = 0.0
             for src_id, weight in incoming.get(node_id, []):
                 src_out_count = len(outgoing.get(src_id, []))
@@ -87,7 +87,10 @@ def propagate_confidence(target_id, workspace_id, session: Session) -> dict:
                     if total_out_weight > 0:
                         incoming_sum += scores.get(src_id, 0) * (weight / total_out_weight)
 
-            new_score = (1.0 - DAMPING) / n + DAMPING * incoming_sum
+            # Personalized PageRank — teleport goes to seed (email), not uniform
+            is_seed = id_map[node_id].type == "email"
+            teleport = (1.0 - DAMPING) if is_seed else 0.0
+            new_score = teleport + DAMPING * incoming_sum
 
             # Clamp to [0, 1]
             new_score = min(1.0, max(0.0, new_score))
@@ -103,19 +106,24 @@ def propagate_confidence(target_id, workspace_id, session: Session) -> dict:
             logger.debug("PageRank converged after %d iterations (delta=%.4f)", iteration + 1, max_delta)
             break
 
-    # Normalize to [0.1, 1.0] range to preserve relative differences
+    # Normalize to [0.15, 1.0] range to preserve relative differences
     if scores:
         min_score = min(scores.values())
         max_score = max(scores.values())
         score_range = max_score - min_score
         if score_range > 0.001:
-            # Scale to [0.1, 1.0] preserving relative differences
-            scores = {k: round(0.1 + 0.9 * (v - min_score) / score_range, 4)
+            # Scale to [0.15, 1.0] preserving relative differences
+            scores = {k: round(0.15 + 0.85 * (v - min_score) / score_range, 4)
                       for k, v in scores.items()}
         else:
             # All scores nearly equal — scale up so they're meaningful
             scores = {k: round(min(1.0, v * len(scores)), 4)
                       for k, v in scores.items()}
+
+    # Enforce seed floor: email anchor never drops below 0.8
+    for identity in identities:
+        if identity.id in scores and identity.type == "email":
+            scores[identity.id] = max(scores[identity.id], 0.8)
 
     # Update identity nodes in DB with propagated confidence
     for identity in identities:
