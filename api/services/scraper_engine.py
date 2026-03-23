@@ -70,6 +70,13 @@ class ScraperEngine:
             content = response.text
             found = self._check_found(content, response.status_code, scraper)
 
+            if logger.isEnabledFor(logging.DEBUG):
+                logger.debug(
+                    "SCRAPER_DEBUG %s: status=%d, found=%s, content_len=%d, preview=%s",
+                    scraper.get("name"), response.status_code, found,
+                    len(content), content[:300].replace('\n', ' '),
+                )
+
             if not found:
                 return {"found": False, "url": url, "status_code": response.status_code, "error": None}
 
@@ -133,17 +140,32 @@ class ScraperEngine:
         return input_value
 
     def _check_found(self, content: str, status_code: int, scraper: dict) -> bool:
-        if status_code in (404, 410, 403, 429):
+        if status_code in (404, 410, 429):
             return False
 
-        for indicator in scraper.get("not_found_indicators") or []:
-            if indicator.lower() in content.lower():
+        success = scraper.get("success_indicator")
+        not_found = scraper.get("not_found_indicators") or []
+        content_lower = content.lower()
+
+        # Check success_indicator FIRST — if it specifically matches, profile exists
+        if success and re.search(success, content, re.IGNORECASE):
+            # Double-check against SPECIFIC not_found signals (>= 10 chars)
+            # Short/broad terms like "Snapchat", "404" can appear on valid pages
+            for indicator in not_found:
+                if len(indicator) >= 10 and indicator.lower() in content_lower:
+                    return False
+            return True
+
+        # 403 without success match = blocked
+        if status_code == 403:
+            return False
+
+        # No success match — check all not_found indicators
+        for indicator in not_found:
+            if indicator.lower() in content_lower:
                 return False
 
-        success = scraper.get("success_indicator")
-        if success:
-            return bool(re.search(success, content, re.IGNORECASE))
-
+        # Fallback: 200 = found
         return status_code == 200
 
     def _extract(self, content: str, rule: dict):
