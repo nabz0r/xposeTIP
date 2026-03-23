@@ -210,6 +210,97 @@ def _geocode_location(loc_string):
     return None
 
 
+# Platform names that holehe/scrapers return as "name" — never real human names
+_PLATFORM_NAMES_SET = {
+    "spotify", "amazon", "reddit", "steam", "keybase", "github", "twitter",
+    "facebook", "instagram", "tiktok", "freelancer", "replit", "eventbrite",
+    "xvideos", "medium", "hackernews", "devto", "gitlab", "pinterest",
+    "snapchat", "linkedin", "tumblr", "flickr", "twitch", "discord",
+    "telegram", "whatsapp", "signal", "youtube", "netflix", "hulu",
+    "apple", "google", "microsoft", "yahoo", "outlook", "protonmail",
+    "gravatar", "wordpress", "blogger", "bitbucket", "stackoverflow",
+    "lastpass", "1password", "bitwarden", "dashlane", "nordpass", "keepass",
+    "office365", "office", "tutanota", "zoho", "mailchimp", "sendgrid",
+    "proton", "icloud", "hotmail", "live", "msn", "aol", "gmx",
+    "fiverr", "upwork", "toptal", "guru", "peopleperhour",
+    "imgur", "disqus", "mastodon", "linktree", "aboutme", "about.me",
+    "unknown", "user", "admin", "test", "null", "none", "default",
+    "anonymous", "noreply", "info", "support", "contact", "hello",
+    "webmaster", "postmaster", "root", "system", "bot", "service",
+    "booking", "firefox", "chrome", "safari", "opera", "edge",
+}
+
+_TELEGRAM_SLOGANS = [
+    "a new era of messaging", "fast. secure. powerful",
+    "pure instant messaging", "cloud-based", "simple, fast, secure",
+    "synced across all your devices", "sending messages",
+    "telegram lets you", "powerful, fast, and secure",
+    "telegram messenger", "telegram is a cloud-based",
+]
+
+
+def _clean_name_value(raw_name):
+    """Clean a name before storing. Returns cleaned name or None if garbage."""
+    if not raw_name or not isinstance(raw_name, str):
+        return None
+
+    name = raw_name.strip()
+
+    # Remove "on about.me", "on Snapchat", etc.
+    name = re.sub(r'\s+on\s+\w+\.?\w*$', '', name, flags=re.IGNORECASE).strip()
+
+    # Reject @xxx | Linktree, @xxx | Platform
+    if name.startswith('@') or '|' in name:
+        return None
+
+    # Reject anything starting with "Telegram"
+    if name.lower().startswith('telegram'):
+        return None
+
+    # Reject Telegram slogans
+    if any(s in name.lower() for s in _TELEGRAM_SLOGANS):
+        return None
+
+    # Reject Cyrillic/CJK-only strings (likely wrong profile match)
+    if re.match(r'^[\u0400-\u04FF\u4E00-\u9FFF\u3040-\u309F\u30A0-\u30FF]+$', name):
+        return None
+
+    # Reject very short
+    if len(name) < 3:
+        return None
+
+    # Reject code/technical artifacts
+    if re.match(r'^[a-z_]+$', name) and len(name) < 15:
+        return None  # lowercase-only single word = username, not a name
+
+    # Reject platform names
+    if name.strip().lower() in _PLATFORM_NAMES_SET:
+        return None
+
+    # Reject "Contact @xxx" patterns
+    if re.match(r'^contact\s+@', name, re.IGNORECASE):
+        return None
+
+    return name
+
+
+def _find_finding_for_name(findings, name_value, source_name):
+    """Find the finding that produced this name value."""
+    for f in findings:
+        data = f.data or {}
+        # Check extracted dict
+        extracted = data.get("extracted")
+        if isinstance(extracted, dict):
+            for k, v in extracted.items():
+                if v == name_value:
+                    return f
+        # Check direct name fields
+        for key in ("name", "full_name", "display_name", "displayName"):
+            if data.get(key) == name_value:
+                return f
+    return None
+
+
 def aggregate_profile(target_id, workspace_id, session: Session, graph_context=None) -> dict:
     """Build a unified profile from all findings for a target. Sync for Celery.
 
@@ -283,8 +374,12 @@ def aggregate_profile(target_id, workspace_id, session: Session, graph_context=N
 
         # --- Names ---
         for name_key in ("name", "full_name", "display_name", "displayName"):
-            name = data.get(name_key, "")
-            if name and name not in seen_names and len(name) > 1:
+            # Axe 4: holehe "name" field = platform name, not person name
+            if f.module == "holehe" and name_key == "name":
+                continue
+            raw = data.get(name_key, "")
+            name = _clean_name_value(raw)
+            if name and name not in seen_names:
                 seen_names.add(name)
                 profile["names"].append({"value": name, "source": source})
 
@@ -762,6 +857,14 @@ def aggregate_profile(target_id, workspace_id, session: Session, graph_context=N
         "scraper", "scanner", "module", "error", "failed", "timeout",
         "not found", "no results", "unavailable", "blocked",
         "http://", "https://", ".com", ".org", ".net",
+        # Telegram garbage
+        "telegram", "a new era", "fast. secure", "instant messaging",
+        "cloud-based", "synced across",
+        # Platform descriptions
+        "on about.me", "| linktree", "contact @",
+        # Browsers / tools
+        "firefox", "chrome", "safari", "opera", "edge",
+        "booking",
     }
 
     def _is_valid_name(name_val):
@@ -793,10 +896,45 @@ def aggregate_profile(target_id, workspace_id, session: Session, graph_context=N
         graph_conf = node_confidence_map.get(n["value"].strip().lower(), 0.3)
         source_rel = _get_src_rel(n.get("source", ""))
         count_bonus = name_counts.get(n["value"].strip().lower(), 1) * 0.1
-        n["composite_score"] = graph_conf * 0.5 + source_rel * 0.3 + count_bonus
+
+        # Axe 3: source method penalty — username-guessed vs email-verified
+        method_adj = 0.0
+        src_finding = _find_finding_for_name(findings, n["value"], n.get("source", ""))
+        if src_finding:
+            src_module = getattr(src_finding, "module", "") or ""
+            src_data = src_finding.data or {}
+            # Username-guessed sources (sherlock, maigret, scraper with username)
+            if src_module in ("sherlock", "maigret", "username_hunter"):
+                method_adj = -0.15
+            elif src_module == "scraper_engine" and src_data.get("search_type") == "username":
+                method_adj = -0.15
+            # Email-verified sources (holehe confirms registration, github_deep, fullcontact)
+            elif src_module in ("holehe", "github_deep", "fullcontact", "social_enricher", "epieos"):
+                method_adj = 0.05
+
+        n["composite_score"] = graph_conf * 0.5 + source_rel * 0.3 + count_bonus + method_adj
 
     # Filter through blacklist + validation, pick highest composite score
     valid_names = [n for n in profile["names"] if _is_valid_name(n["value"])]
+
+    # Axe 2: Family name consensus — boost names whose surname matches dominant family name
+    if len(valid_names) >= 3:
+        surname_votes = {}
+        for n in valid_names:
+            parts = n["value"].strip().split()
+            if len(parts) >= 2:
+                surname = parts[-1].lower()
+                if len(surname) >= 2:
+                    surname_votes[surname] = surname_votes.get(surname, 0) + 1
+        if surname_votes:
+            dominant_surname = max(surname_votes, key=surname_votes.get)
+            dominant_count = surname_votes[dominant_surname]
+            if dominant_count >= 2:
+                for n in valid_names:
+                    parts = n["value"].strip().split()
+                    if len(parts) >= 2 and parts[-1].lower() == dominant_surname:
+                        n["composite_score"] = n.get("composite_score", 0) + 0.10
+
     primary_name = None
     if valid_names:
         best = max(valid_names, key=lambda n: n.get("composite_score", 0))
