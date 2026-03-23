@@ -281,6 +281,10 @@ def _clean_name_value(raw_name):
     if re.match(r'^contact\s+@', name, re.IGNORECASE):
         return None
 
+    # Reject "xxx's profile" patterns (e.g. "stheis's profile" from letterboxd)
+    if re.search(r"'s\s+profile$", name, re.IGNORECASE):
+        return None
+
     return name
 
 
@@ -901,15 +905,12 @@ def aggregate_profile(target_id, workspace_id, session: Session, graph_context=N
         method_adj = 0.0
         src_finding = _find_finding_for_name(findings, n["value"], n.get("source", ""))
         if src_finding:
-            src_module = getattr(src_finding, "module", "") or ""
-            src_data = src_finding.data or {}
-            # Username-guessed sources (sherlock, maigret, scraper with username)
-            if src_module in ("sherlock", "maigret", "username_hunter"):
+            ind_type = getattr(src_finding, "indicator_type", None) or ""
+            # Username-guessed: indicator_type is username or social_url
+            if ind_type in ("username", "social_url"):
                 method_adj = -0.15
-            elif src_module == "scraper_engine" and src_data.get("search_type") == "username":
-                method_adj = -0.15
-            # Email-verified sources (holehe confirms registration, github_deep, fullcontact)
-            elif src_module in ("holehe", "github_deep", "fullcontact", "social_enricher", "epieos"):
+            # Email-verified: indicator_type is email
+            elif ind_type == "email":
                 method_adj = 0.05
 
         n["composite_score"] = graph_conf * 0.5 + source_rel * 0.3 + count_bonus + method_adj
