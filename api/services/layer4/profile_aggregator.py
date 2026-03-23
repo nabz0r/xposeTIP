@@ -9,7 +9,7 @@ from sqlalchemy.orm import Session
 from api.models.finding import Finding
 from api.models.identity import Identity
 from api.models.target import Target
-from api.services.layer4.source_scoring import get_source_reliability
+from api.services.layer4.source_scoring import get_source_reliability as _get_src_rel_mod
 
 logger = logging.getLogger(__name__)
 
@@ -246,6 +246,9 @@ def _clean_name_value(raw_name):
 
     name = raw_name.strip()
 
+    # Strip emojis
+    name = re.sub(r'[\U0001F000-\U0001FFFF\u200D\uFE0F]', '', name).strip()
+
     # Remove "on about.me", "on Snapchat", etc.
     name = re.sub(r'\s+on\s+\w+\.?\w*$', '', name, flags=re.IGNORECASE).strip()
 
@@ -389,6 +392,20 @@ def aggregate_profile(target_id, workspace_id, session: Session, graph_context=N
             if name and name not in seen_names:
                 seen_names.add(name)
                 profile["names"].append({"value": name, "source": source, "module": f.module, "email_verified": is_email_verified})
+            elif name and name in seen_names:
+                # Dedup upgrade: if new source is more reliable, update the entry
+                new_rel = _get_src_rel_mod(f.module, scraper_name=source)
+                for existing in profile["names"]:
+                    if existing["value"] == name:
+                        old_rel = _get_src_rel_mod(
+                            existing.get("module", "scraper_engine"),
+                            scraper_name=existing.get("source", ""),
+                        )
+                        if new_rel > old_rel:
+                            existing["source"] = source
+                            existing["module"] = f.module
+                            existing["email_verified"] = is_email_verified
+                        break
 
         # --- Avatars ---
         for avatar_key in ("avatar_url", "photo_url", "avatar", "picture", "profile_image", "image_url"):
@@ -890,7 +907,7 @@ def aggregate_profile(target_id, workspace_id, session: Session, graph_context=N
         return True
 
     # Composite score name resolution: graph_confidence * 0.5 + source_reliability * 0.3 + count * 0.1
-    from api.services.layer4.source_scoring import get_source_reliability as _get_src_rel
+    _get_src_rel = _get_src_rel_mod
 
     # Count how many sources confirm each name
     name_counts = {}
@@ -940,6 +957,15 @@ def aggregate_profile(target_id, workspace_id, session: Session, graph_context=N
                     parts = n["value"].strip().split()
                     if len(parts) >= 2 and parts[-1].lower() == dominant_surname:
                         n["composite_score"] = n.get("composite_score", 0) + 0.10
+
+    # Email prefix first-letter bonus: "stheis@" → S matches "Sebastian" (+0.08)
+    _email_prefix_lc = _prefix.lower() if _prefix else ""
+    _email_first_char = _email_prefix_lc[0] if _email_prefix_lc else ""
+    if _email_first_char:
+        for n in valid_names:
+            name_first = n["value"].strip()[0].lower() if n["value"].strip() else ""
+            if name_first == _email_first_char:
+                n["composite_score"] = n.get("composite_score", 0) + 0.08
 
     # Tier separation: email-verified names vs username-guessed names
     verified_names = [n for n in valid_names if n.get("email_verified")]
