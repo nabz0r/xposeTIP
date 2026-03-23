@@ -1776,8 +1776,6 @@ DEFAULT_SCRAPERS = [
         "finding_severity": "high",
         "rate_limit_requests": 1,
         "rate_limit_window": 5,
-        "requires_api_key": True,
-        "api_key_header": "Authorization",
         "enabled": False,
     },
     {
