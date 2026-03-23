@@ -2,9 +2,9 @@ import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Crosshair, Radar, AlertTriangle, ShieldAlert, Search } from 'lucide-react'
 import { useAuth } from '../lib/auth'
-import { getTargets, getScans, getFindingsStats, getFindings, createTarget, createScan, getDefaults, getFingerprint, cancelScan } from '../lib/api'
+import { getTargets, getScans, getFindingsStats, createTarget, createScan, getDefaults, getFingerprint, cancelScan } from '../lib/api'
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, AreaChart, Area } from 'recharts'
-import WorldHeatmap from '../components/WorldHeatmap'
+import WorkspaceGeoMap from '../components/WorkspaceGeoMap'
 import FingerprintRadar from '../components/FingerprintRadar'
 import GenerativeAvatar from '../components/GenerativeAvatar'
 import useSSE from '../hooks/useSSE'
@@ -52,7 +52,7 @@ export default function Dashboard() {
   const [recentScans, setRecentScans] = useState([])
   const [severityData, setSeverityData] = useState([])
   const [moduleData, setModuleData] = useState([])
-  const [geoFindings, setGeoFindings] = useState([])
+  const [allTargets, setAllTargets] = useState([])
   const [topTarget, setTopTarget] = useState(null)
   const [topTargets, setTopTargets] = useState([])
   const [topFingerprint, setTopFingerprint] = useState(null)
@@ -97,6 +97,7 @@ export default function Dashboard() {
         setTopTargets(sortedTargets.slice(0, 5))
         getFingerprint(sortedTargets[0].id).then(setTopFingerprint).catch(() => {})
       }
+      setAllTargets(targetsData.items || [])
       setRecentScans(scansData.items?.slice(0, 10) || [])
 
       // Severity chart data
@@ -114,11 +115,6 @@ export default function Dashboard() {
           .filter(d => d.value > 0)
       )
 
-      // Geo findings
-      try {
-        const allFindings = await getFindings('category=geolocation')
-        setGeoFindings(allFindings.items || [])
-      } catch {}
     } catch {}
   }
 
@@ -281,8 +277,8 @@ export default function Dashboard() {
         </div>
       )}
 
-      {/* World Heatmap */}
-      <WorldHeatmap key={geoFindings.length} findings={geoFindings} />
+      {/* Workspace Geo Map */}
+      <WorkspaceGeoMap targets={allTargets} onTargetClick={(id) => navigate(`/targets/${id}`)} />
 
       {/* Recent Scans */}
       {recentScans.length > 0 && (

@@ -419,6 +419,31 @@ def _target_dict(t: Target) -> dict:
     display = t.display_name or profile.get("primary_name", "")
     if display and display.strip().lower() in _QUICK_REJECT_NAMES:
         display = None
+    # Location data for geo map
+    best_location = None
+    user_locs = profile.get("user_locations", [])
+    if user_locs:
+        for ul in user_locs:
+            if ul.get("lat") and ul.get("lon"):
+                best_location = {
+                    "lat": ul["lat"],
+                    "lon": ul["lon"],
+                    "label": ul.get("city") or ul.get("location") or ul.get("country", ""),
+                    "type": "self_reported",
+                }
+                break
+    if not best_location:
+        geo_locs = profile.get("geo_locations", [])
+        if geo_locs and isinstance(geo_locs, list) and geo_locs[0].get("lat"):
+            gl = geo_locs[0]
+            label_parts = [gl.get("city", ""), gl.get("country", "")]
+            best_location = {
+                "lat": gl["lat"],
+                "lon": gl["lon"],
+                "label": ", ".join(p for p in label_parts if p),
+                "type": "server",
+            }
+
     return {
         "id": str(t.id),
         "email": t.email,
@@ -440,4 +465,6 @@ def _target_dict(t: Target) -> dict:
         "fingerprint_risk": fp.get("risk_level") if fp else None,
         "fingerprint_avatar_seed": fp.get("avatar_seed") if fp else None,
         "fingerprint_axes": fp.get("axes") if fp else None,
+        "location_data": best_location,
+        "location_label": profile.get("location", ""),
     }
