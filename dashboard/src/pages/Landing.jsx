@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../lib/auth'
-import { Shield, Radar, ArrowRight, Check, KeyRound, Users, Globe, AtSign, Fingerprint, Mail } from 'lucide-react'
+import { Shield, Radar, ArrowRight, Check, KeyRound, Users, Globe, AtSign, Fingerprint, Mail, Camera, Share2 } from 'lucide-react'
 import GenerativeAvatar from '../components/GenerativeAvatar'
 
 // ─── Scroll reveal hook ───
@@ -108,12 +108,14 @@ const PHASES = [
 ]
 
 const EXPOSURES = [
-  { icon: KeyRound, title: 'Leaked passwords', desc: 'Your email in breach databases. Which passwords were exposed. When.' },
-  { icon: Users, title: 'Social accounts', desc: 'Every platform where your email or username is registered. Even ones you forgot.' },
-  { icon: Globe, title: 'Personal information', desc: 'Name, age, location, employer — publicly available from social profiles and data brokers.' },
-  { icon: AtSign, title: 'Username patterns', desc: 'Same username on 7 platforms? That\'s a credential stuffing target.' },
-  { icon: Fingerprint, title: 'Digital footprint', desc: 'Archived pages, old profiles, data you deleted but the internet remembers.' },
+  { icon: KeyRound, title: 'Leaked credentials', desc: 'Your email in breach databases. Which passwords were exposed. When it happened.' },
+  { icon: Users, title: 'Social accounts', desc: 'Every platform where your email or username is registered. Even ones you forgot about.' },
+  { icon: Globe, title: 'Geographic footprint', desc: 'Where you claim to be. Where your servers are. Cross-referenced across profiles.' },
+  { icon: AtSign, title: 'Username reuse', desc: 'Same username on 12 platforms? That\'s a credential stuffing goldmine.' },
+  { icon: Fingerprint, title: 'Digital fingerprint', desc: '8-axis identity radar: accounts, platforms, breaches, email age, data leaked, geo spread, username reuse, security posture.' },
   { icon: Mail, title: 'Email security', desc: 'SPF, DMARC, DKIM — can someone send emails pretending to be you?' },
+  { icon: Camera, title: 'Profile photos', desc: 'Every avatar collected across platforms. Cross-referenced for visual identity correlation.' },
+  { icon: Share2, title: 'Identity graph', desc: 'How your accounts, names, and platforms connect. PageRank confidence propagation reveals hidden links.' },
 ]
 
 const AUDIENCES = [
@@ -475,21 +477,26 @@ export default function Landing() {
             How it works
           </h2>
 
-          <div className="grid md:grid-cols-3 gap-8 text-center">
+          <div className="grid md:grid-cols-4 gap-8 text-center">
             <div>
               <div className="text-5xl font-mono font-bold text-[#00ff88]/20 mb-3">01</div>
-              <h3 className="text-lg font-semibold mb-1">Enter your email</h3>
-              <p className="text-sm text-gray-500">30 seconds</p>
+              <h3 className="text-lg font-semibold mb-1">Enter an email</h3>
+              <p className="text-sm text-gray-500">That's all we need</p>
             </div>
             <div>
-              <div className="text-5xl font-mono font-bold text-[#00ff88]/20 mb-3">02</div>
-              <h3 className="text-lg font-semibold mb-1">We scan 70+ sources</h3>
-              <p className="text-sm text-gray-500">In parallel</p>
+              <div className="text-5xl font-mono font-bold text-[#3388ff]/20 mb-3">02</div>
+              <h3 className="text-lg font-semibold mb-1">99 sources scanned</h3>
+              <p className="text-sm text-gray-500">Breaches, social, archives, dark web</p>
             </div>
             <div>
-              <div className="text-5xl font-mono font-bold text-[#00ff88]/20 mb-3">03</div>
-              <h3 className="text-lg font-semibold mb-1">See what's exposed</h3>
-              <p className="text-sm text-gray-500">+ how to fix it</p>
+              <div className="text-5xl font-mono font-bold text-[#ffcc00]/20 mb-3">03</div>
+              <h3 className="text-lg font-semibold mb-1">Identity graph built</h3>
+              <p className="text-sm text-gray-500">PageRank + Markov chains</p>
+            </div>
+            <div>
+              <div className="text-5xl font-mono font-bold text-[#ff8800]/20 mb-3">04</div>
+              <h3 className="text-lg font-semibold mb-1">Report delivered</h3>
+              <p className="text-sm text-gray-500">Personas, fingerprint, remediation</p>
             </div>
           </div>
         </div>
@@ -536,6 +543,13 @@ export default function Landing() {
               </div>
             </div>
 
+            {/* Persona + location + photos */}
+            <div className="flex flex-wrap items-center gap-3 mb-4 text-xs text-gray-400">
+              <span className="bg-[#1e1e2e] rounded-full px-2.5 py-1 text-[#3388ff]">@jsmith · Primary · 12 platforms</span>
+              <span className="bg-[#1e1e2e] rounded-full px-2.5 py-1">📍 San Francisco, US</span>
+              <span className="bg-[#1e1e2e] rounded-full px-2.5 py-1">📷 4 photos</span>
+            </div>
+
             <div className="space-y-2.5 mb-4">
               <div className="flex items-center gap-2 text-sm">
                 <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-[#ff2244]/20 text-[#ff2244]">high</span>
@@ -548,6 +562,10 @@ export default function Landing() {
               <div className="flex items-center gap-2 text-sm">
                 <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-[#ffcc00]/20 text-[#ffcc00]">medium</span>
                 <span className="text-gray-300">Username "jsmith" reused on 5 platforms</span>
+              </div>
+              <div className="flex items-center gap-2 text-sm">
+                <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-[#3388ff]/20 text-[#3388ff]">info</span>
+                <span className="text-gray-300">8-axis fingerprint: high account spread, moderate security</span>
               </div>
             </div>
 
@@ -601,7 +619,7 @@ export default function Landing() {
             Built in Luxembourg <span className="inline-block">🇱🇺</span> · GDPR compliant · Open source · On-premise ready
           </p>
           <p className="text-sm text-gray-600 mt-2">
-            71 intelligence sources · PageRank confidence engine · Your data stays yours.
+            99 intelligence sources · Personalized PageRank · Identity graph · 8-axis fingerprint · Your data stays yours.
           </p>
         </div>
       </Section>
@@ -631,7 +649,7 @@ export default function Landing() {
             <div className="flex items-center gap-2">
               <Shield className="w-5 h-5 text-[#00ff88]" />
               <span className="font-bold font-['Instrument_Sans',sans-serif]">xpose</span>
-              <span className="text-xs text-gray-600 font-mono ml-2">v0.42.0</span>
+              <span className="text-xs text-gray-600 font-mono ml-2">v0.57.0</span>
             </div>
             <p className="text-xs text-gray-600 font-mono text-center">
               Identity Threat Intelligence · Open Source · GDPR Compliant

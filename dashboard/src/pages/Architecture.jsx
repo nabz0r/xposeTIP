@@ -31,13 +31,14 @@ function Section({ children, className = '' }) {
 // Inline SVG diagrams
 function CollectDiagram() {
   const categories = [
-    { label: 'Social', angle: 0, color: '#3388ff', count: 29 },
-    { label: 'Breach', angle: 51, color: '#ff2244', count: 5 },
-    { label: 'Metadata', angle: 103, color: '#aa55ff', count: 4 },
-    { label: 'Archive', angle: 154, color: '#ffcc00', count: 8 },
-    { label: 'Gaming', angle: 206, color: '#ff8800', count: 8 },
-    { label: 'People', angle: 257, color: '#00ddcc', count: 5 },
-    { label: 'Dev', angle: 309, color: '#cc88ff', count: 4 },
+    { label: 'Social', angle: 0, color: '#3388ff', count: 35 },
+    { label: 'Breach', angle: 45, color: '#ff2244', count: 9 },
+    { label: 'Metadata', angle: 90, color: '#aa55ff', count: 8 },
+    { label: 'Archive', angle: 135, color: '#ffcc00', count: 10 },
+    { label: 'Gaming', angle: 180, color: '#ff8800', count: 8 },
+    { label: 'People', angle: 225, color: '#00ddcc', count: 7 },
+    { label: 'Dev', angle: 270, color: '#cc88ff', count: 12 },
+    { label: 'LinkedIn', angle: 315, color: '#0077b5', count: 6 },
   ]
   const cx = 200, cy = 160, r = 110
   return (
@@ -173,6 +174,38 @@ function ScoreDiagram() {
   )
 }
 
+function GeoMapDiagram() {
+  return (
+    <svg viewBox="0 0 400 250" className="w-full max-w-md mx-auto">
+      {/* Continents as simple blobs */}
+      <ellipse cx="120" cy="100" rx="60" ry="50" fill="#1e1e2e" stroke="#333" strokeWidth="0.5" />
+      <ellipse cx="280" cy="90" rx="80" ry="60" fill="#1e1e2e" stroke="#333" strokeWidth="0.5" />
+      <ellipse cx="300" cy="190" rx="40" ry="30" fill="#1e1e2e" stroke="#333" strokeWidth="0.5" />
+
+      {/* Self-reported pins (green, pulsing) */}
+      <circle cx="170" cy="80" r="6" fill="#00ff88" opacity="0.8">
+        <animate attributeName="r" values="6;8;6" dur="2s" repeatCount="indefinite" />
+      </circle>
+      <text x="170" y="72" textAnchor="middle" fill="#00ff88" fontSize="8" fontFamily="monospace">LU</text>
+
+      <circle cx="165" cy="90" r="5" fill="#00ff88" opacity="0.6">
+        <animate attributeName="r" values="5;7;5" dur="2.5s" repeatCount="indefinite" />
+      </circle>
+      <text x="165" y="102" textAnchor="middle" fill="#00ff88" fontSize="8" fontFamily="monospace">DE</text>
+
+      {/* Server pins (blue, dim) */}
+      <circle cx="100" cy="95" r="4" fill="#3388ff" opacity="0.3" />
+      <text x="100" y="88" textAnchor="middle" fill="#3388ff" fontSize="7" fontFamily="monospace" opacity="0.4">SFO</text>
+
+      {/* Legend */}
+      <circle cx="20" cy="230" r="4" fill="#00ff88" />
+      <text x="30" y="233" fill="#888" fontSize="8">Self-reported</text>
+      <circle cx="120" cy="230" r="4" fill="#3388ff" opacity="0.3" />
+      <text x="130" y="233" fill="#666" fontSize="8">Mail server</text>
+    </svg>
+  )
+}
+
 export default function Architecture() {
   const demoSeed = {
     num_points: 7, rotation: 142, inner_radius: 0.48,
@@ -203,7 +236,7 @@ export default function Architecture() {
             </h1>
             <p className="text-lg text-gray-400 max-w-xl mx-auto">
               From a single email address to a complete identity intelligence report.
-              Five stages, 71 sources, one graph.
+              Five stages, 99 sources, one graph.
             </p>
           </div>
         </Section>
@@ -216,8 +249,8 @@ export default function Architecture() {
                 <div className="text-6xl font-mono font-bold text-[#00ff88]/15 mb-2">01</div>
                 <h2 className="text-2xl font-bold mb-3 font-['Instrument_Sans',sans-serif]">Collect</h2>
                 <p className="text-gray-400 mb-4">
-                  Your email is scanned across <span className="text-white font-semibold">71 sources</span> in parallel.
-                  Social networks, breach databases, archives, gaming platforms, developer registries.
+                  Your email is scanned across <span className="text-white font-semibold">99 sources</span> in parallel.
+                  Social networks, breach databases, archives, gaming platforms, developer registries, LinkedIn intelligence.
                 </p>
                 <p className="text-sm text-gray-500">
                   Each source is weighted by reliability. A GitHub profile (<span className="text-[#00ff88] font-mono">0.85</span>)
@@ -262,16 +295,17 @@ export default function Architecture() {
                 <div className="text-6xl font-mono font-bold text-[#ffcc00]/15 mb-2">03</div>
                 <h2 className="text-2xl font-bold mb-3 font-['Instrument_Sans',sans-serif]">Propagate</h2>
                 <p className="text-gray-400 mb-4">
-                  <span className="text-white font-semibold">PageRank</span> walks the graph.
-                  Confidence flows through the edges like electricity through a circuit.
+                  <span className="text-white font-semibold">Personalized PageRank</span> walks the graph.
+                  The email anchor always stays the highest-confidence node —
+                  confidence propagates outward through edges weighted by source reliability.
                 </p>
                 <p className="text-sm text-gray-500 mb-3">
                   A name confirmed by 3 independent sources through different paths accumulates
-                  more confidence than a name from 1 source.
+                  more confidence than a name from a single source.
                 </p>
                 <p className="text-sm text-gray-500">
-                  This is the <span className="text-[#ffcc00]">Markov chain</span> — the probability of
-                  transitioning from one identity node to another. High-confidence paths = high probability.
+                  Teleport probability always returns to the seed email — this is <span className="text-[#ffcc00]">Personalized PageRank</span>,
+                  not standard PageRank. The anchor never loses its authority.
                 </p>
               </div>
               <PropagateDiagram />
@@ -318,16 +352,19 @@ export default function Architecture() {
                 <p className="text-gray-400 mb-4">
                   Every identity gets a unique <span className="text-white font-semibold">pixel avatar</span>,
                   an 8-axis <span className="text-white font-semibold">digital fingerprint</span>,
-                  clustered <span className="text-white font-semibold">personas</span>,
-                  and a <span className="text-white font-semibold">remediation plan</span>.
+                  clustered <span className="text-white font-semibold">personas</span> with aliases,
+                  <span className="text-white font-semibold">profile photos</span> collected across platforms,
+                  a <span className="text-white font-semibold">geographic exposure map</span>,
+                  and a <span className="text-white font-semibold">life timeline</span>.
                 </p>
                 <p className="text-sm text-gray-500 mb-3">
-                  The avatar is generated from your graph topology — ~5.4 billion unique combinations.
-                  Green face = low risk. Red glitched face = high threat.
+                  Persona names are resolved through family name consensus — if 3 sources say "Theis",
+                  a single outlier won't override the majority. Email-verified sources take priority
+                  over username-guessed matches.
                 </p>
                 <p className="text-sm text-gray-500">
-                  The 8-axis radar captures your exposure shape: accounts, platforms, username reuse,
-                  breaches, geographic spread, data leaked, email age, and security posture.
+                  The avatar is generated from your graph topology — ~5.4 billion unique combinations.
+                  Green face = low risk. Red glitched face = high threat.
                 </p>
               </div>
               <div className="flex flex-col items-center gap-6">
@@ -352,8 +389,32 @@ export default function Architecture() {
           </div>
         </Section>
 
+        {/* Stage 6: Locate */}
+        <Section className="py-20 bg-[#12121a]/50">
+          <div className="max-w-4xl mx-auto px-6">
+            <div className="grid md:grid-cols-2 gap-12 items-center">
+              <GeoMapDiagram />
+              <div>
+                <div className="text-6xl font-mono font-bold text-[#00ddcc]/15 mb-2">06</div>
+                <h2 className="text-2xl font-bold mb-3 font-['Instrument_Sans',sans-serif]">Locate</h2>
+                <p className="text-gray-400 mb-4">
+                  Self-reported locations from profiles are <span className="text-white font-semibold">geocoded</span> and
+                  separated from mail server IP locations. 30+ countries, 20+ cities — zero API calls.
+                </p>
+                <p className="text-sm text-gray-500 mb-3">
+                  GeoIP tells you where Google's servers are. xpose tells you where the <span className="text-[#00ddcc]">person</span> is.
+                </p>
+                <p className="text-sm text-gray-500">
+                  The workspace-wide geographic map gives CISOs instant visibility into their team's
+                  global digital exposure.
+                </p>
+              </div>
+            </div>
+          </div>
+        </Section>
+
         {/* Roadmap */}
-        <Section className="py-20 bg-[#12121a]/50" id="roadmap">
+        <Section className="py-20" id="roadmap">
           <div className="max-w-3xl mx-auto px-6">
             <h2 className="text-2xl font-bold mb-8 text-center font-['Instrument_Sans',sans-serif]">Roadmap</h2>
             <div className="space-y-8">
@@ -361,13 +422,20 @@ export default function Architecture() {
                 {
                   version: 'v1.0', date: 'Nexus 2026 (June)', color: '#00ff88',
                   items: [
-                    { done: true, text: '71 scrapers, 25 scanners' },
-                    { done: true, text: 'PageRank / Markov chain confidence' },
-                    { done: true, text: '32x32 pixel art identity avatars' },
-                    { done: true, text: 'Freemium quick scan' },
-                    { done: true, text: 'Plans (Free/Consultant/Enterprise)' },
+                    { done: true, text: '99 scrapers across 8 categories (social, breach, dev, archive, gaming, people, metadata, LinkedIn)' },
+                    { done: true, text: 'Personalized PageRank / Markov chain confidence engine' },
+                    { done: true, text: '32x32 pixel art identity avatars (~5.4B unique combinations)' },
+                    { done: true, text: '8-axis digital fingerprint radar' },
+                    { done: true, text: 'Digital personas with display names, aliases, platform badges' },
+                    { done: true, text: 'Profile photos tab (cross-platform collection)' },
+                    { done: true, text: 'Geographic exposure map (self-reported + server locations)' },
+                    { done: true, text: 'Workspace-wide geo map on Dashboard' },
+                    { done: true, text: 'Name resolution: family consensus + source method penalty' },
+                    { done: true, text: 'Life timeline with breach/account/archive events' },
+                    { done: true, text: 'Freemium quick scan with upsell' },
+                    { done: true, text: 'Plans (Free/Consultant \u20ac49/Enterprise \u20ac199)' },
                     { done: false, text: 'PDF report export' },
-                    { done: false, text: 'SSE real-time (stable)' },
+                    { done: false, text: 'Admin scoring tuning sliders' },
                   ],
                 },
                 {
@@ -375,8 +443,9 @@ export default function Architecture() {
                   items: [
                     { done: false, text: 'Corporate scrapers (O365, Azure AD, GitHub org)' },
                     { done: false, text: 'Domain-wide scan' },
-                    { done: false, text: 'Public API' },
-                    { done: false, text: 'Webhook notifications' },
+                    { done: false, text: 'Timezone inference from GitHub commit patterns' },
+                    { done: false, text: 'EXIF metadata extraction from profile photos' },
+                    { done: false, text: 'Public API + webhook notifications' },
                   ],
                 },
                 {
@@ -391,9 +460,9 @@ export default function Architecture() {
                 {
                   version: 'v2.0', date: 'Platform (2027)', color: '#ff2244',
                   items: [
-                    { done: false, text: 'Community marketplace' },
-                    { done: false, text: 'Plugin API' },
-                    { done: false, text: 'Mobile app' },
+                    { done: false, text: 'Community scraper marketplace' },
+                    { done: false, text: 'Plugin API for custom integrations' },
+                    { done: false, text: 'Mobile app (iOS/Android)' },
                   ],
                 },
               ].map(phase => (
@@ -444,7 +513,7 @@ export default function Architecture() {
           <div className="flex items-center gap-2">
             <Shield className="w-4 h-4 text-[#00ff88]" />
             <span className="font-bold text-sm font-['Instrument_Sans',sans-serif]">xpose</span>
-            <span className="text-xs text-gray-600 font-mono ml-2">v0.42.0</span>
+            <span className="text-xs text-gray-600 font-mono ml-2">v0.57.0</span>
           </div>
           <div className="flex items-center gap-4 text-xs text-gray-500">
             <Link to="/welcome" className="hover:text-white transition-colors">Home</Link>
