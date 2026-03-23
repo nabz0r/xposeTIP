@@ -377,15 +377,18 @@ def aggregate_profile(target_id, workspace_id, session: Session, graph_context=N
         sources.add(source)
 
         # --- Names ---
+        is_email_verified = getattr(f, "indicator_type", "") == "email"
         for name_key in ("name", "full_name", "display_name", "displayName"):
             # Axe 4: holehe "name" field = platform name, not person name
             if f.module == "holehe" and name_key == "name":
                 continue
             raw = data.get(name_key, "")
             name = _clean_name_value(raw)
+            if name is None and raw and raw.strip():
+                logger.debug("Name rejected by _clean_name_value: %r (source=%s)", raw.strip(), source)
             if name and name not in seen_names:
                 seen_names.add(name)
-                profile["names"].append({"value": name, "source": source})
+                profile["names"].append({"value": name, "source": source, "email_verified": is_email_verified})
 
         # --- Avatars ---
         for avatar_key in ("avatar_url", "photo_url", "avatar", "picture", "profile_image", "image_url"):
@@ -936,10 +939,32 @@ def aggregate_profile(target_id, workspace_id, session: Session, graph_context=N
                     if len(parts) >= 2 and parts[-1].lower() == dominant_surname:
                         n["composite_score"] = n.get("composite_score", 0) + 0.10
 
+    # Tier separation: email-verified names vs username-guessed names
+    verified_names = [n for n in valid_names if n.get("email_verified")]
+    guessed_names = [n for n in valid_names if not n.get("email_verified")]
+
     primary_name = None
-    if valid_names:
-        best = max(valid_names, key=lambda n: n.get("composite_score", 0))
+    if verified_names:
+        # Prefer email-verified names — these are confirmed for this email
+        best = max(verified_names, key=lambda n: n.get("composite_score", 0))
         primary_name = best["value"].strip()
+    elif guessed_names:
+        # Fallback: consensus by family name among username-guessed names
+        family_groups = {}
+        for n in guessed_names:
+            parts = n["value"].strip().split()
+            if len(parts) >= 2:
+                family = parts[-1].lower()
+                family_groups.setdefault(family, []).append(n)
+
+        if family_groups:
+            best_family = max(family_groups, key=lambda fam: len(family_groups[fam]))
+            candidates = family_groups[best_family]
+            best = max(candidates, key=lambda n: n.get("composite_score", 0))
+            primary_name = best["value"].strip()
+        else:
+            best = max(guessed_names, key=lambda n: n.get("composite_score", 0))
+            primary_name = best["value"].strip()
     # Fallback: use email guess if no name found from scanners
     if not primary_name and email_name_guess["full"]:
         if _is_valid_name(email_name_guess["full"]):
