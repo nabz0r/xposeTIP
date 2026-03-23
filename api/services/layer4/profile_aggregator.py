@@ -967,6 +967,40 @@ def aggregate_profile(target_id, workspace_id, session: Session, graph_context=N
             if name_first == _email_first_char:
                 n["composite_score"] = n.get("composite_score", 0) + 0.08
 
+    # === Email Pattern Intelligence ===
+    # Detect corporate email patterns from sibling targets on the same domain
+    from api.services.layer4.email_pattern_detector import (
+        detect_domain_pattern, decompose_email, boost_names_with_pattern,
+    )
+
+    _email_domain = _email.split("@")[-1].lower() if "@" in _email else ""
+    _email_pattern_info = None
+    _email_decomp = None
+
+    if _email_domain:
+        _email_pattern_info = detect_domain_pattern(_email_domain, session)
+        if _email_pattern_info:
+            _email_decomp = decompose_email(_email, _email_pattern_info)
+            if _email_decomp:
+                logger.info(
+                    "EMAIL_PATTERN: %s → surname='%s' first='%s' (pattern=%s, conf=%.2f)",
+                    _email, _email_decomp.get("surname", "?"),
+                    _email_decomp.get("first_initial", _email_decomp.get("first_name", "?")),
+                    _email_decomp.get("pattern", "?"),
+                    _email_decomp.get("confidence", 0),
+                )
+                valid_names = boost_names_with_pattern(valid_names, _email_decomp)
+
+    # Store pattern info in profile for frontend display
+    if _email_pattern_info:
+        profile["email_pattern"] = _email_pattern_info
+    if _email_decomp:
+        profile["email_decomposition"] = _email_decomp
+        if not any(n.get("email_pattern_match") for n in valid_names):
+            # No name matched — store surname hint
+            profile["email_derived_surname"] = _email_decomp.get("surname", "").title()
+            profile["email_derived_first_initial"] = _email_decomp.get("first_initial", "").upper()
+
     # Tier separation: email-verified names vs username-guessed names
     verified_names = [n for n in valid_names if n.get("email_verified")]
     guessed_names = [n for n in valid_names if not n.get("email_verified")]
