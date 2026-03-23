@@ -425,6 +425,7 @@ def finalize_scan(scan_id: str):
             from api.services.plan_config import check_feature
 
         # Cluster personas (plan-gated)
+        personas = []
         if check_feature(plan_name, "persona_clustering", ws_role):
             try:
                 from api.services.layer4.persona_engine import cluster_personas

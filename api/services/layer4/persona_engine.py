@@ -102,100 +102,105 @@ def _is_valid_extracted_username(username: str) -> bool:
 
 def _cluster_from_graph(identities, graph_context, db_blacklist):
     """Build personas from graph clusters. Each cluster = one persona."""
-    personas = []
-    clusters = graph_context["clusters"]
-    node_scores = graph_context["node_scores"]
+    try:
+        personas = []
+        clusters = graph_context["clusters"]
+        node_scores = graph_context["node_scores"]
 
-    for idx, cluster in enumerate(clusters):
-        cluster_nodes = set(cluster["nodes"])
+        for idx, cluster in enumerate(clusters):
+            cluster_nodes = set(cluster["nodes"])
 
-        # Debug: log cluster composition
-        cluster_types = defaultdict(int)
-        for i in identities:
-            if i.id in cluster_nodes:
-                cluster_types[i.type] += 1
-        logger.info(
-            "PERSONA_DEBUG: Cluster %d: %d nodes, types=%s",
-            idx, len(cluster_nodes), dict(cluster_types),
-        )
-
-        # Find username nodes in this cluster
-        cluster_usernames = set()
-        cluster_platforms = set()
-        cluster_names = set()
-        for i in identities:
-            if i.id in cluster_nodes:
-                if i.type == "username" and _is_valid_username(i.value or "", db_blacklist):
-                    cluster_usernames.add(i.value)
-                # Collect name nodes for persona labeling
-                if i.type == "name":
-                    cluster_names.add(i.value)
-                # Collect platforms from social_url nodes (e.g. "Steam", "Medium")
-                if i.type == "social_url":
-                    url_plat = (i.platform or i.value or "").strip()
-                    if url_plat and url_plat.lower() not in _PLATFORM_BLACKLIST:
-                        cluster_platforms.add(url_plat)
-                plat = i.platform or ""
-                # Skip generic module names — not real platforms
-                if plat and plat not in ("scraper_engine", "graph_builder", "unknown"):
-                    # Clean scraper suffixes
-                    plat_clean = plat.replace("_profile", "").replace("_scraper", "").replace("_search", "").strip()
-                    if plat_clean:
-                        cluster_platforms.add(plat_clean)
-
-        # Filter out non-platform entries (password managers, browsers)
-        cluster_platforms = {p for p in cluster_platforms if p.lower() not in _PLATFORM_BLACKLIST}
-
-        logger.info(
-            "PERSONA_DEBUG: Cluster %d: usernames=%s, names=%s, platforms(%d)=%s",
-            idx, sorted(cluster_usernames), sorted(cluster_names),
-            len(cluster_platforms), sorted(cluster_platforms)[:10],
-        )
-
-        # Sprint 50: Accept clusters with usernames OR names (not just usernames)
-        if not cluster_usernames and not cluster_names:
-            continue
-
-        # Pick best label: prefer username, then name
-        if cluster_usernames:
-            valid_usernames = [u for u in cluster_usernames if _is_valid_persona_name(u)]
-            label_candidates = valid_usernames if valid_usernames else list(cluster_usernames)
-        else:
-            valid_names = [n for n in cluster_names if _is_valid_persona_name(n)]
-            label_candidates = valid_names if valid_names else list(cluster_names)
-
-        best_label = max(
-            label_candidates,
-            key=lambda u: node_scores.get(
-                next((i.id for i in identities if i.value == u), None), 0
+            # Debug: log cluster composition
+            cluster_types = defaultdict(int)
+            for i in identities:
+                if i.id in cluster_nodes:
+                    cluster_types[i.type] += 1
+            logger.info(
+                "PERSONA_DEBUG: Cluster %d: %d nodes, types=%s",
+                idx, len(cluster_nodes), dict(cluster_types),
             )
-        )
 
-        risk_indicators = []
-        if len(cluster_usernames) > 1:
-            risk_indicators.append(f"username reuse across {len(cluster_platforms)} platforms")
+            # Find username nodes in this cluster
+            cluster_usernames = set()
+            cluster_platforms = set()
+            cluster_names = set()
+            for i in identities:
+                if i.id in cluster_nodes:
+                    if i.type == "username" and _is_valid_username(i.value or "", db_blacklist):
+                        cluster_usernames.add(i.value)
+                    # Collect name nodes for persona labeling
+                    if i.type == "name":
+                        cluster_names.add(i.value)
+                    # Collect platforms from social_url nodes (e.g. "Steam", "Medium")
+                    if i.type == "social_url":
+                        url_plat = (i.platform or i.value or "").strip()
+                        if url_plat and url_plat.lower() not in _PLATFORM_BLACKLIST:
+                            cluster_platforms.add(url_plat)
+                    plat = i.platform or ""
+                    # Skip generic module names — not real platforms
+                    if plat and plat not in ("scraper_engine", "graph_builder", "unknown"):
+                        # Clean scraper suffixes
+                        plat_clean = plat.replace("_profile", "").replace("_scraper", "").replace("_search", "").strip()
+                        if plat_clean:
+                            cluster_platforms.add(plat_clean)
 
-        variants = [u for u in cluster_usernames if u != best_label]
-        if variants:
-            risk_indicators.append(f"username variants detected ({', '.join(sorted(variants)[:3])})")
+            # Filter out non-platform entries (password managers, browsers)
+            cluster_platforms = {p for p in cluster_platforms if p.lower() not in _PLATFORM_BLACKLIST}
 
-        all_identifiers = sorted(cluster_usernames | cluster_names)
+            logger.info(
+                "PERSONA_DEBUG: Cluster %d: usernames=%s, names=%s, platforms(%d)=%s",
+                idx, sorted(cluster_usernames), sorted(cluster_names),
+                len(cluster_platforms), sorted(cluster_platforms)[:10],
+            )
 
-        personas.append({
-            "id": f"persona_{idx}",
-            "label": best_label,
-            "usernames": sorted(cluster_usernames) if cluster_usernames else sorted(cluster_names),
-            "platforms": sorted(cluster_platforms),
-            "accounts_count": len(cluster_platforms),
-            "confidence": cluster["confidence"],
-            "density": cluster["density"],
-            "is_primary": idx == 0,
-            "risk_indicators": risk_indicators,
-            "graph_cluster_size": cluster["node_count"],
-            "names": sorted(cluster_names),
-        })
+            # Sprint 50: Accept clusters with usernames OR names (not just usernames)
+            if not cluster_usernames and not cluster_names:
+                continue
 
-    return personas
+            # Pick best label: prefer username, then name
+            if cluster_usernames:
+                valid_usernames = [u for u in cluster_usernames if _is_valid_persona_name(u)]
+                label_candidates = valid_usernames if valid_usernames else list(cluster_usernames)
+            else:
+                valid_names = [n for n in cluster_names if _is_valid_persona_name(n)]
+                label_candidates = valid_names if valid_names else list(cluster_names)
+
+            best_label = max(
+                label_candidates,
+                key=lambda u: node_scores.get(
+                    next((i.id for i in identities if i.value == u), None), 0
+                )
+            )
+
+            risk_indicators = []
+            if len(cluster_usernames) > 1:
+                risk_indicators.append(f"username reuse across {len(cluster_platforms)} platforms")
+
+            variants = [u for u in cluster_usernames if u != best_label]
+            if variants:
+                risk_indicators.append(f"username variants detected ({', '.join(sorted(variants)[:3])})")
+
+            all_identifiers = sorted(cluster_usernames | cluster_names)
+
+            personas.append({
+                "id": f"persona_{idx}",
+                "label": best_label,
+                "usernames": sorted(cluster_usernames) if cluster_usernames else sorted(cluster_names),
+                "platforms": sorted(cluster_platforms),
+                "accounts_count": len(cluster_platforms),
+                "confidence": cluster["confidence"],
+                "density": cluster["density"],
+                "is_primary": idx == 0,
+                "risk_indicators": risk_indicators,
+                "graph_cluster_size": cluster["node_count"],
+                "names": sorted(cluster_names),
+            })
+
+        logger.info("PERSONA_DEBUG: _cluster_from_graph returning %d personas", len(personas))
+        return personas
+    except Exception:
+        logger.exception("PERSONA: graph-based clustering crashed")
+        return []
 
 
 def cluster_personas(target_id, workspace_id, session: Session, graph_context=None) -> list[dict]:
@@ -222,7 +227,15 @@ def cluster_personas(target_id, workspace_id, session: Session, graph_context=No
 
     # GRAPH-BASED clustering: use connected components
     if graph_context and graph_context.get("clusters"):
+        logger.info(
+            "PERSONA: graph path starting with %d clusters, %d identities",
+            len(graph_context["clusters"]), len(identities),
+        )
         personas = _cluster_from_graph(identities, graph_context, db_blacklist)
+        logger.info(
+            "PERSONA: graph path returned %d personas, falling back: %s",
+            len(personas) if personas else 0, not personas,
+        )
         if personas:
             # Tag identities in DB with persona ID (usernames + names)
             persona_label_map = {}
@@ -246,6 +259,7 @@ def cluster_personas(target_id, workspace_id, session: Session, graph_context=No
             return personas
 
     # FALLBACK: SequenceMatcher-based clustering (existing behavior)
+    logger.info("PERSONA: falling back to SequenceMatcher for target %s", target_id)
     findings = session.execute(
         select(Finding).where(
             Finding.target_id == target_id,
@@ -311,6 +325,11 @@ def cluster_personas(target_id, workspace_id, session: Session, graph_context=No
         username_sources[username].add(f.module)
         if f.url:
             username_urls[username].append(f.url)
+
+    logger.info(
+        "PERSONA_FALLBACK: %d usernames after validation: %s",
+        len(username_platforms), list(username_platforms.keys()),
+    )
 
     if not username_platforms:
         return []
