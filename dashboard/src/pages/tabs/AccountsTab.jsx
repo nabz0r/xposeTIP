@@ -1,17 +1,25 @@
 import React from 'react'
 import { ExternalLink, Link2, Unlink, Radar } from 'lucide-react'
 
+const NON_SOCIAL = ['lastpass', 'office365', '1password', 'bitwarden', 'dashlane', 'keepass', 'nordpass', 'firefox', 'chrome', 'safari', 'edge', 'opera', 'eventbrite', 'booking']
+
 export default function AccountsTab({ id, socialFindings, accounts, setAccounts, auditingAccount, setAuditingAccount, toast, setToast, load, startOAuth, auditAccount, disconnectAccount }) {
+  const filteredSocialFindings = socialFindings.filter(f => {
+    const d = f.data || {}
+    const platform = (d.platform || d.scraper || f.title?.split(' on ')?.pop() || f.module || '').toLowerCase()
+    return !NON_SOCIAL.some(ns => platform.includes(ns))
+  })
+
   return (
     <div className="space-y-6">
       {/* Detected Social Accounts */}
-      {socialFindings.length > 0 && (
+      {filteredSocialFindings.length > 0 && (
         <div>
           <h3 className="text-xs font-semibold uppercase tracking-wider text-gray-500 mb-3">
-            Detected Accounts ({socialFindings.length})
+            Detected Accounts ({filteredSocialFindings.length})
           </h3>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-            {socialFindings.map((f, i) => {
+            {filteredSocialFindings.map((f, i) => {
               const d = f.data || {}
               const platform = d.platform || d.scraper || f.title?.split(' on ')?.pop() || f.module
               const username = d.username || d.display_name || f.indicator_value || ''

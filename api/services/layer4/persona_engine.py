@@ -84,13 +84,27 @@ def _cluster_from_graph(identities, graph_context, db_blacklist):
     for idx, cluster in enumerate(clusters):
         cluster_nodes = set(cluster["nodes"])
 
+        # Debug: log cluster composition
+        cluster_types = defaultdict(int)
+        for i in identities:
+            if i.id in cluster_nodes:
+                cluster_types[i.type] += 1
+        logger.info(
+            "PERSONA_DEBUG: Cluster %d: %d nodes, types=%s",
+            idx, len(cluster_nodes), dict(cluster_types),
+        )
+
         # Find username nodes in this cluster
         cluster_usernames = set()
         cluster_platforms = set()
+        cluster_names = set()
         for i in identities:
             if i.id in cluster_nodes:
                 if i.type == "username" and _is_valid_username(i.value or "", db_blacklist):
                     cluster_usernames.add(i.value)
+                # Collect name nodes for persona labeling
+                if i.type == "name":
+                    cluster_names.add(i.value)
                 # Collect platforms from social_url nodes (e.g. "Steam", "Medium")
                 if i.type == "social_url":
                     url_plat = (i.platform or i.value or "").strip()
@@ -106,6 +120,12 @@ def _cluster_from_graph(identities, graph_context, db_blacklist):
 
         # Filter out non-platform entries (password managers, browsers)
         cluster_platforms = {p for p in cluster_platforms if p.lower() not in _PLATFORM_BLACKLIST}
+
+        logger.info(
+            "PERSONA_DEBUG: Cluster %d: usernames=%s, names=%s, platforms(%d)=%s",
+            idx, sorted(cluster_usernames), sorted(cluster_names),
+            len(cluster_platforms), sorted(cluster_platforms)[:10],
+        )
 
         if not cluster_usernames:
             continue

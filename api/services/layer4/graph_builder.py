@@ -40,8 +40,8 @@ def _is_valid_extracted_username(username: str) -> bool:
     u = username.strip()
     if len(u) < 2:
         return False
-    # Reject "X's profile" patterns
-    if "'s profile" in u.lower() or u.lower().endswith(" profile"):
+    # Reject "X's profile" patterns and possessives
+    if "'s " in u.lower() or u.lower().endswith("'s") or "profile" in u.lower():
         return False
     # Reject single-letter initials: "Steffen H.", "J. Smith"
     parts = u.split()
@@ -256,12 +256,53 @@ def build_graph(target_id, workspace_id, session: Session):
                 if platform:
                     platform = platform.replace("_profile", "").replace("_scraper", "").replace("_search", "").strip()
 
-            indicator_node = get_or_create_identity(
-                f.indicator_type, f.indicator_value,
-                platform=platform,
-                source_module=f.module,
-                source_finding_id=f.id,
-            )
+            # Axe 1 (Sprint 49): Validate username indicator values before creating nodes
+            if f.indicator_type == "username" and f.indicator_value:
+                uval = f.indicator_value.strip()
+                # Check if this is actually a display name (capitalized multi-word)
+                uval_parts = [w for w in uval.split() if w]
+                is_display_name = (
+                    ' ' in uval
+                    and len(uval_parts) >= 2
+                    and all(w[0].isupper() for w in uval_parts)
+                )
+                if is_display_name:
+                    # Create as name node, not username — names handled by name extraction below
+                    indicator_node = get_or_create_identity(
+                        "name", uval,
+                        platform=platform,
+                        source_module=f.module,
+                        source_finding_id=f.id,
+                    )
+                    # Weak link: email → name
+                    if email_value:
+                        email_node = get_or_create_identity(
+                            "email", email_value, source_module=f.module,
+                        )
+                        get_or_create_link(
+                            email_node.id, indicator_node.id,
+                            "associated_with",
+                            source_module=f.module,
+                            evidence={"name": uval, "finding_id": str(f.id)},
+                        )
+                elif not _is_valid_extracted_username(uval):
+                    # Invalid username (profile suffix, domain handle, etc.) — skip
+                    logger.debug("Skipping invalid username indicator: %s", uval)
+                    indicator_node = None
+                else:
+                    indicator_node = get_or_create_identity(
+                        f.indicator_type, f.indicator_value,
+                        platform=platform,
+                        source_module=f.module,
+                        source_finding_id=f.id,
+                    )
+            else:
+                indicator_node = get_or_create_identity(
+                    f.indicator_type, f.indicator_value,
+                    platform=platform,
+                    source_module=f.module,
+                    source_finding_id=f.id,
+                )
 
             # Social account findings → create platform node + link
             if f.category == "social_account":
@@ -342,7 +383,7 @@ def build_graph(target_id, workspace_id, session: Session):
                     )
 
             # Breach findings → create breach node + link
-            elif f.category == "breach":
+            elif f.category == "breach" and indicator_node:
                 breach_name = fdata.get("Name", f.title) if fdata else f.title
                 breach_node = get_or_create_identity(
                     "breach", breach_name,
@@ -358,7 +399,7 @@ def build_graph(target_id, workspace_id, session: Session):
                 )
 
             # Username findings → link to email if we have one
-            elif f.indicator_type == "username" and email_value:
+            elif f.indicator_type == "username" and email_value and indicator_node:
                 email_node = get_or_create_identity(
                     "email", email_value,
                     source_module=f.module,
