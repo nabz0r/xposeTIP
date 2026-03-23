@@ -35,6 +35,32 @@ _NON_SOCIAL_PLATFORMS = {
 }
 
 
+def _is_valid_extracted_username(username: str) -> bool:
+    """Reject noisy username values from finding data."""
+    u = username.strip()
+    if len(u) < 2:
+        return False
+    # Reject "X's profile" patterns
+    if "'s profile" in u.lower() or u.lower().endswith(" profile"):
+        return False
+    # Reject single-letter initials: "Steffen H.", "J. Smith"
+    parts = u.split()
+    if len(parts) >= 2:
+        if len(parts[-1].rstrip('.')) <= 1:
+            return False
+        if len(parts[0]) == 1 or (len(parts[0]) == 2 and parts[0].endswith('.')):
+            return False
+    # Reject domain-style handles: "user.bsky.social", "user@mastodon.social"
+    if u.count('.') >= 2:
+        return False
+    if '@' in u:
+        return False
+    # Reject if it's actually a full name with spaces (names are type="name", not username)
+    if ' ' in u and all(p[0].isupper() for p in u.split() if p):
+        return False
+    return True
+
+
 def _match_url_platform(url):
     """Axe 5: Proper domain matching — check if URL host ends with a known domain."""
     if not url:
@@ -170,7 +196,7 @@ def build_graph(target_id, workspace_id, session: Session):
                 extracted_username = fdata.get("username")
                 extracted_platform = fdata.get("platform", "").replace("_profile", "").replace("_scraper", "").replace("_search", "").strip()
 
-                if extracted_username and extracted_platform:
+                if extracted_username and extracted_platform and _is_valid_extracted_username(extracted_username):
                     # Axe 4: Skip non-social platforms
                     if extracted_platform.lower() in _NON_SOCIAL_PLATFORMS:
                         continue
@@ -263,7 +289,7 @@ def build_graph(target_id, workspace_id, session: Session):
 
                 # Axe 1: Extract username from f.data for social_account findings
                 data_username = fdata.get("username")
-                if data_username and isinstance(data_username, str) and len(data_username.strip()) >= 2:
+                if data_username and isinstance(data_username, str) and len(data_username.strip()) >= 2 and _is_valid_extracted_username(data_username.strip()):
                     username_node = get_or_create_identity(
                         "username", data_username.strip(),
                         platform=site_name.lower() if site_name else f.module,
@@ -281,6 +307,11 @@ def build_graph(target_id, workspace_id, session: Session):
                             "same_person",
                             source_module=f.module,
                         )
+
+                # Axe 4: Skip non-social platforms (check site_name before node creation)
+                clean_site = (site_name or "").lower().replace("_profile", "").replace("_scraper", "").strip()
+                if clean_site in _NON_SOCIAL_PLATFORMS:
+                    continue
 
                 # Axe 3: Normalize social_url value with .title()
                 platform_node = get_or_create_identity(

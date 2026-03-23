@@ -250,13 +250,69 @@ class FingerprintEngine:
                 else:
                     accounts.add(title.lower())
 
-        # Username reuse from identities
+        # Username reuse — computed from findings (each finding has username + platform pair)
+        # The identities table has a unique constraint (workspace, target, type, value)
+        # so username "stheis" can only store ONE platform. Findings have all of them.
         usernames = {}
+        for f in findings:
+            fdata = f.data if isinstance(f.data, dict) else {}
+            cat = getattr(f, "category", "") or ""
+
+            # Extract username from finding data
+            username = (
+                fdata.get("username") or
+                fdata.get("handle") or
+                fdata.get("login") or
+                ""
+            ).strip().lower()
+
+            # Also check extracted dict
+            if not username:
+                extracted = fdata.get("extracted")
+                if isinstance(extracted, dict):
+                    username = (
+                        extracted.get("username") or
+                        extracted.get("handle") or
+                        ""
+                    ).strip().lower()
+
+            # Fall back to indicator_value for username-type indicators
+            if not username and getattr(f, "indicator_type", "") == "username":
+                username = (getattr(f, "indicator_value", "") or "").strip().lower()
+
+            if not username or len(username) < 2:
+                continue
+
+            # Skip non-social categories
+            if cat not in ("social_account", "social"):
+                continue
+
+            # Extract platform
+            platform = (
+                fdata.get("platform") or
+                fdata.get("name") or  # holehe
+                fdata.get("network") or
+                fdata.get("service") or
+                ""
+            ).strip().lower()
+
+            if not platform or platform in ("scraper_engine", "unknown"):
+                continue
+
+            # Clean platform name
+            platform = platform.replace("_profile", "").replace("_scraper", "").replace("_search", "").strip()
+
+            if platform:
+                usernames.setdefault(username, set()).add(platform)
+
+        # Fallback: also check identities (for backward compat)
         for i in identities:
             if getattr(i, "type", "") == "username":
-                val = getattr(i, "value", "")
-                plat = getattr(i, "platform", "unknown") or "unknown"
-                usernames.setdefault(val.lower(), set()).add(plat)
+                val = (getattr(i, "value", "") or "").strip().lower()
+                plat = (getattr(i, "platform", "") or "").strip().lower()
+                if val and plat and plat not in ("unknown", "scraper_engine", "graph_builder"):
+                    usernames.setdefault(val, set()).add(plat)
+
         reused = sum(1 for _u, p in usernames.items() if len(p) > 1)
 
         # Breaches
