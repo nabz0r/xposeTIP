@@ -309,6 +309,7 @@ DEFAULT_SCRAPERS = [
         "finding_severity": "info",
         "rate_limit_requests": 1,
         "rate_limit_window": 5,
+        "enabled": False,
     },
     # === IDENTITY ESTIMATION ===
     {
@@ -950,6 +951,7 @@ DEFAULT_SCRAPERS = [
         "finding_severity": "high",
         "rate_limit_requests": 1,
         "rate_limit_window": 5,
+        "enabled": False,
     },
     {
         "name": "disposable_email_check",
@@ -1417,6 +1419,7 @@ DEFAULT_SCRAPERS = [
         "finding_severity": "low",
         "rate_limit_requests": 1,
         "rate_limit_window": 3,
+        "enabled": False,
     },
     # === BREACH / INTELLIGENCE (Sprint 33) ===
     {
@@ -1509,7 +1512,7 @@ DEFAULT_SCRAPERS = [
         "url_template": "https://web.archive.org/cdx/search/cdx?url=twitter.com/{username}&output=json&limit=1&fl=timestamp,original,statuscode",
         "input_type": "username",
         "method": "GET",
-        "success_indicator": "[[",
+        "success_indicator": "\\[\\[",
         "not_found_indicators": ["[]", "Blocked"],
         "extraction_rules": [
             {"field": "first_archived", "type": "regex", "pattern": "\\[\"(\\d{14})\"", "group": 1},
@@ -1529,7 +1532,7 @@ DEFAULT_SCRAPERS = [
         "url_template": "https://web.archive.org/cdx/search/cdx?url=instagram.com/{username}&output=json&limit=1&fl=timestamp,original,statuscode",
         "input_type": "username",
         "method": "GET",
-        "success_indicator": "[[",
+        "success_indicator": "\\[\\[",
         "not_found_indicators": ["[]", "Blocked"],
         "extraction_rules": [
             {"field": "first_archived", "type": "regex", "pattern": "\\[\"(\\d{14})\"", "group": 1},
@@ -1595,7 +1598,7 @@ DEFAULT_SCRAPERS = [
         "input_type": "username",
         "method": "GET",
         "headers": {"User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"},
-        "success_indicator": "uniqueId|nickname|__UNIVERSAL_DATA_FOR_REHYDRATION__",
+        "success_indicator": "uniqueId",
         "not_found_indicators": ["page not available", "Couldn't find this account", "account not found"],
         "extraction_rules": [
             {"field": "display_name", "type": "regex", "pattern": "\"nickname\":\"([^\"]+)\""},
@@ -1727,8 +1730,8 @@ DEFAULT_SCRAPERS = [
         "input_type": "email",
         "method": "GET",
         "headers": {},
-        "success_indicator": "\"total\"",
-        "not_found_indicators": ["\"total\":0", "\"error\""],
+        "success_indicator": "\"total\"\\s*:\\s*[1-9]",
+        "not_found_indicators": ["\"total\":0", "\"total\": 0", "\"error\"", "\"message\""],
         "extraction_rules": [
             {"field": "found_count", "type": "json_key", "pattern": "total"},
             {"field": "sources", "type": "json_key", "pattern": "results"},
@@ -1758,6 +1761,7 @@ DEFAULT_SCRAPERS = [
         "finding_severity": "high",
         "rate_limit_requests": 1,
         "rate_limit_window": 3,
+        "enabled": False,
     },
     {
         "name": "dehashed_public",
@@ -2003,8 +2007,8 @@ DEFAULT_SCRAPERS = [
         "display_name": "Gravatar JSON Profile",
         "description": "Gravatar full profile JSON data",
         "category": "metadata",
-        "url_template": "https://gravatar.com/{email_hash}.json",
-        "input_type": "email_md5",
+        "url_template": "https://gravatar.com/{email_md5}.json",
+        "input_type": "email",
         "method": "GET",
         "headers": {},
         "success_indicator": "\"displayName\"",
