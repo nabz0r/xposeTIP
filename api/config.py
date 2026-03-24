@@ -110,6 +110,14 @@ ALL_API_SERVICES = [
         "free": False,
         "module": "reverse_image",
     },
+    {
+        "key": "gnews_api_key",
+        "name": "GNews.io",
+        "description": "News search API — 100 req/day free tier, 1-year archive",
+        "url": "https://gnews.io/",
+        "free": True,
+        "module": None,
+    },
     # OAuth providers (SaaS connectors)
     {
         "key": "GOOGLE_CLIENT_ID",

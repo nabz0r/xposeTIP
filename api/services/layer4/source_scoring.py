@@ -79,6 +79,8 @@ SCRAPER_RELIABILITY_OVERRIDES = {
     "leakcheck_public": 0.80,     # Breach data
     "emailrep_breaches": 0.80,    # Breach aggregator
     "gdelt_news": 0.65,           # GDELT news search — free API, variable relevance
+    "gnews_news": 0.75,            # GNews.io — curated sources, structured JSON
+    "google_news_rss": 0.60,       # Google News RSS — free fallback, less metadata
 }
 
 
