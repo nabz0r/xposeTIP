@@ -1,6 +1,6 @@
 import React, { useMemo, useState } from 'react'
 
-const AXIS_LABELS = [
+const AXIS_LABELS_8 = [
   { key: 'accounts', label: 'accounts' },
   { key: 'platforms', label: 'platforms' },
   { key: 'username_reuse', label: 'username reuse' },
@@ -11,6 +11,23 @@ const AXIS_LABELS = [
   { key: 'security', label: 'security' },
 ]
 
+const AXIS_LABELS_9 = [
+  { key: 'accounts', label: 'accounts' },
+  { key: 'platforms', label: 'platforms' },
+  { key: 'username_reuse', label: 'username reuse' },
+  { key: 'breaches', label: 'breaches' },
+  { key: 'geo_spread', label: 'geo spread' },
+  { key: 'data_leaked', label: 'data leaked' },
+  { key: 'email_age', label: 'email age' },
+  { key: 'security', label: 'security' },
+  { key: 'public_exposure', label: 'public exposure' },
+]
+
+// Dynamic: use 9-axis if fingerprint has public_exposure, else 8
+function getAxisLabels(axes) {
+  return axes && axes.public_exposure !== undefined ? AXIS_LABELS_9 : AXIS_LABELS_8
+}
+
 const RAW_LABELS = {
   accounts: (v) => `${v} accounts found`,
   platforms: (v) => `${v} unique platforms`,
@@ -20,9 +37,10 @@ const RAW_LABELS = {
   data_leaked: (v) => `${v} data types exposed`,
   email_age: (v) => `${v} years online`,
   security: (v) => `${v} security weaknesses`,
+  public_exposure: (v) => `${(v * 100).toFixed(0)}% public exposure`,
 }
 
-function polarToCartesian(cx, cy, r, i, total = 8) {
+function polarToCartesian(cx, cy, r, i, total = 9) {
   const angle = (2 * Math.PI * i / total) - (Math.PI / 2)
   return { x: cx + r * Math.cos(angle), y: cy + r * Math.sin(angle) }
 }
@@ -39,6 +57,8 @@ export default function FingerprintRadar({ fingerprint, size = 'large', animate 
   const radius = isSmall ? 44 : 180
 
   const axes = fingerprint?.axes || {}
+  const AXIS_LABELS = getAxisLabels(axes)
+  const axisCount = AXIS_LABELS.length
   const color = fingerprint?.color || '#1D9E75'
   const fillColor = fingerprint?.fill_color || 'rgba(29,158,117,0.12)'
   const hash = fingerprint?.hash || '--------'
@@ -51,13 +71,13 @@ export default function FingerprintRadar({ fingerprint, size = 'large', animate 
   const points = useMemo(() => {
     return AXIS_LABELS.map((a, i) => {
       const val = Math.max(0.08, axes[a.key] || 0)
-      return polarToCartesian(cx, cy, radius * val, i)
+      return polarToCartesian(cx, cy, radius * val, i, axisCount)
     })
-  }, [axes, cx, cy, radius])
+  }, [axes, cx, cy, radius, AXIS_LABELS, axisCount])
 
   const edgePoints = useMemo(() => {
-    return AXIS_LABELS.map((_, i) => polarToCartesian(cx, cy, radius, i))
-  }, [cx, cy, radius])
+    return AXIS_LABELS.map((_, i) => polarToCartesian(cx, cy, radius, i, axisCount))
+  }, [cx, cy, radius, AXIS_LABELS, axisCount])
 
   const polygonStr = points.map(p => `${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(' ')
 
@@ -107,7 +127,7 @@ export default function FingerprintRadar({ fingerprint, size = 'large', animate 
         {AXIS_LABELS.map((a, i) => {
           const edge = edgePoints[i]
           const labelR = radius + 28
-          const lp = polarToCartesian(cx, cy, labelR, i)
+          const lp = polarToCartesian(cx, cy, labelR, i, axisCount)
           let anchor = 'middle'
           if (lp.x < cx - 20) anchor = 'end'
           else if (lp.x > cx + 20) anchor = 'start'
@@ -194,11 +214,12 @@ export default function FingerprintRadar({ fingerprint, size = 'large', animate 
         {points.map((p, i) => {
           const rawKey = AXIS_LABELS[i].key === 'email_age' ? 'email_age_years' :
                          AXIS_LABELS[i].key === 'security' ? 'security_weak' :
+                         AXIS_LABELS[i].key === 'public_exposure' ? 'public_exposure_raw' :
                          AXIS_LABELS[i].key
           const rawVal = rawValues[rawKey]
           if (!rawVal || rawVal === 0) return null
           // Offset label slightly outward from the vertex
-          const labelP = polarToCartesian(cx, cy, radius * Math.max(0.08, axes[AXIS_LABELS[i].key] || 0) + 12, i)
+          const labelP = polarToCartesian(cx, cy, radius * Math.max(0.08, axes[AXIS_LABELS[i].key] || 0) + 12, i, axisCount)
           return (
             <text key={`val-${i}`} x={labelP.x} y={labelP.y}
               fill={color} fontSize="10" fontFamily="JetBrains Mono, monospace"
@@ -222,6 +243,7 @@ export default function FingerprintRadar({ fingerprint, size = 'large', animate 
             {RAW_LABELS[AXIS_LABELS[hoverAxis].key]?.(rawValues[
               AXIS_LABELS[hoverAxis].key === 'email_age' ? 'email_age_years' :
               AXIS_LABELS[hoverAxis].key === 'security' ? 'security_weak' :
+              AXIS_LABELS[hoverAxis].key === 'public_exposure' ? 'public_exposure_raw' :
               AXIS_LABELS[hoverAxis].key
             ] || 0)}
           </div>
@@ -278,10 +300,12 @@ export function FingerprintTimeline({ snapshots = [], onSelectSnapshot }) {
 
           // Build mini polygon for snapshot
           const axes = snap.axes || {}
+          const snapAxisLabels = getAxisLabels(axes)
+          const snapAxisCount = snapAxisLabels.length
           const miniCx = 50, miniCy = 50, miniR = 36
-          const miniPoints = AXIS_LABELS.map((a, j) => {
+          const miniPoints = snapAxisLabels.map((a, j) => {
             const val = Math.max(0.08, axes[a.key] || 0)
-            const pt = polarToCartesian(miniCx, miniCy, miniR * val, j)
+            const pt = polarToCartesian(miniCx, miniCy, miniR * val, j, snapAxisCount)
             return `${pt.x.toFixed(1)},${pt.y.toFixed(1)}`
           }).join(' ')
 
@@ -327,7 +351,7 @@ export function FingerprintCompare({ targetA, targetB }) {
           <div className="text-sm font-mono text-center text-gray-400 mb-2">{t.email}</div>
           <FingerprintRadar fingerprint={t.fingerprint} size="large" animate={false} />
           <div className="grid grid-cols-2 gap-2 mt-3">
-            {AXIS_LABELS.map(a => {
+            {getAxisLabels(t.fingerprint.axes).map(a => {
               const val = t.fingerprint.axes?.[a.key] || 0
               return (
                 <div key={a.key} className="flex items-center justify-between text-[10px] px-2 py-1 rounded bg-[#0a0a0f]">

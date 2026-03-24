@@ -38,6 +38,8 @@ EXPOSURE_CATEGORIES = {
     "geolocation": 0.10,
     "domain_registration": 0.08,
     "intelligence": 0.07,
+    "public_exposure": 0.15,  # Media mentions, corporate roles
+    "corporate": 0.10,        # Corporate officer roles
 }
 
 # Categories that indicate THREAT (danger, risk)
@@ -46,6 +48,7 @@ THREAT_CATEGORIES = {
     "paste": 0.15,
     "data_broker": 0.15,
     "tracking": 0.20,
+    "compliance": 0.25,  # Sanctions/PEP = high threat
 }
 
 SEVERITY_MULTIPLIER = {
@@ -64,6 +67,9 @@ SCORE_FACTORS = {
     "multiple_username_matches": 3,  # Low: username reuse across platforms
     "account_proliferation": 2,      # Per account beyond 5
     "cross_verified": -2,            # Bonus: verified data is more actionable (lower is better managed)
+    "sanctions_match": 25,           # Critical: on sanctions/watchlist
+    "pep_match": 10,                 # High: politically exposed person
+    "interpol_red_notice": 35,       # Critical: Interpol red notice
 }
 
 # Max raw score per category before normalization
@@ -109,6 +115,20 @@ def _compute_bonus_factors(findings: list) -> int:
     if len(social_findings) > 5:
         extra = len(social_findings) - 5
         bonus += min(extra * SCORE_FACTORS["account_proliferation"], 10)
+
+    # Sanctions/PEP/Interpol — applied to THREAT only (max +25 for sanctions, +10 PEP)
+    for f in findings:
+        ind = getattr(f, "indicator_type", "") or ""
+        title_l = (getattr(f, "title", "") or "").lower()
+        if "interpol" in title_l:
+            bonus += SCORE_FACTORS["interpol_red_notice"]
+            break  # Only count once
+        elif ind == "sanctions_match":
+            bonus += SCORE_FACTORS["sanctions_match"]
+            break
+        elif ind == "pep_match":
+            bonus += SCORE_FACTORS["pep_match"]
+            break
 
     return bonus
 

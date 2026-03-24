@@ -138,13 +138,14 @@ def _event_label(field: str, source: str, title: str, data: dict) -> str:
 class FingerprintEngine:
     """
     Generates a unique digital fingerprint from target findings.
-    8-axis radar polygon: accounts, platforms, username_reuse, breaches,
-    geo_spread, data_leaked, email_age, security.
+    9-axis radar polygon: accounts, platforms, username_reuse, breaches,
+    geo_spread, data_leaked, email_age, security, public_exposure.
     """
 
     AXIS_ORDER = [
         "accounts", "platforms", "username_reuse", "breaches",
         "geo_spread", "data_leaked", "email_age", "security",
+        "public_exposure",
     ]
 
     AXIS_MAX = {
@@ -156,17 +157,19 @@ class FingerprintEngine:
         "data_leaked": 8,
         "email_age_years": 15,
         "security_weak": 4,
+        "public_exposure_raw": 1.0,  # Already 0-1 from compute_public_exposure_score
     }
 
     SCORE_WEIGHTS = {
-        "accounts": 0.10,
-        "platforms": 0.08,
-        "username_reuse": 0.15,
-        "breaches": 0.25,
+        "accounts": 0.09,
+        "platforms": 0.07,
+        "username_reuse": 0.13,
+        "breaches": 0.22,
         "geo_spread": 0.05,
-        "data_leaked": 0.20,
-        "email_age": 0.05,
-        "security": 0.12,
+        "data_leaked": 0.18,
+        "email_age": 0.04,
+        "security": 0.10,
+        "public_exposure": 0.12,
     }
 
     SEMANTIC_LABELS = {
@@ -179,13 +182,117 @@ class FingerprintEngine:
         ("high_accounts", "high_geo_spread"): "Global digital footprint",
         ("high_security", "high_breaches"): "Compromised and still vulnerable",
         ("high_data_leaked", "high_username_reuse"): "Highly targetable identity",
+        ("high_public_exposure", "high_breaches"): "High-profile breach victim",
+        ("high_public_exposure", "high_accounts"): "Publicly visible digital presence",
     }
+
+    @staticmethod
+    def compute_public_exposure_score(findings: list) -> tuple[float, dict]:
+        """Compute public_exposure axis from media, sanctions, and corporate findings.
+
+        Returns (score 0.0-1.0, breakdown dict with sub-scores).
+        """
+        media_findings = []
+        sanctions_findings = []
+        pep_findings = []
+        corporate_findings = []
+
+        for f in findings:
+            cat = getattr(f, "category", "") or ""
+            ind = getattr(f, "indicator_type", "") or ""
+            if cat == "public_exposure" or ind == "media_mention":
+                media_findings.append(f)
+            elif cat == "compliance" or ind in ("sanctions_match", "pep_match"):
+                if ind == "pep_match":
+                    pep_findings.append(f)
+                else:
+                    sanctions_findings.append(f)
+            elif cat == "corporate" or ind == "corporate_officer":
+                corporate_findings.append(f)
+
+        # --- Media component: 0.0 to 0.35 ---
+        media_score = 0.0
+        if media_findings:
+            count = len(media_findings)
+            # Log-scale: 1 article=0.10, 3=0.20, 8=0.28, 15+=0.35
+            media_score = min(0.35, 0.10 * math.log2(count + 1))
+            # Diversity bonus: 3+ unique sources
+            sources = set()
+            for f in media_findings:
+                data = f.data if isinstance(f.data, dict) else {}
+                src = data.get("source_name") or data.get("source", {}).get("name", "") if isinstance(data.get("source"), dict) else data.get("source_name", "")
+                if src:
+                    sources.add(src.lower())
+            if len(sources) >= 3:
+                media_score = min(0.35, media_score + 0.05)
+
+        # --- Sanctions component: 0.0 to 0.35 ---
+        sanctions_score = 0.0
+        if sanctions_findings or pep_findings:
+            if sanctions_findings:
+                # Average confidence of sanctions findings
+                confs = [f.confidence for f in sanctions_findings if f.confidence is not None]
+                avg_conf = sum(confs) / len(confs) if confs else 0.7
+                # Check if any Interpol
+                has_interpol = any(
+                    "interpol" in (getattr(f, "title", "") or "").lower()
+                    for f in sanctions_findings
+                )
+                if has_interpol:
+                    sanctions_score = min(0.35, 0.35 * avg_conf)
+                else:
+                    sanctions_score = min(0.30, 0.30 * avg_conf)
+            if pep_findings:
+                confs = [f.confidence for f in pep_findings if f.confidence is not None]
+                avg_conf = sum(confs) / len(confs) if confs else 0.7
+                pep_score = min(0.18, 0.18 * avg_conf)
+                sanctions_score = max(sanctions_score, pep_score)
+
+        # --- Corporate component: 0.0 to 0.30 ---
+        corporate_score = 0.0
+        if corporate_findings:
+            active_count = 0
+            inactive_count = 0
+            has_identity_confirmed = False
+            for f in corporate_findings:
+                data = f.data if isinstance(f.data, dict) else {}
+                status = (data.get("status") or data.get("company_status") or "active").lower()
+                if "inactive" in status or "dissolved" in status or "struck" in status:
+                    inactive_count += 1
+                else:
+                    active_count += 1
+                if data.get("match_type") == "confirmed":
+                    has_identity_confirmed = True
+            # Active roles worth 1.0, inactive worth 0.3
+            weighted = active_count * 1.0 + inactive_count * 0.3
+            # Scale: 1 role=0.08, 3=0.15, 5+=0.25, 8+=0.30
+            corporate_score = min(0.27, 0.08 * math.log2(weighted + 1))
+            if has_identity_confirmed:
+                corporate_score = min(0.30, corporate_score + 0.03)
+
+        total = round(min(1.0, media_score + sanctions_score + corporate_score), 3)
+        breakdown = {
+            "media": round(media_score, 3),
+            "sanctions": round(sanctions_score, 3),
+            "corporate": round(corporate_score, 3),
+            "media_count": len(media_findings),
+            "sanctions_count": len(sanctions_findings),
+            "pep_count": len(pep_findings),
+            "corporate_count": len(corporate_findings),
+        }
+        return total, breakdown
 
     def compute(self, findings: list, identities: list, profile_data: dict = None, email: str = "", links=None, graph_context=None) -> dict:
         raw = self._extract_raw_values(findings, identities, profile_data, email=email)
+
+        # Compute 9th axis: public_exposure
+        pe_score, pe_breakdown = self.compute_public_exposure_score(findings)
+        raw["public_exposure_raw"] = pe_score
+
         axes = self._normalize(raw)
         score = self._compute_score(axes)
         color, fill, risk = self._color_from_score(score)
+        n_axes = len(self.AXIS_ORDER)
         points = self._axes_to_polygon(axes, center=(340, 320), radius=180)
         scars = self._detect_scars(axes, raw)
 
@@ -213,6 +320,7 @@ class FingerprintEngine:
             "eigenvalues": eigen,
             "avatar_seed": avatar_seed,
             "timeline_events": raw.pop("timeline_events", []),
+            "public_exposure_breakdown": pe_breakdown,
             "computed_at": datetime.now(timezone.utc).isoformat(),
         }
 
@@ -549,6 +657,7 @@ class FingerprintEngine:
             "data_leaked": "data_leaked",
             "email_age_years": "email_age",
             "security_weak": "security",
+            "public_exposure_raw": "public_exposure",
         }
         axes = {}
         for raw_key, axis_name in mapping.items():
@@ -571,9 +680,10 @@ class FingerprintEngine:
             return "#E24B4A", "rgba(225,50,50,0.08)", "CRITICAL"
 
     def _axes_to_polygon(self, axes, center=(340, 320), radius=180):
+        n = len(self.AXIS_ORDER)
         points = []
         for i, axis in enumerate(self.AXIS_ORDER):
-            angle = (2 * math.pi * i / 8) - (math.pi / 2)
+            angle = (2 * math.pi * i / n) - (math.pi / 2)
             value = axes.get(axis, 0)
             r = radius * max(0.08, value)
             x = center[0] + r * math.cos(angle)
@@ -617,6 +727,21 @@ class FingerprintEngine:
                 "from": 6, "to": 3,
                 "type": "chronic_exposure",
                 "label": "chronic exposure",
+            })
+
+        # public_exposure is axis index 8
+        if axes.get("public_exposure", 0) > 0.4 and axes.get("breaches", 0) > 0.2:
+            scars.append({
+                "from": 8, "to": 3,
+                "type": "public_breach_victim",
+                "label": "publicly known breach victim",
+            })
+
+        if axes.get("public_exposure", 0) > 0.3 and axes.get("accounts", 0) > 0.4:
+            scars.append({
+                "from": 8, "to": 0,
+                "type": "public_figure",
+                "label": "high public visibility",
             })
 
         return scars
@@ -790,6 +915,7 @@ class FingerprintEngine:
             "data_leaked": "Significant data exposure",
             "email_age": "Long-established digital identity",
             "security": "Weak security perimeter",
+            "public_exposure": "Publicly exposed identity",
         }
         return dominant_labels.get(dominant, "Identity mapped")
 
@@ -815,8 +941,9 @@ class FingerprintEngine:
             lines.append(f'<circle cx="{cx}" cy="{cy}" r="{r:.0f}" fill="none" stroke="#1e1e2e" stroke-width="1"/>')
 
         # Axis lines + labels
+        n_axes = len(self.AXIS_ORDER)
         for i, axis in enumerate(self.AXIS_ORDER):
-            angle = (2 * math.pi * i / 8) - (math.pi / 2)
+            angle = (2 * math.pi * i / n_axes) - (math.pi / 2)
             ex = cx + radius * math.cos(angle)
             ey = cy + radius * math.sin(angle)
             lines.append(f'<line x1="{cx}" y1="{cy}" x2="{ex:.1f}" y2="{ey:.1f}" stroke="#1e1e2e" stroke-width="1"/>')

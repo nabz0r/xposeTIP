@@ -236,7 +236,7 @@ export default function Architecture() {
             </h1>
             <p className="text-lg text-gray-400 max-w-xl mx-auto">
               From a single email address to a complete identity intelligence report.
-              Five stages, 99 sources, one graph.
+              Six stages, 117 sources, one graph.
             </p>
           </div>
         </Section>
@@ -249,7 +249,7 @@ export default function Architecture() {
                 <div className="text-6xl font-mono font-bold text-[#00ff88]/15 mb-2">01</div>
                 <h2 className="text-2xl font-bold mb-3 font-['Instrument_Sans',sans-serif]">Collect</h2>
                 <p className="text-gray-400 mb-4">
-                  Your email is scanned across <span className="text-white font-semibold">99 sources</span> in parallel.
+                  Your email is scanned across <span className="text-white font-semibold">117 sources</span> in parallel.
                   Social networks, breach databases, archives, gaming platforms, developer registries, LinkedIn intelligence.
                 </p>
                 <p className="text-sm text-gray-500">
@@ -351,7 +351,7 @@ export default function Architecture() {
                 <h2 className="text-2xl font-bold mb-3 font-['Instrument_Sans',sans-serif]">Identify</h2>
                 <p className="text-gray-400 mb-4">
                   Every identity gets a unique <span className="text-white font-semibold">pixel avatar</span>,
-                  an 8-axis <span className="text-white font-semibold">digital fingerprint</span>,
+                  a 9-axis <span className="text-white font-semibold">digital fingerprint</span>,
                   clustered <span className="text-white font-semibold">personas</span> with aliases,
                   <span className="text-white font-semibold">profile photos</span> collected across platforms,
                   a <span className="text-white font-semibold">geographic exposure map</span>,
@@ -422,10 +422,10 @@ export default function Architecture() {
                 {
                   version: 'v1.0', date: 'Nexus 2026 (June)', color: '#00ff88',
                   items: [
-                    { done: true, text: '99 scrapers across 8 categories (social, breach, dev, archive, gaming, people, metadata, LinkedIn)' },
+                    { done: true, text: '117 sources across 10 categories (social, breach, dev, archive, gaming, people, metadata, LinkedIn, news, compliance)' },
                     { done: true, text: 'Personalized PageRank / Markov chain confidence engine' },
                     { done: true, text: '32x32 pixel art identity avatars (~5.4B unique combinations)' },
-                    { done: true, text: '8-axis digital fingerprint radar' },
+                    { done: true, text: '9-axis digital fingerprint radar (+ public exposure)' },
                     { done: true, text: 'Digital personas with display names, aliases, platform badges' },
                     { done: true, text: 'Profile photos tab (cross-platform collection)' },
                     { done: true, text: 'Geographic exposure map (self-reported + server locations)' },
@@ -434,6 +434,8 @@ export default function Architecture() {
                     { done: true, text: 'Life timeline with breach/account/archive events' },
                     { done: true, text: 'Freemium quick scan with upsell' },
                     { done: true, text: 'Plans (Free/Consultant \u20ac49/Enterprise \u20ac199)' },
+                    { done: true, text: 'Two-pass scan: name-based enrichment after identity resolution' },
+                    { done: true, text: 'Public exposure intelligence: news, sanctions, corporate roles' },
                     { done: false, text: 'PDF report export' },
                     { done: false, text: 'Admin scoring tuning sliders' },
                   ],
@@ -513,7 +515,7 @@ export default function Architecture() {
           <div className="flex items-center gap-2">
             <Shield className="w-4 h-4 text-[#00ff88]" />
             <span className="font-bold text-sm font-['Instrument_Sans',sans-serif]">xpose</span>
-            <span className="text-xs text-gray-600 font-mono ml-2">v0.57.0</span>
+            <span className="text-xs text-gray-600 font-mono ml-2">v0.60.0</span>
           </div>
           <div className="flex items-center gap-4 text-xs text-gray-500">
             <Link to="/welcome" className="hover:text-white transition-colors">Home</Link>

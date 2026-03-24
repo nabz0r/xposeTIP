@@ -112,7 +112,7 @@ const EXPOSURES = [
   { icon: Users, title: 'Social accounts', desc: 'Every platform where your email or username is registered. Even ones you forgot about.' },
   { icon: Globe, title: 'Geographic footprint', desc: 'Where you claim to be. Where your servers are. Cross-referenced across profiles.' },
   { icon: AtSign, title: 'Username reuse', desc: 'Same username on 12 platforms? That\'s a credential stuffing goldmine.' },
-  { icon: Fingerprint, title: 'Digital fingerprint', desc: '8-axis identity radar: accounts, platforms, breaches, email age, data leaked, geo spread, username reuse, security posture.' },
+  { icon: Fingerprint, title: 'Digital fingerprint', desc: '9-axis identity radar: accounts, platforms, breaches, email age, data leaked, geo spread, username reuse, security posture, public exposure.' },
   { icon: Mail, title: 'Email security', desc: 'SPF, DMARC, DKIM — can someone send emails pretending to be you?' },
   { icon: Camera, title: 'Profile photos', desc: 'Every avatar collected across platforms. Cross-referenced for visual identity correlation.' },
   { icon: Share2, title: 'Identity graph', desc: 'How your accounts, names, and platforms connect. PageRank confidence propagation reveals hidden links.' },
@@ -485,7 +485,7 @@ export default function Landing() {
             </div>
             <div>
               <div className="text-5xl font-mono font-bold text-[#3388ff]/20 mb-3">02</div>
-              <h3 className="text-lg font-semibold mb-1">99 sources scanned</h3>
+              <h3 className="text-lg font-semibold mb-1">117 sources scanned</h3>
               <p className="text-sm text-gray-500">Breaches, social, archives, dark web</p>
             </div>
             <div>
@@ -565,7 +565,7 @@ export default function Landing() {
               </div>
               <div className="flex items-center gap-2 text-sm">
                 <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-[#3388ff]/20 text-[#3388ff]">info</span>
-                <span className="text-gray-300">8-axis fingerprint: high account spread, moderate security</span>
+                <span className="text-gray-300">9-axis fingerprint: high account spread, moderate security</span>
               </div>
             </div>
 
@@ -619,7 +619,7 @@ export default function Landing() {
             Built in Luxembourg <span className="inline-block">🇱🇺</span> · GDPR compliant · Open source · On-premise ready
           </p>
           <p className="text-sm text-gray-600 mt-2">
-            99 intelligence sources · Personalized PageRank · Identity graph · 8-axis fingerprint · Your data stays yours.
+            117 intelligence sources · Personalized PageRank · Identity graph · 9-axis fingerprint · Your data stays yours.
           </p>
         </div>
       </Section>
@@ -649,7 +649,7 @@ export default function Landing() {
             <div className="flex items-center gap-2">
               <Shield className="w-5 h-5 text-[#00ff88]" />
               <span className="font-bold font-['Instrument_Sans',sans-serif]">xpose</span>
-              <span className="text-xs text-gray-600 font-mono ml-2">v0.57.0</span>
+              <span className="text-xs text-gray-600 font-mono ml-2">v0.60.0</span>
             </div>
             <p className="text-xs text-gray-600 font-mono text-center">
               Identity Threat Intelligence · Open Source · GDPR Compliant
