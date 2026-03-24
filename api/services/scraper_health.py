@@ -29,8 +29,10 @@ class ScraperHealth:
             pipe.expire(f"{prefix}:codes", TTL_SECONDS)
 
             # Increment total counter
+            # 404/410 = "not found" (scraper worked correctly, profile doesn't exist)
+            # Only 403, 429, 5xx are real errors
             pipe.hincrby(f"{prefix}:total", "calls", 1)
-            if 200 <= status_code < 300:
+            if 200 <= status_code < 300 or status_code in (404, 410):
                 pipe.hincrby(f"{prefix}:total", "success", 1)
             else:
                 pipe.hincrby(f"{prefix}:total", "errors", 1)
@@ -50,8 +52,8 @@ class ScraperHealth:
             pipe.set(f"{REDIS_PREFIX}:{scraper_name}:last_call",
                      datetime.utcnow().isoformat(), ex=TTL_SECONDS)
 
-            # Last success timestamp
-            if 200 <= status_code < 300:
+            # Last success timestamp (404/410 = working correctly)
+            if 200 <= status_code < 300 or status_code in (404, 410):
                 pipe.set(f"{REDIS_PREFIX}:{scraper_name}:last_success",
                          datetime.utcnow().isoformat(), ex=TTL_SECONDS)
 

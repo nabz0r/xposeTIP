@@ -145,8 +145,8 @@ export default function ScraperHealth() {
                     <div className="flex gap-1.5">
                       {Object.entries(d.status_codes || {}).sort().map(([code, count]) => (
                         <span key={code} className="text-[10px] font-mono px-1.5 py-0.5 rounded" style={{
-                          backgroundColor: code.startsWith('2') ? '#00ff8815' : code.startsWith('4') ? '#ff224415' : '#ffcc0015',
-                          color: code.startsWith('2') ? '#00ff88' : code.startsWith('4') ? '#ff2244' : '#ffcc00',
+                          backgroundColor: code.startsWith('2') ? '#00ff8815' : code === '404' || code === '410' ? '#66668815' : code.startsWith('4') ? '#ff224415' : '#ffcc0015',
+                          color: code.startsWith('2') ? '#00ff88' : code === '404' || code === '410' ? '#666688' : code.startsWith('4') ? '#ff2244' : '#ffcc00',
                         }}>
                           {code}&times;{count}
                         </span>
@@ -181,8 +181,11 @@ export default function ScraperHealth() {
                       {Object.entries(d.status_codes || {}).sort().map(([code, count]) => (
                         <div key={code} className="flex items-center gap-1.5 px-2 py-1 rounded bg-[#0a0a0f]">
                           <span className="font-mono font-semibold" style={{
-                            color: code.startsWith('2') ? '#00ff88' : code.startsWith('4') ? '#ff2244' : '#ffcc00',
+                            color: code.startsWith('2') ? '#00ff88' : code === '404' || code === '410' ? '#666688' : code.startsWith('4') ? '#ff2244' : '#ffcc00',
                           }}>{code}</span>
+                          {(code === '404' || code === '410') && (
+                            <span className="text-[9px] text-gray-600">(not found)</span>
+                          )}
                           <span className="text-gray-500">&times; {count}</span>
                         </div>
                       ))}

@@ -379,6 +379,23 @@ def finalize_scan(scan_id: str):
         except Exception:
             pass
 
+        # Pass 1.5 — Username expansion (re-scan discovered usernames)
+        try:
+            from api.services.layer4.username_expander import expand_usernames
+            target = session.execute(select(Target).where(Target.id == scan.target_id)).scalar_one_or_none()
+            pass15_result = expand_usernames(
+                scan.target_id, scan.workspace_id, session,
+                scan_id=scan.id, email=target.email if target else None,
+            )
+            if pass15_result.get("findings_created", 0) > 0:
+                logger.info(
+                    "Pass 1.5 expanded %d usernames → %d new findings for target %s",
+                    len(pass15_result.get("usernames_selected", [])),
+                    pass15_result["findings_created"], scan.target_id,
+                )
+        except Exception:
+            logger.exception("Pass 1.5 username expansion failed for %s", scan.target_id)
+
         # Pass 2 — Public exposure enrichment (name-based scrapers)
         try:
             from api.services.layer4.public_exposure_enricher import enrich_public_exposure

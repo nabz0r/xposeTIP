@@ -13,6 +13,7 @@ import AccountsTab from './tabs/AccountsTab'
 import PhotosTab from './tabs/PhotosTab'
 import ScansTab from './tabs/ScansTab'
 import PublicExposureTab from '../components/target/PublicExposureTab'
+import UsernameTab from './tabs/UsernameTab'
 import SanctionsAlert from '../components/target/SanctionsAlert'
 
 export default function TargetDetail() {
@@ -311,10 +312,10 @@ export default function TargetDetail() {
 
       {/* Tabs */}
       <div className="flex gap-1 border-b border-[#1e1e2e]">
-        {['overview', 'findings', 'graph', 'timeline', 'photos', 'exposure', 'locations', 'accounts', 'scans'].map(tab => (
+        {['overview', 'findings', 'graph', 'timeline', 'photos', 'exposure', 'locations', 'accounts', 'usernames', 'scans'].map(tab => (
           <button key={tab} onClick={() => setActiveTab(tab)}
             className={`px-4 py-2 text-sm capitalize transition-colors ${activeTab === tab ? 'text-[#00ff88] border-b-2 border-[#00ff88]' : 'text-gray-400 hover:text-white'}`}>
-            {tab} {tab === 'findings' ? `(${findings.length})` : tab === 'scans' ? `(${scans.length})` : tab === 'accounts' ? `(${socialFindings.length + accounts.length})` : tab === 'photos' ? `(${(profile?.avatars || []).length})` : tab === 'exposure' ? `(${findings.filter(f => f.category === 'public_exposure' || f.category === 'compliance' || f.category === 'corporate' || f.indicator_type === 'media_mention' || f.indicator_type === 'sanctions_match' || f.indicator_type === 'pep_match' || f.indicator_type === 'corporate_officer').length})` : ''}
+            {tab} {tab === 'findings' ? `(${findings.length})` : tab === 'scans' ? `(${scans.length})` : tab === 'accounts' ? `(${socialFindings.length + accounts.length})` : tab === 'photos' ? `(${(profile?.avatars || []).length})` : tab === 'usernames' ? `(${new Set(findings.filter(f => f.indicator_type === 'username' && f.indicator_value).map(f => f.indicator_value.toLowerCase())).size})` : tab === 'exposure' ? `(${findings.filter(f => f.category === 'public_exposure' || f.category === 'compliance' || f.category === 'corporate' || f.indicator_type === 'media_mention' || f.indicator_type === 'sanctions_match' || f.indicator_type === 'pep_match' || f.indicator_type === 'corporate_officer').length})` : ''}
           </button>
         ))}
       </div>
@@ -361,6 +362,10 @@ export default function TargetDetail() {
           load={load} startOAuth={startOAuth} auditAccount={auditAccount}
           disconnectAccount={disconnectAccount}
         />
+      )}
+
+      {activeTab === 'usernames' && (
+        <UsernameTab findings={findings} graphData={graphData} />
       )}
 
       {activeTab === 'scans' && (
