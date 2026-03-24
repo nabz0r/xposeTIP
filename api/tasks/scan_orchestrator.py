@@ -415,6 +415,17 @@ def finalize_scan(scan_id: str):
                         target.profile_data = profile
                         session.commit()
                         logger.info("Identity enriched for %s with discovered name", target.email)
+
+                # Ground truth: operator-set country overrides nationality estimation
+                if target and target.country_code:
+                    profile = dict(target.profile_data or {})
+                    est = profile.get("identity_estimation", {})
+                    if est and not est.get("nationality_override"):
+                        est["nationality_override"] = target.country_code
+                        profile["identity_estimation"] = est
+                        target.profile_data = profile
+                        session.commit()
+                        logger.info("Nationality override set to %s for %s", target.country_code, target.email)
         except Exception:
             logger.exception("Identity enrichment failed for target %s", scan.target_id)
 
@@ -503,6 +514,7 @@ def finalize_scan(scan_id: str):
             fingerprint = fp_engine.compute(
                 all_findings, all_identities, target.profile_data, target.email,
                 links=all_links, graph_context=graph_context,
+                country_code=target.country_code,
             )
 
             # Save snapshot to history

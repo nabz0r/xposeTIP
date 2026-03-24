@@ -26,7 +26,22 @@ const WORLD_PATH =
   'M740,220L770,215L800,225L810,250L800,270L780,280L760,275L745,260L740,240Z ' + // Australia
   'M630,170L645,175L655,185L650,200L635,195L625,185Z' // Indonesia
 
-export default function LocationMap({ findings, userLocations }) {
+// Approximate country centroids for ground truth pin (ISO alpha-2 → [lat, lng])
+const COUNTRY_CENTROIDS = {
+  US: [39.8, -98.5], GB: [54.0, -2.0], FR: [46.6, 2.2], DE: [51.2, 10.4], CA: [56.1, -106.3],
+  AU: [-25.3, 133.8], JP: [36.2, 138.3], CN: [35.9, 104.2], IN: [20.6, 79.0], BR: [-14.2, -51.9],
+  RU: [61.5, 105.3], KR: [35.9, 127.8], IT: [41.9, 12.5], ES: [40.5, -3.7], MX: [23.6, -102.6],
+  NL: [52.1, 5.3], SE: [60.1, 18.6], NO: [60.5, 8.5], DK: [56.3, 9.5], FI: [61.9, 25.7],
+  PL: [51.9, 19.1], CH: [46.8, 8.2], AT: [47.5, 14.6], BE: [50.5, 4.5], PT: [39.4, -8.2],
+  IE: [53.4, -8.2], IL: [31.0, 34.9], AE: [23.4, 53.8], SA: [23.9, 45.1], EG: [26.8, 30.8],
+  ZA: [-30.6, 22.9], NG: [9.1, 8.7], KE: [-0.02, 37.9], TR: [39.0, 35.2], UA: [48.4, 31.2],
+  AR: [-38.4, -63.6], CL: [-35.7, -71.5], CO: [4.6, -74.3], PH: [12.9, 121.8], TH: [15.9, 100.9],
+  MY: [4.2, 101.9], SG: [1.4, 103.8], ID: [-0.8, 113.9], VN: [14.1, 108.3], PK: [30.4, 69.3],
+  LU: [49.8, 6.1], HK: [22.4, 114.1], TW: [23.7, 121.0], NZ: [-40.9, 174.9], GR: [39.1, 21.8],
+  CZ: [49.8, 15.5], RO: [45.9, 25.0], HU: [47.2, 19.5], BG: [42.7, 25.5],
+}
+
+export default function LocationMap({ findings, userLocations, countryCode }) {
   const geoFindings = useMemo(
     () => findings.filter(f => f.category === 'geolocation' && f.data?.latitude && f.data?.longitude),
     [findings]
@@ -51,7 +66,16 @@ export default function LocationMap({ findings, userLocations }) {
     })
   }, [geoFindings])
 
-  const hasData = userPoints.length > 0 || serverPoints.length > 0
+  // Ground truth pin: operator-confirmed country
+  const groundTruthPoint = useMemo(() => {
+    if (!countryCode) return null
+    const coords = COUNTRY_CENTROIDS[countryCode.toUpperCase()]
+    if (!coords) return null
+    const [x, y] = project(coords[0], coords[1])
+    return { x, y, code: countryCode.toUpperCase() }
+  }, [countryCode])
+
+  const hasData = userPoints.length > 0 || serverPoints.length > 0 || groundTruthPoint
 
   if (!hasData) {
     return (
@@ -127,6 +151,24 @@ export default function LocationMap({ findings, userLocations }) {
             </g>
           ))}
 
+          {/* Ground truth pin (gold, operator-confirmed) */}
+          {groundTruthPoint && (
+            <g>
+              <circle cx={groundTruthPoint.x} cy={groundTruthPoint.y} r="24" fill="none" stroke="#ffd700" strokeWidth="1.5" opacity="0.4">
+                <animate attributeName="r" from="10" to="35" dur="2.5s" repeatCount="indefinite" />
+                <animate attributeName="opacity" from="0.5" to="0" dur="2.5s" repeatCount="indefinite" />
+              </circle>
+              <circle cx={groundTruthPoint.x} cy={groundTruthPoint.y} r="9" fill="#ffd700" opacity="0.25" />
+              <circle cx={groundTruthPoint.x} cy={groundTruthPoint.y} r="6" fill="#ffd700" opacity="0.6" />
+              <circle cx={groundTruthPoint.x} cy={groundTruthPoint.y} r="3" fill="#ffffff" />
+              {/* Pin label */}
+              <rect x={groundTruthPoint.x + 14} y={groundTruthPoint.y - 14} width="80" height="20" rx="4" fill="#12121a" stroke="#ffd700" strokeWidth="1" opacity="0.9" />
+              <text x={groundTruthPoint.x + 20} y={groundTruthPoint.y} fill="#ffd700" fontSize="10" fontFamily="monospace" fontWeight="bold">
+                {groundTruthPoint.code} (confirmed)
+              </text>
+            </g>
+          )}
+
           {/* User location labels */}
           {userPoints.map((p, i) => (
             <g key={`usr-label-${i}`}>
@@ -151,6 +193,12 @@ export default function LocationMap({ findings, userLocations }) {
       {/* Legend */}
       <div className="px-4 py-3 border-t border-[#1e1e2e]">
         <div className="flex flex-wrap gap-4 text-xs text-gray-400">
+          {groundTruthPoint && (
+            <span className="inline-flex items-center gap-1.5 text-[#ffd700]">
+              <span className="w-2 h-2 rounded-full bg-[#ffd700]" />
+              Operator-confirmed country
+            </span>
+          )}
           {userPoints.length > 0 && (
             <span className="inline-flex items-center gap-1.5 text-[#00ff88]">
               <span className="w-2 h-2 rounded-full bg-[#00ff88]" />

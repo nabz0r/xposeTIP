@@ -51,15 +51,32 @@ def search_gdelt_news(name: str, domain: str | None = None) -> list[dict]:
     }
 
     try:
-        resp = requests.get(
-            GDELT_API_URL,
-            params=params,
-            timeout=REQUEST_TIMEOUT,
-            headers={"User-Agent": "xposeTIP/1.0"},
-        )
+        resp = None
+        for attempt in range(2):
+            resp = requests.get(
+                GDELT_API_URL,
+                params=params,
+                timeout=REQUEST_TIMEOUT,
+                headers={"User-Agent": "xposeTIP/1.0"},
+            )
 
-        if resp.status_code != 200:
-            logger.warning("GDELT: HTTP %d for query '%s'", resp.status_code, name)
+            if resp.status_code == 429:
+                if attempt == 0:
+                    logger.info("GDELT: 429 rate limited — retrying in 5s")
+                    import time
+                    time.sleep(5)
+                    continue
+                else:
+                    logger.warning("GDELT: 429 — giving up after retry")
+                    return []
+
+            if resp.status_code != 200:
+                logger.warning("GDELT: HTTP %d for query '%s'", resp.status_code, name)
+                return []
+
+            break  # Success
+
+        if resp is None or resp.status_code != 200:
             return []
 
         data = resp.json()

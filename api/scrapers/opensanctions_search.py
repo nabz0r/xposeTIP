@@ -5,7 +5,7 @@ Endpoint: POST https://api.opensanctions.org/match/default
 Aggregates 40+ datasets: OFAC SDN, EU Consolidated, UN Security Council,
 Interpol Red Notices, PEP lists, national sanctions (UK, CH, AU, CA, JP).
 
-Free API, no key needed. Rate limit ~60 req/min.
+API key required (free tier available at opensanctions.org/api/).
 """
 import logging
 import time
@@ -168,7 +168,7 @@ def build_sanctions_query(primary_name: str, nationality: str | None = None,
 
 def search_opensanctions(primary_name: str, nationality: str | None = None,
                          country: str | None = None, birth_year: int | None = None,
-                         name_match_fn=None) -> list[dict]:
+                         name_match_fn=None, api_key: str | None = None) -> list[dict]:
     """Search OpenSanctions for sanctions, PEP, and wanted matches.
 
     Args:
@@ -177,6 +177,7 @@ def search_opensanctions(primary_name: str, nationality: str | None = None,
         country: ISO country code if known
         birth_year: Estimated birth year if known
         name_match_fn: Optional function(text, name) -> float for confidence
+        api_key: Optional API key for authenticated access
 
     Returns:
         List of finding dicts ready for storage.
@@ -186,24 +187,35 @@ def search_opensanctions(primary_name: str, nationality: str | None = None,
 
     query = build_sanctions_query(primary_name, nationality, country, birth_year)
 
+    headers = {
+        "Content-Type": "application/json",
+        "User-Agent": "xposeTIP/1.0",
+    }
+    if api_key:
+        headers["Authorization"] = f"ApiKey {api_key}"
+
     try:
         resp = requests.post(
             OPENSANCTIONS_URL,
             json=query,
             timeout=REQUEST_TIMEOUT,
-            headers={
-                "Content-Type": "application/json",
-                "User-Agent": "xposeTIP/1.0",
-            },
+            headers=headers,
         )
+
+        if resp.status_code == 401:
+            logger.warning(
+                "OpenSanctions: 401 Unauthorized — API key required. "
+                "Configure 'opensanctions_api_key' in Settings → API Keys. "
+                "Get a free key at https://www.opensanctions.org/api/"
+            )
+            return []
 
         if resp.status_code == 429:
             logger.warning("OpenSanctions: Rate limited (429), waiting 10s...")
             time.sleep(10)
-            # Retry once
             resp = requests.post(
                 OPENSANCTIONS_URL, json=query, timeout=REQUEST_TIMEOUT,
-                headers={"Content-Type": "application/json", "User-Agent": "xposeTIP/1.0"},
+                headers=headers,
             )
             if resp.status_code == 429:
                 logger.warning("OpenSanctions: Still rate limited after retry")

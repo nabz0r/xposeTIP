@@ -282,8 +282,8 @@ class FingerprintEngine:
         }
         return total, breakdown
 
-    def compute(self, findings: list, identities: list, profile_data: dict = None, email: str = "", links=None, graph_context=None) -> dict:
-        raw = self._extract_raw_values(findings, identities, profile_data, email=email)
+    def compute(self, findings: list, identities: list, profile_data: dict = None, email: str = "", links=None, graph_context=None, country_code: str = None) -> dict:
+        raw = self._extract_raw_values(findings, identities, profile_data, email=email, country_code=country_code)
 
         # Compute 9th axis: public_exposure
         pe_score, pe_breakdown = self.compute_public_exposure_score(findings)
@@ -343,7 +343,7 @@ class FingerprintEngine:
 
         return result
 
-    def _extract_raw_values(self, findings, identities, profile_data, email=""):
+    def _extract_raw_values(self, findings, identities, profile_data, email="", country_code=None):
         accounts = set()
         platforms = set()
         for f in findings:
@@ -454,8 +454,20 @@ class FingerprintEngine:
                 else:
                     countries_user.add(country.strip().lower())
 
-        # User-reported countries worth 1 each, server countries worth 0.25
-        geo_spread_value = len(countries_user) + len(countries_server) * 0.25
+        # Ground truth: operator-set country_code boosts matching locations
+        # Matching countries get weight 1.0, GeoIP mismatches get weight 0.2
+        if country_code:
+            gt = country_code.strip().lower()
+            matching_user = sum(1 for c in countries_user if c == gt)
+            other_user = len(countries_user) - matching_user
+            matching_server = sum(1 for c in countries_server if c == gt)
+            other_server = len(countries_server) - matching_server
+            # Ground truth country always counts as 1 even if not in findings
+            gt_base = 1.0 if gt not in countries_user else 0
+            geo_spread_value = gt_base + matching_user * 1.0 + other_user * 0.5 + matching_server * 0.25 + other_server * 0.05
+        else:
+            # User-reported countries worth 1 each, server countries worth 0.25
+            geo_spread_value = len(countries_user) + len(countries_server) * 0.25
 
         # Data types leaked
         data_types = set()

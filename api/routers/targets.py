@@ -256,6 +256,36 @@ async def delete_target(
     await db.commit()
 
 
+class CountryUpdate(BaseModel):
+    country_code: str | None = None
+
+
+@router.patch("/{target_id}/country")
+async def update_target_country(
+    target_id: uuid.UUID,
+    body: CountryUpdate,
+    workspace_id: uuid.UUID = Depends(get_current_workspace),
+    user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """Update target country_code. Set to null to clear."""
+    target = await _get_target(db, target_id, workspace_id)
+
+    country_code = body.country_code
+    if country_code is not None:
+        country_code = country_code.upper().strip()
+        if len(country_code) != 2 or not country_code.isalpha():
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="country_code must be a 2-letter ISO code or null",
+            )
+
+    target.country_code = country_code
+    await db.commit()
+    await db.refresh(target)
+    return {"id": str(target.id), "country_code": target.country_code}
+
+
 @router.patch("/{target_id}/move")
 async def move_target(
     target_id: uuid.UUID,

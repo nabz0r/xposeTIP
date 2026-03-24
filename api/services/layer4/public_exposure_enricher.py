@@ -252,20 +252,31 @@ def select_top_findings(findings: list, max_count: int = MAX_FINDINGS_PER_TARGET
 # ---------------------------------------------------------------------------
 
 def get_search_languages(target) -> list[str]:
-    """Determine search languages based on target context. Max 2."""
+    """Determine search languages based on target context. Max 2.
+
+    Priority: ground truth country_code > email TLD > profile locations.
+    """
     langs = ["en"]
 
-    # Check target email domain TLD
-    email = getattr(target, "value", "") or ""
-    if "@" in email:
-        domain = email.split("@")[1].lower()
-        for tld, lang in TLD_LANG_MAP.items():
-            if domain.endswith(tld):
-                if lang not in langs:
-                    langs.append(lang)
-                break
+    # Priority 1: ground truth country_code
+    country_code = getattr(target, "country_code", None)
+    if country_code:
+        lang = COUNTRY_LANG_MAP.get(country_code.upper())
+        if lang and lang not in langs:
+            langs.append(lang)
 
-    # Check target country from profile
+    # Priority 2: email domain TLD
+    if len(langs) < 2:
+        email = getattr(target, "value", "") or ""
+        if "@" in email:
+            domain = email.split("@")[1].lower()
+            for tld, lang in TLD_LANG_MAP.items():
+                if domain.endswith(tld):
+                    if lang not in langs:
+                        langs.append(lang)
+                    break
+
+    # Priority 3: profile locations
     if len(langs) < 2:
         profile = getattr(target, "profile_data", None) or {}
         locations = profile.get("user_locations", []) or profile.get("geo_locations", [])
@@ -362,37 +373,42 @@ def should_run_gnews(gdelt_results_count: int) -> bool:
 # ---------------------------------------------------------------------------
 
 def enrich_public_exposure(target_id, session: Session) -> dict:
-    """Pass 2 enrichment: run news scrapers in order with cross-dedup.
+    """Pass 2 enrichment: run name-based scrapers with layer isolation.
 
-    Order: GDELT (deep) -> GNews (recent, if newsworthy) -> Google News RSS (fallback)
-    Max 15 findings stored per target.
+    Each layer (media, compliance, corporate) is independently wrapped.
+    Each scraper within a layer is independently wrapped.
+    An error in one scraper NEVER prevents other scrapers from running.
     """
-    result = {"scrapers_run": 0, "findings_created": 0, "skipped_reason": None}
+    results = {
+        "media": [], "sanctions": [], "corporate": [],
+        "errors": [], "scrapers_run": 0, "findings_created": 0,
+        "skipped_reason": None,
+    }
 
     target = session.execute(
         select(Target).where(Target.id == target_id)
     ).scalar_one_or_none()
 
     if not target:
-        result["skipped_reason"] = "target_not_found"
-        return result
+        results["skipped_reason"] = "target_not_found"
+        return results
 
     profile = target.profile_data or {}
     primary_name = profile.get("primary_name")
 
     if not primary_name:
-        result["skipped_reason"] = "no_primary_name"
+        results["skipped_reason"] = "no_primary_name"
         logger.debug("PASS2: Skipping %s — no primary_name", target_id)
-        return result
+        return results
 
     if not _is_real_name(primary_name):
-        result["skipped_reason"] = "username_like_name"
+        results["skipped_reason"] = "username_like_name"
         logger.debug("PASS2: Skipping %s — name '%s' looks like username", target_id, primary_name)
-        return result
+        return results
 
     logger.info("PASS2: Running public exposure enrichment for '%s' (target %s)", primary_name, target_id)
 
-    # Determine search languages
+    # Determine search languages (ground truth country_code takes priority)
     search_langs = get_search_languages(target)
     logger.info("PASS2: Search languages for '%s': %s", primary_name, search_langs)
 
@@ -400,69 +416,61 @@ def enrich_public_exposure(target_id, session: Session) -> dict:
     email = getattr(target, "value", "") or ""
     email_domain = email.split("@")[1] if "@" in email else None
 
-    all_findings = []
+    # === MEDIA LAYER ===
 
-    # --- 1. GDELT (free, deep archive, broad net) ---
+    # 1. GDELT (free, deep archive)
+    gdelt_findings = []
+    gdelt_errored = False
     try:
         from api.scrapers.gdelt_news import search_gdelt_news
 
-        for lang in search_langs:
-            gdelt_results = search_gdelt_news(primary_name, domain=email_domain)
-            if gdelt_results:
-                for r in gdelt_results:
-                    r.setdefault("data", {})["scraper"] = "gdelt_news"
-                    r["confidence"] = compute_name_match_confidence(
-                        r.get("description", "") or r.get("title", ""),
-                        primary_name,
-                    )
-                # Filter by confidence
-                gdelt_results = [r for r in gdelt_results if r.get("confidence", 0) >= 0.60]
-                all_findings.extend(gdelt_results)
-                logger.info("PASS2: GDELT found %d articles (lang=%s)", len(gdelt_results), lang)
-            # GDELT doesn't have lang param — only run once
-            break
+        raw = search_gdelt_news(primary_name, domain=email_domain)
+        if raw:
+            for r in raw:
+                r.setdefault("data", {})["scraper"] = "gdelt_news"
+                r["confidence"] = compute_name_match_confidence(
+                    r.get("description", "") or r.get("title", ""), primary_name,
+                )
+            gdelt_findings = [r for r in raw if r.get("confidence", 0) >= 0.60]
+            results["media"].extend(gdelt_findings)
+            logger.info("PASS2: GDELT found %d articles", len(gdelt_findings))
 
-        result["scrapers_run"] += 1
+        results["scrapers_run"] += 1
         time.sleep(1.0)
-    except Exception:
-        logger.exception("PASS2: GDELT scraper failed")
+    except Exception as e:
+        gdelt_errored = True
+        logger.warning("PASS2: GDELT failed: %s", e)
+        results["errors"].append(f"gdelt_news: {str(e)[:100]}")
 
-    # --- 2. GNews (if newsworthy + quota available + API key exists) ---
-    gnews_api_key = _get_gnews_api_key(session, target.workspace_id)
-    if gnews_api_key and should_run_gnews(len(all_findings)):
-        try:
-            from api.scrapers.gnews_news import search_gnews
+    # 2. GNews (conditional: needs GDELT results OR GDELT errored)
+    try:
+        gnews_api_key = _get_gnews_api_key(session, target.workspace_id)
+        if gnews_api_key and (len(gdelt_findings) > 0 or gdelt_errored):
+            if should_run_gnews(max(len(gdelt_findings), 1) if gdelt_errored else len(gdelt_findings)):
+                from api.scrapers.gnews_news import search_gnews
 
-            gnews_all = []
-            for lang in search_langs:
-                gnews_results = search_gnews(primary_name, api_key=gnews_api_key, lang=lang)
-                _increment_gnews_usage(1)
+                gnews_all = []
+                for lang in search_langs:
+                    gnews_results = search_gnews(primary_name, api_key=gnews_api_key, lang=lang)
+                    _increment_gnews_usage(1)
+                    if gnews_results:
+                        for r in gnews_results:
+                            r.setdefault("data", {})["scraper"] = "gnews_news"
+                            r["confidence"] = compute_name_match_confidence(
+                                r.get("description", "") or r.get("title", ""), primary_name,
+                            )
+                        gnews_all.extend([r for r in gnews_results if r.get("confidence", 0) >= 0.60])
+                        logger.info("PASS2: GNews found %d articles (lang=%s)", len(gnews_results), lang)
+                    time.sleep(1.5)
 
-                if gnews_results:
-                    for r in gnews_results:
-                        r.setdefault("data", {})["scraper"] = "gnews_news"
-                        r["confidence"] = compute_name_match_confidence(
-                            r.get("description", "") or r.get("title", ""),
-                            primary_name,
-                        )
-                    gnews_results = [r for r in gnews_results if r.get("confidence", 0) >= 0.60]
-                    gnews_all.extend(gnews_results)
-                    logger.info("PASS2: GNews found %d articles (lang=%s)", len(gnews_results), lang)
+                gnews_unique = deduplicate_media_findings(gnews_all, results["media"])
+                results["media"].extend(gnews_unique)
+                results["scrapers_run"] += 1
+    except Exception as e:
+        logger.warning("PASS2: GNews failed: %s", e)
+        results["errors"].append(f"gnews_news: {str(e)[:100]}")
 
-                time.sleep(1.5)
-
-            # Dedup against GDELT
-            gnews_unique = deduplicate_media_findings(gnews_all, all_findings)
-            all_findings.extend(gnews_unique)
-            result["scrapers_run"] += 1
-        except Exception:
-            logger.exception("PASS2: GNews scraper failed")
-    elif not gnews_api_key:
-        logger.debug("PASS2: GNews skipped — no API key configured")
-    else:
-        logger.debug("PASS2: GNews skipped — not newsworthy or quota exhausted")
-
-    # --- 3. Google News RSS (free fallback, freshest) ---
+    # 3. Google News RSS (ALWAYS runs — free, no API key, no quota)
     try:
         from api.scrapers.google_news_rss import search_google_news_rss
 
@@ -473,134 +481,124 @@ def enrich_public_exposure(target_id, session: Session) -> dict:
                 for r in rss_results:
                     r.setdefault("data", {})["scraper"] = "google_news_rss"
                     r["confidence"] = compute_name_match_confidence(
-                        r.get("description", "") or r.get("title", ""),
-                        primary_name,
+                        r.get("description", "") or r.get("title", ""), primary_name,
                     )
-                rss_results = [r for r in rss_results if r.get("confidence", 0) >= 0.60]
-                rss_all.extend(rss_results)
+                rss_all.extend([r for r in rss_results if r.get("confidence", 0) >= 0.60])
                 logger.info("PASS2: Google News RSS found %d articles (lang=%s)", len(rss_results), lang)
-
             time.sleep(3.0)
 
-        # Dedup against GDELT + GNews
-        rss_unique = deduplicate_media_findings(rss_all, all_findings)
-        all_findings.extend(rss_unique)
-        result["scrapers_run"] += 1
-    except Exception:
-        logger.exception("PASS2: Google News RSS scraper failed")
+        rss_unique = deduplicate_media_findings(rss_all, results["media"])
+        results["media"].extend(rss_unique)
+        results["scrapers_run"] += 1
+    except Exception as e:
+        logger.warning("PASS2: Google News RSS failed: %s", e)
+        results["errors"].append(f"google_news_rss: {str(e)[:100]}")
 
-    # --- 4. Apply global cap on media findings ---
-    all_findings = select_top_findings(all_findings, MAX_FINDINGS_PER_TARGET)
+    # Cap media at 15
+    results["media"] = select_top_findings(results["media"], MAX_FINDINGS_PER_TARGET)
 
-    # === COMPLIANCE LAYER (Sprint 63) ===
-    sanctions_findings = []
+    # === COMPLIANCE LAYER ===
 
-    # --- 5. OpenSanctions (sanctions + PEP + wanted) ---
+    # Extract target context (ground truth country_code takes priority)
+    nationality = _get_target_nationality(target)
+    target_country = _get_target_country(target)
+    birth_year = _get_estimated_birth_year(target)
+
+    # 4. OpenSanctions
     try:
         from api.scrapers.opensanctions_search import search_opensanctions
 
-        # Extract target context for better matching
-        nationality = _get_target_nationality(profile)
-        target_country = _get_target_country(target, profile)
-        birth_year = _get_estimated_birth_year(profile)
-
+        os_api_key = _get_opensanctions_api_key(session, target.workspace_id)
         os_results = search_opensanctions(
-            primary_name,
-            nationality=nationality,
-            country=target_country,
-            birth_year=birth_year,
-            name_match_fn=compute_name_match_confidence,
+            primary_name, nationality=nationality, country=target_country,
+            birth_year=birth_year, name_match_fn=compute_name_match_confidence,
+            api_key=os_api_key,
         )
         if os_results:
-            sanctions_findings.extend(os_results)
+            results["sanctions"].extend(os_results)
             logger.info("PASS2: OpenSanctions found %d matches", len(os_results))
 
-        result["scrapers_run"] += 1
+        results["scrapers_run"] += 1
         time.sleep(1.5)
-    except Exception:
-        logger.exception("PASS2: OpenSanctions scraper failed")
+    except Exception as e:
+        logger.warning("PASS2: OpenSanctions failed: %s", e)
+        results["errors"].append(f"opensanctions_search: {str(e)[:100]}")
 
-    # --- 6. Interpol direct (only if OpenSanctions didn't already find Interpol) ---
-    has_interpol_from_os = any(
-        "interpol" in str(f.get("data", {}).get("datasets", [])).lower()
-        for f in sanctions_findings
-    )
-    if not has_interpol_from_os:
-        try:
+    # 5. Interpol (conditional on OpenSanctions results, NOT on success)
+    try:
+        has_interpol = any(
+            "interpol" in str(f.get("data", {}).get("datasets", [])).lower()
+            for f in results["sanctions"]
+        )
+        if not has_interpol:
             from api.scrapers.interpol_red_notices import search_interpol_red_notices
 
-            target_country = _get_target_country(target, profile)
-            birth_year = _get_estimated_birth_year(profile)
-
             interpol_results = search_interpol_red_notices(
-                primary_name,
-                target_country=target_country,
-                target_birth_year=birth_year,
+                primary_name, target_country=target_country, target_birth_year=birth_year,
             )
             if interpol_results:
-                sanctions_findings.extend(interpol_results)
+                results["sanctions"].extend(interpol_results)
                 logger.info("PASS2: Interpol found %d red notices", len(interpol_results))
 
-            result["scrapers_run"] += 1
+            results["scrapers_run"] += 1
             time.sleep(2.0)
-        except Exception:
-            logger.exception("PASS2: Interpol scraper failed")
-    else:
-        logger.debug("PASS2: Interpol skipped — already found via OpenSanctions")
+        else:
+            logger.debug("PASS2: Interpol skipped — already found via OpenSanctions")
+    except Exception as e:
+        logger.warning("PASS2: Interpol failed: %s", e)
+        results["errors"].append(f"interpol_red_notices: {str(e)[:100]}")
 
-    # === CORPORATE LAYER (Sprint 64) ===
-    corporate_findings = []
+    # === CORPORATE LAYER ===
 
-    # --- 7. OpenCorporates (global officer search) ---
+    # 6. OpenCorporates
+    oc_findings = []
     try:
         from api.scrapers.opencorporates_officers import search_opencorporates
 
         oc_api_key = _get_opencorporates_api_key(session, target.workspace_id)
-        target_country = _get_target_country(target, profile)
-
         oc_results = search_opencorporates(
-            primary_name,
-            api_key=oc_api_key,
-            target_country=target_country,
+            primary_name, api_key=oc_api_key, target_country=target_country,
         )
         if oc_results:
-            corporate_findings.extend(oc_results)
+            oc_findings = oc_results
+            results["corporate"].extend(oc_results)
             logger.info("PASS2: OpenCorporates found %d officer roles", len(oc_results))
 
         _increment_opencorporates_usage(1)
-        result["scrapers_run"] += 1
+        results["scrapers_run"] += 1
         time.sleep(2.0)
-    except Exception:
-        logger.exception("PASS2: OpenCorporates scraper failed")
+    except Exception as e:
+        logger.warning("PASS2: OpenCorporates failed: %s", e)
+        results["errors"].append(f"opencorporates_officers: {str(e)[:100]}")
 
-    # --- 8. LBR Luxembourg (only for LU targets) ---
-    if _should_run_lbr(target, profile):
-        try:
+    # 7. LBR Luxembourg (conditional on country)
+    try:
+        if _should_run_lbr(target):
             from api.scrapers.lbr_luxembourg import search_lbr_luxembourg
 
             lbr_results = search_lbr_luxembourg(primary_name)
             if lbr_results:
-                # Dedup against OpenCorporates for same LU companies
-                lbr_unique = _deduplicate_corporate_findings(lbr_results, corporate_findings)
-                corporate_findings.extend(lbr_unique)
+                lbr_unique = _deduplicate_corporate_findings(lbr_results, oc_findings)
+                results["corporate"].extend(lbr_unique)
                 logger.info("PASS2: LBR found %d officer roles (%d unique)", len(lbr_results), len(lbr_unique))
 
-            result["scrapers_run"] += 1
+            results["scrapers_run"] += 1
             time.sleep(3.0)
-        except Exception:
-            logger.exception("PASS2: LBR Luxembourg scraper failed")
-    else:
-        logger.debug("PASS2: LBR skipped — target not Luxembourg-connected")
+        else:
+            logger.debug("PASS2: LBR skipped — target not Luxembourg-connected")
+    except Exception as e:
+        logger.warning("PASS2: LBR failed: %s", e)
+        results["errors"].append(f"lbr_luxembourg: {str(e)[:100]}")
 
     # Cap corporate at 8, prioritize active roles
-    corporate_findings.sort(key=lambda f: (
+    results["corporate"].sort(key=lambda f: (
         -int(f.get("data", {}).get("is_active", False)),
         -f.get("confidence", 0),
     ))
-    corporate_findings = corporate_findings[:MAX_CORPORATE_FINDINGS]
+    results["corporate"] = results["corporate"][:MAX_CORPORATE_FINDINGS]
 
-    # === STORE ALL FINDINGS ===
-    all_to_store = all_findings + sanctions_findings + corporate_findings
+    # === STORE ALL (even partial results) ===
+    all_to_store = results["media"] + results["sanctions"] + results["corporate"]
 
     if all_to_store:
         created = 0
@@ -637,22 +635,26 @@ def enrich_public_exposure(target_id, session: Session) -> dict:
 
         if created > 0:
             session.commit()
-            result["findings_created"] = created
+            results["findings_created"] = created
 
     logger.info(
-        "PASS2: Completed for target %s — %d scrapers, %d findings stored (%d media + %d sanctions + %d corporate)",
-        target_id, result["scrapers_run"], result["findings_created"],
-        len(all_findings), len(sanctions_findings), len(corporate_findings),
+        "PASS2 complete for '%s': %d media, %d sanctions, %d corporate, %d errors",
+        primary_name, len(results["media"]), len(results["sanctions"]),
+        len(results["corporate"]), len(results["errors"]),
     )
-    return result
+    if results["errors"]:
+        logger.warning("PASS2 errors: %s", results["errors"])
+
+    return results
 
 
 # ---------------------------------------------------------------------------
 # Target Context Helpers (for sanctions matching)
 # ---------------------------------------------------------------------------
 
-def _get_target_nationality(profile: dict) -> str | None:
-    """Extract nationality from profile identity_estimation."""
+def _get_target_nationality(target) -> str | None:
+    """Extract nationality from profile_data identity_estimation."""
+    profile = getattr(target, "profile_data", None) or {}
     est = profile.get("identity_estimation", {})
     nats = est.get("nationalities", [])
     if nats and isinstance(nats, list):
@@ -662,8 +664,15 @@ def _get_target_nationality(profile: dict) -> str | None:
     return None
 
 
-def _get_target_country(target, profile: dict) -> str | None:
-    """Extract country from target locations or email TLD."""
+def _get_target_country(target) -> str | None:
+    """Get target country. Ground truth (country_code) takes priority."""
+    # Priority 1: operator-set ground truth
+    country_code = getattr(target, "country_code", None)
+    if country_code:
+        return country_code.upper()
+
+    # Priority 2: profile locations
+    profile = getattr(target, "profile_data", None) or {}
     locations = profile.get("user_locations", []) or profile.get("geo_locations", [])
     if locations and isinstance(locations, list):
         for loc in locations:
@@ -672,7 +681,7 @@ def _get_target_country(target, profile: dict) -> str | None:
                 if country:
                     return country.upper()
 
-    # Fallback: email TLD
+    # Priority 3: email TLD
     email = getattr(target, "value", "") or ""
     if "@" in email:
         domain = email.split("@")[1].lower()
@@ -684,8 +693,9 @@ def _get_target_country(target, profile: dict) -> str | None:
     return None
 
 
-def _get_estimated_birth_year(profile: dict) -> int | None:
-    """Extract estimated birth year from Agify result."""
+def _get_estimated_birth_year(target) -> int | None:
+    """Extract estimated birth year from profile_data Agify result."""
+    profile = getattr(target, "profile_data", None) or {}
     est = profile.get("identity_estimation", {})
     age = est.get("age")
     if age and isinstance(age, (int, float)) and 10 < age < 120:
@@ -701,15 +711,46 @@ def _get_estimated_birth_year(profile: dict) -> int | None:
 MAX_CORPORATE_FINDINGS = 8
 
 
-def _should_run_lbr(target, profile: dict) -> bool:
+def _should_run_lbr(target) -> bool:
     """Only run LBR on Luxembourg-connected targets."""
-    country = _get_target_country(target, profile)
+    # Ground truth first
+    country_code = getattr(target, "country_code", None)
+    if country_code and country_code.upper() == "LU":
+        return True
+    # Fallback: inferred country
+    country = _get_target_country(target)
     if country and country.upper() == "LU":
         return True
+    # Fallback: email domain
     email = getattr(target, "value", "") or ""
     if "@" in email and email.split("@")[1].lower().endswith(".lu"):
         return True
     return False
+
+
+def _get_opensanctions_api_key(session: Session, workspace_id) -> str | None:
+    """Retrieve OpenSanctions API key from workspace settings."""
+    try:
+        from api.models.workspace import Workspace
+        ws = session.execute(
+            select(Workspace).where(Workspace.id == workspace_id)
+        ).scalar_one_or_none()
+        if not ws:
+            return None
+        settings = ws.settings or {}
+        for store in ("custom_api_keys", "api_keys"):
+            entry = settings.get(store, {}).get("opensanctions_api_key")
+            if entry and isinstance(entry, dict) and entry.get("encrypted"):
+                try:
+                    from api.routers.settings import _get_fernet
+                    return _get_fernet().decrypt(entry["encrypted"].encode()).decode()
+                except Exception:
+                    return None
+            elif entry and isinstance(entry, str):
+                return entry
+    except Exception:
+        pass
+    return None
 
 
 def _get_opencorporates_api_key(session: Session, workspace_id) -> str | None:

@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { Globe, MapPin, Building2, Github, ExternalLink, Shield, AlertTriangle, Link2 } from 'lucide-react'
 import { getTargetProfile, getFingerprint } from '../lib/api'
 import FingerprintRadar from './FingerprintRadar'
+import CountrySelector from './target/CountrySelector'
 const scoreColor = (score) => {
   if (score == null) return '#666688'
   if (score >= 61) return '#ff2244'
@@ -15,7 +16,7 @@ const repColor = (level) => {
   return '#ff8800'
 }
 
-export default function ProfileHeader({ target, findings, animScore, profileData }) {
+export default function ProfileHeader({ target, findings, animScore, profileData, onTargetUpdate }) {
   const [localProfile, setLocalProfile] = useState(null)
   const [fingerprint, setFingerprint] = useState(null)
   const profile = profileData || localProfile
@@ -163,7 +164,14 @@ export default function ProfileHeader({ target, findings, animScore, profileData
                   )}
                 </div>
               )}
-              <p className="text-sm font-mono text-gray-400">{target.email}</p>
+              <div className="flex items-center gap-2">
+                <p className="text-sm font-mono text-gray-400">{target.email}</p>
+                <CountrySelector
+                  targetId={target.id}
+                  currentCode={target.country_code}
+                  onUpdate={(code) => onTargetUpdate?.({ ...target, country_code: code })}
+                />
+              </div>
               {title && company && <p className="text-xs text-gray-400 mt-0.5">{title} at {company}</p>}
               {bio && <p className="text-sm text-gray-300 mt-1 line-clamp-2">{bio}</p>}
               <div className="flex flex-wrap gap-3 mt-2 text-xs text-gray-400">

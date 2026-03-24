@@ -224,7 +224,7 @@ export default function TargetDetail() {
       {/* Profile Header */}
       <div className="flex items-start gap-4">
         <div className="flex-1">
-          <ProfileHeader target={target} findings={findings} animScore={animScore} profileData={profile} />
+          <ProfileHeader target={target} findings={findings} animScore={animScore} profileData={profile} onTargetUpdate={setTarget} />
         </div>
         <div className="shrink-0 flex items-center gap-2 mt-2">
           {workspaces.length > 1 && (
@@ -351,7 +351,7 @@ export default function TargetDetail() {
 
       {activeTab === 'exposure' && <PublicExposureTab findings={findings} profile={profile} />}
 
-      {activeTab === 'locations' && <LocationMap findings={findings} userLocations={profile?.user_locations} />}
+      {activeTab === 'locations' && <LocationMap findings={findings} userLocations={profile?.user_locations} countryCode={target?.country_code} />}
 
       {activeTab === 'accounts' && (
         <AccountsTab

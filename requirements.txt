@@ -13,6 +13,7 @@ python-multipart==0.0.20
 pyjwt==2.10.1
 bcrypt==4.2.1
 httpx==0.28.1
+feedparser>=6.0
 holehe==1.61
 aiohttp>=3.9.0
 arabic-reshaper>=2.1.4

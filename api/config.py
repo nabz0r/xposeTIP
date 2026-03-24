@@ -192,4 +192,12 @@ ALL_API_SERVICES = [
         "free": True,
         "module": "google_linkedin_search",
     },
+    {
+        "key": "OPENSANCTIONS_API_KEY",
+        "name": "OpenSanctions",
+        "description": "Sanctions, PEP, and wanted person search — free tier available",
+        "url": "https://www.opensanctions.org/api/",
+        "free": True,
+        "module": "opensanctions_search",
+    },
 ]
