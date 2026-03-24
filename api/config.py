@@ -118,6 +118,14 @@ ALL_API_SERVICES = [
         "free": True,
         "module": None,
     },
+    {
+        "key": "opencorporates_api_key",
+        "name": "OpenCorporates",
+        "description": "Company officer search — 500 req/month free tier, 200M+ companies",
+        "url": "https://opencorporates.com/api_accounts/new",
+        "free": True,
+        "module": None,
+    },
     # OAuth providers (SaaS connectors)
     {
         "key": "GOOGLE_CLIENT_ID",

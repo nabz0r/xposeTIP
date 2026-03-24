@@ -415,6 +415,30 @@ def build_graph(target_id, workspace_id, session: Session):
                     evidence={"finding_id": str(f.id)},
                 )
 
+            # Corporate officer → create officer_of link
+            elif f.category == "corporate" and email_value and f.indicator_type == "corporate_officer":
+                company_name = fdata.get("company_name", f.title) if fdata else f.title
+                jurisdiction = fdata.get("jurisdiction", "") if fdata else ""
+                company_node = get_or_create_identity(
+                    "company", company_name,
+                    platform=jurisdiction or "corporate",
+                    source_module=f.module,
+                    source_finding_id=f.id,
+                )
+                email_node = get_or_create_identity(
+                    "email", email_value, source_module=f.module,
+                )
+                get_or_create_link(
+                    email_node.id, company_node.id,
+                    "officer_of",
+                    source_module=f.module,
+                    evidence={
+                        "finding_id": str(f.id),
+                        "position": fdata.get("position", ""),
+                        "company_number": fdata.get("company_number", ""),
+                    },
+                )
+
             # Compliance / sanctions+PEP → create listed_on link
             elif f.category == "compliance" and email_value:
                 entity_label = fdata.get("caption", f.title) if fdata else f.title

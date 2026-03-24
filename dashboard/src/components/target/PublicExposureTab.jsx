@@ -55,6 +55,13 @@ export default function PublicExposureTab({ findings = [], profile }) {
     )
   }, [findings])
 
+  // Corporate findings
+  const corporateFindings = useMemo(() => {
+    return findings.filter(f =>
+      f.indicator_type === 'corporate_officer' || f.category === 'corporate'
+    )
+  }, [findings])
+
   // Extract unique languages
   const languages = useMemo(() => {
     const l = new Set()
@@ -120,8 +127,8 @@ export default function PublicExposureTab({ findings = [], profile }) {
     return { total: exposureFindings.length, highConf, countries: countries.size, languages: uniqueLangs.size, sources: sources.length }
   }, [exposureFindings, sources])
 
-  // Empty states (only show if BOTH media and sanctions are empty)
-  if (!exposureFindings.length && !sanctionsFindings.length) {
+  // Empty states (only show if ALL sections are empty)
+  if (!exposureFindings.length && !sanctionsFindings.length && !corporateFindings.length) {
     const hasName = profile?.primary_name
     const nameIsUsername = hasName && (!hasName.includes(' ') || hasName.includes('_'))
 
@@ -151,14 +158,15 @@ export default function PublicExposureTab({ findings = [], profile }) {
 
   return (
     <div className="space-y-4">
-      {/* Stats bar */}
-      <div className="grid grid-cols-5 gap-3">
+      {/* Unified stats bar */}
+      <div className="grid grid-cols-6 gap-3">
         {[
-          { label: 'Mentions', value: stats.total, color: '#00ff88' },
-          { label: 'High Confidence', value: stats.highConf, color: '#ffcc00' },
-          { label: 'Sources', value: stats.sources, color: '#00ccff' },
-          { label: 'Countries', value: stats.countries, color: '#ff8800' },
-          { label: 'Languages', value: stats.languages, color: '#cc88ff' },
+          { label: 'Articles', value: stats.total, color: '#3b82f6', icon: 'N' },
+          { label: 'Sanctions', value: sanctionsFindings.filter(f => f.indicator_type === 'sanctions_match').length, color: '#EF4444', icon: 'S' },
+          { label: 'PEP', value: sanctionsFindings.filter(f => f.indicator_type === 'pep_match').length, color: '#F59E0B', icon: 'P' },
+          { label: 'Companies', value: corporateFindings.length, color: '#8B5CF6', icon: 'C' },
+          { label: 'Sources', value: stats.sources, color: '#00ccff', icon: 'R' },
+          { label: 'Countries', value: stats.countries, color: '#ff8800', icon: 'G' },
         ].map(s => (
           <div key={s.label} className="bg-[#0a0a12] border border-[#1e1e2e] rounded-lg p-3 text-center">
             <div className="text-2xl font-bold font-mono" style={{ color: s.color }}>{s.value}</div>
@@ -387,6 +395,126 @@ export default function PublicExposureTab({ findings = [], profile }) {
           </div>
         </div>
       )}
+
+      {/* Corporate Roles & Directorships section */}
+      {corporateFindings.length > 0 && (() => {
+        const activeRoles = corporateFindings.filter(f => f.data?.is_active)
+        const inactiveRoles = corporateFindings.filter(f => !f.data?.is_active)
+
+        return (
+          <div className="space-y-3">
+            <div className="flex items-center gap-2 mt-2">
+              <span className="text-[#8B5CF6]" style={{ fontSize: '16px' }}>&#127970;</span>
+              <h2 className="text-sm font-bold text-white">Corporate Roles & Directorships</h2>
+              <span className="text-xs text-gray-500">({corporateFindings.length})</span>
+              {activeRoles.length > 0 && (
+                <span className="text-[10px] px-1.5 py-0.5 rounded bg-[#00ff88]/10 text-[#00ff88] border border-[#00ff88]/30">
+                  {activeRoles.length} active
+                </span>
+              )}
+            </div>
+
+            {/* Active roles */}
+            {activeRoles.map((f, i) => (
+              <div key={f.id || `active-${i}`} className="bg-[#0a0a12] border border-[#8B5CF620] rounded-lg p-4">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 flex-wrap mb-1">
+                      <span className="text-sm font-medium text-white">{f.data?.position || 'Officer'}</span>
+                      <span className="text-sm text-gray-400">at</span>
+                      <span className="text-sm font-medium text-[#8B5CF6]">{f.data?.company_name}</span>
+                      {f.data?.jurisdiction && (
+                        <span className="text-[10px] font-mono px-1 py-0.5 rounded bg-[#1e1e2e] text-gray-400 uppercase">
+                          {f.data.jurisdiction}
+                        </span>
+                      )}
+                      <span className="text-[10px] px-1.5 py-0.5 rounded bg-[#00ff88]/10 text-[#00ff88] border border-[#00ff88]/30">
+                        Active
+                      </span>
+                    </div>
+
+                    <div className="flex items-center gap-3 mt-2 text-[10px] text-gray-600">
+                      {f.data?.start_date && <span>Since {f.data.start_date}</span>}
+                      {f.data?.company_number && <span>Reg: {f.data.company_number}</span>}
+                      {f.data?.rcs_number && <span>RCS: {f.data.rcs_number}</span>}
+                      <span className="text-[10px] font-mono px-1 py-0.5 rounded uppercase"
+                        style={{
+                          color: f.data?.scraper === 'lbr_luxembourg' ? '#F59E0B' : '#8B5CF6',
+                          background: f.data?.scraper === 'lbr_luxembourg' ? '#F59E0B10' : '#8B5CF610',
+                        }}>
+                        {f.data?.scraper === 'lbr_luxembourg' ? 'LU RCS' : 'OpenCorp'}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-2 shrink-0">
+                    <span className="text-xs font-mono px-1.5 py-0.5 rounded"
+                      style={{ color: '#8B5CF6', background: '#8B5CF615', border: '1px solid #8B5CF630' }}>
+                      {Math.round((f.confidence || 0) * 100)}%
+                    </span>
+                    {(f.url || f.data?.company_url) && (
+                      <a href={f.url || f.data?.company_url} target="_blank" rel="noopener noreferrer"
+                        className="text-gray-500 hover:text-[#8B5CF6] transition-colors">
+                        <ExternalLink className="w-4 h-4" />
+                      </a>
+                    )}
+                  </div>
+                </div>
+              </div>
+            ))}
+
+            {/* Inactive roles (collapsed) */}
+            {inactiveRoles.length > 0 && (
+              <details className="group">
+                <summary className="text-xs text-gray-500 cursor-pointer hover:text-gray-400 list-none flex items-center gap-1">
+                  <span className="group-open:rotate-90 transition-transform">&#9654;</span>
+                  {inactiveRoles.length} inactive role{inactiveRoles.length > 1 ? 's' : ''}
+                </summary>
+                <div className="space-y-2 mt-2">
+                  {inactiveRoles.map((f, i) => (
+                    <div key={f.id || `inactive-${i}`} className="bg-[#0a0a12] border border-[#1e1e2e] rounded-lg p-3 opacity-60">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className="text-sm text-gray-400">{f.data?.position || 'Officer'}</span>
+                        <span className="text-xs text-gray-600">at</span>
+                        <span className="text-sm text-gray-400">{f.data?.company_name}</span>
+                        {f.data?.jurisdiction && (
+                          <span className="text-[10px] font-mono px-1 py-0.5 rounded bg-[#1e1e2e] text-gray-500 uppercase">
+                            {f.data.jurisdiction}
+                          </span>
+                        )}
+                        <span className="text-[10px] px-1.5 py-0.5 rounded bg-[#1e1e2e] text-gray-500">
+                          Inactive
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-3 mt-1 text-[10px] text-gray-600">
+                        {f.data?.start_date && <span>{f.data.start_date}</span>}
+                        {f.data?.end_date && <span>— {f.data.end_date}</span>}
+                        {(f.url || f.data?.company_url) && (
+                          <a href={f.url || f.data?.company_url} target="_blank" rel="noopener noreferrer"
+                            className="text-gray-600 hover:text-white">
+                            <ExternalLink className="w-3 h-3" />
+                          </a>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </details>
+            )}
+
+            {/* Confidence disclaimer */}
+            <div className="bg-[#1e1e2e]/50 rounded-lg p-3 border border-[#2a2a3e]">
+              <div className="flex items-start gap-2">
+                <AlertTriangle className="w-3.5 h-3.5 text-gray-500 shrink-0 mt-0.5" />
+                <p className="text-[10px] text-gray-500 leading-relaxed">
+                  Corporate roles are matched by name similarity and may not correspond to the target person.
+                  Verify through official company registers before drawing conclusions.
+                </p>
+              </div>
+            </div>
+          </div>
+        )
+      })()}
     </div>
   )
 }

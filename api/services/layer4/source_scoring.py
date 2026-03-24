@@ -83,6 +83,8 @@ SCRAPER_RELIABILITY_OVERRIDES = {
     "google_news_rss": 0.60,       # Google News RSS — free fallback, less metadata
     "opensanctions_search": 0.90,  # OpenSanctions — official government sources
     "interpol_red_notices": 0.95,  # Interpol — official law enforcement source
+    "opencorporates_officers": 0.85, # OpenCorporates — largest company database
+    "lbr_luxembourg": 0.92,        # Luxembourg RCS — official government register
 }
 
 

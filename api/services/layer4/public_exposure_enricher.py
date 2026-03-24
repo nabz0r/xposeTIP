@@ -548,18 +548,70 @@ def enrich_public_exposure(target_id, session: Session) -> dict:
     else:
         logger.debug("PASS2: Interpol skipped — already found via OpenSanctions")
 
+    # === CORPORATE LAYER (Sprint 64) ===
+    corporate_findings = []
+
+    # --- 7. OpenCorporates (global officer search) ---
+    try:
+        from api.scrapers.opencorporates_officers import search_opencorporates
+
+        oc_api_key = _get_opencorporates_api_key(session, target.workspace_id)
+        target_country = _get_target_country(target, profile)
+
+        oc_results = search_opencorporates(
+            primary_name,
+            api_key=oc_api_key,
+            target_country=target_country,
+        )
+        if oc_results:
+            corporate_findings.extend(oc_results)
+            logger.info("PASS2: OpenCorporates found %d officer roles", len(oc_results))
+
+        _increment_opencorporates_usage(1)
+        result["scrapers_run"] += 1
+        time.sleep(2.0)
+    except Exception:
+        logger.exception("PASS2: OpenCorporates scraper failed")
+
+    # --- 8. LBR Luxembourg (only for LU targets) ---
+    if _should_run_lbr(target, profile):
+        try:
+            from api.scrapers.lbr_luxembourg import search_lbr_luxembourg
+
+            lbr_results = search_lbr_luxembourg(primary_name)
+            if lbr_results:
+                # Dedup against OpenCorporates for same LU companies
+                lbr_unique = _deduplicate_corporate_findings(lbr_results, corporate_findings)
+                corporate_findings.extend(lbr_unique)
+                logger.info("PASS2: LBR found %d officer roles (%d unique)", len(lbr_results), len(lbr_unique))
+
+            result["scrapers_run"] += 1
+            time.sleep(3.0)
+        except Exception:
+            logger.exception("PASS2: LBR Luxembourg scraper failed")
+    else:
+        logger.debug("PASS2: LBR skipped — target not Luxembourg-connected")
+
+    # Cap corporate at 8, prioritize active roles
+    corporate_findings.sort(key=lambda f: (
+        -int(f.get("data", {}).get("is_active", False)),
+        -f.get("confidence", 0),
+    ))
+    corporate_findings = corporate_findings[:MAX_CORPORATE_FINDINGS]
+
     # === STORE ALL FINDINGS ===
-    all_to_store = all_findings + sanctions_findings
+    all_to_store = all_findings + sanctions_findings + corporate_findings
 
     if all_to_store:
         created = 0
         for fd in all_to_store:
             try:
-                # Determine indicator_type: sanctions findings have their own, media uses default
                 ind_type = fd.get("indicator_type", "media_mention")
                 category = "public_exposure"
                 if ind_type in ("sanctions_match", "pep_match"):
                     category = "compliance"
+                elif ind_type == "corporate_officer":
+                    category = "corporate"
 
                 finding = Finding(
                     workspace_id=target.workspace_id,
@@ -588,9 +640,9 @@ def enrich_public_exposure(target_id, session: Session) -> dict:
             result["findings_created"] = created
 
     logger.info(
-        "PASS2: Completed for target %s — %d scrapers, %d findings stored (%d media + %d sanctions)",
+        "PASS2: Completed for target %s — %d scrapers, %d findings stored (%d media + %d sanctions + %d corporate)",
         target_id, result["scrapers_run"], result["findings_created"],
-        len(all_findings), len(sanctions_findings),
+        len(all_findings), len(sanctions_findings), len(corporate_findings),
     )
     return result
 
@@ -640,3 +692,113 @@ def _get_estimated_birth_year(profile: dict) -> int | None:
         from datetime import date as date_cls
         return date_cls.today().year - int(age)
     return None
+
+
+# ---------------------------------------------------------------------------
+# Corporate Layer Helpers (Sprint 64)
+# ---------------------------------------------------------------------------
+
+MAX_CORPORATE_FINDINGS = 8
+
+
+def _should_run_lbr(target, profile: dict) -> bool:
+    """Only run LBR on Luxembourg-connected targets."""
+    country = _get_target_country(target, profile)
+    if country and country.upper() == "LU":
+        return True
+    email = getattr(target, "value", "") or ""
+    if "@" in email and email.split("@")[1].lower().endswith(".lu"):
+        return True
+    return False
+
+
+def _get_opencorporates_api_key(session: Session, workspace_id) -> str | None:
+    """Retrieve OpenCorporates API key from workspace settings."""
+    try:
+        from api.models.workspace import Workspace
+        ws = session.execute(
+            select(Workspace).where(Workspace.id == workspace_id)
+        ).scalar_one_or_none()
+        if not ws:
+            return None
+        settings = ws.settings or {}
+        for store in ("custom_api_keys", "api_keys"):
+            entry = settings.get(store, {}).get("opencorporates_api_key")
+            if entry and isinstance(entry, dict) and entry.get("encrypted"):
+                try:
+                    from api.routers.settings import _get_fernet
+                    return _get_fernet().decrypt(entry["encrypted"].encode()).decode()
+                except Exception:
+                    return None
+            elif entry and isinstance(entry, str):
+                return entry
+    except Exception:
+        pass
+    return None
+
+
+def _increment_opencorporates_usage(count: int = 1):
+    """Increment OpenCorporates monthly usage counter in Redis."""
+    try:
+        from api.services.cache import CacheService
+        cache = CacheService()
+        if cache.redis:
+            key = f"opencorporates:monthly_count:{date.today().strftime('%Y-%m')}"
+            pipe = cache.redis.pipeline()
+            pipe.incrby(key, count)
+            pipe.expire(key, 86400 * 31)
+            pipe.execute()
+    except Exception:
+        pass
+
+
+def _deduplicate_corporate_findings(new_findings: list, existing_findings: list) -> list:
+    """Dedup corporate findings: match by company name similarity + jurisdiction.
+
+    Keep the one with higher source reliability (LBR > OpenCorporates for LU).
+    """
+    if not new_findings or not existing_findings:
+        return new_findings
+
+    from difflib import SequenceMatcher
+
+    existing_companies = []
+    for f in existing_findings:
+        data = f.get("data", {}) or {}
+        existing_companies.append({
+            "company": (data.get("company_name") or "").lower().strip(),
+            "jurisdiction": (data.get("jurisdiction") or "").lower(),
+            "position": (data.get("position") or "").lower(),
+            "scraper": data.get("scraper", ""),
+        })
+
+    unique = []
+    for nf in new_findings:
+        ndata = nf.get("data", {}) or {}
+        n_company = (ndata.get("company_name") or "").lower().strip()
+        n_jurisdiction = (ndata.get("jurisdiction") or "").lower()
+        n_scraper = ndata.get("scraper", "")
+
+        is_dup = False
+        for ec in existing_companies:
+            # Same jurisdiction
+            if n_jurisdiction and ec["jurisdiction"] and n_jurisdiction != ec["jurisdiction"]:
+                continue
+            # Company name similarity > 0.80
+            sim = SequenceMatcher(None, n_company, ec["company"]).ratio()
+            if sim > 0.80:
+                # It's a duplicate — keep LBR over OpenCorporates for LU
+                if n_scraper == "lbr_luxembourg" and ec["scraper"] == "opencorporates_officers":
+                    # Replace existing with LBR (higher reliability)
+                    for i, ef in enumerate(existing_findings):
+                        ef_data = ef.get("data", {}) or {}
+                        if (ef_data.get("company_name") or "").lower().strip() == ec["company"]:
+                            existing_findings[i] = nf
+                            break
+                is_dup = True
+                break
+
+        if not is_dup:
+            unique.append(nf)
+
+    return unique
