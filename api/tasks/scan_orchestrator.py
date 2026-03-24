@@ -382,8 +382,9 @@ def finalize_scan(scan_id: str):
         # Pass 2 — Public exposure enrichment (name-based scrapers)
         try:
             from api.services.layer4.public_exposure_enricher import enrich_public_exposure
-            pass2_result = enrich_public_exposure(scan.target_id, session)
+            pass2_result = enrich_public_exposure(scan.target_id, session, scan_id=scan.id)
             if pass2_result.get("findings_created", 0) > 0:
+                session.commit()  # Persist pass 2 findings + graph edges
                 logger.info(
                     "Pass 2 created %d public exposure findings for target %s",
                     pass2_result["findings_created"], scan.target_id,

@@ -9,6 +9,12 @@ logger = logging.getLogger(__name__)
 
 MAJOR_SITES = {"google", "facebook", "twitter", "instagram", "linkedin", "github", "microsoft", "apple", "amazon", "spotify"}
 
+# Holehe modules that consistently crash (upstream bugs: IndexError, KeyError, ConnectError)
+HOLEHE_SKIP_MODULES = {
+    "soundcloud", "rocketreach", "evernote", "samsung",
+    "github", "deliveroo", "crevado", "pinterest", "snapchat",
+}
+
 
 class HoleheScanner(BaseScanner):
     MODULE_ID = "holehe"
@@ -36,13 +42,19 @@ class HoleheScanner(BaseScanner):
             return []
 
         out = []
+        skipped = 0
         async with httpx.AsyncClient(timeout=15) as client:
             for func in funcs:
+                if func.__name__ in HOLEHE_SKIP_MODULES:
+                    skipped += 1
+                    continue
                 try:
                     await func(email, client, out)
                     await asyncio.sleep(1)  # Rate limit: 1 req/sec
                 except Exception:
-                    logger.warning("holehe module %s failed", func.__name__, exc_info=True)
+                    logger.warning("holehe module %s failed", func.__name__)
+        if skipped:
+            logger.debug("holehe: skipped %d broken modules", skipped)
 
         for entry in out:
             if entry.get("exists") is True:

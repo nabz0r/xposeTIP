@@ -19,6 +19,21 @@ from sqlalchemy.orm import Session
 from api.models.finding import Finding
 from api.models.target import Target
 
+
+def _sanitize_for_json(obj):
+    """Recursively convert non-JSON-serializable types for JSONB storage."""
+    if isinstance(obj, dict):
+        return {k: _sanitize_for_json(v) for k, v in obj.items()}
+    elif isinstance(obj, list):
+        return [_sanitize_for_json(v) for v in obj]
+    elif isinstance(obj, (datetime, date)):
+        return obj.isoformat()
+    elif isinstance(obj, set):
+        return list(obj)
+    elif hasattr(obj, '__str__') and not isinstance(obj, (str, int, float, bool, type(None))):
+        return str(obj)
+    return obj
+
 logger = logging.getLogger(__name__)
 
 # Common first names for name validation
@@ -278,7 +293,7 @@ def get_search_languages(target) -> list[str]:
 
     # Priority 2: email domain TLD
     if len(langs) < 2:
-        email = getattr(target, "value", "") or ""
+        email = getattr(target, "email", "") or ""
         if "@" in email:
             domain = email.split("@")[1].lower()
             for tld, lang in TLD_LANG_MAP.items():
@@ -383,7 +398,7 @@ def should_run_gnews(gdelt_results_count: int) -> bool:
 # Main Enrichment Pipeline
 # ---------------------------------------------------------------------------
 
-def enrich_public_exposure(target_id, session: Session) -> dict:
+def enrich_public_exposure(target_id, session: Session, scan_id=None) -> dict:
     """Pass 2 enrichment: run name-based scrapers with layer isolation.
 
     Each layer (media, compliance, corporate) is independently wrapped.
@@ -426,7 +441,7 @@ def enrich_public_exposure(target_id, session: Session) -> dict:
     logger.info("PASS2: Search languages for '%s': %s", primary_name, search_langs)
 
     # Extract email domain for context
-    email = getattr(target, "value", "") or ""
+    email = getattr(target, "email", "") or ""
     email_domain = email.split("@")[1] if "@" in email else None
 
     # === MEDIA LAYER ===
@@ -624,17 +639,20 @@ def enrich_public_exposure(target_id, session: Session) -> dict:
                 elif ind_type == "corporate_officer":
                     category = "corporate"
 
+                # Use actual scraper name from data, not generic "scraper_engine"
+                scraper_name = (fd.get("data") or {}).get("scraper", "scraper_engine")
+
                 finding = Finding(
                     workspace_id=target.workspace_id,
-                    scan_id=None,
+                    scan_id=scan_id,
                     target_id=target_id,
-                    module="scraper_engine",
+                    module=scraper_name[:50],
                     layer=4,
                     category=category,
                     severity=fd.get("severity", "info"),
                     title=fd.get("title", f"Media mention: {primary_name}")[:255],
-                    description=fd.get("description"),
-                    data=fd.get("data", {}),
+                    description=(fd.get("description") or "")[:1000] or None,
+                    data=_sanitize_for_json(fd.get("data", {})),
                     url=fd.get("url"),
                     indicator_value=(fd.get("indicator_value") or fd.get("url") or fd.get("title", ""))[:500],
                     indicator_type=ind_type,
@@ -647,8 +665,20 @@ def enrich_public_exposure(target_id, session: Session) -> dict:
                 logger.exception("PASS2: Failed to create finding: %s", fd.get("title", "")[:80])
 
         if created > 0:
-            session.commit()
-            results["findings_created"] = created
+            try:
+                session.flush()
+                results["findings_created"] = created
+                logger.info("PASS2: Stored %d findings (flushed)", created)
+            except Exception:
+                logger.exception("PASS2: Failed to flush findings")
+                session.rollback()
+
+    # === CREATE GRAPH EDGES ===
+    if results["findings_created"] > 0:
+        try:
+            _create_pe_graph_edges(all_to_store, target, session)
+        except Exception:
+            logger.warning("PASS2: Graph edge creation failed", exc_info=True)
 
     logger.info(
         "PASS2 complete for '%s': %d media, %d sanctions, %d corporate, %d errors",
@@ -659,6 +689,81 @@ def enrich_public_exposure(target_id, session: Session) -> dict:
         logger.warning("PASS2 errors: %s", results["errors"])
 
     return results
+
+
+# ---------------------------------------------------------------------------
+# Graph Edge Creation for PE Findings
+# ---------------------------------------------------------------------------
+
+# PE edge types are WEAK — excluded from clustering, used for PageRank only
+_PE_EDGE_TYPES = {
+    "media_mention": "mentioned_in",
+    "sanctions_match": "listed_on",
+    "pep_match": "listed_on",
+    "corporate_officer": "officer_of",
+}
+
+
+def _create_pe_graph_edges(finding_dicts: list, target, session):
+    """Create identity graph edges for public exposure findings.
+
+    Creates weak edges (excluded from clustering) between the email anchor
+    and PE entity nodes.
+    """
+    from api.models.identity import Identity, IdentityLink
+
+    # Get email anchor node
+    email_node = session.execute(
+        select(Identity).where(
+            Identity.target_id == target.id,
+            Identity.type == "email",
+        )
+    ).scalars().first()
+
+    if not email_node:
+        logger.debug("PASS2: No email anchor node — skipping PE graph edges")
+        return
+
+    edges_created = 0
+    for fd in finding_dicts:
+        ind_type = fd.get("indicator_type", "media_mention")
+        edge_type = _PE_EDGE_TYPES.get(ind_type)
+        if not edge_type:
+            continue
+
+        data = fd.get("data", {})
+        display = fd.get("title", fd.get("url", ""))[:200]
+        confidence = fd.get("confidence", 0.5)
+
+        try:
+            entity_node = Identity(
+                target_id=target.id,
+                workspace_id=target.workspace_id,
+                type=ind_type,
+                value=(fd.get("indicator_value") or fd.get("url") or display)[:500],
+                platform=data.get("scraper", "public_exposure"),
+                source_module=data.get("scraper", "public_exposure"),
+                confidence=confidence,
+            )
+            session.add(entity_node)
+            session.flush()
+
+            link = IdentityLink(
+                workspace_id=target.workspace_id,
+                source_id=email_node.id,
+                dest_id=entity_node.id,
+                link_type=edge_type,
+                confidence=confidence,
+                source_module=data.get("scraper", "public_exposure"),
+            )
+            session.add(link)
+            edges_created += 1
+        except Exception:
+            logger.debug("PASS2: Failed to create edge for %s", display[:60], exc_info=True)
+
+    if edges_created > 0:
+        session.flush()
+        logger.info("PASS2: Created %d graph edges", edges_created)
 
 
 # ---------------------------------------------------------------------------
@@ -695,7 +800,7 @@ def _get_target_country(target) -> str | None:
                     return country.upper()
 
     # Priority 3: email TLD
-    email = getattr(target, "value", "") or ""
+    email = getattr(target, "email", "") or ""
     if "@" in email:
         domain = email.split("@")[1].lower()
         tld_map = {".lu": "LU", ".fr": "FR", ".de": "DE", ".be": "BE", ".ch": "CH",
@@ -735,7 +840,7 @@ def _should_run_lbr(target) -> bool:
     if country and country.upper() == "LU":
         return True
     # Fallback: email domain
-    email = getattr(target, "value", "") or ""
+    email = getattr(target, "email", "") or ""
     if "@" in email and email.split("@")[1].lower().endswith(".lu"):
         return True
     return False

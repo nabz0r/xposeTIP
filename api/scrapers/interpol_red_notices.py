@@ -89,9 +89,15 @@ def search_interpol_red_notices(primary_name: str,
             INTERPOL_API_URL,
             params=params,
             timeout=REQUEST_TIMEOUT,
-            headers={"User-Agent": "xposeTIP/1.0"},
+            headers={
+                "User-Agent": "Mozilla/5.0 (compatible; xposeTIP/1.0; security research)",
+                "Accept": "application/json",
+            },
         )
 
+        if resp.status_code == 403:
+            logger.warning("Interpol: 403 Forbidden — may be geo-restricted. Skipping.")
+            return []
         if resp.status_code == 429:
             logger.warning("Interpol: Rate limited (429)")
             return []
