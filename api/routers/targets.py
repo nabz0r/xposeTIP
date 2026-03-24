@@ -28,8 +28,16 @@ class TargetUpdate(BaseModel):
     notes: str | None = None
 
 
+class BulkImportTarget(BaseModel):
+    email: EmailStr
+    country_code: str | None = None
+    first_name: str | None = None
+    last_name: str | None = None
+
+
 class BulkImport(BaseModel):
-    emails: list[EmailStr]
+    emails: list[EmailStr] | None = None
+    targets: list[BulkImportTarget] | None = None
     country_code: str | None = None
     tags: list[str] | None = None
 
@@ -80,12 +88,26 @@ async def bulk_import_targets(
     user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
-    if len(body.emails) > 500:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Maximum 500 emails per import")
+    # Support both legacy format (emails list) and new format (targets with names)
+    entries = []
+    if body.targets:
+        entries = [
+            {"email": t.email, "country_code": t.country_code or body.country_code,
+             "first_name": t.first_name, "last_name": t.last_name}
+            for t in body.targets
+        ]
+    elif body.emails:
+        entries = [{"email": e, "country_code": body.country_code, "first_name": None, "last_name": None} for e in body.emails]
+    else:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Provide 'emails' or 'targets'")
+
+    if len(entries) > 500:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Maximum 500 entries per import")
 
     created = []
     skipped = []
-    for email in body.emails:
+    for entry in entries:
+        email = entry["email"]
         existing = await db.execute(
             select(Target).where(Target.workspace_id == workspace_id, Target.email == email)
         )
@@ -95,9 +117,14 @@ async def bulk_import_targets(
         target = Target(
             workspace_id=workspace_id,
             email=email,
-            country_code=body.country_code,
+            country_code=entry.get("country_code"),
+            user_first_name=entry["first_name"].strip()[:100] if entry.get("first_name") else None,
+            user_last_name=entry["last_name"].strip()[:100] if entry.get("last_name") else None,
             tags=body.tags,
         )
+        if target.user_first_name or target.user_last_name:
+            parts = [target.user_first_name, target.user_last_name]
+            target.display_name = ' '.join(p for p in parts if p)
         db.add(target)
         created.append(email)
 
@@ -209,6 +236,8 @@ async def get_target_profile(
     profile["score_breakdown"] = target.score_breakdown
     profile["status"] = target.status
     profile["country_code"] = target.country_code
+    profile["user_first_name"] = target.user_first_name
+    profile["user_last_name"] = target.user_last_name
     profile["last_scanned"] = target.last_scanned.isoformat() if target.last_scanned else None
     profile["first_scanned"] = target.first_scanned.isoformat() if target.first_scanned else None
 
@@ -254,6 +283,43 @@ async def delete_target(
     target = await _get_target(db, target_id, workspace_id)
     await db.delete(target)
     await db.commit()
+
+
+class IdentityUpdate(BaseModel):
+    first_name: str | None = None
+    last_name: str | None = None
+
+
+@router.patch("/{target_id}/identity")
+async def update_target_identity(
+    target_id: uuid.UUID,
+    body: IdentityUpdate,
+    workspace_id: uuid.UUID = Depends(get_current_workspace),
+    user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """Update operator-asserted identity. Set fields to null to clear."""
+    target = await _get_target(db, target_id, workspace_id)
+
+    if body.first_name is not None:
+        target.user_first_name = body.first_name.strip()[:100] if body.first_name else None
+    if body.last_name is not None:
+        target.user_last_name = body.last_name.strip()[:100] if body.last_name else None
+
+    # Update display_name immediately when operator sets a name
+    if target.user_first_name or target.user_last_name:
+        parts = [target.user_first_name, target.user_last_name]
+        target.display_name = ' '.join(p for p in parts if p)
+    # If both explicitly cleared, don't reset display_name — let next scan re-resolve
+
+    await db.commit()
+    await db.refresh(target)
+    return {
+        "id": str(target.id),
+        "user_first_name": target.user_first_name,
+        "user_last_name": target.user_last_name,
+        "display_name": target.display_name,
+    }
 
 
 class CountryUpdate(BaseModel):
@@ -481,6 +547,10 @@ def _target_dict(t: Target) -> dict:
         "avatar_url": t.avatar_url,
         "primary_name": profile.get("primary_name") if display else None,
         "country_code": t.country_code,
+        "user_first_name": t.user_first_name,
+        "user_last_name": t.user_last_name,
+        "primary_name_source": profile.get("primary_name_source", "auto"),
+        "auto_resolved_name": profile.get("_auto_resolved_name"),
         "status": t.status,
         "exposure_score": t.exposure_score,
         "threat_score": t.threat_score,

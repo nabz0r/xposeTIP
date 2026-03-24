@@ -70,6 +70,17 @@ MAX_FINDINGS_PER_TARGET = 15
 GNEWS_DAILY_QUOTA = 80  # Leave 20 req buffer from 100/day limit
 
 
+def _get_primary_name(target) -> str | None:
+    """Get the best name to use for Pass 2 searches.
+    Priority: operator assertion > auto-resolved from profile."""
+    user_first = getattr(target, 'user_first_name', None)
+    user_last = getattr(target, 'user_last_name', None)
+    if user_first or user_last:
+        return ' '.join(p for p in [user_first, user_last] if p)
+    profile = getattr(target, 'profile_data', None) or {}
+    return profile.get('primary_name')
+
+
 def _is_real_name(name: str) -> bool:
     """Check if a name looks like a real human name (not a username)."""
     if not name or len(name.strip()) < 4:
@@ -394,7 +405,9 @@ def enrich_public_exposure(target_id, session: Session) -> dict:
         return results
 
     profile = target.profile_data or {}
-    primary_name = profile.get("primary_name")
+
+    # Operator-asserted name takes priority for Pass 2 searches
+    primary_name = _get_primary_name(target)
 
     if not primary_name:
         results["skipped_reason"] = "no_primary_name"

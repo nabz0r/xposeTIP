@@ -3,6 +3,7 @@ import { Globe, MapPin, Building2, Github, ExternalLink, Shield, AlertTriangle, 
 import { getTargetProfile, getFingerprint } from '../lib/api'
 import FingerprintRadar from './FingerprintRadar'
 import CountrySelector from './target/CountrySelector'
+import IdentityEditor from './target/IdentityEditor'
 const scoreColor = (score) => {
   if (score == null) return '#666688'
   if (score >= 61) return '#ff2244'
@@ -132,38 +133,57 @@ export default function ProfileHeader({ target, findings, animScore, profileData
                   </p>
                 </div>
               )}
-              {displayName && (
-                <div>
-                  <div className="flex items-center gap-2">
-                    <h2 className="text-xl font-semibold">{displayName}</h2>
-                    {p.confidence && (
-                      <span className="text-[10px] font-mono px-1.5 py-0.5 rounded-full bg-[#00ff88]/10 text-[#00ff88]">
-                        {Math.round(p.confidence.overall * 100)}% confidence
-                        {p.confidence.cross_verified && ' · cross-verified'}
-                      </span>
-                    )}
-                  </div>
-                  {/* Per-field confidence pills */}
-                  {p.field_confidence && Object.keys(p.field_confidence).length > 0 && (
-                    <div className="flex flex-wrap gap-1.5 mt-1.5">
-                      {Object.entries(p.field_confidence).map(([field, fc]) => (
-                        <span key={field} className="inline-flex items-center gap-1 text-[10px] font-mono px-1.5 py-0.5 rounded bg-[#1e1e2e]"
-                          title={`${fc.sources?.join(', ')} — ${fc.note || ''}`}>
-                          <span className="text-gray-500">{field.replace('_', ' ')}:</span>
-                          <span className="text-gray-300">{fc.value}</span>
-                          <span style={{
-                            color: fc.confidence >= 0.7 ? '#00ff88' :
-                                   fc.confidence >= 0.4 ? '#ffcc00' : '#ff8800'
-                          }}>{Math.round(fc.confidence * 100)}%</span>
-                          {fc.source_count > 1 && (
-                            <span className="text-gray-600">({fc.source_count})</span>
-                          )}
-                        </span>
-                      ))}
-                    </div>
+              <div>
+                <div className="flex items-center gap-2">
+                  <IdentityEditor
+                    targetId={target.id}
+                    userFirstName={target.user_first_name}
+                    userLastName={target.user_last_name}
+                    autoResolvedName={p._auto_resolved_name || (p.primary_name_source !== 'operator' ? displayName : null)}
+                    displayName={displayName}
+                    onUpdate={(res) => onTargetUpdate?.({
+                      ...target,
+                      user_first_name: res.user_first_name,
+                      user_last_name: res.user_last_name,
+                      display_name: res.display_name,
+                    })}
+                  />
+                  {p.confidence && (
+                    <span className="text-[10px] font-mono px-1.5 py-0.5 rounded-full bg-[#00ff88]/10 text-[#00ff88]">
+                      {Math.round(p.confidence.overall * 100)}% confidence
+                      {p.confidence.cross_verified && ' · cross-verified'}
+                    </span>
                   )}
                 </div>
-              )}
+                {/* Dual view: show auto-resolved name when operator has overridden it */}
+                {(target.user_first_name || target.user_last_name) && p._auto_resolved_name &&
+                  p._auto_resolved_name.toLowerCase() !== displayName?.toLowerCase() && (
+                  <div className="flex items-center gap-1.5 mt-1 text-xs text-gray-500">
+                    <span>{'\uD83E\uDD16'}</span>
+                    <span>{p._auto_resolved_name}</span>
+                    <span className="text-gray-600">(auto-resolved)</span>
+                  </div>
+                )}
+                {/* Per-field confidence pills */}
+                {p.field_confidence && Object.keys(p.field_confidence).length > 0 && (
+                  <div className="flex flex-wrap gap-1.5 mt-1.5">
+                    {Object.entries(p.field_confidence).map(([field, fc]) => (
+                      <span key={field} className="inline-flex items-center gap-1 text-[10px] font-mono px-1.5 py-0.5 rounded bg-[#1e1e2e]"
+                        title={`${fc.sources?.join(', ')} — ${fc.note || ''}`}>
+                        <span className="text-gray-500">{field.replace('_', ' ')}:</span>
+                        <span className="text-gray-300">{fc.value}</span>
+                        <span style={{
+                          color: fc.confidence >= 0.7 ? '#00ff88' :
+                                 fc.confidence >= 0.4 ? '#ffcc00' : '#ff8800'
+                        }}>{Math.round(fc.confidence * 100)}%</span>
+                        {fc.source_count > 1 && (
+                          <span className="text-gray-600">({fc.source_count})</span>
+                        )}
+                      </span>
+                    ))}
+                  </div>
+                )}
+              </div>
               <div className="flex items-center gap-2">
                 <p className="text-sm font-mono text-gray-400">{target.email}</p>
                 <CountrySelector

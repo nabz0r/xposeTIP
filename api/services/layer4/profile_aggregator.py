@@ -971,6 +971,7 @@ def aggregate_profile(target_id, workspace_id, session: Session, graph_context=N
     # Detect corporate email patterns from sibling targets on the same domain
     from api.services.layer4.email_pattern_detector import (
         detect_domain_pattern, decompose_email, boost_names_with_pattern,
+        detect_pattern_with_assertion,
     )
 
     _email_domain = _email.split("@")[-1].lower() if "@" in _email else ""
@@ -990,6 +991,19 @@ def aggregate_profile(target_id, workspace_id, session: Session, graph_context=N
                     _email_decomp.get("confidence", 0),
                 )
                 valid_names = boost_names_with_pattern(valid_names, _email_decomp)
+
+    # Operator-confirmed pattern: if operator has asserted a name, confirm the pattern
+    _target_for_pattern = session.execute(
+        select(Target).where(Target.id == target_id, Target.workspace_id == workspace_id)
+    ).scalar_one_or_none()
+    if _target_for_pattern:
+        _op_pattern = detect_pattern_with_assertion(
+            _email,
+            getattr(_target_for_pattern, 'user_first_name', None),
+            getattr(_target_for_pattern, 'user_last_name', None),
+        )
+        if _op_pattern:
+            profile["email_pattern_confirmed"] = _op_pattern
 
     # Store pattern info in profile for frontend display
     if _email_pattern_info:
@@ -1035,6 +1049,36 @@ def aggregate_profile(target_id, workspace_id, session: Session, graph_context=N
             profile["confidence"]["overall"] = max(profile.get("confidence", {}).get("overall", 0), 0.25)
     profile["primary_name"] = primary_name
 
+    # Save auto-resolved name BEFORE potential operator override
+    profile["_auto_resolved_name"] = primary_name
+
+    # === OPERATOR ASSERTION CHECK ===
+    # If operator has asserted a name, it becomes primary with confidence=1.0
+    target = session.execute(
+        select(Target).where(Target.id == target_id, Target.workspace_id == workspace_id)
+    ).scalar_one_or_none()
+    if target:
+        user_first = getattr(target, 'user_first_name', None)
+        user_last = getattr(target, 'user_last_name', None)
+        if user_first or user_last:
+            asserted_name = ' '.join(p for p in [user_first, user_last] if p)
+            profile["primary_name"] = asserted_name
+            profile["primary_name_source"] = "operator"
+            profile["primary_name_confidence"] = 1.0
+
+            # Demote auto-resolved name to alias if different
+            auto_name = profile.get("_auto_resolved_name")
+            if auto_name and auto_name.lower() != asserted_name.lower():
+                aliases = profile.get("name_aliases", [])
+                if auto_name not in aliases:
+                    aliases.append(auto_name)
+                profile["name_aliases"] = aliases
+
+            logger.info("Using operator-asserted name: '%s' (auto-resolved was: '%s')",
+                        asserted_name, profile.get("_auto_resolved_name"))
+        else:
+            profile["primary_name_source"] = "auto"
+
     # Pick primary avatar with priority:
     # 1. Google OAuth, 2. Gravatar (non-default), 3. GitHub, 4. FullContact, 5. Others
     AVATAR_PRIORITY = ["google_audit", "gravatar", "github_deep", "social_enricher", "fullcontact", "epieos", "scraper_engine"]
@@ -1059,7 +1103,10 @@ def aggregate_profile(target_id, workspace_id, session: Session, graph_context=N
     ).scalar_one_or_none()
     if target:
         target.profile_data = profile
-        if profile["primary_name"] and not target.display_name:
+        # Operator-asserted name always wins for display_name
+        if profile.get("primary_name_source") == "operator":
+            target.display_name = profile["primary_name"]
+        elif profile["primary_name"] and not target.display_name:
             target.display_name = profile["primary_name"]
         if profile["primary_avatar"] and not target.avatar_url:
             target.avatar_url = profile["primary_avatar"]

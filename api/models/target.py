@@ -16,6 +16,8 @@ class Target(UUIDMixin, TimestampMixin, Base):
     display_name: Mapped[str | None] = mapped_column(String(255))
     avatar_url: Mapped[str | None] = mapped_column(String(1024))
     country_code: Mapped[str | None] = mapped_column(String(2))
+    user_first_name: Mapped[str | None] = mapped_column(String(100))
+    user_last_name: Mapped[str | None] = mapped_column(String(100))
     status: Mapped[str] = mapped_column(String(20), default="pending")
     exposure_score: Mapped[int | None] = mapped_column(Integer)
     threat_score: Mapped[int | None] = mapped_column(Integer)

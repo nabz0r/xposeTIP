@@ -33,14 +33,22 @@ _DOMAIN_LAUNCH_DATES = {
 }
 
 
+def _strip_tz(dt: datetime | None) -> datetime | None:
+    """Strip timezone info to produce a naive-UTC datetime for safe comparison."""
+    if dt and hasattr(dt, 'tzinfo') and dt.tzinfo is not None:
+        return dt.replace(tzinfo=None)
+    return dt
+
+
 def _parse_timestamp(value) -> datetime | None:
-    """Parse a timestamp from various formats found in OSINT findings."""
+    """Parse a timestamp from various formats found in OSINT findings.
+    Always returns a naive datetime (timezone stripped) to avoid mixed comparisons."""
     if value is None:
         return None
 
     # Already a datetime
     if isinstance(value, datetime):
-        return value
+        return _strip_tz(value)
 
     # Numeric — unix epoch (seconds or milliseconds)
     if isinstance(value, (int, float)):
@@ -79,7 +87,7 @@ def _parse_timestamp(value) -> datetime | None:
         "%m/%d/%Y",
     ):
         try:
-            return datetime.strptime(s, fmt)
+            return _strip_tz(datetime.strptime(s, fmt))
         except ValueError:
             continue
 

@@ -125,10 +125,17 @@ def detect_domain_pattern(domain: str, session: Session) -> dict | None:
         return None
 
     # Collect (prefix, confirmed_name) pairs
+    # Operator-asserted names are highest quality; fall back to auto-resolved
     pairs = []
     for t in targets:
-        profile = t.profile_data or {}
-        name = profile.get("primary_name")
+        # Prefer operator-asserted name (ground truth)
+        user_first = getattr(t, 'user_first_name', None)
+        user_last = getattr(t, 'user_last_name', None)
+        if user_first or user_last:
+            name = ' '.join(p for p in [user_first, user_last] if p)
+        else:
+            profile = t.profile_data or {}
+            name = profile.get("primary_name")
         if name and " " in name and len(name) > 3:
             prefix = t.email.split("@")[0].lower()
             clean_name = re.sub(r'[\U0001F000-\U0001FFFF\u200D\uFE0F]', '', name).strip()
@@ -270,3 +277,58 @@ def boost_names_with_pattern(names: list, email_decomp: dict) -> list:
             )
 
     return names
+
+
+def detect_pattern_with_assertion(email: str, user_first: str | None, user_last: str | None) -> dict | None:
+    """Confirm email pattern from operator-asserted name.
+
+    Example:
+      email: stheis@threatconnect.com
+      user_first: "Sebastian", user_last: "Theis"
+      -> pattern confirmed: {f}{last} (s + theis), confidence: 1.0
+
+    Returns pattern info dict or None if no pattern matches.
+    """
+    if not (user_first or user_last):
+        return None
+    if "@" not in email:
+        return None
+
+    local_part = email.split("@")[0].lower()
+    first = user_first.lower().strip() if user_first else ""
+    last = user_last.lower().strip() if user_last else ""
+
+    if not first and not last:
+        return None
+
+    # Test known patterns
+    test_patterns = []
+    if first and last:
+        test_patterns = [
+            ("{first}.{last}", f"{first}.{last}"),
+            ("{f}.{last}", f"{first[0]}.{last}"),
+            ("{first}_{last}", f"{first}_{last}"),
+            ("{f}{last}", f"{first[0]}{last}"),
+            ("{first}{last}", f"{first}{last}"),
+            ("{last}{f}", f"{last}{first[0]}"),
+            ("{last}.{first}", f"{last}.{first}"),
+            ("{last}_{first}", f"{last}_{first}"),
+        ]
+    if first:
+        test_patterns.append(("{first}", first))
+    if last:
+        test_patterns.append(("{last}", last))
+
+    for pattern_name, expected in test_patterns:
+        if expected and local_part == expected:
+            logger.info(
+                "EMAIL_PATTERN: Operator-confirmed '%s' for %s",
+                pattern_name, email,
+            )
+            return {
+                "pattern": pattern_name,
+                "confidence": 1.0,
+                "source": "operator_confirmed",
+            }
+
+    return None
