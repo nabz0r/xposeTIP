@@ -78,6 +78,7 @@ SCRAPER_RELIABILITY_OVERRIDES = {
     "dns_dmarc_check": 0.90,      # DNS records are facts
     "leakcheck_public": 0.80,     # Breach data
     "emailrep_breaches": 0.80,    # Breach aggregator
+    "gdelt_news": 0.65,           # GDELT news search — free API, variable relevance
 }
 
 

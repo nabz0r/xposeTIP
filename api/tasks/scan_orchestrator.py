@@ -86,7 +86,7 @@ def _build_graph_context(target_id, workspace_id, session):
     # Only use STRONG edges for clustering (not associated_with/located_in)
     # associated_with = catch-all links that connect everything to email anchor
     # Good for PageRank propagation, toxic for persona clustering
-    WEAK_EDGE_TYPES = {"associated_with", "located_in"}
+    WEAK_EDGE_TYPES = {"associated_with", "located_in", "mentioned_in"}
 
     adj = defaultdict(set)
     for l in relevant_links:
@@ -378,6 +378,18 @@ def finalize_scan(scan_id: str):
             })
         except Exception:
             pass
+
+        # Pass 2 — Public exposure enrichment (name-based scrapers)
+        try:
+            from api.services.layer4.public_exposure_enricher import enrich_public_exposure
+            pass2_result = enrich_public_exposure(scan.target_id, session)
+            if pass2_result.get("findings_created", 0) > 0:
+                logger.info(
+                    "Pass 2 created %d public exposure findings for target %s",
+                    pass2_result["findings_created"], scan.target_id,
+                )
+        except Exception:
+            logger.exception("Pass 2 public exposure enrichment failed for %s", scan.target_id)
 
         # Identity enrichment — re-query with discovered name
         try:

@@ -2461,6 +2461,32 @@ DEFAULT_SCRAPERS = [
         "rate_limit_requests": 1,
         "rate_limit_window": 2,
     },
+    {
+        "name": "gdelt_news",
+        "display_name": "GDELT News Search",
+        "description": "Search global news articles mentioning this person via GDELT",
+        "category": "public_exposure",
+        "url_template": "https://api.gdeltproject.org/api/v2/doc/doc?query=\"{name}\"&mode=ArtList&maxrecords=10&format=json&sort=DateDesc&timespan=5y",
+        "input_type": "name",
+        "method": "GET",
+        "headers": {},
+        "success_indicator": "\"articles\"",
+        "not_found_indicators": [],
+        "extraction_rules": [
+            {"field": "title", "type": "json_path", "pattern": "articles[*].title"},
+            {"field": "url", "type": "json_path", "pattern": "articles[*].url"},
+            {"field": "source_domain", "type": "json_path", "pattern": "articles[*].domain"},
+            {"field": "pub_date", "type": "json_path", "pattern": "articles[*].seendate"},
+            {"field": "language", "type": "json_path", "pattern": "articles[*].language"},
+            {"field": "source_country", "type": "json_path", "pattern": "articles[*].sourcecountry"},
+        ],
+        "finding_title_template": "News mention: {title}",
+        "finding_category": "public_exposure",
+        "finding_severity": "info",
+        "rate_limit_requests": 1,
+        "rate_limit_window": 5,
+        "enabled": True,
+    },
 ]
 
 

@@ -415,6 +415,25 @@ def build_graph(target_id, workspace_id, session: Session):
                     evidence={"finding_id": str(f.id)},
                 )
 
+            # Public exposure / media mention → create mentioned_in link
+            elif f.category == "public_exposure" and email_value:
+                source_domain = fdata.get("source_domain", f.title) if fdata else f.title
+                mention_node = get_or_create_identity(
+                    "media_mention", source_domain,
+                    platform=fdata.get("source_domain", "news") if fdata else "news",
+                    source_module=f.module,
+                    source_finding_id=f.id,
+                )
+                email_node = get_or_create_identity(
+                    "email", email_value, source_module=f.module,
+                )
+                get_or_create_link(
+                    email_node.id, mention_node.id,
+                    "mentioned_in",
+                    source_module=f.module,
+                    evidence={"finding_id": str(f.id), "url": f.url},
+                )
+
             # Username findings → link to email if we have one
             elif f.indicator_type == "username" and email_value and indicator_node:
                 email_node = get_or_create_identity(

@@ -12,6 +12,7 @@ import TimelineTab from './tabs/TimelineTab'
 import AccountsTab from './tabs/AccountsTab'
 import PhotosTab from './tabs/PhotosTab'
 import ScansTab from './tabs/ScansTab'
+import PublicExposureTab from '../components/target/PublicExposureTab'
 
 export default function TargetDetail() {
   const { id } = useParams()
@@ -306,7 +307,7 @@ export default function TargetDetail() {
 
       {/* Tabs */}
       <div className="flex gap-1 border-b border-[#1e1e2e]">
-        {['overview', 'findings', 'graph', 'timeline', 'photos', 'locations', 'accounts', 'scans'].map(tab => (
+        {['overview', 'findings', 'graph', 'timeline', 'photos', 'exposure', 'locations', 'accounts', 'scans'].map(tab => (
           <button key={tab} onClick={() => setActiveTab(tab)}
             className={`px-4 py-2 text-sm capitalize transition-colors ${activeTab === tab ? 'text-[#00ff88] border-b-2 border-[#00ff88]' : 'text-gray-400 hover:text-white'}`}>
             {tab} {tab === 'findings' ? `(${findings.length})` : tab === 'scans' ? `(${scans.length})` : tab === 'accounts' ? `(${socialFindings.length + accounts.length})` : tab === 'photos' ? `(${(profile?.avatars || []).length})` : ''}
@@ -343,6 +344,8 @@ export default function TargetDetail() {
       {activeTab === 'timeline' && <TimelineTab profile={profile} findings={findings} />}
 
       {activeTab === 'photos' && <PhotosTab profile={profile} target={target} />}
+
+      {activeTab === 'exposure' && <PublicExposureTab findings={findings} profile={profile} />}
 
       {activeTab === 'locations' && <LocationMap findings={findings} userLocations={profile?.user_locations} />}
 
