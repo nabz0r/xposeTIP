@@ -143,11 +143,54 @@ def expand_usernames(target_id, workspace_id, session: Session,
 
 
 def _select_usernames(target_id, workspace_id, session: Session, email=None) -> list:
-    """Select top N usernames from the identity graph.
+    """Select top N usernames from findings AND identity graph.
 
-    Criteria: type='username', appears on 2+ platforms, not the email prefix,
+    Primary source: Finding records (indicator_type='username') — most usernames
+    land here. Secondary source: Identity nodes (type='username').
+    Criteria: appears on 2+ platforms, not the email prefix,
     sorted by (platform_count × avg_confidence) descending.
     """
+    # Email prefix to exclude (trivial match)
+    email_prefix = email.split("@")[0].lower() if email and "@" in email else None
+
+    # Group by username value
+    groups = {}
+
+    def _add_to_group(val_raw, platform, confidence):
+        """Add a username occurrence to the groups dict."""
+        val = val_raw.strip().lower()
+        if not val or len(val) < 2:
+            return
+        if val in SKIP_USERNAMES:
+            return
+        if email_prefix and val == email_prefix:
+            return
+        if "@" in val:
+            return
+
+        if val not in groups:
+            groups[val] = {"value": val_raw.strip(), "platforms": set(), "confidences": []}
+        groups[val]["platforms"].add(platform or "unknown")
+        groups[val]["confidences"].append(confidence or 0.5)
+
+    # Source 1: Findings (primary — most usernames live here)
+    username_findings = session.execute(
+        select(Finding).where(
+            Finding.target_id == target_id,
+            Finding.indicator_type == "username",
+        )
+    ).scalars().all()
+
+    for f in username_findings:
+        if not f.indicator_value:
+            continue
+        # Extract platform from module name (e.g. "scraper_github_profile" → "github")
+        platform = (f.module or "").replace("scraper_", "").split("_")[0]
+        if not platform and f.data and isinstance(f.data, dict):
+            platform = f.data.get("platform", "unknown")
+        _add_to_group(f.indicator_value, platform, f.confidence)
+
+    # Source 2: Identity nodes (secondary enrichment)
     identities = session.execute(
         select(Identity).where(
             Identity.target_id == target_id,
@@ -156,31 +199,13 @@ def _select_usernames(target_id, workspace_id, session: Session, email=None) -> 
         )
     ).scalars().all()
 
-    if not identities:
-        return []
-
-    # Email prefix to exclude (trivial match)
-    email_prefix = email.split("@")[0].lower() if email and "@" in email else None
-
-    # Group by username value
-    groups = {}
     for ident in identities:
-        val = ident.value.strip().lower()
-        if not val or len(val) < 2:
+        if not ident.value:
             continue
-        if val in SKIP_USERNAMES:
-            continue
-        if email_prefix and val == email_prefix:
-            continue
-        # Skip if it looks like an email
-        if "@" in val:
-            continue
+        _add_to_group(ident.value, ident.platform, ident.confidence)
 
-        if val not in groups:
-            groups[val] = {"value": ident.value, "platforms": set(), "confidences": [], "ids": []}
-        groups[val]["platforms"].add(ident.platform or "unknown")
-        groups[val]["confidences"].append(ident.confidence or 0.5)
-        groups[val]["ids"].append(ident.id)
+    if not groups:
+        return []
 
     # Filter: must appear on 2+ platforms
     candidates = [g for g in groups.values() if len(g["platforms"]) >= MIN_PLATFORMS]
