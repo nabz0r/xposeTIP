@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../lib/auth'
-import { Shield, Radar, ArrowRight, Check, KeyRound, Users, Globe, AtSign, Fingerprint, Mail, Camera, Share2 } from 'lucide-react'
+import { Shield, Radar, ArrowRight, Check, KeyRound, Users, Globe, AtSign, Fingerprint, Mail, Camera, Share2, Newspaper, ShieldCheck } from 'lucide-react'
 import GenerativeAvatar from '../components/GenerativeAvatar'
 
 // ─── Scroll reveal hook ───
@@ -108,14 +108,12 @@ const PHASES = [
 ]
 
 const EXPOSURES = [
-  { icon: KeyRound, title: 'Leaked credentials', desc: 'Your email in breach databases. Which passwords were exposed. When it happened.' },
-  { icon: Users, title: 'Social accounts', desc: 'Every platform where your email or username is registered. Even ones you forgot about.' },
-  { icon: Globe, title: 'Geographic footprint', desc: 'Where you claim to be. Where your servers are. Cross-referenced across profiles.' },
-  { icon: AtSign, title: 'Username reuse', desc: 'Same username on 12 platforms? That\'s a credential stuffing goldmine.' },
-  { icon: Fingerprint, title: 'Digital fingerprint', desc: '9-axis identity radar: accounts, platforms, breaches, email age, data leaked, geo spread, username reuse, security posture, public exposure.' },
-  { icon: Mail, title: 'Email security', desc: 'SPF, DMARC, DKIM — can someone send emails pretending to be you?' },
-  { icon: Camera, title: 'Profile photos', desc: 'Every avatar collected across platforms. Cross-referenced for visual identity correlation.' },
-  { icon: Share2, title: 'Identity graph', desc: 'How your accounts, names, and platforms connect. PageRank confidence propagation reveals hidden links.' },
+  { icon: Users, title: 'Digital Footprint Discovery', desc: 'Identify accounts across 35+ social platforms, dev tools, gaming sites. Detect username reuse and cross-platform linkage.' },
+  { icon: KeyRound, title: 'Breach & Leak Intelligence', desc: 'Check exposure in data breaches, leaked credentials, and paste sites. Timeline of when data was compromised.' },
+  { icon: Newspaper, title: 'Public Exposure Intelligence', desc: 'Automated news monitoring across global media. Sanctions & PEP screening via 40+ watchlists. Corporate directorship tracking.' },
+  { icon: Fingerprint, title: '9-Axis Behavioral Radar', desc: 'Unique digital fingerprint across 9 dimensions: accounts, platforms, email age, breaches, username reuse, data leaked, geo spread, security posture, and public exposure.' },
+  { icon: Share2, title: 'Identity Graph & Personas', desc: 'PageRank-based confidence propagation. Automatic persona clustering. Name resolution with operator override.' },
+  { icon: ShieldCheck, title: 'Compliance Ready', desc: 'Sanctions screening (OFAC, EU, UN, Interpol). PEP detection. Corporate officer identification. Built for KYC/AML workflows.' },
 ]
 
 const AUDIENCES = [
@@ -304,11 +302,21 @@ export default function Landing() {
             </div>
 
             <h1 className="text-5xl md:text-6xl lg:text-7xl font-bold tracking-tight leading-[1.1] mb-6 font-['Instrument_Sans',sans-serif]">
-              Your name.<br />
-              Your accounts.<br />
-              Your passwords.<br />
-              <span className="text-gray-500">All of this is public.</span>
+              Identity Threat<br />
+              Intelligence<br />
+              <span className="text-gray-500">from one email.</span>
             </h1>
+
+            <p className="text-gray-400 text-lg mb-6 max-w-lg leading-relaxed">
+              From a single email address, uncover the complete digital identity: online accounts,
+              data breaches, corporate roles, media presence, sanctions exposure, and geographic footprint.
+            </p>
+
+            <div className="flex flex-wrap gap-3 text-[11px] font-mono text-gray-500 mb-8">
+              <span className="bg-[#1e1e2e] px-2.5 py-1 rounded-full">117 OSINT sources</span>
+              <span className="bg-[#1e1e2e] px-2.5 py-1 rounded-full">9-axis behavioral radar</span>
+              <span className="bg-[#1e1e2e] px-2.5 py-1 rounded-full">Two-pass intelligence pipeline</span>
+            </div>
 
             <div className="mb-8">
               <ScanForm email={email} setEmail={setEmail} loading={loading} error={error} onSubmit={handleQuickScan} />
@@ -451,7 +459,7 @@ export default function Landing() {
       <Section className="py-32">
         <div className="max-w-4xl mx-auto px-6">
           <h2 className="text-3xl md:text-4xl font-bold text-center mb-16 font-['Instrument_Sans',sans-serif]">
-            What we look for
+            What we uncover
           </h2>
 
           <div className="grid md:grid-cols-2 gap-8">
@@ -477,26 +485,36 @@ export default function Landing() {
             How it works
           </h2>
 
-          <div className="grid md:grid-cols-4 gap-8 text-center">
+          <div className="grid md:grid-cols-3 lg:grid-cols-6 gap-6 text-center">
             <div>
-              <div className="text-5xl font-mono font-bold text-[#00ff88]/20 mb-3">01</div>
-              <h3 className="text-lg font-semibold mb-1">Enter an email</h3>
-              <p className="text-sm text-gray-500">That's all we need</p>
+              <div className="text-4xl font-mono font-bold text-[#00ff88]/20 mb-3">01</div>
+              <h3 className="text-sm font-semibold mb-1">Collect</h3>
+              <p className="text-xs text-gray-500">117 scrapers gather raw data</p>
             </div>
             <div>
-              <div className="text-5xl font-mono font-bold text-[#3388ff]/20 mb-3">02</div>
-              <h3 className="text-lg font-semibold mb-1">117 sources scanned</h3>
-              <p className="text-sm text-gray-500">Breaches, social, archives, dark web</p>
+              <div className="text-4xl font-mono font-bold text-[#3388ff]/20 mb-3">02</div>
+              <h3 className="text-sm font-semibold mb-1">Verify</h3>
+              <p className="text-xs text-gray-500">Cross-reference findings</p>
             </div>
             <div>
-              <div className="text-5xl font-mono font-bold text-[#ffcc00]/20 mb-3">03</div>
-              <h3 className="text-lg font-semibold mb-1">Identity graph built</h3>
-              <p className="text-sm text-gray-500">PageRank + Markov chains</p>
+              <div className="text-4xl font-mono font-bold text-[#ffcc00]/20 mb-3">03</div>
+              <h3 className="text-sm font-semibold mb-1">Analyze</h3>
+              <p className="text-xs text-gray-500">PageRank graph, confidence propagation</p>
             </div>
             <div>
-              <div className="text-5xl font-mono font-bold text-[#ff8800]/20 mb-3">04</div>
-              <h3 className="text-lg font-semibold mb-1">Report delivered</h3>
-              <p className="text-sm text-gray-500">Personas, fingerprint, remediation</p>
+              <div className="text-4xl font-mono font-bold text-[#ff8800]/20 mb-3">04</div>
+              <h3 className="text-sm font-semibold mb-1">Profile</h3>
+              <p className="text-xs text-gray-500">Name resolution, personas, locations</p>
+            </div>
+            <div>
+              <div className="text-4xl font-mono font-bold text-[#ff2244]/20 mb-3">05</div>
+              <h3 className="text-sm font-semibold mb-1">Expose</h3>
+              <p className="text-xs text-gray-500">News, sanctions, corporate (two-pass)</p>
+            </div>
+            <div>
+              <div className="text-4xl font-mono font-bold text-[#aa55ff]/20 mb-3">06</div>
+              <h3 className="text-sm font-semibold mb-1">Measure</h3>
+              <p className="text-xs text-gray-500">9-axis radar, dual scoring</p>
             </div>
           </div>
         </div>
@@ -614,17 +632,42 @@ export default function Landing() {
 
       {/* ═══════════════════ Section 7: TRUST ═══════════════════ */}
       <Section className="py-20">
-        <div className="max-w-3xl mx-auto px-6 text-center">
-          <p className="text-sm text-gray-500 leading-relaxed">
-            Built in Luxembourg <span className="inline-block">🇱🇺</span> · GDPR compliant · Open source · On-premise ready
-          </p>
-          <p className="text-sm text-gray-600 mt-2">
-            117 intelligence sources · Personalized PageRank · Identity graph · 9-axis fingerprint · Your data stays yours.
+        <div className="max-w-4xl mx-auto px-6">
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 text-center">
+            {[
+              { value: '117', label: 'OSINT sources' },
+              { value: '9-axis', label: 'Behavioral radar' },
+              { value: '2-pass', label: 'Intelligence pipeline' },
+              { value: '40+', label: 'Sanctions lists' },
+              { value: 'GDPR', label: 'Aware architecture' },
+              { value: 'AES-256', label: 'Encrypted keys' },
+            ].map(t => (
+              <div key={t.label} className="bg-[#12121a] border border-[#1e1e2e] rounded-lg py-3 px-2">
+                <div className="text-sm font-mono font-bold text-[#00ff88]">{t.value}</div>
+                <div className="text-[10px] text-gray-500 mt-0.5">{t.label}</div>
+              </div>
+            ))}
+          </div>
+          <p className="text-sm text-gray-600 text-center mt-4">
+            Built in Luxembourg <span className="inline-block">🇱🇺</span> · Open source · On-premise ready · Your data stays yours.
           </p>
         </div>
       </Section>
 
-      {/* ═══════════════════ Section 8: FINAL CTA ═══════════════════ */}
+      {/* ═══════════════════ Section 8: TECH STACK ═══════════════════ */}
+      <Section className="py-12">
+        <div className="max-w-3xl mx-auto px-6 text-center">
+          <div className="flex flex-wrap justify-center gap-3">
+            {['FastAPI', 'Celery', 'PostgreSQL', 'Redis', 'React', 'D3.js', 'Docker'].map(t => (
+              <span key={t} className="text-[11px] font-mono text-gray-500 bg-[#12121a] border border-[#1e1e2e] rounded-full px-3 py-1">
+                {t}
+              </span>
+            ))}
+          </div>
+        </div>
+      </Section>
+
+      {/* ═══════════════════ Section 9: FINAL CTA ═══════════════════ */}
       <Section className="py-32">
         <div className="max-w-3xl mx-auto px-6 text-center">
           <h2 className="text-3xl md:text-4xl font-bold mb-6 font-['Instrument_Sans',sans-serif]">
@@ -649,10 +692,10 @@ export default function Landing() {
             <div className="flex items-center gap-2">
               <Shield className="w-5 h-5 text-[#00ff88]" />
               <span className="font-bold font-['Instrument_Sans',sans-serif]">xpose</span>
-              <span className="text-xs text-gray-600 font-mono ml-2">v0.60.0</span>
+              <span className="text-xs text-gray-600 font-mono ml-2">v0.70.0</span>
             </div>
             <p className="text-xs text-gray-600 font-mono text-center">
-              Identity Threat Intelligence · Open Source · GDPR Compliant
+              Identity Threat Intelligence · 117 Sources · Two-Pass Pipeline · Open Source
             </p>
             <div className="flex items-center gap-4 text-xs text-gray-500">
               <a href="/architecture" className="hover:text-white transition-colors">How it works</a>

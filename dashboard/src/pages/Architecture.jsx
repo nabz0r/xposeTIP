@@ -32,13 +32,14 @@ function Section({ children, className = '' }) {
 function CollectDiagram() {
   const categories = [
     { label: 'Social', angle: 0, color: '#3388ff', count: 35 },
-    { label: 'Breach', angle: 45, color: '#ff2244', count: 9 },
-    { label: 'Metadata', angle: 90, color: '#aa55ff', count: 8 },
-    { label: 'Archive', angle: 135, color: '#ffcc00', count: 10 },
-    { label: 'Gaming', angle: 180, color: '#ff8800', count: 8 },
-    { label: 'People', angle: 225, color: '#00ddcc', count: 7 },
-    { label: 'Dev', angle: 270, color: '#cc88ff', count: 12 },
-    { label: 'LinkedIn', angle: 315, color: '#0077b5', count: 6 },
+    { label: 'Breach', angle: 40, color: '#ff2244', count: 9 },
+    { label: 'Dev', angle: 80, color: '#cc88ff', count: 12 },
+    { label: 'Metadata', angle: 120, color: '#aa55ff', count: 12 },
+    { label: 'Archive', angle: 160, color: '#ffcc00', count: 10 },
+    { label: 'Gaming', angle: 200, color: '#ff8800', count: 8 },
+    { label: 'People', angle: 240, color: '#00ddcc', count: 7 },
+    { label: 'Exposure', angle: 280, color: '#ff5588', count: 7 },
+    { label: 'LinkedIn', angle: 320, color: '#0077b5', count: 6 },
   ]
   const cx = 200, cy = 160, r = 110
   return (
@@ -232,11 +233,11 @@ export default function Architecture() {
         <Section className="py-20">
           <div className="max-w-3xl mx-auto px-6 text-center">
             <h1 className="text-4xl md:text-5xl font-bold mb-4 font-['Instrument_Sans',sans-serif]">
-              How <span className="text-[#00ff88]">xpose</span> works
+              Architecture — How <span className="text-[#00ff88]">xpose</span> Works
             </h1>
             <p className="text-lg text-gray-400 max-w-xl mx-auto">
-              From a single email address to a complete identity intelligence report.
-              Six stages, 117 sources, one graph.
+              A deep dive into the two-pass intelligence pipeline.
+              117 sources, 9-axis radar, one identity graph.
             </p>
           </div>
         </Section>
@@ -246,10 +247,11 @@ export default function Architecture() {
           <div className="max-w-4xl mx-auto px-6">
             <div className="grid md:grid-cols-2 gap-12 items-center">
               <div>
+                <div className="inline-block text-[10px] font-mono text-[#00ff88] bg-[#00ff88]/10 px-2 py-0.5 rounded-full mb-2">PASS 1 — EMAIL-BASED</div>
                 <div className="text-6xl font-mono font-bold text-[#00ff88]/15 mb-2">01</div>
                 <h2 className="text-2xl font-bold mb-3 font-['Instrument_Sans',sans-serif]">Collect</h2>
                 <p className="text-gray-400 mb-4">
-                  Your email is scanned across <span className="text-white font-semibold">117 sources</span> in parallel.
+                  Your email is scanned across <span className="text-white font-semibold">110 sources</span> in parallel.
                   Social networks, breach databases, archives, gaming platforms, developer registries, LinkedIn intelligence.
                 </p>
                 <p className="text-sm text-gray-500">
@@ -389,13 +391,163 @@ export default function Architecture() {
           </div>
         </Section>
 
-        {/* Stage 6: Locate */}
+        {/* Stage 6: Expose (Pass 2) */}
+        <Section className="py-20 bg-[#12121a]/50">
+          <div className="max-w-4xl mx-auto px-6">
+            <div className="grid md:grid-cols-2 gap-12 items-center">
+              <div>
+                <div className="inline-block text-[10px] font-mono text-[#ff2244] bg-[#ff2244]/10 px-2 py-0.5 rounded-full mb-2">PASS 2 — NAME-BASED</div>
+                <div className="text-6xl font-mono font-bold text-[#ff2244]/15 mb-2">06</div>
+                <h2 className="text-2xl font-bold mb-3 font-['Instrument_Sans',sans-serif]">Expose</h2>
+                <p className="text-gray-400 mb-4">
+                  Once Pass 1 resolves a name, Pass 2 runs <span className="text-white font-semibold">name-based intelligence</span>.
+                  This separation ensures name-based searches only run with high-confidence names.
+                </p>
+                <p className="text-sm text-gray-500 mb-3">
+                  Three independent layers — errors don't cascade. Max 15 media + 8 corporate findings.
+                  All matches are <span className="text-[#ffcc00]">potential</span> — never auto-confirmed.
+                </p>
+              </div>
+              <div className="space-y-3">
+                {[
+                  { layer: 'MEDIA', color: '#3388ff', items: ['GDELT (deep archive)', 'GNews (curated)', 'Google News RSS (free fallback)'], desc: 'Global news monitoring' },
+                  { layer: 'COMPLIANCE', color: '#ff8800', items: ['OpenSanctions (40+ lists)', 'Interpol Red Notices'], desc: 'Sanctions & PEP screening' },
+                  { layer: 'CORPORATE', color: '#aa55ff', items: ['OpenCorporates', 'LBR Luxembourg'], desc: 'Directorship tracking' },
+                ].map(l => (
+                  <div key={l.layer} className="bg-[#0a0a0f] border border-[#1e1e2e] rounded-lg p-4">
+                    <div className="flex items-center gap-2 mb-2">
+                      <span className="text-xs font-mono font-bold" style={{ color: l.color }}>{l.layer}</span>
+                      <span className="text-[10px] text-gray-600">{l.desc}</span>
+                    </div>
+                    <div className="flex flex-wrap gap-1.5">
+                      {l.items.map(i => (
+                        <span key={i} className="text-[10px] font-mono text-gray-400 bg-[#1e1e2e] px-2 py-0.5 rounded">{i}</span>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+                <p className="text-[10px] text-gray-600 font-mono mt-2">
+                  Confidence threshold: &ge; 0.60 &middot; match_type = "potential"
+                </p>
+              </div>
+            </div>
+          </div>
+        </Section>
+
+        {/* Stage 7: Measure (Radar) */}
+        <Section className="py-20">
+          <div className="max-w-4xl mx-auto px-6">
+            <div className="text-6xl font-mono font-bold text-[#aa55ff]/15 mb-2 text-center">07</div>
+            <h2 className="text-2xl font-bold mb-8 text-center font-['Instrument_Sans',sans-serif]">Measure</h2>
+            <p className="text-gray-400 text-center mb-8 max-w-xl mx-auto">
+              The 9-axis behavioral radar computes a unique digital fingerprint. Each axis independently measures
+              a dimension of the target's online presence.
+            </p>
+            <div className="grid md:grid-cols-3 gap-3">
+              {[
+                { axis: 'accounts', color: '#00ff88', desc: 'Number of online accounts', sources: 'Holehe, scraper engine, social enricher' },
+                { axis: 'platforms', color: '#3388ff', desc: 'Diversity of platform types', sources: 'Social, dev, gaming, professional' },
+                { axis: 'email_age', color: '#ffcc00', desc: 'How long the email has existed', sources: 'Breach dates, archive snapshots' },
+                { axis: 'breaches', color: '#ff2244', desc: 'Breach exposure count', sources: 'HIBP, LeakCheck, IntelX' },
+                { axis: 'username_reuse', color: '#ff8800', desc: 'Same username across sites', sources: 'Cross-platform matching' },
+                { axis: 'data_leaked', color: '#cc88ff', desc: 'Volume of exposed data', sources: 'Breach content analysis' },
+                { axis: 'geo_spread', color: '#00ddcc', desc: 'Geographic distribution', sources: 'GeoIP, user-reported locations' },
+                { axis: 'security', color: '#888888', desc: 'Security posture', sources: 'SPF, DKIM, DMARC, security headers' },
+                { axis: 'public_exposure', color: '#ff5588', desc: 'Media + sanctions + corporate visibility', sources: 'GDELT, GNews, OpenSanctions, Interpol' },
+              ].map(a => (
+                <div key={a.axis} className="bg-[#0a0a0f] border border-[#1e1e2e] rounded-lg p-3">
+                  <div className="flex items-center gap-2 mb-1">
+                    <span className="w-2 h-2 rounded-full" style={{ backgroundColor: a.color }} />
+                    <span className="text-xs font-mono font-semibold" style={{ color: a.color }}>{a.axis}</span>
+                  </div>
+                  <p className="text-xs text-gray-400 mb-1">{a.desc}</p>
+                  <p className="text-[10px] text-gray-600">{a.sources}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </Section>
+
+        {/* Scraper Categories Breakdown */}
+        <Section className="py-20 bg-[#12121a]/50">
+          <div className="max-w-3xl mx-auto px-6">
+            <h2 className="text-2xl font-bold mb-8 text-center font-['Instrument_Sans',sans-serif]">117 Intelligence Sources</h2>
+            <div className="bg-[#0a0a0f] border border-[#1e1e2e] rounded-xl overflow-hidden">
+              {[
+                { cat: 'Social', count: 35, color: '#3388ff', examples: 'Twitter, Instagram, Reddit, TikTok, Bluesky, Mastodon...' },
+                { cat: 'Dev', count: 12, color: '#cc88ff', examples: 'GitHub, GitLab, npm, PyPI, Keybase, Codeberg...' },
+                { cat: 'Breach', count: 9, color: '#ff2244', examples: 'HIBP, LeakCheck, IntelX, DeHashed, Pastebin...' },
+                { cat: 'Metadata', count: 12, color: '#aa55ff', examples: 'DNS, WHOIS, email validation, Gravatar...' },
+                { cat: 'Gaming', count: 8, color: '#ff8800', examples: 'Steam, Chess.com, Roblox, RuneScape...' },
+                { cat: 'People Search', count: 7, color: '#00ddcc', examples: 'WebMii, Google Scholar, NPM, PyPI...' },
+                { cat: 'Archive', count: 10, color: '#ffcc00', examples: 'Wayback Machine, cached profiles...' },
+                { cat: 'Public Exposure', count: 7, color: '#ff5588', examples: 'GDELT, GNews, RSS, OpenSanctions, Interpol, OpenCorporates, LBR' },
+                { cat: 'LinkedIn', count: 6, color: '#0077b5', examples: 'Profile discovery, employment history...' },
+                { cat: 'Other', count: 11, color: '#666688', examples: 'Misc scrapers, enrichers...' },
+              ].map(c => (
+                <div key={c.cat} className="flex items-center gap-4 px-5 py-3 border-b border-[#1e1e2e] last:border-0">
+                  <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: c.color }} />
+                  <span className="text-sm font-semibold w-28 shrink-0" style={{ color: c.color }}>{c.cat}</span>
+                  <span className="text-sm font-mono font-bold w-8 text-center">{c.count}</span>
+                  <span className="text-xs text-gray-500 truncate">{c.examples}</span>
+                </div>
+              ))}
+              <div className="flex items-center gap-4 px-5 py-3 bg-[#1e1e2e]/30">
+                <span className="w-2 h-2 rounded-full shrink-0 bg-white" />
+                <span className="text-sm font-bold w-28 shrink-0">Total</span>
+                <span className="text-sm font-mono font-bold w-8 text-center text-[#00ff88]">117</span>
+                <span className="text-xs text-gray-400">Across 10 categories</span>
+              </div>
+            </div>
+          </div>
+        </Section>
+
+        {/* Design Principles */}
+        <Section className="py-20">
+          <div className="max-w-3xl mx-auto px-6">
+            <h2 className="text-2xl font-bold mb-8 text-center font-['Instrument_Sans',sans-serif]">Design Principles</h2>
+            <div className="space-y-6">
+              {[
+                {
+                  num: '01', title: 'Two-Pass Intelligence', color: '#00ff88',
+                  desc: 'Pass 1 gathers data by email/username. Pass 2 enriches by resolved name. This separation ensures name-based searches only run with high-confidence names.',
+                },
+                {
+                  num: '02', title: 'Operator Ground Truth', color: '#3388ff',
+                  desc: 'Operators can assert country and name — overriding automated resolution. Assertions have confidence=1.0 and survive re-scans.',
+                },
+                {
+                  num: '03', title: 'Layer Isolation', color: '#ffcc00',
+                  desc: 'Each scraper runs independently. API failures don\'t cascade. Partial results are always stored and displayed.',
+                },
+                {
+                  num: '04', title: 'Confidence-First', color: '#ff8800',
+                  desc: 'Every data point carries a confidence score. Name-based matches are always "potential" — never auto-confirmed. Users see confidence badges and mandatory disclaimers.',
+                },
+                {
+                  num: '05', title: 'Privacy by Design', color: '#ff2244',
+                  desc: 'All API keys AES-256 encrypted at rest. Every DB query scoped to workspace. No data shared between workspaces.',
+                },
+              ].map(p => (
+                <div key={p.num} className="flex gap-4">
+                  <span className="text-2xl font-mono font-bold shrink-0" style={{ color: p.color + '33' }}>{p.num}</span>
+                  <div>
+                    <h3 className="text-sm font-semibold mb-1" style={{ color: p.color }}>{p.title}</h3>
+                    <p className="text-sm text-gray-500 leading-relaxed">{p.desc}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </Section>
+
+        {/* Stage 8: Locate */}
         <Section className="py-20 bg-[#12121a]/50">
           <div className="max-w-4xl mx-auto px-6">
             <div className="grid md:grid-cols-2 gap-12 items-center">
               <GeoMapDiagram />
               <div>
-                <div className="text-6xl font-mono font-bold text-[#00ddcc]/15 mb-2">06</div>
+                <div className="text-6xl font-mono font-bold text-[#00ddcc]/15 mb-2">08</div>
                 <h2 className="text-2xl font-bold mb-3 font-['Instrument_Sans',sans-serif]">Locate</h2>
                 <p className="text-gray-400 mb-4">
                   Self-reported locations from profiles are <span className="text-white font-semibold">geocoded</span> and
@@ -436,6 +588,10 @@ export default function Architecture() {
                     { done: true, text: 'Plans (Free/Consultant \u20ac49/Enterprise \u20ac199)' },
                     { done: true, text: 'Two-pass scan: name-based enrichment after identity resolution' },
                     { done: true, text: 'Public exposure intelligence: news, sanctions, corporate roles' },
+                    { done: true, text: 'Operator identity assertions (name + country ground truth)' },
+                    { done: true, text: 'Scraper health monitoring dashboard' },
+                    { done: true, text: 'Language-aware multi-lang news search' },
+                    { done: true, text: 'Corporate email pattern detection' },
                     { done: false, text: 'PDF report export' },
                     { done: false, text: 'Admin scoring tuning sliders' },
                   ],
@@ -444,10 +600,11 @@ export default function Architecture() {
                   version: 'v1.1', date: 'Post-Nexus (Jul-Aug)', color: '#3388ff',
                   items: [
                     { done: false, text: 'Corporate scrapers (O365, Azure AD, GitHub org)' },
-                    { done: false, text: 'Domain-wide scan' },
-                    { done: false, text: 'Timezone inference from GitHub commit patterns' },
-                    { done: false, text: 'EXIF metadata extraction from profile photos' },
-                    { done: false, text: 'Public API + webhook notifications' },
+                    { done: false, text: 'Domain-wide scan (all employees of company)' },
+                    { done: false, text: 'Batch scan scheduling' },
+                    { done: false, text: 'Public API for integrations + webhook notifications' },
+                    { done: false, text: 'Custom scraper plugins' },
+                    { done: false, text: 'Multi-language UI (FR, DE, LU)' },
                   ],
                 },
                 {
@@ -515,7 +672,7 @@ export default function Architecture() {
           <div className="flex items-center gap-2">
             <Shield className="w-4 h-4 text-[#00ff88]" />
             <span className="font-bold text-sm font-['Instrument_Sans',sans-serif]">xpose</span>
-            <span className="text-xs text-gray-600 font-mono ml-2">v0.60.0</span>
+            <span className="text-xs text-gray-600 font-mono ml-2">v0.70.0</span>
           </div>
           <div className="flex items-center gap-4 text-xs text-gray-500">
             <Link to="/welcome" className="hover:text-white transition-colors">Home</Link>
