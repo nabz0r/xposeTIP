@@ -81,6 +81,8 @@ SCRAPER_RELIABILITY_OVERRIDES = {
     "gdelt_news": 0.65,           # GDELT news search — free API, variable relevance
     "gnews_news": 0.75,            # GNews.io — curated sources, structured JSON
     "google_news_rss": 0.60,       # Google News RSS — free fallback, less metadata
+    "opensanctions_search": 0.90,  # OpenSanctions — official government sources
+    "interpol_red_notices": 0.95,  # Interpol — official law enforcement source
 }
 
 

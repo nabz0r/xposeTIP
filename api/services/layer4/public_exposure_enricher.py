@@ -489,28 +489,92 @@ def enrich_public_exposure(target_id, session: Session) -> dict:
     except Exception:
         logger.exception("PASS2: Google News RSS scraper failed")
 
-    # --- 4. Apply global cap ---
+    # --- 4. Apply global cap on media findings ---
     all_findings = select_top_findings(all_findings, MAX_FINDINGS_PER_TARGET)
 
-    # --- 5. Store findings ---
-    if all_findings:
+    # === COMPLIANCE LAYER (Sprint 63) ===
+    sanctions_findings = []
+
+    # --- 5. OpenSanctions (sanctions + PEP + wanted) ---
+    try:
+        from api.scrapers.opensanctions_search import search_opensanctions
+
+        # Extract target context for better matching
+        nationality = _get_target_nationality(profile)
+        target_country = _get_target_country(target, profile)
+        birth_year = _get_estimated_birth_year(profile)
+
+        os_results = search_opensanctions(
+            primary_name,
+            nationality=nationality,
+            country=target_country,
+            birth_year=birth_year,
+            name_match_fn=compute_name_match_confidence,
+        )
+        if os_results:
+            sanctions_findings.extend(os_results)
+            logger.info("PASS2: OpenSanctions found %d matches", len(os_results))
+
+        result["scrapers_run"] += 1
+        time.sleep(1.5)
+    except Exception:
+        logger.exception("PASS2: OpenSanctions scraper failed")
+
+    # --- 6. Interpol direct (only if OpenSanctions didn't already find Interpol) ---
+    has_interpol_from_os = any(
+        "interpol" in str(f.get("data", {}).get("datasets", [])).lower()
+        for f in sanctions_findings
+    )
+    if not has_interpol_from_os:
+        try:
+            from api.scrapers.interpol_red_notices import search_interpol_red_notices
+
+            target_country = _get_target_country(target, profile)
+            birth_year = _get_estimated_birth_year(profile)
+
+            interpol_results = search_interpol_red_notices(
+                primary_name,
+                target_country=target_country,
+                target_birth_year=birth_year,
+            )
+            if interpol_results:
+                sanctions_findings.extend(interpol_results)
+                logger.info("PASS2: Interpol found %d red notices", len(interpol_results))
+
+            result["scrapers_run"] += 1
+            time.sleep(2.0)
+        except Exception:
+            logger.exception("PASS2: Interpol scraper failed")
+    else:
+        logger.debug("PASS2: Interpol skipped — already found via OpenSanctions")
+
+    # === STORE ALL FINDINGS ===
+    all_to_store = all_findings + sanctions_findings
+
+    if all_to_store:
         created = 0
-        for fd in all_findings:
+        for fd in all_to_store:
             try:
+                # Determine indicator_type: sanctions findings have their own, media uses default
+                ind_type = fd.get("indicator_type", "media_mention")
+                category = "public_exposure"
+                if ind_type in ("sanctions_match", "pep_match"):
+                    category = "compliance"
+
                 finding = Finding(
                     workspace_id=target.workspace_id,
                     scan_id=None,
                     target_id=target_id,
                     module="scraper_engine",
                     layer=4,
-                    category="public_exposure",
+                    category=category,
                     severity=fd.get("severity", "info"),
                     title=fd.get("title", f"Media mention: {primary_name}")[:255],
                     description=fd.get("description"),
                     data=fd.get("data", {}),
                     url=fd.get("url"),
-                    indicator_value=(fd.get("url") or fd.get("title", ""))[:500],
-                    indicator_type="media_mention",
+                    indicator_value=(fd.get("indicator_value") or fd.get("url") or fd.get("title", ""))[:500],
+                    indicator_type=ind_type,
                     verified=False,
                     confidence=round(fd.get("confidence", 0.60), 3),
                 )
@@ -524,7 +588,55 @@ def enrich_public_exposure(target_id, session: Session) -> dict:
             result["findings_created"] = created
 
     logger.info(
-        "PASS2: Completed for target %s — %d scrapers, %d findings stored (from %d total)",
-        target_id, result["scrapers_run"], result["findings_created"], len(all_findings),
+        "PASS2: Completed for target %s — %d scrapers, %d findings stored (%d media + %d sanctions)",
+        target_id, result["scrapers_run"], result["findings_created"],
+        len(all_findings), len(sanctions_findings),
     )
     return result
+
+
+# ---------------------------------------------------------------------------
+# Target Context Helpers (for sanctions matching)
+# ---------------------------------------------------------------------------
+
+def _get_target_nationality(profile: dict) -> str | None:
+    """Extract nationality from profile identity_estimation."""
+    est = profile.get("identity_estimation", {})
+    nats = est.get("nationalities", [])
+    if nats and isinstance(nats, list):
+        for n in nats:
+            if isinstance(n, dict) and n.get("probability", 0) >= 0.20:
+                return n.get("country_id", "")
+    return None
+
+
+def _get_target_country(target, profile: dict) -> str | None:
+    """Extract country from target locations or email TLD."""
+    locations = profile.get("user_locations", []) or profile.get("geo_locations", [])
+    if locations and isinstance(locations, list):
+        for loc in locations:
+            if isinstance(loc, dict):
+                country = loc.get("country_code", "") or loc.get("country", "")
+                if country:
+                    return country.upper()
+
+    # Fallback: email TLD
+    email = getattr(target, "value", "") or ""
+    if "@" in email:
+        domain = email.split("@")[1].lower()
+        tld_map = {".lu": "LU", ".fr": "FR", ".de": "DE", ".be": "BE", ".ch": "CH",
+                   ".it": "IT", ".es": "ES", ".nl": "NL", ".at": "AT", ".pt": "PT"}
+        for tld, code in tld_map.items():
+            if domain.endswith(tld):
+                return code
+    return None
+
+
+def _get_estimated_birth_year(profile: dict) -> int | None:
+    """Extract estimated birth year from Agify result."""
+    est = profile.get("identity_estimation", {})
+    age = est.get("age")
+    if age and isinstance(age, (int, float)) and 10 < age < 120:
+        from datetime import date as date_cls
+        return date_cls.today().year - int(age)
+    return None

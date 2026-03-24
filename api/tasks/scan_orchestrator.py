@@ -86,7 +86,7 @@ def _build_graph_context(target_id, workspace_id, session):
     # Only use STRONG edges for clustering (not associated_with/located_in)
     # associated_with = catch-all links that connect everything to email anchor
     # Good for PageRank propagation, toxic for persona clustering
-    WEAK_EDGE_TYPES = {"associated_with", "located_in", "mentioned_in"}
+    WEAK_EDGE_TYPES = {"associated_with", "located_in", "mentioned_in", "listed_on"}
 
     adj = defaultdict(set)
     for l in relevant_links:

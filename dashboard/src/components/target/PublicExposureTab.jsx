@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import { Newspaper, ExternalLink, Globe, Calendar, Search, Filter, Languages } from 'lucide-react'
+import { Newspaper, ExternalLink, Globe, Calendar, Search, Filter, Languages, Shield, Skull, AlertTriangle, Ban } from 'lucide-react'
 
 const SCRAPER_BADGES = {
   gdelt_news: { label: 'GDELT', color: '#3b82f6', bg: '#3b82f610', border: '#3b82f630' },
@@ -45,6 +45,13 @@ export default function PublicExposureTab({ findings = [], profile }) {
   const exposureFindings = useMemo(() => {
     return findings.filter(f =>
       f.category === 'public_exposure' || f.indicator_type === 'media_mention'
+    )
+  }, [findings])
+
+  // Sanctions & PEP findings
+  const sanctionsFindings = useMemo(() => {
+    return findings.filter(f =>
+      f.indicator_type === 'sanctions_match' || f.indicator_type === 'pep_match' || f.category === 'compliance'
     )
   }, [findings])
 
@@ -113,8 +120,8 @@ export default function PublicExposureTab({ findings = [], profile }) {
     return { total: exposureFindings.length, highConf, countries: countries.size, languages: uniqueLangs.size, sources: sources.length }
   }, [exposureFindings, sources])
 
-  // Empty states
-  if (!exposureFindings.length) {
+  // Empty states (only show if BOTH media and sanctions are empty)
+  if (!exposureFindings.length && !sanctionsFindings.length) {
     const hasName = profile?.primary_name
     const nameIsUsername = hasName && (!hasName.includes(' ') || hasName.includes('_'))
 
@@ -291,6 +298,92 @@ export default function PublicExposureTab({ findings = [], profile }) {
                 </span>
               )
             })}
+          </div>
+        </div>
+      )}
+
+      {/* Sanctions & Watchlists section */}
+      {sanctionsFindings.length > 0 && (
+        <div className="space-y-3">
+          <div className="flex items-center gap-2 mt-2">
+            <Ban className="w-4 h-4 text-[#EF4444]" />
+            <h2 className="text-sm font-bold text-white">Sanctions & Watchlists</h2>
+            <span className="text-xs text-gray-500">({sanctionsFindings.length})</span>
+          </div>
+
+          {sanctionsFindings.map((f, i) => {
+            const isSanctions = f.indicator_type === 'sanctions_match'
+            const borderColor = isSanctions ? '#EF444430' : '#F59E0B30'
+            const iconColor = isSanctions ? '#EF4444' : '#F59E0B'
+            const SevIcon = isSanctions ? Skull : Shield
+
+            return (
+              <div key={f.id || i} className="bg-[#0a0a12] rounded-lg p-4" style={{ border: `1px solid ${borderColor}` }}>
+                <div className="flex items-start justify-between gap-3">
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 flex-wrap mb-1">
+                      <SevIcon className="w-3.5 h-3.5 shrink-0" style={{ color: iconColor }} />
+                      <span className="text-sm font-medium text-white">{f.data?.caption || f.title}</span>
+                      {(f.data?.topics || []).map(t => (
+                        <span key={t} className="text-[10px] font-mono px-1.5 py-0.5 rounded uppercase"
+                          style={{ color: iconColor, background: `${iconColor}10`, border: `1px solid ${iconColor}30` }}>
+                          {t.replace('role.', '')}
+                        </span>
+                      ))}
+                    </div>
+
+                    {f.data?.dataset_labels?.length > 0 && (
+                      <p className="text-xs text-gray-400 mt-1">
+                        {isSanctions ? 'Listed on' : 'Source'}: {f.data.dataset_labels.join(', ')}
+                      </p>
+                    )}
+
+                    {f.data?.listed_reason && (
+                      <p className="text-xs text-gray-500 mt-1 line-clamp-2">{f.data.listed_reason}</p>
+                    )}
+                    {f.data?.charge && (
+                      <p className="text-xs text-gray-500 mt-1 line-clamp-2">Charge: {f.data.charge}</p>
+                    )}
+
+                    <div className="flex items-center gap-3 mt-2 text-[10px] text-gray-600">
+                      {f.data?.birth_date && <span>DOB: {f.data.birth_date}</span>}
+                      {f.data?.nationality?.length > 0 && <span>Nationality: {f.data.nationality.join(', ').toUpperCase()}</span>}
+                      {f.data?.aliases?.length > 1 && <span>Aliases: {f.data.aliases.slice(1, 4).join(', ')}</span>}
+                      {(f.data?.source_urls || []).length > 0 && (
+                        <a href={f.data.source_urls[0]} target="_blank" rel="noopener noreferrer"
+                          className="text-gray-500 hover:text-white flex items-center gap-0.5">
+                          <ExternalLink className="w-2.5 h-2.5" /> Source
+                        </a>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-2 shrink-0">
+                    <span className="text-xs font-mono px-1.5 py-0.5 rounded"
+                      style={{ color: iconColor, background: `${iconColor}15`, border: `1px solid ${iconColor}30` }}>
+                      {Math.round((f.confidence || 0) * 100)}%
+                    </span>
+                    {f.url && (
+                      <a href={f.url} target="_blank" rel="noopener noreferrer"
+                        className="text-gray-500 hover:text-white transition-colors">
+                        <ExternalLink className="w-4 h-4" />
+                      </a>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )
+          })}
+
+          {/* MANDATORY confidence disclaimer */}
+          <div className="bg-[#1e1e2e]/50 rounded-lg p-3 border border-[#2a2a3e]">
+            <div className="flex items-start gap-2">
+              <AlertTriangle className="w-3.5 h-3.5 text-gray-500 shrink-0 mt-0.5" />
+              <p className="text-[10px] text-gray-500 leading-relaxed">
+                These results are potential matches based on name similarity. A match does NOT confirm
+                the target is the listed person. Always verify through official channels before taking action.
+              </p>
+            </div>
           </div>
         </div>
       )}

@@ -415,6 +415,27 @@ def build_graph(target_id, workspace_id, session: Session):
                     evidence={"finding_id": str(f.id)},
                 )
 
+            # Compliance / sanctions+PEP → create listed_on link
+            elif f.category == "compliance" and email_value:
+                entity_label = fdata.get("caption", f.title) if fdata else f.title
+                datasets = fdata.get("datasets", []) if fdata else []
+                list_name = ", ".join(datasets[:2]) if datasets else "sanctions_list"
+                sanctions_node = get_or_create_identity(
+                    "sanctions_entity", entity_label,
+                    platform=list_name,
+                    source_module=f.module,
+                    source_finding_id=f.id,
+                )
+                email_node = get_or_create_identity(
+                    "email", email_value, source_module=f.module,
+                )
+                get_or_create_link(
+                    email_node.id, sanctions_node.id,
+                    "listed_on",
+                    source_module=f.module,
+                    evidence={"finding_id": str(f.id), "datasets": datasets},
+                )
+
             # Public exposure / media mention → create mentioned_in link
             elif f.category == "public_exposure" and email_value:
                 source_domain = fdata.get("source_domain", f.title) if fdata else f.title

@@ -13,6 +13,7 @@ import AccountsTab from './tabs/AccountsTab'
 import PhotosTab from './tabs/PhotosTab'
 import ScansTab from './tabs/ScansTab'
 import PublicExposureTab from '../components/target/PublicExposureTab'
+import SanctionsAlert from '../components/target/SanctionsAlert'
 
 export default function TargetDetail() {
   const { id } = useParams()
@@ -305,12 +306,15 @@ export default function TargetDetail() {
         )
       })()}
 
+      {/* Sanctions/PEP Alert Banner */}
+      <SanctionsAlert findings={findings} />
+
       {/* Tabs */}
       <div className="flex gap-1 border-b border-[#1e1e2e]">
         {['overview', 'findings', 'graph', 'timeline', 'photos', 'exposure', 'locations', 'accounts', 'scans'].map(tab => (
           <button key={tab} onClick={() => setActiveTab(tab)}
             className={`px-4 py-2 text-sm capitalize transition-colors ${activeTab === tab ? 'text-[#00ff88] border-b-2 border-[#00ff88]' : 'text-gray-400 hover:text-white'}`}>
-            {tab} {tab === 'findings' ? `(${findings.length})` : tab === 'scans' ? `(${scans.length})` : tab === 'accounts' ? `(${socialFindings.length + accounts.length})` : tab === 'photos' ? `(${(profile?.avatars || []).length})` : tab === 'exposure' ? `(${findings.filter(f => f.category === 'public_exposure' || f.indicator_type === 'media_mention').length})` : ''}
+            {tab} {tab === 'findings' ? `(${findings.length})` : tab === 'scans' ? `(${scans.length})` : tab === 'accounts' ? `(${socialFindings.length + accounts.length})` : tab === 'photos' ? `(${(profile?.avatars || []).length})` : tab === 'exposure' ? `(${findings.filter(f => f.category === 'public_exposure' || f.category === 'compliance' || f.indicator_type === 'media_mention' || f.indicator_type === 'sanctions_match' || f.indicator_type === 'pep_match').length})` : ''}
           </button>
         ))}
       </div>
