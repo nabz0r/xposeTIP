@@ -51,7 +51,7 @@ export default function TargetDetail() {
     try {
       const [t, f, s] = await Promise.all([
         getTarget(id),
-        getFindings(`target_id=${id}`),
+        getFindings(`target_id=${id}&per_page=200`),
         getScans(`target_id=${id}`),
       ])
       setTarget(t)
@@ -100,13 +100,15 @@ export default function TargetDetail() {
 
         if (done) {
           clearInterval(pollRef.current)
-          const [t, f] = await Promise.all([getTarget(id), getFindings(`target_id=${id}`)])
+          const [t, f] = await Promise.all([getTarget(id), getFindings(`target_id=${id}&per_page=200`)])
           setTarget(t)
           const newFindings = f.items || []
           const newCount = newFindings.length - findings.length
           setFindings(newFindings)
           getFingerprint(id).then(setFingerprint).catch(() => {})
           getFingerprintHistory(id).then(d => setFpHistory(d.snapshots || [])).catch(() => {})
+          getTargetProfile(id).then(setProfile).catch(() => {})
+          getGraph(id).then(setGraphData).catch(() => {})
           const failed = updated.filter(s => s.status === 'failed')
           if (failed.length > 0) {
             setToast({ type: 'error', message: `Scan failed: ${failed[0].error_log || 'Unknown error'}` })

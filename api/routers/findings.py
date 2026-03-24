@@ -40,7 +40,7 @@ async def list_findings(
     finding_status: str | None = Query(None, alias="status"),
     deduplicate: bool = Query(True),
     page: int = Query(1, ge=1),
-    per_page: int = Query(50, ge=1, le=200),
+    per_page: int = Query(50, ge=1, le=500),
     workspace_id: uuid.UUID = Depends(get_current_workspace),
     user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),

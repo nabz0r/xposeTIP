@@ -1113,7 +1113,9 @@ def aggregate_profile(target_id, workspace_id, session: Session, graph_context=N
             )
         elif profile.get("primary_name_source") == "operator":
             target.display_name = profile["primary_name"]
-        elif profile["primary_name"] and not target.display_name:
+        elif profile["primary_name"]:
+            # Always update display_name from auto-resolved name on rescan
+            # (previous value may be stale from an earlier, less accurate scan)
             target.display_name = profile["primary_name"]
         if profile["primary_avatar"] and not target.avatar_url:
             target.avatar_url = profile["primary_avatar"]

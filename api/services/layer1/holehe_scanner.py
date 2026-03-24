@@ -1,5 +1,6 @@
 import asyncio
 import logging
+import time
 
 import httpx
 
@@ -14,6 +15,9 @@ HOLEHE_SKIP_MODULES = {
     "soundcloud", "rocketreach", "evernote", "samsung",
     "github", "deliveroo", "crevado", "pinterest", "snapchat",
 }
+
+# Safety timeout: abort holehe if taking too long (seconds)
+HOLEHE_GLOBAL_TIMEOUT = 120
 
 
 class HoleheScanner(BaseScanner):
@@ -43,18 +47,28 @@ class HoleheScanner(BaseScanner):
 
         out = []
         skipped = 0
+        checked = 0
+        t0 = time.time()
         async with httpx.AsyncClient(timeout=15) as client:
             for func in funcs:
                 if func.__name__ in HOLEHE_SKIP_MODULES:
                     skipped += 1
                     continue
+                # Global timeout safety net
+                if time.time() - t0 > HOLEHE_GLOBAL_TIMEOUT:
+                    logger.warning("holehe: global timeout (%ds) after %d/%d modules",
+                                   HOLEHE_GLOBAL_TIMEOUT, checked, len(funcs) - skipped)
+                    break
                 try:
                     await func(email, client, out)
+                    checked += 1
                     await asyncio.sleep(1)  # Rate limit: 1 req/sec
                 except Exception:
                     logger.warning("holehe module %s failed", func.__name__)
-        if skipped:
-            logger.debug("holehe: skipped %d broken modules", skipped)
+                    checked += 1
+        elapsed = time.time() - t0
+        logger.info("holehe: checked %d modules, skipped %d blacklisted in %.1fs",
+                     checked, skipped, elapsed)
 
         for entry in out:
             if entry.get("exists") is True:

@@ -13,6 +13,32 @@ import requests
 
 logger = logging.getLogger(__name__)
 
+REDIS_DISABLE_KEY = "interpol:disabled"
+REDIS_DISABLE_TTL = 3600  # 1 hour
+
+
+def _is_disabled() -> bool:
+    """Check Redis flag — skip API calls after 403."""
+    try:
+        from api.config import settings
+        import redis
+        r = redis.from_url(settings.REDIS_URL)
+        return r.exists(REDIS_DISABLE_KEY) > 0
+    except Exception:
+        return False
+
+
+def _set_disabled():
+    """Set Redis disable flag for 1 hour after 403."""
+    try:
+        from api.config import settings
+        import redis
+        r = redis.from_url(settings.REDIS_URL)
+        r.setex(REDIS_DISABLE_KEY, REDIS_DISABLE_TTL, "403")
+        logger.warning("Interpol disabled for %ds after 403", REDIS_DISABLE_TTL)
+    except Exception:
+        pass
+
 INTERPOL_API_URL = "https://ws-public.interpol.int/notices/v1/red"
 REQUEST_TIMEOUT = 12
 
@@ -74,6 +100,11 @@ def search_interpol_red_notices(primary_name: str,
     if not primary_name or len(primary_name.strip()) < 4:
         return []
 
+    # Skip if disabled after a recent 403
+    if _is_disabled():
+        logger.debug("Interpol: Skipping — disabled after 403 (Redis flag)")
+        return []
+
     first_name, last_name = _split_name(primary_name)
     if not last_name:
         return []
@@ -97,6 +128,7 @@ def search_interpol_red_notices(primary_name: str,
 
         if resp.status_code == 403:
             logger.warning("Interpol: 403 Forbidden — may be geo-restricted. Skipping.")
+            _set_disabled()
             return []
         if resp.status_code == 429:
             logger.warning("Interpol: Rate limited (429)")

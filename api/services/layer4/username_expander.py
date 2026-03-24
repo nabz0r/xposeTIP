@@ -25,6 +25,13 @@ from api.models.scraper import Scraper
 
 logger = logging.getLogger(__name__)
 
+
+class _SafeFormatDict(dict):
+    """Dict that returns '{key}' for missing keys, avoiding KeyError in .format_map()."""
+    def __missing__(self, key):
+        return f"{{{key}}}"
+
+
 # Config
 MAX_USERNAMES = 3
 MIN_PLATFORMS = 2         # Username must appear on 2+ platforms
@@ -86,41 +93,46 @@ def expand_usernames(target_id, workspace_id, session: Session,
         health = _get_health()
 
         try:
-            for uinfo in usernames:
-                username = uinfo["value"]
-                for scraper in scrapers[:MAX_SCRAPERS]:
-                    # Budget check
-                    if time.time() - t0 > TOTAL_TIMEOUT:
-                        logger.warning("Pass 1.5: Timeout reached after %ds", TOTAL_TIMEOUT)
-                        result["errors"].append("timeout")
-                        return result
+            with session.no_autoflush:
+                for uinfo in usernames:
+                    username = uinfo["value"]
+                    for scraper in scrapers[:MAX_SCRAPERS]:
+                        # Budget check
+                        if time.time() - t0 > TOTAL_TIMEOUT:
+                            logger.warning("Pass 1.5: Timeout reached after %ds", TOTAL_TIMEOUT)
+                            result["errors"].append("timeout")
+                            return result
 
-                    # Skip if we already have a finding for this scraper+username
-                    dedup_key = f"{scraper['name']}:{username}"
-                    if dedup_key in existing:
-                        continue
+                        # Skip if we already have a finding for this scraper+username
+                        dedup_key = f"{scraper['name']}:{username}"
+                        if dedup_key in existing:
+                            continue
 
-                    try:
-                        found_data = _execute_scraper(client, scraper, username, health)
-                        result["scrapers_run"] += 1
+                        try:
+                            found_data = _execute_scraper(client, scraper, username, health)
+                            result["scrapers_run"] += 1
 
-                        if found_data and found_data.get("found"):
-                            # Create finding + identity + edge
-                            created = _store_result(
-                                session, target_id, workspace_id, scan_id,
-                                scraper, username, found_data, uinfo,
-                            )
-                            if created:
-                                result["findings_created"] += created.get("findings", 0)
-                                result["identities_created"] += created.get("identities", 0)
-                                existing.add(dedup_key)
+                            if found_data and found_data.get("found"):
+                                # Create finding + identity + edge
+                                created = _store_result(
+                                    session, target_id, workspace_id, scan_id,
+                                    scraper, username, found_data, uinfo,
+                                )
+                                if created:
+                                    result["findings_created"] += created.get("findings", 0)
+                                    result["identities_created"] += created.get("identities", 0)
+                                    existing.add(dedup_key)
 
-                        time.sleep(RATE_LIMIT_DELAY)
+                            time.sleep(RATE_LIMIT_DELAY)
 
-                    except Exception as e:
-                        logger.debug("Pass 1.5: Scraper %s failed for %s: %s",
-                                     scraper["name"], username, e)
-                        result["errors"].append(f"{scraper['name']}:{e}")
+                        except Exception as e:
+                            logger.debug("Pass 1.5: Scraper %s failed for %s: %s",
+                                         scraper["name"], username, e)
+                            result["errors"].append(f"{scraper['name']}:{e}")
+                            try:
+                                session.rollback()
+                            except Exception:
+                                pass
         finally:
             client.close()
 
@@ -253,7 +265,9 @@ def _execute_scraper(client: httpx.Client, scraper: dict, username: str,
     """Execute a single scraper against a username. Sync version."""
     url = ""
     try:
-        fmt_kwargs = {
+        # Use a defaultdict-like SafeDict so unknown {placeholders} survive
+        # without raising KeyError or "got multiple values" from .format()
+        fmt_kwargs = _SafeFormatDict({
             "username": username,
             "email": username,  # Some templates use {email}
             "input": username,
@@ -262,14 +276,15 @@ def _execute_scraper(client: httpx.Client, scraper: dict, username: str,
             "fullname": username,
             "fullname_encoded": username,
             "email_md5": hashlib.md5(username.encode()).hexdigest(),
-        }
+            "name": username,
+        })
 
-        url = scraper["url_template"].format(**fmt_kwargs)
+        url = scraper["url_template"].format_map(fmt_kwargs)
         headers = {**{"User-Agent": USER_AGENT}, **(scraper.get("headers") or {})}
 
         t0 = time.time()
         if (scraper.get("method") or "GET").upper() == "POST":
-            body = (scraper.get("body_template") or "").format(**fmt_kwargs)
+            body = (scraper.get("body_template") or "").format_map(fmt_kwargs)
             response = client.post(url, content=body, headers=headers)
         else:
             response = client.get(url, headers=headers)
@@ -364,6 +379,19 @@ def _extract(content: str, rule: dict):
     return rule.get("default")
 
 
+def _sanitize_for_json(obj):
+    """Recursively convert non-JSON-serializable types for JSONB storage."""
+    if isinstance(obj, dict):
+        return {k: _sanitize_for_json(v) for k, v in obj.items()}
+    elif isinstance(obj, list):
+        return [_sanitize_for_json(v) for v in obj]
+    elif isinstance(obj, (datetime,)):
+        return obj.isoformat()
+    elif isinstance(obj, set):
+        return list(obj)
+    return obj
+
+
 def _store_result(session: Session, target_id, workspace_id, scan_id,
                   scraper: dict, username: str, found_data: dict,
                   username_info: dict) -> dict:
@@ -376,8 +404,10 @@ def _store_result(session: Session, target_id, workspace_id, scan_id,
     # Create Finding
     title = scraper.get("finding_title_template", "Account found: {username} on {platform}")
     try:
-        title = title.format(username=username, platform=platform, **extracted)
-    except (KeyError, IndexError):
+        fmt = _SafeFormatDict({"username": username, "platform": platform})
+        fmt.update(extracted)
+        title = title.format_map(fmt)
+    except Exception:
         title = f"Account found: {username} on {platform}"
 
     finding = Finding(
@@ -391,13 +421,13 @@ def _store_result(session: Session, target_id, workspace_id, scan_id,
         severity=scraper.get("finding_severity", "info"),
         title=title[:255],
         description=f"Username '{username}' found on {platform} via Pass 1.5 expansion",
-        data={
+        data=_sanitize_for_json({
             "extracted": extracted,
             "url": found_data.get("url"),
             "pass": "1.5",
             "source_username": username,
             "source_platforms": list(username_info.get("platforms", [])),
-        },
+        }),
         url=found_data.get("url"),
         indicator_value=username,
         indicator_type="username",

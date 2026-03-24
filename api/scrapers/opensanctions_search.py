@@ -14,6 +14,32 @@ import requests
 
 logger = logging.getLogger(__name__)
 
+REDIS_DISABLE_KEY = "opensanctions:disabled"
+REDIS_DISABLE_TTL = 3600  # 1 hour
+
+
+def _is_disabled() -> bool:
+    """Check Redis flag — skip API calls after 401."""
+    try:
+        from api.config import settings
+        import redis
+        r = redis.from_url(settings.REDIS_URL)
+        return r.exists(REDIS_DISABLE_KEY) > 0
+    except Exception:
+        return False
+
+
+def _set_disabled():
+    """Set Redis disable flag for 1 hour after 401."""
+    try:
+        from api.config import settings
+        import redis
+        r = redis.from_url(settings.REDIS_URL)
+        r.setex(REDIS_DISABLE_KEY, REDIS_DISABLE_TTL, "401")
+        logger.warning("OpenSanctions disabled for %ds after 401", REDIS_DISABLE_TTL)
+    except Exception:
+        pass
+
 OPENSANCTIONS_URL = "https://api.opensanctions.org/match/default"
 REQUEST_TIMEOUT = 15
 MIN_OPENSANCTIONS_SCORE = 0.70
@@ -185,6 +211,11 @@ def search_opensanctions(primary_name: str, nationality: str | None = None,
     if not primary_name or len(primary_name.strip()) < 4:
         return []
 
+    # Skip if disabled after a recent 401
+    if _is_disabled():
+        logger.debug("OpenSanctions: Skipping — disabled after 401 (Redis flag)")
+        return []
+
     query = build_sanctions_query(primary_name, nationality, country, birth_year)
 
     headers = {
@@ -208,6 +239,7 @@ def search_opensanctions(primary_name: str, nationality: str | None = None,
                 "Configure 'opensanctions_api_key' in Settings → API Keys. "
                 "Get a free key at https://www.opensanctions.org/api/"
             )
+            _set_disabled()
             return []
 
         if resp.status_code == 429:

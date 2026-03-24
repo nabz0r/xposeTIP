@@ -82,6 +82,24 @@ def search_gdelt_news(name: str, domain: str | None = None) -> list[dict]:
         data = resp.json()
         articles = data.get("articles", [])
 
+        # Retry without quotes if quoted search returned 0 results
+        # (rare names sometimes need broader matching)
+        if not articles and '"' in params["query"]:
+            logger.debug("GDELT: No results with quotes for '%s' — retrying unquoted", name)
+            unquoted_query = name
+            if domain and "." in domain:
+                company = domain.split(".")[0]
+                if len(company) > 3:
+                    unquoted_query += f" {company}"
+            params["query"] = unquoted_query
+            resp2 = requests.get(
+                GDELT_API_URL, params=params, timeout=REQUEST_TIMEOUT,
+                headers={"User-Agent": "xposeTIP/1.0"},
+            )
+            if resp2.status_code == 200:
+                data = resp2.json()
+                articles = data.get("articles", [])
+
         if not articles:
             logger.debug("GDELT: No articles found for '%s'", name)
             return []
