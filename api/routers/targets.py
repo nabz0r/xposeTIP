@@ -512,9 +512,14 @@ _QUICK_REJECT_NAMES = {
 def _target_dict(t: Target) -> dict:
     fp = (t.profile_data or {}).get("fingerprint") if t.profile_data else None
     profile = t.profile_data or {}
-    display = t.display_name or profile.get("primary_name", "")
-    if display and display.strip().lower() in _QUICK_REJECT_NAMES:
-        display = None
+
+    # Operator assertion ALWAYS wins for display name
+    if t.user_first_name or t.user_last_name:
+        display = ' '.join(p for p in [t.user_first_name, t.user_last_name] if p)
+    else:
+        display = t.display_name or profile.get("primary_name", "")
+        if display and display.strip().lower() in _QUICK_REJECT_NAMES:
+            display = None
     # Location data for geo map
     best_location = None
     user_locs = profile.get("user_locations", [])
@@ -545,11 +550,11 @@ def _target_dict(t: Target) -> dict:
         "email": t.email,
         "display_name": display,
         "avatar_url": t.avatar_url,
-        "primary_name": profile.get("primary_name") if display else None,
+        "primary_name": display or (profile.get("primary_name") if display else None),
         "country_code": t.country_code,
         "user_first_name": t.user_first_name,
         "user_last_name": t.user_last_name,
-        "primary_name_source": profile.get("primary_name_source", "auto"),
+        "primary_name_source": "operator" if (t.user_first_name or t.user_last_name) else profile.get("primary_name_source", "auto"),
         "auto_resolved_name": profile.get("_auto_resolved_name"),
         "status": t.status,
         "exposure_score": t.exposure_score,

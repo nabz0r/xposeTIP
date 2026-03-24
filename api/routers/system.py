@@ -401,6 +401,20 @@ async def list_all_workspaces(
     return {"items": result, "total": len(result)}
 
 
+# ---- Scraper Health ----
+
+@router.get("/scraper-health")
+async def get_scraper_health(
+    role: str = Depends(require_role("superadmin", "admin")),
+):
+    """Get health stats for all scrapers (last 24h) from Redis counters."""
+    from api.services.scraper_health import get_scraper_health_instance
+    health = get_scraper_health_instance()
+    if not health:
+        return {"items": [], "error": "Redis unavailable"}
+    return {"items": health.get_all_health()}
+
+
 # ---- Name Blacklist Management ----
 
 @router.get("/name-blacklist")

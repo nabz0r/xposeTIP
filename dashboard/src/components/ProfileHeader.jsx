@@ -33,8 +33,9 @@ export default function ProfileHeader({ target, findings, animScore, profileData
 
   // Fallback to findings-based extraction if profile not available
   const p = profile || {}
-  // Never show platform names as the display name — only real names from profile data
-  const rawName = p.primary_name || target.display_name || ''
+  // Operator assertion ALWAYS wins — check user_first_name/user_last_name first
+  const operatorName = [target.user_first_name, target.user_last_name].filter(Boolean).join(' ')
+  const rawName = operatorName || p.primary_name || target.display_name || ''
   const PLATFORM_REJECT = /^(spotify|amazon|reddit|steam|keybase|github|twitter|facebook|instagram|freelancer|replit|medium|gitlab|eventbrite|lastpass|1password|bitwarden|dashlane|office365|office|unknown|admin|test|null|none|default|anonymous|noreply|support|contact)$/i
   const displayName = rawName && !PLATFORM_REJECT.test(rawName.trim()) ? rawName : ''
   const avatarUrl = p.primary_avatar || target.avatar_url || null

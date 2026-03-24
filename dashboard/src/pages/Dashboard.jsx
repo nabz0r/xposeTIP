@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useOutletContext } from 'react-router-dom'
 import { Crosshair, Radar, AlertTriangle, ShieldAlert, Search } from 'lucide-react'
 import { useAuth } from '../lib/auth'
 import { getTargets, getScans, getFindingsStats, createTarget, createScan, getDefaults, getFingerprint, cancelScan } from '../lib/api'
@@ -48,6 +48,7 @@ const CustomTooltip = ({ active, payload, label }) => {
 
 export default function Dashboard() {
   const { refreshKey } = useAuth()
+  const { currentWs } = useOutletContext() || {}
   const [stats, setStats] = useState({ targets: 0, scans: 0, findings: 0, critical: 0, high: 0 })
   const [recentScans, setRecentScans] = useState([])
   const [severityData, setSeverityData] = useState([])
@@ -139,7 +140,12 @@ export default function Dashboard() {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-bold">Dashboard</h1>
+      <div className="flex items-baseline gap-3">
+        <h1 className="text-2xl font-bold">Dashboard</h1>
+        {currentWs && (
+          <span className="text-lg text-gray-400">/ {currentWs.name}</span>
+        )}
+      </div>
 
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
         <StatCard icon={Crosshair} label="Targets" value={stats.targets} color="#00ff88" />

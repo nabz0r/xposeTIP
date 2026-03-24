@@ -1,11 +1,13 @@
 import { useEffect, useState } from 'react'
-import { Key, Cpu, SlidersHorizontal, User, Database, CheckCircle, XCircle, Loader2, Lock, Trash2, AlertTriangle, Plus } from 'lucide-react'
+import { Key, Cpu, SlidersHorizontal, User, Database, CheckCircle, XCircle, Loader2, Lock, Trash2, AlertTriangle, Plus, Activity } from 'lucide-react'
 import { getModules, patchModule, getApiKeys, saveApiKey, validateApiKey, deleteApiKey, saveCustomKey, getDefaults, updateDefaults, getTargets, changePassword } from '../lib/api'
 import { useAuth } from '../lib/auth'
+import ScraperHealth from '../components/ScraperHealth'
 
 const tabs = [
   { id: 'apikeys', label: 'API Keys', icon: Key },
   { id: 'modules', label: 'Scanner Modules', icon: Cpu },
+  { id: 'health', label: 'Scraper Health', icon: Activity },
   { id: 'defaults', label: 'Scan Defaults', icon: SlidersHorizontal },
   { id: 'profile', label: 'Profile & Security', icon: User },
   { id: 'data', label: 'Data Management', icon: Database },
@@ -38,6 +40,7 @@ export default function Settings() {
 
       {activeTab === 'apikeys' && <ApiKeysTab />}
       {activeTab === 'modules' && <ModulesTab />}
+      {activeTab === 'health' && <ScraperHealth />}
       {activeTab === 'defaults' && <DefaultsTab />}
       {activeTab === 'profile' && <ProfileTab user={user} />}
       {activeTab === 'data' && <DataTab />}

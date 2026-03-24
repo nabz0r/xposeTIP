@@ -2,10 +2,25 @@ import hashlib
 import json
 import logging
 import re
+import time as _time
 
 import httpx
 
 logger = logging.getLogger(__name__)
+
+# Lazy-loaded scraper health instance
+_health_instance = None
+
+
+def _get_health():
+    global _health_instance
+    if _health_instance is None:
+        try:
+            from api.services.scraper_health import get_scraper_health_instance
+            _health_instance = get_scraper_health_instance()
+        except Exception:
+            pass
+    return _health_instance
 
 
 class ScraperEngine:
@@ -61,11 +76,18 @@ class ScraperEngine:
 
             headers = {**dict(self.client.headers), **(scraper.get("headers") or {})}
 
+            _t0 = _time.time()
             if scraper.get("method", "GET").upper() == "POST":
                 body = (scraper.get("body_template") or "").format(**fmt_kwargs)
                 response = await self.client.post(url, content=body, headers=headers)
             else:
                 response = await self.client.get(url, headers=headers)
+            _elapsed_ms = int((_time.time() - _t0) * 1000)
+
+            # Record health metric (fire-and-forget)
+            _h = _get_health()
+            if _h:
+                _h.record(scraper.get("name", "unknown"), response.status_code, _elapsed_ms)
 
             content = response.text
             found = self._check_found(content, response.status_code, scraper)

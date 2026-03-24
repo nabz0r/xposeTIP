@@ -1104,7 +1104,14 @@ def aggregate_profile(target_id, workspace_id, session: Session, graph_context=N
     if target:
         target.profile_data = profile
         # Operator-asserted name always wins for display_name
-        if profile.get("primary_name_source") == "operator":
+        has_operator_name = (getattr(target, 'user_first_name', None) or
+                             getattr(target, 'user_last_name', None))
+        if has_operator_name:
+            # Rebuild from user fields — pipeline NEVER overwrites operator assertion
+            target.display_name = ' '.join(
+                p for p in [target.user_first_name, target.user_last_name] if p
+            )
+        elif profile.get("primary_name_source") == "operator":
             target.display_name = profile["primary_name"]
         elif profile["primary_name"] and not target.display_name:
             target.display_name = profile["primary_name"]
