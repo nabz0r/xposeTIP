@@ -1,4 +1,4 @@
-# Architecture
+# Architecture — xposeTIP v0.73.0
 
 ## System Overview
 
@@ -33,6 +33,7 @@ graph TB
         L2[Layer 2: Public DBs]
         L3[Layer 3: OAuth Audit]
         L4[Layer 4: Intelligence]
+        L5[Layer 5: Premium]
     end
 
     React --> FastAPI
@@ -41,14 +42,20 @@ graph TB
     FastAPI --> PG
     FastAPI --> Redis
     FastAPI --> Celery
-    Celery --> L1 & L2 & L3 & L4
+    Celery --> L1 & L2 & L3 & L4 & L5
     L4 --> PG
     Celery --> Redis
     Beat --> Redis
     Fernet -.-> PG
 ```
 
-## Scan Pipeline
+## 3-Pass Scan Pipeline
+
+| Pass | Name | What it does |
+|------|------|-------------|
+| 1 | Email scan | Run all enabled scanner modules against email address |
+| 1.5 | Username expansion | Select top 3 discovered usernames, re-scan across username-capable scrapers |
+| 2 | Name enrichment | Use discovered real name for public exposure scrapers (media, corporate) |
 
 ```mermaid
 sequenceDiagram
@@ -62,19 +69,131 @@ sequenceDiagram
     API->>DB: Create Scan record
     API->>C: launch_scan.delay(scan_id)
     C->>C: chord([run_module x N], finalize_scan)
-    par For each module
+    par Pass 1 — Email scan
         C->>S: scanner.scan(target_email)
         S-->>C: ScanResult(findings)
         C->>DB: Insert findings
     end
-    C->>C: finalize_scan
-    C->>DB: Count findings, update target
-    C->>C: compute_score()
-    C->>C: build_graph()
-    C->>C: aggregate_profile()
-    C->>C: analysis_pipeline.run()
-    C->>DB: Store score, graph, profile, intelligence
+    C->>C: Pass 1.5 — Username expansion
+    C->>DB: Re-scan top 3 usernames
+    C->>C: Pass 2 — Name enrichment
+    C->>DB: Public exposure findings
+    C->>C: finalize_scan (intelligence pipeline)
+    C->>DB: Store score, graph, profile, fingerprint
 ```
+
+## Intelligence Pipeline (finalize_scan order)
+
+1. Cross-verify findings (boosts confidence)
+2. Build identity graph (nodes + weighted edges)
+3. PageRank confidence propagation (20 iterations, damping=0.85)
+4. Build graph_context (node_scores, node_map, transition_matrix, clusters)
+5. Compute score (exposure + threat, weighted by graph confidence)
+6. Aggregate profile (names, avatar, bio — ranked by graph + source reliability)
+7. Force bio cleanup (reject Telegram slogans, platform descriptions)
+8. Force display_name blacklist validation
+9. Identity enrichment (re-query Genderize/Agify/Nationalize with discovered name)
+10. Cluster personas (graph-based with SequenceMatcher fallback)
+11. Intelligence pipeline (5 analyzers: risk, breach, domain, behavioral, network)
+12. Compute fingerprint (9-axis radar, eigenvalues, avatar_seed, timeline_events)
+13. Store life_timeline in profile_data
+
+## Markov Chain / graph_context
+
+Computed once after PageRank, passed to ALL downstream services:
+- `node_scores`: {identity_id: confidence} — PageRank results
+- `node_map`: {value: {type, confidence, platform, id}} — quick lookups
+- `transition_matrix`: {node_id: {dest_id: probability}} — Markov transitions
+- `clusters`: [{nodes, confidence, density, dominant_type}] — connected components
+
+Services receive `graph_context=None` parameter. If present → enhanced behavior.
+If absent → graceful fallback to pre-Markov behavior. Zero regression guarantee.
+
+## Graph Edge Types
+
+| Type | Meaning | Used for clustering? |
+|------|---------|---------------------|
+| registered_with | Email registered on platform | Yes |
+| identified_as | Username identified as name | Yes |
+| same_person | Email linked to username | Yes |
+| exposed_in | Email exposed in breach | Yes |
+| associated_with | Catch-all orphan link to email anchor | No (PageRank only) |
+| located_in | Identity linked to location | No (PageRank only) |
+
+Clustering BFS uses ONLY strong edges (first 4). Weak edges feed PageRank
+but are excluded from persona clustering.
+
+## Name Resolution
+
+Composite score: `graph_confidence × 0.5 + source_reliability × 0.3 + source_count × 0.1`
+Higher reliability sources (GitHub 0.85, LinkedIn 0.80) beat lower ones (scraper 0.60).
+Names in the top PageRank cluster get a +0.15 boost.
+Single-letter initials ("J.", "Steffen H.") are rejected.
+
+## Username Validation
+
+`is_valid_username()` in `username_validator.py` filters junk from the pipeline:
+- Page titles (pipe `|`, en-dash, em-dash)
+- HTML entities (`&#`, `&amp;`)
+- Emoji-only strings, full names (2+ words with 3+ letters each)
+- Known platform title patterns, domain handles (2+ dots)
+
+Applied in both Pass 1.5 (username_expander) and profile aggregation (username list).
+
+## Avatar Quality Ranking
+
+`_score_avatar()` scores candidates 0-3:
+- **3**: Real platform photos (githubusercontent, linktr.ee, pbs.twimg.com, googleusercontent)
+- **2**: Unknown source (default)
+- **1**: Generated/defaults (Gravatar identicons, Reddit defaults, protocol-relative URLs)
+- **0**: Invalid/empty
+
+Combined with source priority. Always synced to `target.avatar_url` on every aggregation.
+
+## Email Age Inference
+
+Extracts earliest timestamp from ALL findings:
+- `BreachDate`, `created_at`, `joined`, `member_since`, `first_seen`, etc.
+- Skips domain-level modules (dns_deep, whois_lookup)
+- Caps by domain launch date (Gmail 2004, Outlook 2012, etc.)
+- 30-year sanity cap
+
+## Score Engine
+
+Dual score: Exposure (how much is public) + Threat (how dangerous it is).
+Each finding: `severity × confidence × source_reliability × graph_node_confidence`.
+Graph weighting: `0.5 + node_conf × 0.5` (50% at zero confidence → 100% at full).
+
+## Digital Fingerprint
+
+9-axis radar: accounts, platforms, username_reuse, breaches, geo_spread,
+data_leaked, email_age, security, public_exposure.
+Eigenvalue computation from identity graph adjacency matrix.
+Avatar seed: deterministic params for GenerativeAvatar.
+Fingerprint hash: SHA256 of sorted axis values.
+
+## GenerativeAvatar (32x32 Pixel Art)
+
+CryptoPunk-style pixel face generated from `avatar_seed.email_hash`.
+~5.4 billion combinations (face shape, skin, hair, eyes, mouth, accessories, clothing).
+Score-reactive: expression changes, background shifts green→red, glitch pixels at high score.
+
+## Scanner Modules: 35 total
+
+| Layer | Modules |
+|-------|---------|
+| L1 (basic) | email_validator, holehe, hibp, sherlock, gravatar, social_enricher, google_profile, emailrep, epieos, fullcontact, github_deep, username_hunter |
+| L2 (deep) | whois_lookup, maxmind_geo, geoip, leaked_domains, dns_deep |
+| L3 (audit) | google_auditor, exodus_tracker, browser_auditor, databroker_check, paste_monitor |
+| L4 (intel) | intelligence (5 analyzers), maigret, ghunt, h8mail |
+| L5 (premium) | virustotal, shodan, intelx, hunter, dehashed, reverse_image, google_audit, microsoft_audit |
+
+Seeded via `scripts/seed_modules.py`. Lazy-loaded via `importlib`.
+
+## Scrapers: 117 total
+
+Seeded via `scripts/seed_scrapers.py`. URL template + regex/JSONPath extraction.
+Input transforms: `email_to_first_name`, `email_to_fullname` for name-based APIs.
 
 ## Database Schema
 
@@ -146,116 +265,30 @@ erDiagram
     }
 ```
 
+All datetime columns use `TIMESTAMP(timezone=True)`. DB: service=postgres, user=xpose.
+
 ## Multi-Tenant Design
 
-Everything is scoped to a `workspace_id`:
+Everything scoped to `workspace_id`:
 - JWT tokens carry workspace_id in claims
 - Middleware extracts workspace_id for every request
 - All DB queries filter by workspace_id
-- PostgreSQL Row-Level Security (RLS) planned for Phase 2
 
 ### RBAC Roles
 `superadmin` > `admin` > `consultant` > `client` > `user`
 
-Phase 1 uses superadmin only. Others activate in later phases.
+## Plan Enforcement
 
-## Score Engine
+Three-tier plan system (Free/Consultant/Enterprise) enforced at API endpoints.
+superadmin bypasses ALL limits. Plan lives on Workspace, not User.
+Central config: `api/services/plan_config.py`.
 
-```
-Exposure Score = Σ (category_weight × min(Σ severity_multiplier, 100))
+## Pre-flush Truncation
 
-Weights: breach=0.25, social=0.20, tracking=0.15, geo=0.12,
-         data_broker=0.10, metadata=0.08, domain=0.05, paste=0.05
-
-Severity: critical=5, high=4, medium=3, low=2, info=1
-```
-
-## Intelligence Pipeline
-
-Runs automatically after each scan in `finalize_scan`:
-
-1. **IP Analyzer** — ASN lookup, reverse DNS, infrastructure mapping
-2. **Domain Analyzer** — Subdomain discovery (crt.sh), security headers, SSL check
-3. **Username Correlator** — Cross-platform username reuse detection
-4. **Breach Correlator** — Password reuse risk, exposure timeline
-5. **Risk Assessor** — Overall risk level + prioritized remediation actions
-
-Intelligence findings are stored as `layer=4, module="intelligence"`.
-
-## Scraper Engine
-
-Parallel to the scanner plugin system, the scraper engine provides a data-driven
-approach for simple HTTP scraping tasks. Scraper definitions are stored in the
-`scrapers` DB table and executed by the `ScraperScanner` meta-scanner during scan
-orchestration.
-
-Flow: ScraperScanner → loads enabled scrapers from DB → ScraperEngine.execute()
-per scraper → HTTP request with URL template → extraction via regex/JSONPath →
-ScanResult findings
-
-New in v0.11.0: Input transforms (`email_to_first_name`, `email_to_fullname`)
-enable name-based intelligence APIs like Genderize, Agify, and Nationalize.
-
-New in v0.12.0: Profile aggregator unwraps scraper `extracted` dict, enabling
-scraper-sourced names, avatars, and identity estimation data to flow into
-the unified profile.
-
-## Persona Clustering (v0.13.0+)
-
-Post-scan, the persona engine clusters identity graph nodes into distinct digital personas:
-1. Extract all social accounts, usernames, display names from findings
-2. Group by shared username patterns (exact match, prefix match, similarity)
-3. Cross-reference with avatar hashes and display names
-4. Assign confidence score per cluster
-5. Store in `target.profile_data.personas` (JSONB array)
-
-Feature-gated: Consultant/Enterprise plans only (superadmin bypasses).
-
-## Dual Score Engine (v0.14.0+)
-
-Two complementary scores computed in `finalize_scan`:
-
-**Exposure Score** (0-100): How much data is publicly visible.
-```
-exposure = Σ (category_weight × min(Σ severity_multiplier, 100))
-```
-
-**Threat Score** (0-100): Active risk level.
-```
-threat = f(breach_recency, credential_leaks, active_tracking, password_reuse)
-```
-
-Both displayed in UI with color-coded indicators. History tracked per-scan.
-
-## Plan Enforcement (v0.20.0+)
-
-Three-tier plan system (Free/Consultant/Enterprise) enforced at API endpoints:
-
-```
-POST /targets → check_target_limit(plan, current_count, role)
-POST /scans   → check_scan_limit(plan, scans_this_month, role)
-               → filter_modules_by_plan(modules, plan, role, layers)
-finalize_scan → check_feature(plan, "persona_clustering", role)
-              → check_feature(plan, "intelligence_pipeline", role)
-```
-
-superadmin role bypasses ALL plan limits. Plan lives on Workspace, not User.
-
-Central config: `api/services/plan_config.py`
-
-## Admin Panel (v0.21.0+)
-
-Platform-wide management endpoints (superadmin only):
-- `GET /system/users` — all users with workspace memberships, roles, last_login
-- `PATCH /system/users/{id}` — activate/deactivate users
-- `GET /system/workspaces` — all workspaces with member/target/scan counts
-
-Frontend: System page with Users + Workspaces tabs. Expandable user rows
-showing workspace memberships. Inline plan change dropdown for workspaces.
+Safety net in `module_tasks.py` before `session.flush()`:
+- `title`: max 255, `url`: max 1024, `indicator_value`: max 500, `module`: max 50
 
 ## Encryption
 
-- API keys encrypted at rest using **Fernet** (AES-256-CBC + HMAC-SHA256)
-- Encryption key derived from `SECRET_KEY`
-- Stored in workspace `settings` JSONB column
-- Decrypted only when passed to scanner at scan time
+API keys encrypted at rest using Fernet (AES-256-CBC + HMAC-SHA256).
+Key derived from `SECRET_KEY`. Decrypted only at scan time.
