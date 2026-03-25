@@ -47,6 +47,20 @@ export default function TargetDetail() {
   const [workspaces, setWorkspaces] = useState([])
   const [showMoveMenu, setShowMoveMenu] = useState(false)
 
+  const downloadPdf = async (targetId) => {
+    const token = localStorage.getItem('xpose_token')
+    const res = await fetch(`/api/v1/targets/${targetId}/report/pdf`, {
+      headers: { 'Authorization': `Bearer ${token}` }
+    })
+    const blob = await res.blob()
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `xposeTIP_report_${targetId}.pdf`
+    a.click()
+    URL.revokeObjectURL(url)
+  }
+
   const load = useCallback(async () => {
     try {
       const [t, f, s] = await Promise.all([
@@ -249,7 +263,7 @@ export default function TargetDetail() {
             </div>
           )}
           <button
-            onClick={() => window.open(`/api/v1/targets/${id}/report/pdf`, '_blank')}
+            onClick={() => downloadPdf(id)}
             className="flex items-center gap-1.5 text-xs px-3 py-2.5 border border-[#1e1e2e] rounded-lg text-[#00D4AA] hover:bg-[#00D4AA]/10 transition-colors"
             title="Download PDF Report"
           >

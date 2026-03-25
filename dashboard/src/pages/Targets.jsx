@@ -73,6 +73,20 @@ export default function Targets() {
   const [scanningIds, setScanningIds] = useState(new Set())
   const navigate = useNavigate()
 
+  const downloadPdf = async (targetId) => {
+    const token = localStorage.getItem('xpose_token')
+    const res = await fetch(`/api/v1/targets/${targetId}/report/pdf`, {
+      headers: { 'Authorization': `Bearer ${token}` }
+    })
+    const blob = await res.blob()
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `xposeTIP_report_${targetId}.pdf`
+    a.click()
+    URL.revokeObjectURL(url)
+  }
+
   useEffect(() => {
     loadTargets()
   }, [search])
@@ -254,7 +268,7 @@ export default function Targets() {
                           Scanning...
                         </span>
                       )}
-                      <button onClick={(e) => { e.stopPropagation(); window.open(`/api/v1/targets/${t.id}/report/pdf`, '_blank') }}
+                      <button onClick={(e) => { e.stopPropagation(); downloadPdf(t.id) }}
                         className="opacity-0 group-hover:opacity-100 transition-opacity text-gray-500 hover:text-[#00D4AA] p-1" title="Download PDF Report">
                         <FileDown className="w-3.5 h-3.5" />
                       </button>
