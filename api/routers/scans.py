@@ -126,6 +126,16 @@ async def list_scans(
     user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
+    base_filter = select(Scan).where(Scan.workspace_id == workspace_id)
+    if target_id:
+        base_filter = base_filter.where(Scan.target_id == target_id)
+    if scan_status:
+        base_filter = base_filter.where(Scan.status == scan_status)
+
+    # Total count
+    count_q = select(func.count()).select_from(base_filter.subquery())
+    total = (await db.execute(count_q)).scalar() or 0
+
     q = select(Scan, Target.email).join(Target, Scan.target_id == Target.id, isouter=True).where(Scan.workspace_id == workspace_id)
     if target_id:
         q = q.where(Scan.target_id == target_id)
@@ -135,7 +145,7 @@ async def list_scans(
 
     result = await db.execute(q)
     items = [_scan_dict(scan, target_email=email) for scan, email in result.all()]
-    return {"items": items, "page": page, "per_page": per_page}
+    return {"items": items, "total": total, "page": page, "per_page": per_page}
 
 
 @router.get("/{scan_id}")

@@ -85,7 +85,7 @@ export default function Dashboard() {
 
       setStats({
         targets: targetsData.total || 0,
-        scans: scansData.items?.length || 0,
+        scans: scansData.total || scansData.items?.length || 0,
         findings: Object.values(bySev).reduce((a, b) => a + b, 0),
         critical: bySev.critical || 0,
         high: bySev.high || 0,

@@ -654,7 +654,7 @@ def aggregate_profile(target_id, workspace_id, session: Session, graph_context=N
             "location": loc,
             "source": source,
             "type": "self_reported",
-            "confidence": get_source_reliability(source),
+            "confidence": _get_src_rel_mod(source),
         }
         # Static geocode
         coords = _geocode_location(loc)

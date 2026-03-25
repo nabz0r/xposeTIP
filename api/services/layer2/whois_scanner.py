@@ -1,8 +1,21 @@
+import json
 import logging
+from datetime import date, datetime
 
 from api.services.base import BaseScanner, ScanResult
 
 logger = logging.getLogger(__name__)
+
+
+def _json_safe(obj):
+    """Convert non-serializable objects for JSONB storage."""
+    if isinstance(obj, (datetime, date)):
+        return obj.isoformat()
+    if isinstance(obj, set):
+        return list(obj)
+    if isinstance(obj, bytes):
+        return obj.decode("utf-8", errors="replace")
+    return str(obj)
 
 
 class WhoisScanner(BaseScanner):
@@ -36,6 +49,8 @@ class WhoisScanner(BaseScanner):
             val = getattr(w, key, None)
             if val is not None:
                 whois_data[key] = str(val) if not isinstance(val, (list, dict)) else val
+        # Ensure all values are JSON-serializable (datetime, set, bytes)
+        whois_data = json.loads(json.dumps(whois_data, default=_json_safe))
 
         # Always create an info finding with WHOIS data
         results.append(ScanResult(

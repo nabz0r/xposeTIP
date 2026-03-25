@@ -80,8 +80,8 @@ export default function Targets() {
 
   async function loadTargets() {
     try {
-      const params = search ? `search=${encodeURIComponent(search)}` : ''
-      const data = await getTargets(params)
+      const searchParam = search ? `search=${encodeURIComponent(search)}&` : ''
+      const data = await getTargets(`${searchParam}per_page=100`)
       setTargets(data.items || [])
       setTotal(data.total || 0)
     } catch {}
@@ -178,7 +178,7 @@ export default function Targets() {
       </div>
 
       {/* Table */}
-      <div className="bg-[#12121a] border border-[#1e1e2e] rounded-xl overflow-x-hidden">
+      <div className="bg-[#12121a] border border-[#1e1e2e] rounded-xl overflow-x-hidden overflow-y-auto max-h-[calc(100vh-240px)]">
         <table className="w-full text-sm">
           <thead>
             <tr className="text-xs text-gray-500 uppercase tracking-wider border-b border-[#1e1e2e]">
