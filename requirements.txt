@@ -23,3 +23,4 @@ python-whois
 geoip2
 cryptography
 dnspython
+reportlab

@@ -1,4 +1,4 @@
-# Sprint Log — xposeTIP v0.73.0
+# Sprint Log — xposeTIP v0.74.0
 
 ## Sprint history
 
@@ -23,13 +23,13 @@
 | 73b | Username filter: is_valid_username() applied in username_expander + profile_aggregator |
 | 73c | Avatar quality ranking (_score_avatar), always-sync to target.avatar_url |
 | 73d | CLAUDE.md split into 4 files, version bump to v0.73.0 |
+| 74 | PDF identity report export (ReportLab, dark theme, 5-page Pro tier, tiered by plan) |
 
 ## Known issues
 
 - Quick scan timeout (300s) may not be enough for slow Celery
 - Some scraper timestamps not parsed (field names vary per API)
 - Life timeline sparse (most findings don't include timestamps)
-- PDF export never implemented
 - Fingerprint evolution avatars identical when score stable (by design)
 - BUG 4 (deferred to Sprint 74): Add exponential backoff with 1 retry on HTTP 429 for Roblox, Agify, Nationalize scrapers
 
@@ -44,7 +44,7 @@
 - [x] 3-pass pipeline (email → username → name)
 - [x] 9-axis digital fingerprint
 - [x] Identity-first narrative rewrite
-- [ ] PDF report export
+- [x] PDF report export
 - [ ] Graph zoom/pan improvement
 
 ### v1.1 — Post-Nexus (July-August)

@@ -5,10 +5,11 @@
 Identity Threat Intelligence platform. Scans email → builds identity graph →
 PageRank/Markov confidence → clusters personas → pixel art avatar → remediation plan.
 
-## Current version: v0.73.0
+## Current version: v0.74.0
 
-73 sprints. 117 scrapers, 35 scanners, 5 intelligence analyzers, 9-axis fingerprint.
+74 sprints. 117 scrapers, 35 scanners, 5 intelligence analyzers, 9-axis fingerprint.
 3-pass pipeline (email → username expansion → name-based enrichment).
+PDF identity report export (ReportLab, dark theme, tiered by plan).
 
 ## Developer
 
@@ -74,6 +75,7 @@ After deploy: System → Recalculate Fingerprints → Recalculate Profiles
 - `api/services/scraper_engine.py` — URL template + regex/JSONPath extraction
 - `api/routers/targets.py` — CRUD + profile + fingerprint + geo_locations
 - `api/routers/scans.py` — scan CRUD + quick scan + paginated total
+- `api/services/report/pdf_generator.py` — PDF identity report (ReportLab)
 - `scripts/seed_scrapers.py` — 117 scraper definitions
 - `scripts/seed_modules.py` — 35 scanner modules
 

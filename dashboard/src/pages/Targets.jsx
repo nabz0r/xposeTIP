@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Plus, Trash2, Search, Eye, Upload, Play } from 'lucide-react'
+import { Plus, Trash2, Search, Eye, Upload, Play, FileDown } from 'lucide-react'
 import { getTargets, createTarget, deleteTarget, bulkImportTargets, createScan } from '../lib/api'
 import TargetQuickView from '../components/TargetQuickView'
 import GenerativeAvatar from '../components/GenerativeAvatar'
@@ -198,7 +198,7 @@ export default function Targets() {
                 <tr
                   key={t.id}
                   onClick={() => navigate(`/targets/${t.id}`)}
-                  className={`border-t border-[#1e1e2e] cursor-pointer hover:bg-white/[0.03] ${i % 2 === 1 ? 'bg-white/[0.02]' : ''}`}
+                  className={`group border-t border-[#1e1e2e] cursor-pointer hover:bg-white/[0.03] ${i % 2 === 1 ? 'bg-white/[0.02]' : ''}`}
                 >
                   <td className="px-5 py-3">
                     <div className="flex items-center gap-3">
@@ -254,6 +254,10 @@ export default function Targets() {
                           Scanning...
                         </span>
                       )}
+                      <button onClick={(e) => { e.stopPropagation(); window.open(`/api/v1/targets/${t.id}/report/pdf`, '_blank') }}
+                        className="opacity-0 group-hover:opacity-100 transition-opacity text-gray-500 hover:text-[#00D4AA] p-1" title="Download PDF Report">
+                        <FileDown className="w-3.5 h-3.5" />
+                      </button>
                       <button onClick={(e) => { e.stopPropagation(); setQuickViewId(t.id) }} className="text-gray-500 hover:text-[#00ff88] p-1" title="Quick view">
                         <Eye className="w-3.5 h-3.5" />
                       </button>

@@ -6,7 +6,7 @@ from sqlalchemy import text
 
 from api.config import settings
 from api.database import engine
-from api.routers import auth, targets, scans, findings, modules, graph, system, settings as settings_router, workspaces, accounts, scrapers, events
+from api.routers import auth, targets, scans, findings, modules, graph, system, settings as settings_router, workspaces, accounts, scrapers, events, report
 
 
 @asynccontextmanager
@@ -71,6 +71,7 @@ app.include_router(workspaces.router, prefix="/api/v1/workspaces", tags=["worksp
 app.include_router(accounts.router, prefix="/api/v1/accounts", tags=["accounts"])
 app.include_router(scrapers.router, prefix="/api/v1/scrapers", tags=["scrapers"])
 app.include_router(events.router, prefix="/api/v1/events", tags=["events"])
+app.include_router(report.router, prefix="/api/v1", tags=["report"])
 
 
 @app.post("/api/v1/scan/quick")

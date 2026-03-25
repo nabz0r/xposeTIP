@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useCallback, useRef } from 'react'
 import { useParams, Link } from 'react-router-dom'
-import { Radar, CheckCircle, AlertTriangle, XCircle, ArrowRightLeft } from 'lucide-react'
+import { Radar, CheckCircle, AlertTriangle, XCircle, ArrowRightLeft, FileDown } from 'lucide-react'
 import { getTarget, getFindings, getScans, createScan, getModules, getScan, getGraph, patchFinding, getTargetSources, getAccounts, startOAuth, auditAccount, disconnectAccount, getFingerprint, getFingerprintHistory, getTargetProfile, cancelScan, getWorkspaces, moveTarget } from '../lib/api'
 import IdentityGraph from '../components/IdentityGraph'
 import LocationMap from '../components/LocationMap'
@@ -248,6 +248,13 @@ export default function TargetDetail() {
               )}
             </div>
           )}
+          <button
+            onClick={() => window.open(`/api/v1/targets/${id}/report/pdf`, '_blank')}
+            className="flex items-center gap-1.5 text-xs px-3 py-2.5 border border-[#1e1e2e] rounded-lg text-[#00D4AA] hover:bg-[#00D4AA]/10 transition-colors"
+            title="Download PDF Report"
+          >
+            <FileDown className="w-3.5 h-3.5" /> PDF
+          </button>
           <button onClick={() => setShowScanModal(true)}
             className="flex items-center gap-2 bg-[#00ff88] text-black font-semibold rounded-lg px-4 py-2.5 text-sm hover:bg-[#00ff88]/90">
             <Radar className="w-4 h-4" /> New Scan
