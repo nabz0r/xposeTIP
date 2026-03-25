@@ -75,7 +75,7 @@ export default function Dashboard() {
   async function loadData() {
     try {
       const [targetsData, scansData, findingsData] = await Promise.all([
-        getTargets(),
+        getTargets('per_page=100'),
         getScans(),
         getFindingsStats(),
       ])

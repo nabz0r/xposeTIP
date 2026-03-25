@@ -40,22 +40,39 @@ export default function WorkspaceGeoMap({ targets = [], onTargetClick }) {
   const [expandedCluster, setExpandedCluster] = useState(null)
 
   const { pins, locatedCount, unlocatedCount, countryCount } = useMemo(() => {
-    const located = targets
-      .filter(t => t.location_data?.lat && t.location_data?.lon)
-      .map(t => ({
+    const located = []
+    for (const t of targets) {
+      const name = t.primary_name || t.display_name || t.email?.split('@')[0] || ''
+      const base = {
         id: t.id,
-        name: t.primary_name || t.display_name || t.email?.split('@')[0] || '',
+        name,
         email: t.email,
         score: t.exposure_score || 0,
         threat: t.threat_score || 0,
         color: riskColor(t.exposure_score || 0),
         size: pinSize(t.exposure_score || 0),
-        lat: t.location_data.lat,
-        lon: t.location_data.lon,
-        label: t.location_data.label,
-        type: t.location_data.type,
         avatar_seed: t.fingerprint_avatar_seed,
-      }))
+      }
+
+      // Priority 1: location_data (pre-computed best location)
+      if (t.location_data?.lat && t.location_data?.lon) {
+        located.push({ ...base, lat: t.location_data.lat, lon: t.location_data.lon, label: t.location_data.label, type: t.location_data.type })
+      }
+      // Priority 2: user_locations from profile_data
+      else if (t.user_locations?.length) {
+        const ul = t.user_locations.find(u => u.lat && u.lon)
+        if (ul) {
+          located.push({ ...base, lat: ul.lat, lon: ul.lon, label: ul.city || ul.location || ul.country || '', type: 'self_reported' })
+        }
+      }
+      // Priority 3: geo_locations from profile_data
+      if (!located.find(p => p.id === t.id) && t.geo_locations?.length) {
+        const gl = t.geo_locations.find(g => g.lat && g.lon)
+        if (gl) {
+          located.push({ ...base, lat: gl.lat, lon: gl.lon, label: [gl.city, gl.country].filter(Boolean).join(', '), type: 'server' })
+        }
+      }
+    }
 
     // Cluster nearby pins (within ~3 degrees)
     const clusters = []

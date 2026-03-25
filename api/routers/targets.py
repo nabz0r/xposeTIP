@@ -572,4 +572,6 @@ def _target_dict(t: Target) -> dict:
         "fingerprint_axes": fp.get("axes") if fp else None,
         "location_data": best_location,
         "location_label": profile.get("location", ""),
+        "geo_locations": profile.get("geo_locations", []),
+        "user_locations": profile.get("user_locations", []),
     }
