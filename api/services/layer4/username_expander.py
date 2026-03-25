@@ -22,6 +22,7 @@ from sqlalchemy.orm import Session
 from api.models.finding import Finding
 from api.models.identity import Identity, IdentityLink
 from api.models.scraper import Scraper
+from api.services.layer4.username_validator import is_valid_username
 
 logger = logging.getLogger(__name__)
 
@@ -178,6 +179,8 @@ def _select_usernames(target_id, workspace_id, session: Session, email=None) -> 
         if email_prefix and val == email_prefix:
             return
         if "@" in val:
+            return
+        if not is_valid_username(val_raw.strip()):
             return
 
         if val not in groups:

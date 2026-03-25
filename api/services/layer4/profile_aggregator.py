@@ -10,6 +10,7 @@ from api.models.finding import Finding
 from api.models.identity import Identity
 from api.models.target import Target
 from api.services.layer4.source_scoring import get_source_reliability as _get_src_rel_mod
+from api.services.layer4.username_validator import is_valid_username
 
 logger = logging.getLogger(__name__)
 
@@ -543,7 +544,7 @@ def aggregate_profile(target_id, workspace_id, session: Session, graph_context=N
         # --- Usernames ---
         for uname_key in ("username", "login", "handle", "preferredUsername"):
             uname = data.get(uname_key, "")
-            if uname and uname not in seen_usernames and len(uname) >= 3:
+            if uname and uname not in seen_usernames and len(uname) >= 3 and is_valid_username(uname):
                 seen_usernames.add(uname)
                 profile["usernames"].append({"value": uname, "source": source})
 
