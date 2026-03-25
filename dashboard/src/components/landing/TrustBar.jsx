@@ -8,10 +8,10 @@ export default function TrustBar() {
           {[
             { value: '117', label: 'OSINT sources' },
             { value: '9-axis', label: 'Behavioral radar' },
-            { value: '2-pass', label: 'Intelligence pipeline' },
             { value: '40+', label: 'Sanctions lists' },
             { value: 'GDPR', label: 'Aware architecture' },
-            { value: 'AES-256', label: 'Encrypted keys' },
+            { value: 'AES-256', label: 'Encrypted at rest' },
+            { value: '\ud83c\uddf1\ud83c\uddfa', label: 'Made in Luxembourg' },
           ].map(t => (
             <div key={t.label} className="bg-[#12121a] border border-[#1e1e2e] rounded-lg py-3 px-2">
               <div className="text-sm font-mono font-bold text-[#00ff88]">{t.value}</div>
@@ -20,7 +20,7 @@ export default function TrustBar() {
           ))}
         </div>
         <p className="text-sm text-gray-600 text-center mt-4">
-          Built in Luxembourg <span className="inline-block">{'\ud83c\uddf1\ud83c\uddfa'}</span> · Open source · On-premise ready · Your data stays yours.
+          Open source · On-premise ready · Your data stays yours.
         </p>
       </div>
     </Section>

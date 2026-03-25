@@ -33,11 +33,11 @@ export default function Architecture() {
         <Section className="py-20">
           <div className="max-w-3xl mx-auto px-6 text-center">
             <h1 className="text-4xl md:text-5xl font-bold mb-4 font-['Instrument_Sans',sans-serif]">
-              Architecture — How <span className="text-[#00ff88]">xpose</span> Works
+              How <span className="text-[#00ff88]">xposeTIP</span> builds identities
             </h1>
             <p className="text-lg text-gray-400 max-w-xl mx-auto">
-              A deep dive into the two-pass intelligence pipeline.
-              117 sources, 9-axis radar, one identity graph.
+              From a single email to a multi-dimensional identity portrait.
+              Discover, enrich, identify — the three-stage pipeline that turns noise into signal.
             </p>
           </div>
         </Section>

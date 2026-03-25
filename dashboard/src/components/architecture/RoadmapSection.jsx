@@ -4,60 +4,57 @@ export default function RoadmapSection() {
   return (
     <Section className="py-20" id="roadmap">
       <div className="max-w-3xl mx-auto px-6">
-        <h2 className="text-2xl font-bold mb-8 text-center font-['Instrument_Sans',sans-serif]">Roadmap</h2>
+        <h2 className="text-2xl font-bold mb-4 text-center font-['Instrument_Sans',sans-serif]">Vision</h2>
+        <p className="text-center text-gray-500 text-sm mb-12 max-w-lg mx-auto">
+          Today, an email gives you a report. Tomorrow, behavioral fingerprints feed firewalls and SIEMs.
+          The attacker changes IP — the fingerprint persists.
+        </p>
         <div className="space-y-8">
           {[
             {
-              version: 'v1.0', date: 'Nexus 2026 (June)', color: '#00ff88',
+              version: 'v1', date: 'Now — Investigation & Awareness', color: '#00ff88',
               items: [
-                { done: true, text: '117 sources across 10 categories (social, breach, dev, archive, gaming, people, metadata, LinkedIn, news, compliance)' },
-                { done: true, text: 'Personalized PageRank / Markov chain confidence engine' },
-                { done: true, text: '32x32 pixel art identity avatars (~5.4B unique combinations)' },
-                { done: true, text: '9-axis digital fingerprint radar (+ public exposure)' },
-                { done: true, text: 'Digital personas with display names, aliases, platform badges' },
-                { done: true, text: 'Profile photos tab (cross-platform collection)' },
+                { done: true, text: 'Email → complete identity report with behavioral fingerprint' },
+                { done: true, text: '117 OSINT sources across 10 categories' },
+                { done: true, text: 'Personalized PageRank confidence propagation' },
+                { done: true, text: '9-axis behavioral radar — the identity\'s digital DNA' },
+                { done: true, text: 'Digital persona clustering with name resolution' },
+                { done: true, text: '32×32 pixel art identity avatars (~5.4B combinations)' },
+                { done: true, text: 'Two-pass pipeline: Discover (email) → Enrich (name)' },
+                { done: true, text: 'Public exposure: news, sanctions (40+ lists), corporate records' },
+                { done: true, text: 'Operator identity assertions (ground truth override)' },
                 { done: true, text: 'Geographic exposure map (self-reported + server locations)' },
-                { done: true, text: 'Workspace-wide geo map on Dashboard' },
-                { done: true, text: 'Name resolution: family consensus + source method penalty' },
-                { done: true, text: 'Life timeline with breach/account/archive events' },
-                { done: true, text: 'Freemium quick scan with upsell' },
-                { done: true, text: 'Plans (Free/Consultant \u20ac49/Enterprise \u20ac199)' },
-                { done: true, text: 'Two-pass scan: name-based enrichment after identity resolution' },
-                { done: true, text: 'Public exposure intelligence: news, sanctions, corporate roles' },
-                { done: true, text: 'Operator identity assertions (name + country ground truth)' },
-                { done: true, text: 'Scraper health monitoring dashboard' },
-                { done: true, text: 'Language-aware multi-lang news search' },
-                { done: true, text: 'Corporate email pattern detection' },
-                { done: false, text: 'PDF report export' },
-                { done: false, text: 'Admin scoring tuning sliders' },
+                { done: true, text: 'Freemium quick scan with zero-friction onboarding' },
+                { done: true, text: 'Plans: Free / Consultant €49 / Enterprise €199' },
+                { done: false, text: 'PDF identity report export' },
               ],
             },
             {
-              version: 'v1.1', date: 'Post-Nexus (Jul-Aug)', color: '#3388ff',
+              version: 'v2', date: '2026 — API & Integration', color: '#3388ff',
               items: [
-                { done: false, text: 'Corporate scrapers (O365, Azure AD, GitHub org)' },
-                { done: false, text: 'Domain-wide scan (all employees of company)' },
-                { done: false, text: 'Batch scan scheduling' },
-                { done: false, text: 'Public API for integrations + webhook notifications' },
-                { done: false, text: 'Custom scraper plugins' },
-                { done: false, text: 'Multi-language UI (FR, DE, LU)' },
+                { done: false, text: 'Public API — behavioral fingerprints as structured intelligence' },
+                { done: false, text: 'SIEM integration — fingerprint feeds for Splunk, Elastic, Sentinel' },
+                { done: false, text: 'Webhook notifications on identity changes' },
+                { done: false, text: 'Batch scan scheduling and domain-wide employee scans' },
+                { done: false, text: 'Custom scraper plugins and community marketplace' },
               ],
             },
             {
-              version: 'v1.2', date: 'Enterprise (Q4 2026)', color: '#ff8800',
+              version: 'v3', date: '2027 — Behavioral Matching', color: '#ff8800',
               items: [
-                { done: false, text: 'OAuth audit (Google/Microsoft)' },
-                { done: false, text: 'Scheduled recurring scans' },
-                { done: false, text: 'Compliance reports (NIS2, DORA)' },
-                { done: false, text: 'Multi-language (FR, DE, LU)' },
+                { done: false, text: 'Cross-persona pattern detection — same behavior, different emails' },
+                { done: false, text: 'Behavioral similarity scoring between identities' },
+                { done: false, text: 'Threat actor clustering from fingerprint patterns' },
+                { done: false, text: 'Historical fingerprint evolution tracking' },
               ],
             },
             {
-              version: 'v2.0', date: 'Platform (2027)', color: '#ff2244',
+              version: 'v4', date: '2028 — Behavioral Feeds', color: '#ff2244',
               items: [
-                { done: false, text: 'Community scraper marketplace' },
-                { done: false, text: 'Plugin API for custom integrations' },
-                { done: false, text: 'Mobile app (iOS/Android)' },
+                { done: false, text: 'Firewalls block behaviors, not IPs' },
+                { done: false, text: 'Behavioral fingerprint as a new indicator type in STIX/TAXII' },
+                { done: false, text: 'The identity layer the security stack is missing' },
+                { done: false, text: 'From IOC feeds to identity feeds — the paradigm shift' },
               ],
             },
           ].map(phase => (

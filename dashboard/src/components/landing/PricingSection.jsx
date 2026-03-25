@@ -5,9 +5,15 @@ export default function PricingSection() {
   return (
     <Section className="py-32">
       <div className="max-w-4xl mx-auto px-6">
-        <h2 className="text-3xl md:text-4xl font-bold text-center mb-16 font-['Instrument_Sans',sans-serif]">
+        <h2 className="text-3xl md:text-4xl font-bold text-center mb-4 font-['Instrument_Sans',sans-serif]">
           Built for
         </h2>
+        <p className="text-center text-gray-500 text-sm mb-4 max-w-lg mx-auto">
+          For individuals: discover your digital footprint. Free, zero friction.
+        </p>
+        <p className="text-center text-gray-500 text-sm mb-16 max-w-lg mx-auto">
+          For enterprises: KYC, due diligence, and threat intelligence centered on humans — not indicators.
+        </p>
 
         <div className="grid md:grid-cols-3 gap-6">
           {AUDIENCES.map(a => (

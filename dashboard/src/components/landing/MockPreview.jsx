@@ -6,9 +6,12 @@ export default function MockPreview() {
   return (
     <Section className="py-32">
       <div className="max-w-3xl mx-auto px-6">
-        <h2 className="text-3xl md:text-4xl font-bold text-center mb-16 font-['Instrument_Sans',sans-serif]">
-          What you'll see
+        <h2 className="text-3xl md:text-4xl font-bold text-center mb-4 font-['Instrument_Sans',sans-serif]">
+          This is what an identity looks like
         </h2>
+        <p className="text-center text-gray-500 text-sm mb-16 max-w-md mx-auto">
+          Not a spreadsheet of IOCs. A complete digital persona — scores, accounts, behavioral radar, and remediation.
+        </p>
 
         <div className="bg-[#12121a] border border-[#1e1e2e] rounded-xl p-6 md:p-8 max-w-lg mx-auto">
           <div className="flex items-center gap-4 mb-5">
@@ -46,7 +49,7 @@ export default function MockPreview() {
 
           {/* Persona + location + photos */}
           <div className="flex flex-wrap items-center gap-3 mb-4 text-xs text-gray-400">
-            <span className="bg-[#1e1e2e] rounded-full px-2.5 py-1 text-[#3388ff]">@jsmith · Primary · 12 platforms</span>
+            <span className="bg-[#1e1e2e] rounded-full px-2.5 py-1 text-[#3388ff]">@jsmith · Primary persona · 12 platforms</span>
             <span className="bg-[#1e1e2e] rounded-full px-2.5 py-1">{'\ud83d\udccd'} San Francisco, US</span>
             <span className="bg-[#1e1e2e] rounded-full px-2.5 py-1">{'\ud83d\udcf7'} 4 photos</span>
           </div>
@@ -54,19 +57,19 @@ export default function MockPreview() {
           <div className="space-y-2.5 mb-4">
             <div className="flex items-center gap-2 text-sm">
               <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-[#ff2244]/20 text-[#ff2244]">high</span>
-              <span className="text-gray-300">1 breach found (LinkedIn 2021)</span>
+              <span className="text-gray-300">Exposed in LinkedIn 2021 breach — email + password hash</span>
             </div>
             <div className="flex items-center gap-2 text-sm">
               <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-[#ffcc00]/20 text-[#ffcc00]">medium</span>
-              <span className="text-gray-300">12 social accounts detected</span>
+              <span className="text-gray-300">12 accounts discovered across social and dev platforms</span>
             </div>
             <div className="flex items-center gap-2 text-sm">
               <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-[#ffcc00]/20 text-[#ffcc00]">medium</span>
-              <span className="text-gray-300">Username "jsmith" reused on 5 platforms</span>
+              <span className="text-gray-300">Username "jsmith" reused on 5 platforms — persona linkable</span>
             </div>
             <div className="flex items-center gap-2 text-sm">
               <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-[#3388ff]/20 text-[#3388ff]">info</span>
-              <span className="text-gray-300">9-axis fingerprint: high account spread, moderate security</span>
+              <span className="text-gray-300">Behavioral fingerprint: high account spread, moderate security</span>
             </div>
           </div>
 
@@ -75,14 +78,14 @@ export default function MockPreview() {
               {[1,2,3].map(i => (
                 <div key={i} className="flex items-center gap-2 text-sm">
                   <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-gray-800 text-gray-600">low</span>
-                  <span className="text-gray-600">Additional finding — sign up to view</span>
+                  <span className="text-gray-600">Additional identity detail — sign up to view</span>
                 </div>
               ))}
             </div>
             <div className="absolute inset-0 flex items-center justify-center">
               <a href="/setup"
                 className="bg-[#00ff88] text-black font-bold rounded-lg px-6 py-2.5 text-sm hover:bg-[#00ff88]/90 transition-all hover:scale-105 shadow-lg shadow-[#00ff88]/20">
-                See your full report — Free
+                See your full identity report — Free
               </a>
             </div>
           </div>

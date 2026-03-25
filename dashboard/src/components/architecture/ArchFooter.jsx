@@ -7,9 +7,9 @@ export function ArchCTA() {
     <Section className="py-20">
       <div className="max-w-3xl mx-auto px-6 text-center">
         <h2 className="text-2xl font-bold mb-3 font-['Instrument_Sans',sans-serif]">
-          See what the internet knows about you
+          From IOCs to identities
         </h2>
-        <p className="text-gray-500 mb-6">Free scan. No signup required. 30 seconds.</p>
+        <p className="text-gray-500 mb-6">The future of threat intelligence starts here. Free scan, no signup.</p>
         <Link
           to="/welcome"
           className="inline-flex items-center gap-2 bg-[#00ff88] text-black font-semibold rounded-lg px-6 py-3 text-sm hover:bg-[#00ff88]/90 transition-colors"
@@ -28,7 +28,8 @@ export function ArchFooter() {
         <div className="flex items-center gap-2">
           <Shield className="w-4 h-4 text-[#00ff88]" />
           <span className="font-bold text-sm font-['Instrument_Sans',sans-serif]">xpose</span>
-          <span className="text-xs text-gray-600 font-mono ml-2">v0.70.0</span>
+          <span className="text-[10px] font-mono text-gray-600">TIP</span>
+          <span className="text-xs text-gray-600 font-mono ml-2">v0.72.0</span>
         </div>
         <div className="flex items-center gap-4 text-xs text-gray-500">
           <Link to="/welcome" className="hover:text-white transition-colors">Home</Link>

@@ -11,6 +11,7 @@ export default function HeroSection({ email, setEmail, loading, error, onSubmit,
         <div className="flex items-center gap-2">
           <Shield className="w-6 h-6 text-[#00ff88]" />
           <span className="text-xl font-bold tracking-tight font-['Instrument_Sans',sans-serif]">xpose</span>
+          <span className="text-[10px] font-mono text-gray-600 ml-1">TIP</span>
         </div>
         <div className="flex items-center gap-3">
           <a href="/login" className="text-sm text-gray-400 hover:text-white px-3 py-1.5 transition-colors">Sign in</a>
@@ -33,24 +34,28 @@ export default function HeroSection({ email, setEmail, loading, error, onSubmit,
           <div className="max-w-2xl">
             <div className="inline-flex items-center gap-2 text-xs font-mono text-[#00ff88]/70 mb-8">
               <span className="w-1.5 h-1.5 bg-[#00ff88] rounded-full animate-pulse" />
-              Free · No account needed
+              Threat Identity Platform · Free scan
             </div>
 
             <h1 className="text-5xl md:text-6xl lg:text-7xl font-bold tracking-tight leading-[1.1] mb-6 font-['Instrument_Sans',sans-serif]">
-              Identity Threat<br />
-              Intelligence<br />
-              <span className="text-gray-500">from one email.</span>
+              The threat is not<br />
+              the indicator.<br />
+              <span className="text-gray-500">It's the person behind it.</span>
             </h1>
 
-            <p className="text-gray-400 text-lg mb-6 max-w-lg leading-relaxed">
-              From a single email address, uncover the complete digital identity: online accounts,
-              data breaches, corporate roles, media presence, sanctions exposure, and geographic footprint.
+            <p className="text-gray-400 text-lg mb-4 max-w-lg leading-relaxed">
+              The threat intelligence industry is drowning in noise. 100,000 IOCs a day.
+              IPs that change. Blocklists stale by morning.
+            </p>
+            <p className="text-gray-300 text-lg mb-6 max-w-lg leading-relaxed">
+              xposeTIP doesn't store indicators.<br />
+              <span className="text-white font-semibold">xposeTIP builds identities.</span>
             </p>
 
             <div className="flex flex-wrap gap-3 text-[11px] font-mono text-gray-500 mb-8">
+              <span className="bg-[#1e1e2e] px-2.5 py-1 rounded-full">1 email → 1 complete persona</span>
+              <span className="bg-[#1e1e2e] px-2.5 py-1 rounded-full">9-axis behavioral fingerprint</span>
               <span className="bg-[#1e1e2e] px-2.5 py-1 rounded-full">117 OSINT sources</span>
-              <span className="bg-[#1e1e2e] px-2.5 py-1 rounded-full">9-axis behavioral radar</span>
-              <span className="bg-[#1e1e2e] px-2.5 py-1 rounded-full">Two-pass intelligence pipeline</span>
             </div>
 
             <div className="mb-8">
@@ -58,7 +63,7 @@ export default function HeroSection({ email, setEmail, loading, error, onSubmit,
             </div>
 
             <p className="text-sm text-gray-600">
-              Takes 30 seconds. We'll show you everything an attacker already knows.
+              Enter any email. In 2 minutes, you'll see the person behind it.
             </p>
 
             {/* Loading with phase messages */}
@@ -135,14 +140,14 @@ export default function HeroSection({ email, setEmail, loading, error, onSubmit,
                     {[1,2,3,4,5].map(i => (
                       <div key={i} className="flex items-center gap-2 text-sm">
                         <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-gray-800 text-gray-600">medium</span>
-                        <span className="text-gray-600">Finding detail hidden — create account to view</span>
+                        <span className="text-gray-600">Identity detail hidden — create account to view</span>
                       </div>
                     ))}
                   </div>
                   <div className="absolute inset-0 flex items-center justify-center">
                     <a href={quickResult.upsell?.cta_url || `/setup?email=${encodeURIComponent(email)}`}
                        className="bg-[#00ff88] text-black font-bold rounded-lg px-6 py-3 text-sm hover:bg-[#00ff88]/90 transition-all hover:scale-105 shadow-lg shadow-[#00ff88]/20">
-                      See full report — Free
+                      See full identity report — Free
                     </a>
                   </div>
                 </div>

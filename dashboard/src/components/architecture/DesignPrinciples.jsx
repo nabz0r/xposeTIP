@@ -8,24 +8,24 @@ export default function DesignPrinciples() {
         <div className="space-y-6">
           {[
             {
-              num: '01', title: 'Two-Pass Intelligence', color: '#00ff88',
-              desc: 'Pass 1 gathers data by email/username. Pass 2 enriches by resolved name. This separation ensures name-based searches only run with high-confidence names.',
+              num: '01', title: 'Identity-First', color: '#00ff88',
+              desc: 'The unit of intelligence is the person, not the indicator. An IP changes. A blocklist goes stale. A behavioral fingerprint persists. xposeTIP builds identities, not IOC lists.',
             },
             {
-              num: '02', title: 'Operator Ground Truth', color: '#3388ff',
-              desc: 'Operators can assert country and name — overriding automated resolution. Assertions have confidence=1.0 and survive re-scans.',
+              num: '02', title: 'Confidence-Scored', color: '#3388ff',
+              desc: 'Every data point carries a confidence score derived from PageRank propagation. Nothing is assumed. Name-based matches are always "potential" — never auto-confirmed. Users see confidence badges and mandatory disclaimers.',
             },
             {
-              num: '03', title: 'Layer Isolation', color: '#ffcc00',
-              desc: 'Each scraper runs independently. API failures don\'t cascade. Partial results are always stored and displayed.',
+              num: '03', title: 'Operator-Augmented', color: '#ffcc00',
+              desc: 'Machine intelligence builds the graph. Human knowledge refines it. Operators can assert country and name — overriding automated resolution with confidence=1.0. Assertions survive re-scans.',
             },
             {
-              num: '04', title: 'Confidence-First', color: '#ff8800',
-              desc: 'Every data point carries a confidence score. Name-based matches are always "potential" — never auto-confirmed. Users see confidence badges and mandatory disclaimers.',
+              num: '04', title: 'Layer-Isolated', color: '#ff8800',
+              desc: 'Each source runs independently. API failures don\'t cascade. Partial results are always stored and displayed. Three enrichment layers (media, compliance, corporate) fail independently — one broken API never blocks the pipeline.',
             },
             {
               num: '05', title: 'Privacy by Design', color: '#ff2244',
-              desc: 'All API keys AES-256 encrypted at rest. Every DB query scoped to workspace. No data shared between workspaces.',
+              desc: 'All API keys AES-256 encrypted at rest. Every DB query scoped to workspace. No data shared between workspaces. GDPR-aware architecture — we reveal existing public exposure, we don\'t create new exposure.',
             },
           ].map(p => (
             <div key={p.num} className="flex gap-4">
