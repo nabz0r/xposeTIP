@@ -66,6 +66,37 @@ def _is_valid_avatar(url):
     return not any(pattern in url_lower for pattern in AVATAR_BLACKLIST_PATTERNS)
 
 
+def _score_avatar(url: str) -> int:
+    """Score avatar quality: 0=invalid, 1=generated/default, 2=unknown, 3=real platform photo."""
+    if not url:
+        return 0
+    low = url.lower()
+    # Gravatar identicons / generated defaults
+    if 'd=identicon' in low or 'd=retro' in low or 'd=wavatar' in low:
+        return 1
+    # Platform default avatars
+    if 'redditstatic.com/avatars/defaults' in low:
+        return 1
+    if 'simg-ssl.duolingo.com/avatar/default' in low:
+        return 1
+    # Protocol-relative URLs (//simg-ssl...) — typically low quality
+    if url.startswith('//'):
+        return 1
+    # Real platform avatars — known high-quality sources
+    if 'githubusercontent.com' in low:
+        return 3
+    if 'linktr.ee' in low:
+        return 3
+    if 'pbs.twimg.com' in low:
+        return 3
+    if 'googleusercontent.com' in low:
+        return 3
+    if 'fullcontact.com' in low:
+        return 3
+    # Everything else
+    return 2
+
+
 def _is_valid_bio(bio):
     """Check if bio is user-written, not a platform slogan."""
     if not bio:
@@ -1080,22 +1111,22 @@ def aggregate_profile(target_id, workspace_id, session: Session, graph_context=N
         else:
             profile["primary_name_source"] = "auto"
 
-    # Pick primary avatar with priority:
-    # 1. Google OAuth, 2. Gravatar (non-default), 3. GitHub, 4. FullContact, 5. Others
-    AVATAR_PRIORITY = ["google_audit", "gravatar", "github_deep", "social_enricher", "fullcontact", "epieos", "scraper_engine"]
+    # Pick primary avatar: quality score first, then source priority as tiebreaker
+    AVATAR_SOURCE_PRIORITY = {
+        "google_audit": 6, "github_deep": 5, "fullcontact": 4,
+        "social_enricher": 3, "epieos": 2, "gravatar": 1, "scraper_engine": 0,
+    }
     primary_avatar = None
-    for source_prio in AVATAR_PRIORITY:
-        for a in profile["avatars"]:
-            if a.get("source") == source_prio and _is_valid_avatar(a.get("url")):
-                primary_avatar = a["url"]
-                break
-        if primary_avatar:
-            break
-    if not primary_avatar and profile["avatars"]:
-        for a in profile["avatars"]:
-            if _is_valid_avatar(a.get("url")):
-                primary_avatar = a["url"]
-                break
+    best_score = (-1, -1)  # (quality, source_priority)
+    for a in profile["avatars"]:
+        url = a.get("url")
+        if not url or not _is_valid_avatar(url):
+            continue
+        quality = _score_avatar(url)
+        src_prio = AVATAR_SOURCE_PRIORITY.get(a.get("source", ""), 0)
+        if (quality, src_prio) > best_score:
+            best_score = (quality, src_prio)
+            primary_avatar = url
     profile["primary_avatar"] = primary_avatar
 
     # Store on target
@@ -1118,7 +1149,7 @@ def aggregate_profile(target_id, workspace_id, session: Session, graph_context=N
             # Always update display_name from auto-resolved name on rescan
             # (previous value may be stale from an earlier, less accurate scan)
             target.display_name = profile["primary_name"]
-        if profile["primary_avatar"] and not target.avatar_url:
+        if profile["primary_avatar"]:
             target.avatar_url = profile["primary_avatar"]
         session.commit()
 
