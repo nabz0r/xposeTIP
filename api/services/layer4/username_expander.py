@@ -521,36 +521,80 @@ DEEP_TOTAL_TIMEOUT = 300   # 5 min budget (operator-triggered, can afford more)
 DEEP_MAX_SCRAPERS = 80     # More scrapers than auto Pass 1.5 (which caps at 50)
 DEEP_RATE_LIMIT_DELAY = 0.3  # Slightly faster (operator chose this, not auto)
 
+# --- Config for generic deep scan ---
+INDICATOR_TIMEOUT = {
+    "username": 300,
+    "email": 180,
+    "domain": 120,
+    "name": 180,
+    "fullname": 180,
+    "first_name": 180,
+}
+INDICATOR_MAX_SCRAPERS = {
+    "username": 80,
+    "email": 30,
+    "domain": 15,
+    "name": 15,
+    "fullname": 15,
+    "first_name": 15,
+}
+
 
 def scan_single_username(target_id, workspace_id, session: Session,
                          username: str, scan_id=None, email=None) -> dict:
-    """Deep scan a single username across all username-capable scrapers.
+    """Backward-compatible wrapper — delegates to scan_single_indicator."""
+    return scan_single_indicator(
+        target_id, workspace_id, session,
+        indicator_type="username", indicator_value=username,
+        scan_id=scan_id, email=email,
+    )
 
-    Operator-triggered (no min_platforms filter, no top-3 limit).
-    Re-scans everything — dedup happens at _store_result (upsert pattern).
-    Findings tagged with data.pass = "deep" to distinguish from auto Pass 1.5.
+
+def scan_single_indicator(target_id, workspace_id, session: Session,
+                          indicator_type: str, indicator_value: str,
+                          scan_id=None, email=None) -> dict:
+    """Deep scan a single indicator across all matching scrapers.
+
+    Generic version of scan_single_username. Loads scrapers by input_type,
+    executes them against indicator_value, stores findings tagged pass="deep".
     """
     t0 = time.time()
     result = {
-        "username": username,
+        "indicator_type": indicator_type,
+        "indicator_value": indicator_value,
         "scrapers_run": 0,
         "findings_created": 0,
         "identities_created": 0,
         "errors": [],
     }
 
-    if not username or not is_valid_username(username):
+    value = indicator_value.strip()
+    if not value or len(value) < 2:
+        result["errors"].append("invalid_value")
+        return result
+
+    # For username type, validate
+    if indicator_type == "username" and not is_valid_username(value):
         result["errors"].append("invalid_username")
         return result
 
+    # Map indicator_type to scraper input_types
+    input_types = _map_indicator_to_input_types(indicator_type)
+    if not input_types:
+        result["errors"].append(f"no_scrapers_for_type:{indicator_type}")
+        return result
+
+    timeout = INDICATOR_TIMEOUT.get(indicator_type, 180)
+    max_scrapers = INDICATOR_MAX_SCRAPERS.get(indicator_type, 30)
+
     try:
-        scrapers = _load_username_scrapers(session)
+        scrapers = _load_scrapers_by_types(session, input_types)
         if not scrapers:
-            result["errors"].append("no_username_scrapers")
+            result["errors"].append("no_enabled_scrapers")
             return result
 
-        logger.info("Deep scan: username '%s' across %d scrapers for target %s",
-                     username, len(scrapers), target_id)
+        logger.info("Deep scan: %s '%s' across %d scrapers for target %s",
+                     indicator_type, value, len(scrapers), target_id)
 
         client = httpx.Client(
             timeout=HTTP_TIMEOUT,
@@ -559,31 +603,33 @@ def scan_single_username(target_id, workspace_id, session: Session,
         )
         health = _get_health()
 
-        # Fake username_info for _store_result compatibility
+        fmt_base = _build_format_kwargs(indicator_type, value, email)
+
         username_info = {
-            "value": username,
+            "value": value,
             "platforms": set(),
             "confidences": [0.7],
-            "score": 2.0,  # Higher base score — operator chose this username
+            "score": 2.0,
         }
 
         try:
             with session.no_autoflush:
-                for scraper in scrapers[:DEEP_MAX_SCRAPERS]:
-                    if time.time() - t0 > DEEP_TOTAL_TIMEOUT:
+                for scraper in scrapers[:max_scrapers]:
+                    if time.time() - t0 > timeout:
                         result["errors"].append("timeout")
                         break
 
                     try:
-                        found_data = _execute_scraper(client, scraper, username, health)
+                        found_data = _execute_scraper_generic(
+                            client, scraper, value, indicator_type, fmt_base, health
+                        )
                         result["scrapers_run"] += 1
 
                         if found_data and found_data.get("found"):
-                            # Tag as deep scan
                             found_data["pass"] = "deep"
                             created = _store_result(
                                 session, target_id, workspace_id, scan_id,
-                                scraper, username, found_data, username_info,
+                                scraper, value, found_data, username_info,
                             )
                             if created:
                                 result["findings_created"] += created.get("findings", 0)
@@ -593,7 +639,7 @@ def scan_single_username(target_id, workspace_id, session: Session,
 
                     except Exception as e:
                         logger.debug("Deep scan: %s failed for %s: %s",
-                                     scraper.get("name"), username, e)
+                                     scraper.get("name"), value, e)
                         result["errors"].append(f"{scraper['name']}:{e}")
                         try:
                             session.rollback()
@@ -606,11 +652,123 @@ def scan_single_username(target_id, workspace_id, session: Session,
             session.commit()
 
         elapsed = time.time() - t0
-        logger.info("Deep scan complete: '%s' → %d scrapers, %d findings, %d identities in %.1fs",
-                     username, result["scrapers_run"],
-                     result["findings_created"], result["identities_created"], elapsed)
+        logger.info("Deep scan complete: %s '%s' → %d scrapers, %d findings in %.1fs",
+                     indicator_type, value, result["scrapers_run"],
+                     result["findings_created"], elapsed)
 
     except Exception:
-        logger.exception("Deep scan failed for username '%s' target %s", username, target_id)
+        logger.exception("Deep scan failed for %s '%s'", indicator_type, value)
 
     return result
+
+
+def _map_indicator_to_input_types(indicator_type: str) -> list:
+    """Map a finding indicator_type to scraper input_type(s)."""
+    mapping = {
+        "username": ["username"],
+        "email": ["email"],
+        "domain": ["domain"],
+        "name": ["name", "fullname", "first_name"],
+        "fullname": ["name", "fullname", "first_name"],
+        "media_mention": ["name", "fullname"],
+        "sanctions_match": ["name", "fullname"],
+        "corporate_officer": ["name", "fullname"],
+        "pep_match": ["name", "fullname"],
+    }
+    return mapping.get(indicator_type, [])
+
+
+def _load_scrapers_by_types(session: Session, input_types: list) -> list:
+    """Load all enabled scrapers matching any of the given input_types."""
+    from sqlalchemy import or_
+    scrapers = session.execute(
+        select(Scraper).where(
+            Scraper.enabled == True,
+            or_(*[Scraper.input_type == t for t in input_types])
+        )
+    ).scalars().all()
+    return [s.to_dict() for s in scrapers]
+
+
+def _build_format_kwargs(indicator_type: str, value: str, email: str = None) -> dict:
+    """Build URL template format kwargs based on indicator type."""
+    base = _SafeFormatDict({
+        "username": value,
+        "email": value,
+        "input": value,
+        "domain": "",
+        "first_name": value,
+        "fullname": value,
+        "fullname_encoded": value.replace(" ", "+"),
+        "name": value,
+        "email_md5": hashlib.md5(value.encode()).hexdigest(),
+    })
+
+    if indicator_type == "email":
+        parts = value.split("@")
+        base["domain"] = parts[1] if len(parts) > 1 else ""
+        base["username"] = parts[0] if len(parts) > 0 else value
+
+    if indicator_type == "domain":
+        base["domain"] = value
+
+    if indicator_type in ("name", "fullname", "media_mention", "sanctions_match",
+                          "corporate_officer", "pep_match"):
+        parts = value.split()
+        base["first_name"] = parts[0] if parts else value
+        base["last_name"] = parts[-1] if len(parts) > 1 else ""
+        base["fullname"] = value
+        base["fullname_encoded"] = value.replace(" ", "+")
+
+    return base
+
+
+def _execute_scraper_generic(client, scraper, value, indicator_type, fmt_base, health):
+    """Execute a scraper with generic format kwargs."""
+    url = ""
+    try:
+        url = scraper.get("url_template", "").format_map(fmt_base)
+        if not url or "{" in url:
+            return {"found": False, "error": "template_incomplete", "url": url}
+
+        headers = dict(scraper.get("headers") or {})
+        headers.setdefault("User-Agent", USER_AGENT)
+
+        method = (scraper.get("method") or "GET").upper()
+        t0_req = time.time()
+
+        if method == "POST":
+            body = (scraper.get("body_template") or "").format_map(fmt_base)
+            response = client.post(url, content=body, headers=headers)
+        else:
+            response = client.get(url, headers=headers)
+
+        elapsed_ms = int((time.time() - t0_req) * 1000)
+
+        if health:
+            health.record(scraper.get("name", "unknown"), response.status_code, elapsed_ms)
+
+        content = response.text
+        found = _check_found(content, response.status_code, scraper)
+
+        if not found:
+            return {"found": False, "url": url, "status_code": response.status_code}
+
+        extracted = {}
+        for rule in scraper.get("extraction_rules") or []:
+            val = _extract(content, rule)
+            if val is not None:
+                extracted[rule["field"]] = val
+
+        return {
+            "found": True,
+            "extracted": extracted,
+            "url": url,
+            "status_code": response.status_code,
+        }
+
+    except httpx.TimeoutException:
+        return {"found": False, "error": "timeout", "url": url}
+    except Exception as e:
+        logger.debug("Generic scraper %s failed: %s", scraper.get("name"), e)
+        return {"found": False, "error": str(e), "url": url}

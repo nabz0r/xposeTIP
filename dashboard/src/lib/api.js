@@ -71,6 +71,11 @@ export const scanUsername = (targetId, username) =>
     body: JSON.stringify({ username }),
   })
 export const getRemediation = (targetId) => request(`/targets/${targetId}/remediation`)
+export const scanIndicator = (targetId, type, value) =>
+  request(`/targets/${targetId}/scan-indicator`, {
+    method: 'POST',
+    body: JSON.stringify({ type, value }),
+  })
 
 // Scans
 export const createScan = (data) => request('/scans', { method: 'POST', body: JSON.stringify(data) })

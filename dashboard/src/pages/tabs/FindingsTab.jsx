@@ -1,5 +1,6 @@
-import React, { Fragment } from 'react'
-import { ChevronDown, ChevronRight, ExternalLink, Shield, Globe } from 'lucide-react'
+import React, { Fragment, useState } from 'react'
+import { ChevronDown, ChevronRight, ExternalLink, Shield, Globe, Search, Loader2 } from 'lucide-react'
+import { scanIndicator } from '../../lib/api'
 
 const severityColors = {
   critical: '#ff2244', high: '#ff8800', medium: '#ffcc00', low: '#3388ff', info: '#666688',
@@ -211,7 +212,38 @@ function FindingDataCard({ finding }) {
   return null
 }
 
-export default function FindingsTab({ target, findings, filteredFindings, expanded, setExpanded, sevFilter, setSevFilter, modFilter, setModFilter, statusFilter, setStatusFilter, findingsLimit, setFindingsLimit, uniqueModules, load, patchFinding }) {
+const SCANNABLE_TYPES = new Set(['username', 'email', 'domain', 'name', 'fullname',
+    'media_mention', 'sanctions_match', 'corporate_officer', 'pep_match'])
+
+export default function FindingsTab({ target, findings, filteredFindings, expanded, setExpanded, sevFilter, setSevFilter, modFilter, setModFilter, statusFilter, setStatusFilter, findingsLimit, setFindingsLimit, uniqueModules, load, patchFinding, targetId, onRefresh }) {
+  const [scanningIndicator, setScanningIndicator] = useState(null)
+
+  async function handleDeepScan(e, finding) {
+    e.stopPropagation()
+    if (scanningIndicator) return
+    const type = finding.indicator_type
+    const value = finding.indicator_value
+    if (!type || !value || !targetId) return
+    setScanningIndicator(value)
+    try {
+      await scanIndicator(targetId, type, value)
+      let attempts = 0
+      const poll = setInterval(() => {
+        attempts++
+        if (attempts >= 24) {
+          clearInterval(poll)
+          setScanningIndicator(null)
+          if (onRefresh) onRefresh()
+          return
+        }
+        if (onRefresh) onRefresh()
+      }, 5000)
+      setTimeout(() => { if (onRefresh) onRefresh() }, 10000)
+    } catch (err) {
+      console.error('Deep indicator scan failed:', err)
+      setScanningIndicator(null)
+    }
+  }
   return (
     <div>
       {/* Remediation progress bar */}
@@ -337,6 +369,26 @@ export default function FindingsTab({ target, findings, filteredFindings, expand
                         <p className="text-sm text-gray-300">{f.description}</p>
                         <div className="flex items-center gap-4 text-xs text-gray-400">
                           {f.indicator_value && <span><span className="text-gray-500">Indicator:</span> <span className="font-mono">{f.indicator_value}</span></span>}
+                          {f.indicator_value && f.indicator_type && SCANNABLE_TYPES.has(f.indicator_type) && (
+                            <button
+                              onClick={(e) => handleDeepScan(e, f)}
+                              disabled={!!scanningIndicator}
+                              className={`inline-flex items-center gap-1 text-[10px] font-mono px-2 py-1 rounded transition-colors ${
+                                scanningIndicator === f.indicator_value
+                                  ? 'bg-[#00ff88]/20 text-[#00ff88] animate-pulse'
+                                  : scanningIndicator
+                                    ? 'text-gray-600 cursor-not-allowed'
+                                    : 'text-gray-400 hover:text-[#00ff88] hover:bg-[#00ff88]/10 border border-[#1e1e2e]'
+                              }`}
+                              title={`Deep scan this ${f.indicator_type} across all matching scrapers`}
+                            >
+                              {scanningIndicator === f.indicator_value ? (
+                                <><Loader2 className="w-3 h-3 animate-spin" /> Scanning...</>
+                              ) : (
+                                <><Search className="w-3 h-3" /> Deep Scan</>
+                              )}
+                            </button>
+                          )}
                           {f.url && <a href={f.url} target="_blank" rel="noreferrer" className="text-[#3388ff] hover:underline inline-flex items-center gap-1">
                             Open link <ExternalLink className="w-3 h-3" />
                           </a>}

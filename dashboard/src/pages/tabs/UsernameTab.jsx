@@ -1,6 +1,6 @@
 import { useMemo, useState, useEffect } from 'react'
 import { ChevronDown, ChevronRight, ExternalLink, Zap, Search, Loader2 } from 'lucide-react'
-import { scanUsername } from '../../lib/api'
+import { scanIndicator } from '../../lib/api'
 
 const PLATFORM_COLORS = {
   github: '#238636', gitlab: '#fc6d26', reddit: '#ff4500',
@@ -123,7 +123,7 @@ export default function UsernameTab({ findings, graphData, targetId, onRefresh }
     if (scanningUser) return
     setScanningUser(username)
     try {
-      await scanUsername(targetId, username)
+      await scanIndicator(targetId, 'username', username)
       // Poll for completion — refresh every 5s, clear after 2 min max
       let attempts = 0
       const maxAttempts = 24

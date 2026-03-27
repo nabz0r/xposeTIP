@@ -646,6 +646,46 @@ def deep_username_scan(self, target_id: str, workspace_id: str, username: str, s
         session.close()
 
 
+@celery_app.task(name="api.tasks.scan_orchestrator.deep_indicator_scan", bind=True)
+def deep_indicator_scan(self, target_id: str, workspace_id: str,
+                        indicator_type: str, indicator_value: str,
+                        scan_id: str = None):
+    """Operator-triggered deep scan of any indicator type.
+
+    Runs all scrapers matching the indicator_type, then re-finalizes.
+    """
+    from api.services.layer4.username_expander import scan_single_indicator
+
+    session = get_sync_session()
+    try:
+        result = scan_single_indicator(
+            uuid.UUID(target_id),
+            uuid.UUID(workspace_id),
+            session,
+            indicator_type=indicator_type,
+            indicator_value=indicator_value,
+            scan_id=uuid.UUID(scan_id) if scan_id else None,
+        )
+
+        if result.get("findings_created", 0) > 0:
+            logger.info("Deep %s scan '%s' created %d findings — re-finalizing",
+                         indicator_type, indicator_value, result["findings_created"])
+            if scan_id:
+                finalize_scan(scan_id)
+            else:
+                _lightweight_refinalize(target_id, workspace_id, session)
+        else:
+            logger.info("Deep %s scan '%s' — no new findings", indicator_type, indicator_value)
+
+        return result
+
+    except Exception:
+        logger.exception("deep_indicator_scan failed for %s '%s'", indicator_type, indicator_value)
+        raise
+    finally:
+        session.close()
+
+
 def _lightweight_refinalize(target_id_str: str, workspace_id_str: str, session):
     """Re-run graph + PageRank + profile + fingerprint without a full scan cycle."""
     from api.models.target import Target

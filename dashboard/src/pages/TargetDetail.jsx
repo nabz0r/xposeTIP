@@ -350,6 +350,7 @@ export default function TargetDetail() {
           statusFilter={statusFilter} setStatusFilter={setStatusFilter}
           findingsLimit={findingsLimit} setFindingsLimit={setFindingsLimit}
           uniqueModules={uniqueModules} load={load} patchFinding={patchFinding}
+          targetId={id} onRefresh={load}
         />
       )}
 
