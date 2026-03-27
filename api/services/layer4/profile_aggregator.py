@@ -1127,7 +1127,14 @@ def aggregate_profile(target_id, workspace_id, session: Session, graph_context=N
         if (quality, src_prio) > best_score:
             best_score = (quality, src_prio)
             primary_avatar = url
+
+    # Quality gate: only promote to target.avatar_url if quality >= 2
+    # Score 0-1 = invalid/generated defaults → pixel art avatar fallback
+    avatar_quality = best_score[0] if best_score != (-1, -1) else 0
+    if avatar_quality < 2:
+        primary_avatar = None
     profile["primary_avatar"] = primary_avatar
+    profile["primary_avatar_quality"] = avatar_quality  # expose for frontend badge
 
     # Store on target
     target = session.execute(
@@ -1149,8 +1156,11 @@ def aggregate_profile(target_id, workspace_id, session: Session, graph_context=N
             # Always update display_name from auto-resolved name on rescan
             # (previous value may be stale from an earlier, less accurate scan)
             target.display_name = profile["primary_name"]
+        # Avatar: only set if quality >= 2, otherwise clear to trigger pixel art fallback
         if profile["primary_avatar"]:
             target.avatar_url = profile["primary_avatar"]
+        else:
+            target.avatar_url = None  # force GenerativeAvatar fallback
         session.commit()
 
     logger.info("Profile aggregated for target %s: %d sources, %d social profiles, %d breaches",

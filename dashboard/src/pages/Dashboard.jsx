@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react'
 import { useNavigate, useOutletContext } from 'react-router-dom'
-import { Crosshair, Radar, AlertTriangle, ShieldAlert, Search } from 'lucide-react'
+import { Crosshair, Radar, AlertTriangle, ShieldAlert } from 'lucide-react'
 import { useAuth } from '../lib/auth'
-import { getTargets, getScans, getFindingsStats, createTarget, createScan, getDefaults, getFingerprint, cancelScan } from '../lib/api'
+import { getTargets, getScans, getFindingsStats, getFingerprint, cancelScan } from '../lib/api'
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, AreaChart, Area } from 'recharts'
 import WorkspaceGeoMap from '../components/WorkspaceGeoMap'
 import FingerprintRadar from '../components/FingerprintRadar'
@@ -57,20 +57,10 @@ export default function Dashboard() {
   const [topTarget, setTopTarget] = useState(null)
   const [topTargets, setTopTargets] = useState([])
   const [topFingerprint, setTopFingerprint] = useState(null)
-  const [quickEmail, setQuickEmail] = useState('')
-  const [loading, setLoading] = useState(false)
-  const [defaultModules, setDefaultModules] = useState(['email_validator', 'holehe', 'emailrep', 'gravatar', 'epieos', 'github_deep', 'dns_deep'])
   const navigate = useNavigate()
 
-  useEffect(() => { loadData(); loadDefaults() }, [refreshKey])
+  useEffect(() => { loadData() }, [refreshKey])
   useSSE({ 'scan.completed': () => loadData(), 'target.updated': () => loadData() })
-
-  async function loadDefaults() {
-    try {
-      const defs = await getDefaults()
-      if (defs.default_modules?.length) setDefaultModules(defs.default_modules)
-    } catch {}
-  }
 
   async function loadData() {
     try {
@@ -119,21 +109,6 @@ export default function Dashboard() {
     } catch {}
   }
 
-  async function handleQuickScan(e) {
-    e.preventDefault()
-    if (!quickEmail) return
-    setLoading(true)
-    try {
-      const target = await createTarget({ email: quickEmail })
-      await createScan({ target_id: target.id, modules: defaultModules })
-      navigate(`/targets/${target.id}`)
-    } catch (err) {
-      alert(err.message)
-    } finally {
-      setLoading(false)
-    }
-  }
-
   const statusColors = {
     queued: '#666688', running: '#ffcc00', completed: '#00ff88', failed: '#ff2244', cancelled: '#666688',
   }
@@ -177,23 +152,6 @@ export default function Dashboard() {
           </div>
         </div>
       )}
-
-      {/* Quick Scan */}
-      <div className="bg-[#12121a] border border-[#1e1e2e] rounded-xl p-5">
-        <h2 className="text-sm font-semibold mb-3">Quick Scan</h2>
-        <form onSubmit={handleQuickScan} className="flex gap-3">
-          <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
-            <input type="email" value={quickEmail} onChange={(e) => setQuickEmail(e.target.value)}
-              placeholder="Enter email to scan..."
-              className="w-full bg-[#0a0a0f] border border-[#1e1e2e] rounded-lg pl-10 pr-3 py-2.5 text-sm font-mono focus:outline-none focus:border-[#00ff88]/50" />
-          </div>
-          <button type="submit" disabled={loading}
-            className="bg-[#00ff88] text-black font-semibold rounded-lg px-6 py-2.5 text-sm hover:bg-[#00ff88]/90 transition-colors disabled:opacity-50">
-            {loading ? 'Scanning...' : 'Scan'}
-          </button>
-        </form>
-      </div>
 
       {/* Charts */}
       {stats.findings > 0 && (

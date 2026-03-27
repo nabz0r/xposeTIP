@@ -1,6 +1,21 @@
 import { useState } from 'react'
 import { Camera, X } from 'lucide-react'
 
+function getAvatarQuality(url) {
+  if (!url) return 0
+  const low = url.toLowerCase()
+  if (low.includes('d=identicon') || low.includes('d=retro') || low.includes('d=wavatar')) return 1
+  if (low.includes('redditstatic.com/avatars/defaults')) return 1
+  if (low.includes('simg-ssl.duolingo.com/avatar/default')) return 1
+  if (url.startsWith('//')) return 1
+  if (low.includes('githubusercontent.com')) return 3
+  if (low.includes('linktr.ee')) return 3
+  if (low.includes('pbs.twimg.com')) return 3
+  if (low.includes('googleusercontent.com')) return 3
+  if (low.includes('fullcontact.com')) return 3
+  return 2
+}
+
 export default function PhotosTab({ profile, target }) {
   const avatars = profile?.avatars || []
   const primaryAvatar = profile?.primary_avatar || target?.avatar_url
@@ -68,11 +83,21 @@ export default function PhotosTab({ profile, target }) {
                 <span className="text-[10px] font-mono text-[#3388ff]">
                   {(a.source || 'unknown').replace(/_profile|_scraper|_search/g, '')}
                 </span>
-                {a.url === primaryAvatar && (
-                  <span className="text-[9px] bg-[#00ff88]/15 text-[#00ff88] px-1.5 py-0.5 rounded font-mono">
-                    Primary
+                <div className="flex items-center gap-1">
+                  <span className={`text-[9px] px-1.5 py-0.5 rounded font-mono ${
+                    getAvatarQuality(a.url) >= 3 ? 'bg-[#00ff88]/15 text-[#00ff88]' :
+                    getAvatarQuality(a.url) >= 2 ? 'bg-[#ffcc00]/15 text-[#ffcc00]' :
+                    'bg-[#ff2244]/15 text-[#ff2244]'
+                  }`}>
+                    {getAvatarQuality(a.url) >= 3 ? 'Verified' :
+                     getAvatarQuality(a.url) >= 2 ? 'Likely' : 'Default'}
                   </span>
-                )}
+                  {a.url === primaryAvatar && (
+                    <span className="text-[9px] bg-[#00ff88]/15 text-[#00ff88] px-1.5 py-0.5 rounded font-mono">
+                      Primary
+                    </span>
+                  )}
+                </div>
               </div>
             </div>
           ))}
