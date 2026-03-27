@@ -1,3 +1,4 @@
+import { Shield, Zap, BookOpen } from 'lucide-react'
 import Section from '../shared/Section'
 
 export default function TrustBar() {
@@ -19,9 +20,17 @@ export default function TrustBar() {
             </div>
           ))}
         </div>
-        <p className="text-sm text-gray-600 text-center mt-4">
-          Open source · On-premise ready · Your data stays yours.
-        </p>
+        <div className="flex justify-center gap-6 mt-4">
+          <span className="text-xs text-gray-400 flex items-center gap-1.5">
+            <Shield className="w-3.5 h-3.5 text-[#00ff88]" /> Ethical OSINT
+          </span>
+          <span className="text-xs text-gray-400 flex items-center gap-1.5">
+            <Zap className="w-3.5 h-3.5 text-[#00ff88]" /> Green by design
+          </span>
+          <span className="text-xs text-gray-400 flex items-center gap-1.5">
+            <BookOpen className="w-3.5 h-3.5 text-[#00ff88]" /> Education first
+          </span>
+        </div>
       </div>
     </Section>
   )

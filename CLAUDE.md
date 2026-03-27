@@ -39,6 +39,28 @@ Nexus 2026 — June 10-11, Luxexpo, Luxembourg (€50 cybersecurity category, su
 10. Every DB query scoped to workspace_id
 11. SCANNER_REGISTRY IDs must match scripts/seed_modules.py
 
+## Product Principles (Manifesto)
+
+### Ethical OSINT
+- Consent-first: scan yourself or with DPA authorization
+- Transparency: every finding shows source, every score explains reasoning
+- Purpose limitation: expose to protect, not to exploit
+- Right to delete: full purge on request, not soft delete
+- No dark patterns: honest scores, no scare-tactic upsells
+
+### Green Intelligence
+- Maximum insight per watt — Amiga 500 philosophy
+- Data-driven scrapers (JSON config, not code per source)
+- Single PostgreSQL, no distributed clusters
+- Pixel art avatars: 5.4B combos, zero GPU, zero API
+- Every architecture decision: "is this the lightest way?"
+
+### Education First
+- Every finding explains WHY it's a risk in plain language
+- Remediation actions are actionable, not generic
+- The goal is to make users NOT need xpose anymore
+- Scores are explainable, not black-box
+
 ## Deploy sequence
 
 ```bash

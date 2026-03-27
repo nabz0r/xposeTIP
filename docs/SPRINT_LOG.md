@@ -59,6 +59,7 @@
 - [x] Consumer dashboard preview (/user-preview)
 - [x] Remediation engine (prioritized action plan)
 - [x] Avatar quality gate (reject identicons/defaults)
+- [x] Product manifesto: Ethical OSINT + Green Intelligence + Education First
 - [ ] Graph zoom/pan improvement
 - [ ] Corporate intelligence via Hunter.io (domain → employees)
 
@@ -71,6 +72,9 @@
 - [ ] Public API — behavioral fingerprints as structured intelligence
 - [ ] Webhook notifications
 - [ ] On-premise deployment guide
+- [ ] Consent gate enforcement (scan authorization flow)
+- [ ] Right-to-delete (full purge endpoint + UI)
+- [ ] Finding explanations (plain-language "why this matters" per finding type)
 
 ### v1.2 — Enterprise (Q4 2026)
 - [ ] OAuth audit (Google/Microsoft third-party app access)
@@ -79,6 +83,9 @@
 - [ ] Compliance reports (NIS2, DORA, AI Act)
 - [ ] Multi-language (FR, DE, LU)
 - [ ] Email alerts (new breach detected for monitored identities)
+- [ ] Carbon footprint dashboard (scan cost in watts + CO2 vs industry average)
+- [ ] Educational guides per finding category (interactive walkthroughs)
+- [ ] Compliance: consent audit trail (who authorized which scan, when)
 
 ### v2.0 — Platform (2027)
 - [ ] Marketplace (community scrapers and analyzers)

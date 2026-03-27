@@ -18,6 +18,7 @@ export default function LandingFooter() {
             <a href="/architecture" className="hover:text-white transition-colors">Architecture</a>
             <a href="/architecture#roadmap" className="hover:text-white transition-colors">Roadmap</a>
             <a href="https://github.com/nabz0r/xposeTIP" className="hover:text-white transition-colors">GitHub</a>
+            <a href="/manifesto" className="hover:text-white transition-colors">Manifesto</a>
             <a href="/login" className="hover:text-white transition-colors">Sign in</a>
           </div>
         </div>

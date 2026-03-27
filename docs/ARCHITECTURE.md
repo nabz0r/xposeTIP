@@ -1,5 +1,30 @@
 # Architecture — xposeTIP v0.80.0
 
+## Design Philosophy
+
+### Ethical OSINT
+xpose reveals exposure to protect, not to exploit. Every finding includes its source
+and a remediation action. No black-box scoring. No unconsented scanning.
+
+### Green Intelligence (Amiga 500 Principle)
+In 1987, demoscene coders created art with 512KB of RAM that still inspires today.
+xpose follows this philosophy: maximum intelligence with minimum resources.
+
+120 scrapers, PageRank, Markov chains, behavioral profiling, a rules engine — all on a
+single machine. No GPU clusters. No distributed databases. No managed cloud services
+required. 5 Docker containers. ~50 watts.
+
+Every architectural decision asks: **"is this the lightest way to achieve this?"**
+
+- Scrapers are data-driven JSON configs, not code-per-source
+- PostgreSQL single node handles raw + gold + graph
+- Celery + Redis for task orchestration, not Kafka
+- Pixel art avatars: 5.4B unique combinations, zero API calls, zero GPU
+
+### Education First
+Every scan is a lesson. Findings explain the risk in plain language. Remediation actions
+are specific and actionable. The goal is to make users informed enough to not need xpose.
+
 ## System Overview
 
 ```mermaid

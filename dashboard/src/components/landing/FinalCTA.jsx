@@ -19,6 +19,9 @@ export default function FinalCTA({ email, setEmail, loading, error, onSubmit }) 
         <p className="text-sm text-gray-600">
           Free. No credit card. Results in 2 minutes.
         </p>
+        <p className="text-xs text-gray-500 mt-3">
+          Ethical OSINT &middot; Green intelligence &middot; <a href="/manifesto" className="text-[#00ff88] hover:underline">Read our manifesto</a>
+        </p>
       </div>
     </Section>
   )

@@ -27,6 +27,10 @@ export default function DesignPrinciples() {
               num: '05', title: 'Privacy by Design', color: '#ff2244',
               desc: 'All API keys AES-256 encrypted at rest. Every DB query scoped to workspace. No data shared between workspaces. GDPR-aware architecture — we reveal existing public exposure, we don\'t create new exposure.',
             },
+            {
+              num: '06', title: 'Green Intelligence', color: '#00ddcc',
+              desc: 'Maximum insight per watt. 120 scrapers, PageRank, Markov chains — on a single machine. No GPU clusters, no cloud bloat. Data-driven scrapers (JSON config, not code per source). Pixel art avatars: 5.4B combos, zero GPU. Every decision asks: is this the lightest way?',
+            },
           ].map(p => (
             <div key={p.num} className="flex gap-4">
               <span className="text-2xl font-mono font-bold shrink-0" style={{ color: p.color + '33' }}>{p.num}</span>

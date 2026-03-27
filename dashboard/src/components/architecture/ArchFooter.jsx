@@ -33,6 +33,7 @@ export function ArchFooter() {
         </div>
         <div className="flex items-center gap-4 text-xs text-gray-500">
           <Link to="/welcome" className="hover:text-white transition-colors">Home</Link>
+          <Link to="/manifesto" className="hover:text-white transition-colors">Manifesto</Link>
           <a href="https://github.com/nabz0r/xposeTIP" className="hover:text-white transition-colors">GitHub</a>
         </div>
       </div>
