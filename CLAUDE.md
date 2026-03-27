@@ -7,7 +7,7 @@ PageRank/Markov confidence → clusters personas → pixel art avatar → remedi
 
 ## Current version: v0.74.0
 
-79 sprints. 120 scrapers, 35 scanners, 6 intelligence analyzers, 9-axis fingerprint.
+80 sprints. 120 scrapers, 35 scanners, 7 intelligence analyzers, 9-axis fingerprint.
 3-pass pipeline (email → username expansion → name-based enrichment).
 PDF identity report export (ReportLab, dark theme, tiered by plan).
 

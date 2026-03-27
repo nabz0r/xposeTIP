@@ -68,6 +68,7 @@ class AnalysisPipeline:
         from api.services.layer4.analyzers.breach_correlator import BreachCorrelator
         from api.services.layer4.analyzers.risk_assessor import RiskAssessor
         from api.services.layer4.analyzers.code_leak_analyzer import CodeLeakAnalyzer
+        from api.services.layer4.analyzers.behavioral_profiler import BehavioralProfiler
 
         analyzers = [
             IPAnalyzer(),
@@ -76,6 +77,7 @@ class AnalysisPipeline:
             BreachCorrelator(),
             RiskAssessor(),
             CodeLeakAnalyzer(),
+            BehavioralProfiler(),
         ]
 
         new_count = 0
