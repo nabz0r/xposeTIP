@@ -5,7 +5,7 @@
 Identity Threat Intelligence platform. Scans email → builds identity graph →
 PageRank/Markov confidence → clusters personas → pixel art avatar → remediation plan.
 
-## Current version: v0.74.0
+## Current version: v0.80.0
 
 80 sprints. 120 scrapers, 35 scanners, 7 intelligence analyzers, 9-axis fingerprint.
 3-pass pipeline (email → username expansion → name-based enrichment).
@@ -67,7 +67,9 @@ After deploy: System → Recalculate Fingerprints → Recalculate Profiles
 - `api/services/layer4/score_engine.py` — dual exposure/threat score
 - `api/services/layer4/persona_engine.py` — graph cluster + SequenceMatcher personas
 - `api/services/layer4/fingerprint_engine.py` — 9-axis radar, eigenvalues, avatar_seed
-- `api/services/layer4/analysis_pipeline.py` — 5 intelligence analyzers
+- `api/services/layer4/analysis_pipeline.py` — 7 intelligence analyzers
+- `api/services/layer4/analyzers/code_leak_analyzer.py` — GitHub/paste code leak detection
+- `api/services/layer4/analyzers/behavioral_profiler.py` — 5 archetypes behavioral classification
 - `api/services/layer4/username_expander.py` — Pass 1.5 username expansion
 - `api/services/layer4/username_validator.py` — is_valid_username() junk filter
 - `api/services/layer4/source_scoring.py` — source reliability weights
@@ -87,6 +89,7 @@ After deploy: System → Recalculate Fingerprints → Recalculate Profiles
 - `dashboard/src/components/IdentityGraph.jsx` — D3 force-directed graph
 - `dashboard/src/components/FingerprintRadar.jsx` — 9-axis radar chart
 - `dashboard/src/components/WorkspaceGeoMap.jsx` — D3 geographic heatmap
+- `dashboard/src/pages/UserPreview.jsx` — consumer dashboard preview (/user-preview)
 
 ## Details
 

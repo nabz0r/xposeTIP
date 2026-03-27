@@ -6,7 +6,7 @@ export default function TrustBar() {
       <div className="max-w-4xl mx-auto px-6">
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 text-center">
           {[
-            { value: '117', label: 'OSINT sources' },
+            { value: '120', label: 'OSINT sources' },
             { value: '9-axis', label: 'Behavioral radar' },
             { value: '40+', label: 'Sanctions lists' },
             { value: 'GDPR', label: 'Aware architecture' },

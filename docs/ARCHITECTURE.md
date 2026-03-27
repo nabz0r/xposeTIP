@@ -1,4 +1,4 @@
-# Architecture — xposeTIP v0.73.0
+# Architecture — xposeTIP v0.80.0
 
 ## System Overview
 
@@ -56,6 +56,7 @@ graph TB
 | 1 | Email scan | Run all enabled scanner modules against email address |
 | 1.5 | Username expansion | Select top 3 discovered usernames, re-scan across username-capable scrapers |
 | 2 | Name enrichment | Use discovered real name for public exposure scrapers (media, corporate) |
+| Deep | Username drill-down | Operator-triggered: scan single username across all 80+ username-capable scrapers |
 
 ```mermaid
 sequenceDiagram
@@ -94,9 +95,24 @@ sequenceDiagram
 8. Force display_name blacklist validation
 9. Identity enrichment (re-query Genderize/Agify/Nationalize with discovered name)
 10. Cluster personas (graph-based with SequenceMatcher fallback)
-11. Intelligence pipeline (5 analyzers: risk, breach, domain, behavioral, network)
+11. Intelligence pipeline (7 analyzers: risk, breach, domain, behavioral, network, code_leak, behavioral_profiler)
 12. Compute fingerprint (9-axis radar, eigenvalues, avatar_seed, timeline_events)
 13. Store life_timeline in profile_data
+
+## Code Leak Detection
+
+GitHub Code Search API (free, 5 req/min) searches ALL public repositories for email
+and username mentions. Finds leaked credentials, .env files, config files, API keys.
+CodeLeakAnalyzer classifies findings by sensitivity (10 regex patterns for keys, tokens,
+passwords, database URLs).
+
+## Behavioral Profiling
+
+BehavioralProfiler analyzer classifies identities into archetypes based on cross-platform
+activity metrics: GitHub repos/followers, Reddit karma, Kaggle competitions, Medium followers.
+
+5 archetypes: Developer (senior/active/present), Gamer, Creative/Designer, Social Influencer,
+Privacy-conscious. Also detects account longevity and high-activity patterns.
 
 ## Markov Chain / graph_context
 

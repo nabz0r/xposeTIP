@@ -1,4 +1,4 @@
-# API Reference — xposeTIP v0.73.0
+# API Reference — xposeTIP v0.80.0
 
 All endpoints prefixed with `/api/v1/`. All require auth (JWT Bearer) except health.
 All scoped to workspace via middleware (extracts workspace_id from JWT claims).
@@ -20,6 +20,8 @@ GET    /api/v1/targets/{id}
 PATCH  /api/v1/targets/{id}
 DELETE /api/v1/targets/{id}
 GET    /api/v1/targets/{id}/profile
+POST   /api/v1/targets/{id}/scan-username  — Deep scan a single username (202 Accepted)
+GET    /api/v1/targets/{id}/remediation    — Prioritized remediation actions
 ```
 
 ## Scans

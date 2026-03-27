@@ -9,7 +9,7 @@ export default function LandingFooter() {
             <Shield className="w-5 h-5 text-[#00ff88]" />
             <span className="font-bold font-['Instrument_Sans',sans-serif]">xpose</span>
             <span className="text-[10px] font-mono text-gray-600">TIP</span>
-            <span className="text-xs text-gray-600 font-mono ml-2">v0.73.0</span>
+            <span className="text-xs text-gray-600 font-mono ml-2">v0.80.0</span>
           </div>
           <p className="text-xs text-gray-600 font-mono text-center">
             Threat Identity Platform · From IOCs to identities · Open Source
