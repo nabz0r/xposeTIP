@@ -12,6 +12,12 @@ def is_valid_username(value: str) -> bool:
     """Return True if value looks like a real username, not a page title or junk."""
     if not value or len(value) > 40:
         return False
+    # Reject anything with 3+ spaces (definitely a sentence/title, not a username)
+    if value.count(' ') >= 3:
+        return False
+    # Reject regular dashes surrounded by spaces (e.g. "Telegram - a new era")
+    if ' - ' in value or ' \u2013 ' in value or ' \u2014 ' in value:
+        return False
     # Reject pipe (page titles like "seb57 | Instagram | Linktree")
     if "|" in value:
         return False

@@ -19,6 +19,21 @@ from api.models.identity import Identity
 logger = logging.getLogger(__name__)
 
 
+def _analyzer_confidence(result: dict) -> float:
+    """Map analyzer severity to confidence. Intelligence findings are inferences,
+    not direct discoveries — they should rank below platform-confirmed data."""
+    severity = result.get("severity", "info")
+    if severity == "critical":
+        return 0.85
+    if severity == "high":
+        return 0.75
+    if severity == "medium":
+        return 0.65
+    if severity == "low":
+        return 0.50
+    return 0.40  # info
+
+
 class AnalysisPipeline:
     """Orchestrates all intelligence analyzers."""
 
@@ -96,7 +111,7 @@ class AnalysisPipeline:
                         indicator_value=result.get("indicator_value"),
                         indicator_type=result.get("indicator_type"),
                         verified=result.get("verified", True),
-                        confidence=0.90,
+                        confidence=_analyzer_confidence(result),
                     )
                     session.add(finding)
                     new_count += 1

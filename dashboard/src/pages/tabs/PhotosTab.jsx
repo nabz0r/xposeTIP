@@ -92,6 +92,10 @@ export default function PhotosTab({ profile, target }) {
                     {getAvatarQuality(a.url) >= 3 ? 'Verified' :
                      getAvatarQuality(a.url) >= 2 ? 'Likely' : 'Default'}
                   </span>
+                  <span className="text-[9px] font-mono text-gray-500">
+                    {getAvatarQuality(a.url) >= 3 ? '95%' :
+                     getAvatarQuality(a.url) >= 2 ? '60%' : '20%'}
+                  </span>
                   {a.url === primaryAvatar && (
                     <span className="text-[9px] bg-[#00ff88]/15 text-[#00ff88] px-1.5 py-0.5 rounded font-mono">
                       Primary

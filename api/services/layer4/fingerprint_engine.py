@@ -21,7 +21,7 @@ _TIMESTAMP_FIELDS = [
 ]
 
 # Modules whose timestamps refer to DOMAIN age, not USER account age
-_DOMAIN_AGE_MODULES = {"dns_deep", "whois_lookup", "domain_analyzer", "crt_sh"}
+_DOMAIN_AGE_MODULES = {"dns_deep", "whois_lookup", "domain_analyzer", "crt_sh", "dns_resolver", "email_dns"}
 
 # Caps: no email account can predate the service launch
 _DOMAIN_LAUNCH_DATES = {
@@ -630,6 +630,29 @@ class FingerprintEngine:
             email_age = min(email_age, max_age)
         # Global sanity cap: no email account is older than 30 years
         email_age = min(email_age, 30)
+
+        # Filter out domain-age events from timeline
+        if timeline_events:
+            launch_year = _DOMAIN_LAUNCH_DATES.get(domain)
+            filtered_events = []
+            for ev in timeline_events:
+                ev_year = None
+                try:
+                    ev_year = datetime.fromisoformat(ev["date"]).year
+                except (ValueError, KeyError):
+                    pass
+                # Drop events older than domain launch date (impossible for user)
+                if launch_year and ev_year and ev_year < launch_year:
+                    continue
+                # Drop events from domain-age modules that slipped through
+                if ev.get("source") in _DOMAIN_AGE_MODULES:
+                    continue
+                # Drop events with domain-registration labels
+                label_l = (ev.get("label") or "").lower()
+                if "domain" in label_l and ("regist" in label_l or "creat" in label_l or "age" in label_l):
+                    continue
+                filtered_events.append(ev)
+            timeline_events = filtered_events
 
         # Security posture weaknesses
         security_issues = 0

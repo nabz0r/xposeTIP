@@ -91,10 +91,23 @@ export default function UsernameTab({ findings, graphData, targetId, onRefresh }
       }
     }
 
-    // Sort by platform count descending, then confidence
-    return Object.values(groups).sort((a, b) =>
-      b.platforms.length - a.platforms.length || b.maxConfidence - a.maxConfidence
-    )
+    // Filter out junk usernames (page titles persisted in DB before Sprint 73b)
+    const validGroups = Object.values(groups).filter(g => {
+      const u = g.username
+      if (u.length > 40) return false
+      if ((u.match(/ /g) || []).length >= 3) return false
+      if (u.includes(' - ') || u.includes(' \u2013 ') || u.includes(' \u2014 ')) return false
+      return true
+    })
+
+    // Sort: real platform count first, then total platforms, then confidence
+    return validGroups.sort((a, b) => {
+      const realA = a.platforms.filter(p => p.module && !p.module.startsWith('intelligence')).length
+      const realB = b.platforms.filter(p => p.module && !p.module.startsWith('intelligence')).length
+      if (realB !== realA) return realB - realA
+      if (b.platforms.length !== a.platforms.length) return b.platforms.length - a.platforms.length
+      return b.maxConfidence - a.maxConfidence
+    })
   }, [findings, graphData])
 
   // Clear scanning state when findings data changes (scan completed)
