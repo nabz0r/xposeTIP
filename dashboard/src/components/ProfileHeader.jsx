@@ -104,6 +104,7 @@ export default function ProfileHeader({ target, findings, animScore, profileData
     data_broker: 'Data Brokers',
     identity: 'Identity Intel',
     archive: 'Archive History',
+    code_leak: 'Code Leaks',
   }
 
   return (

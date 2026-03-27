@@ -12,6 +12,7 @@ const nodeColors = {
   paste: '#ff4466',
   name: '#00ddcc',
   location: '#cc88ff',
+  code_leak: '#ff00ff',
 }
 
 const CLUSTER_COLORS = [
