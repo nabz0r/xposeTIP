@@ -65,6 +65,11 @@ export const compareFingerprints = (id, withId) => request(`/targets/${id}/finge
 export const updateTargetCountry = (targetId, countryCode) => request(`/targets/${targetId}/country`, { method: 'PATCH', body: JSON.stringify({ country_code: countryCode }) })
 export const updateTargetIdentity = (targetId, firstName, lastName) => request(`/targets/${targetId}/identity`, { method: 'PATCH', body: JSON.stringify({ first_name: firstName, last_name: lastName }) })
 export const moveTarget = (targetId, workspaceId) => request(`/targets/${targetId}/move`, { method: 'PATCH', body: JSON.stringify({ workspace_id: workspaceId }) })
+export const scanUsername = (targetId, username) =>
+  request(`/targets/${targetId}/scan-username`, {
+    method: 'POST',
+    body: JSON.stringify({ username }),
+  })
 
 // Scans
 export const createScan = (data) => request('/scans', { method: 'POST', body: JSON.stringify(data) })

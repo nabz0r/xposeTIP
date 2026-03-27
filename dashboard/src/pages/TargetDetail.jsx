@@ -374,7 +374,7 @@ export default function TargetDetail() {
       )}
 
       {activeTab === 'usernames' && (
-        <UsernameTab findings={findings} graphData={graphData} />
+        <UsernameTab findings={findings} graphData={graphData} targetId={id} onRefresh={load} />
       )}
 
       {activeTab === 'scans' && (

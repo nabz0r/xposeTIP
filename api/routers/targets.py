@@ -394,6 +394,48 @@ async def move_target(
     return {"moved": True, "target_id": str(target_id), "new_workspace_id": str(new_ws_id)}
 
 
+@router.post("/{target_id}/scan-username", status_code=status.HTTP_202_ACCEPTED)
+async def scan_username(
+    target_id: uuid.UUID,
+    body: dict,
+    db: AsyncSession = Depends(get_db),
+    current_user=Depends(get_current_user),
+    workspace_id: uuid.UUID = Depends(get_current_workspace),
+):
+    """Trigger a deep scan of a single username across all username-capable scrapers."""
+    username = body.get("username", "").strip()
+    if not username or len(username) < 2:
+        raise HTTPException(status_code=400, detail="Username is required (min 2 chars)")
+
+    # Verify target exists and belongs to workspace
+    target = await _get_target(db, target_id, workspace_id)
+
+    # Find latest scan for this target (to attach findings)
+    from api.models.scan import Scan
+    latest_scan = (await db.execute(
+        select(Scan).where(
+            Scan.target_id == target_id,
+            Scan.status == "completed",
+        ).order_by(Scan.completed_at.desc()).limit(1)
+    )).scalar_one_or_none()
+
+    # Dispatch Celery task
+    from api.tasks.scan_orchestrator import deep_username_scan
+    task = deep_username_scan.delay(
+        str(target_id),
+        str(workspace_id),
+        username,
+        str(latest_scan.id) if latest_scan else None,
+    )
+
+    return {
+        "task_id": task.id,
+        "username": username,
+        "target_id": str(target_id),
+        "status": "queued",
+    }
+
+
 async def _get_target(db: AsyncSession, target_id: uuid.UUID, workspace_id: uuid.UUID) -> Target:
     result = await db.execute(
         select(Target).where(Target.id == target_id, Target.workspace_id == workspace_id)

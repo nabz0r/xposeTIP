@@ -605,3 +605,110 @@ def finalize_scan(scan_id: str):
         raise
     finally:
         session.close()
+
+
+@celery_app.task(name="api.tasks.scan_orchestrator.deep_username_scan", bind=True)
+def deep_username_scan(self, target_id: str, workspace_id: str, username: str, scan_id: str = None):
+    """Operator-triggered deep scan of a single username.
+
+    Runs all username-capable scrapers, then re-finalizes the target
+    (graph, PageRank, profile, fingerprint) to integrate new findings.
+    """
+    from api.services.layer4.username_expander import scan_single_username
+
+    session = get_sync_session()
+    try:
+        result = scan_single_username(
+            uuid.UUID(target_id),
+            uuid.UUID(workspace_id),
+            session,
+            username=username,
+            scan_id=uuid.UUID(scan_id) if scan_id else None,
+        )
+
+        # If new findings were created, re-finalize to rebuild graph + profile
+        if result.get("findings_created", 0) > 0:
+            logger.info("Deep scan '%s' created %d findings — re-finalizing target %s",
+                         username, result["findings_created"], target_id)
+            if scan_id:
+                finalize_scan(scan_id)
+            else:
+                _lightweight_refinalize(target_id, workspace_id, session)
+        else:
+            logger.info("Deep scan '%s' — no new findings for target %s", username, target_id)
+
+        return result
+
+    except Exception:
+        logger.exception("deep_username_scan task failed for '%s' target %s", username, target_id)
+        raise
+    finally:
+        session.close()
+
+
+def _lightweight_refinalize(target_id_str: str, workspace_id_str: str, session):
+    """Re-run graph + PageRank + profile + fingerprint without a full scan cycle."""
+    from api.models.target import Target
+    from api.models.finding import Finding
+
+    target_id = uuid.UUID(target_id_str) if isinstance(target_id_str, str) else target_id_str
+    workspace_id = uuid.UUID(workspace_id_str) if isinstance(workspace_id_str, str) else workspace_id_str
+
+    target = session.execute(select(Target).where(Target.id == target_id)).scalar_one_or_none()
+    if not target:
+        return
+
+    # 1. Rebuild graph
+    try:
+        from api.services.layer4.graph_builder import build_graph
+        build_graph(target_id, workspace_id, session)
+    except Exception:
+        logger.exception("Lightweight refinalize: graph build failed")
+
+    # 2. PageRank
+    graph_context = None
+    try:
+        from api.services.layer4.confidence_propagator import propagate_confidence
+        graph_context = propagate_confidence(target_id, workspace_id, session)
+    except Exception:
+        logger.exception("Lightweight refinalize: PageRank failed")
+
+    # 3. Profile aggregation
+    try:
+        from api.services.layer4.profile_aggregator import aggregate_profile
+        aggregate_profile(target_id, workspace_id, session, graph_context=graph_context)
+    except Exception:
+        logger.exception("Lightweight refinalize: profile aggregation failed")
+
+    # 4. Score
+    try:
+        from api.services.layer4.score_engine import compute_score
+        all_findings = session.execute(
+            select(Finding).where(Finding.target_id == target_id)
+        ).scalars().all()
+        compute_score(target, all_findings, session)
+    except Exception:
+        logger.exception("Lightweight refinalize: score failed")
+
+    # 5. Fingerprint
+    try:
+        from api.services.layer4.fingerprint_engine import FingerprintEngine
+        from api.models.identity import Identity, IdentityLink
+        all_findings = session.execute(select(Finding).where(Finding.target_id == target_id)).scalars().all()
+        identities = session.execute(select(Identity).where(Identity.target_id == target_id)).scalars().all()
+        links = session.execute(select(IdentityLink).where(IdentityLink.workspace_id == workspace_id)).scalars().all()
+        engine = FingerprintEngine()
+        fingerprint = engine.compute(target, list(all_findings), list(identities), list(links), graph_context=graph_context)
+        if fingerprint:
+            target.exposure_score = fingerprint["score"]
+            target.risk_level = fingerprint["risk_level"]
+            target.fingerprint_hash = fingerprint["hash"]
+            target.fingerprint_avatar_seed = fingerprint.get("avatar_seed")
+            profile = dict(target.profile_data or {})
+            profile["fingerprint"] = fingerprint
+            target.profile_data = profile
+    except Exception:
+        logger.exception("Lightweight refinalize: fingerprint failed")
+
+    session.commit()
+    logger.info("Lightweight refinalize done for target %s", target_id)

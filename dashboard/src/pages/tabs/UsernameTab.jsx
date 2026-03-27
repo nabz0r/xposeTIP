@@ -1,5 +1,6 @@
-import { useMemo, useState } from 'react'
-import { ChevronDown, ChevronRight, ExternalLink, Zap } from 'lucide-react'
+import { useMemo, useState, useEffect } from 'react'
+import { ChevronDown, ChevronRight, ExternalLink, Zap, Search, Loader2 } from 'lucide-react'
+import { scanUsername } from '../../lib/api'
 
 const PLATFORM_COLORS = {
   github: '#238636', gitlab: '#fc6d26', reddit: '#ff4500',
@@ -19,8 +20,9 @@ function getPlatformColor(platform) {
   return PLATFORM_COLORS[key] || '#666688'
 }
 
-export default function UsernameTab({ findings, graphData }) {
+export default function UsernameTab({ findings, graphData, targetId, onRefresh }) {
   const [expandedUser, setExpandedUser] = useState(null)
+  const [scanningUser, setScanningUser] = useState(null)
 
   // Build username map from findings + graph identities
   const usernameGroups = useMemo(() => {
@@ -36,12 +38,14 @@ export default function UsernameTab({ findings, graphData }) {
           platforms: [],
           findings: [],
           fromExpansion: false,
+          fromDeepScan: false,
           maxConfidence: 0,
         }
       }
       groups[key].findings.push(f)
       groups[key].maxConfidence = Math.max(groups[key].maxConfidence, f.confidence || 0)
       if (f.data?.pass === '1.5') groups[key].fromExpansion = true
+      if (f.data?.pass === 'deep') groups[key].fromDeepScan = true
 
       // Extract platform from module name
       const platform = f.module?.replace('scraper_', '').split('_')[0] || f.data?.platform
@@ -53,6 +57,7 @@ export default function UsernameTab({ findings, graphData }) {
           severity: f.severity,
           confidence: f.confidence,
           fromExpansion: f.data?.pass === '1.5',
+          fromDeepScan: f.data?.pass === 'deep',
         })
       }
     }
@@ -68,6 +73,7 @@ export default function UsernameTab({ findings, graphData }) {
             platforms: [],
             findings: [],
             fromExpansion: false,
+            fromDeepScan: false,
             maxConfidence: node.confidence || 0,
           }
         }
@@ -91,9 +97,48 @@ export default function UsernameTab({ findings, graphData }) {
     )
   }, [findings, graphData])
 
+  // Clear scanning state when findings data changes (scan completed)
+  useEffect(() => {
+    if (scanningUser) {
+      const timer = setTimeout(() => setScanningUser(null), 120000) // 2 min max
+      return () => clearTimeout(timer)
+    }
+  }, [scanningUser])
+
+  async function handleDeepScan(e, username) {
+    e.stopPropagation()
+    if (scanningUser) return
+    setScanningUser(username)
+    try {
+      await scanUsername(targetId, username)
+      // Poll for completion — refresh every 5s, clear after 2 min max
+      let attempts = 0
+      const maxAttempts = 24
+      const poll = setInterval(() => {
+        attempts++
+        if (attempts >= maxAttempts) {
+          clearInterval(poll)
+          setScanningUser(null)
+          if (onRefresh) onRefresh()
+          return
+        }
+        if (onRefresh) onRefresh()
+      }, 5000)
+
+      // First refresh after 10s
+      setTimeout(() => {
+        if (onRefresh) onRefresh()
+      }, 10000)
+    } catch (err) {
+      console.error('Deep scan failed:', err)
+      setScanningUser(null)
+    }
+  }
+
   // Reuse analysis
   const reuseCount = usernameGroups.filter(g => g.platforms.length >= 2).length
   const expansionCount = usernameGroups.filter(g => g.fromExpansion).length
+  const deepCount = usernameGroups.filter(g => g.fromDeepScan).length
   const totalPlatforms = usernameGroups.reduce((sum, g) => sum + g.platforms.length, 0)
 
   if (usernameGroups.length === 0) {
@@ -125,6 +170,12 @@ export default function UsernameTab({ findings, graphData }) {
             {expansionCount} from Pass 1.5
           </span>
         )}
+        {deepCount > 0 && (
+          <span className="flex items-center gap-1 text-[#3388ff] font-mono">
+            <Search className="w-3 h-3" />
+            {deepCount} deep scanned
+          </span>
+        )}
       </div>
 
       {/* Username cards */}
@@ -150,6 +201,11 @@ export default function UsernameTab({ findings, graphData }) {
                       <Zap className="w-2.5 h-2.5" /> PASS 1.5
                     </span>
                   )}
+                  {group.fromDeepScan && (
+                    <span className="flex items-center gap-1 text-[9px] font-mono text-[#3388ff] bg-[#3388ff15] px-1.5 py-0.5 rounded">
+                      <Search className="w-2.5 h-2.5" /> DEEP
+                    </span>
+                  )}
                   {group.platforms.length >= 2 && (
                     <span className="text-[9px] font-mono text-[#ffcc00] bg-[#ffcc0015] px-1.5 py-0.5 rounded">
                       REUSED
@@ -157,6 +213,25 @@ export default function UsernameTab({ findings, graphData }) {
                   )}
                 </div>
                 <div className="flex items-center gap-2 shrink-0">
+                  {/* Deep Scan button */}
+                  <button
+                    onClick={(e) => handleDeepScan(e, group.username)}
+                    disabled={!!scanningUser}
+                    className={`flex items-center gap-1 text-[10px] font-mono px-2 py-1 rounded transition-colors ${
+                      scanningUser === group.username
+                        ? 'bg-[#00ff88]/20 text-[#00ff88] animate-pulse'
+                        : scanningUser
+                          ? 'text-gray-600 cursor-not-allowed'
+                          : 'text-gray-400 hover:text-[#00ff88] hover:bg-[#00ff88]/10'
+                    }`}
+                    title="Deep scan this username across all platforms"
+                  >
+                    {scanningUser === group.username ? (
+                      <><Loader2 className="w-3 h-3 animate-spin" /> Scanning...</>
+                    ) : (
+                      <><Search className="w-3 h-3" /> Deep Scan</>
+                    )}
+                  </button>
                   {/* Platform badges */}
                   <div className="flex gap-1.5 flex-wrap justify-end">
                     {group.platforms.map(p => (
@@ -195,6 +270,9 @@ export default function UsernameTab({ findings, graphData }) {
                           <span className="text-sm font-mono text-gray-300">{p.name}</span>
                           {p.fromExpansion && (
                             <Zap className="w-3 h-3 text-[#00ff88]" />
+                          )}
+                          {p.fromDeepScan && (
+                            <Search className="w-3 h-3 text-[#3388ff]" />
                           )}
                           {p.severity && (
                             <span className={`text-[10px] px-1.5 py-0.5 rounded font-mono ${

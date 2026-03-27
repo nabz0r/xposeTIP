@@ -423,11 +423,11 @@ def _store_result(session: Session, target_id, workspace_id, scan_id,
         category=scraper.get("finding_category", "social_media"),
         severity=scraper.get("finding_severity", "info"),
         title=title[:255],
-        description=f"Username '{username}' found on {platform} via Pass 1.5 expansion",
+        description=f"Username '{username}' found on {platform} via {'deep scan' if found_data.get('pass') == 'deep' else 'Pass 1.5 expansion'}",
         data=_sanitize_for_json({
             "extracted": extracted,
             "url": found_data.get("url"),
-            "pass": "1.5",
+            "pass": found_data.get("pass", "1.5"),
             "source_username": username,
             "source_platforms": list(username_info.get("platforms", [])),
         }),
@@ -514,3 +514,103 @@ def _get_health():
         return get_scraper_health_instance()
     except Exception:
         return None
+
+
+# --- Config overrides for deep scan ---
+DEEP_TOTAL_TIMEOUT = 300   # 5 min budget (operator-triggered, can afford more)
+DEEP_MAX_SCRAPERS = 80     # More scrapers than auto Pass 1.5 (which caps at 50)
+DEEP_RATE_LIMIT_DELAY = 0.3  # Slightly faster (operator chose this, not auto)
+
+
+def scan_single_username(target_id, workspace_id, session: Session,
+                         username: str, scan_id=None, email=None) -> dict:
+    """Deep scan a single username across all username-capable scrapers.
+
+    Operator-triggered (no min_platforms filter, no top-3 limit).
+    Re-scans everything — dedup happens at _store_result (upsert pattern).
+    Findings tagged with data.pass = "deep" to distinguish from auto Pass 1.5.
+    """
+    t0 = time.time()
+    result = {
+        "username": username,
+        "scrapers_run": 0,
+        "findings_created": 0,
+        "identities_created": 0,
+        "errors": [],
+    }
+
+    if not username or not is_valid_username(username):
+        result["errors"].append("invalid_username")
+        return result
+
+    try:
+        scrapers = _load_username_scrapers(session)
+        if not scrapers:
+            result["errors"].append("no_username_scrapers")
+            return result
+
+        logger.info("Deep scan: username '%s' across %d scrapers for target %s",
+                     username, len(scrapers), target_id)
+
+        client = httpx.Client(
+            timeout=HTTP_TIMEOUT,
+            follow_redirects=True,
+            headers={"User-Agent": USER_AGENT},
+        )
+        health = _get_health()
+
+        # Fake username_info for _store_result compatibility
+        username_info = {
+            "value": username,
+            "platforms": set(),
+            "confidences": [0.7],
+            "score": 2.0,  # Higher base score — operator chose this username
+        }
+
+        try:
+            with session.no_autoflush:
+                for scraper in scrapers[:DEEP_MAX_SCRAPERS]:
+                    if time.time() - t0 > DEEP_TOTAL_TIMEOUT:
+                        result["errors"].append("timeout")
+                        break
+
+                    try:
+                        found_data = _execute_scraper(client, scraper, username, health)
+                        result["scrapers_run"] += 1
+
+                        if found_data and found_data.get("found"):
+                            # Tag as deep scan
+                            found_data["pass"] = "deep"
+                            created = _store_result(
+                                session, target_id, workspace_id, scan_id,
+                                scraper, username, found_data, username_info,
+                            )
+                            if created:
+                                result["findings_created"] += created.get("findings", 0)
+                                result["identities_created"] += created.get("identities", 0)
+
+                        time.sleep(DEEP_RATE_LIMIT_DELAY)
+
+                    except Exception as e:
+                        logger.debug("Deep scan: %s failed for %s: %s",
+                                     scraper.get("name"), username, e)
+                        result["errors"].append(f"{scraper['name']}:{e}")
+                        try:
+                            session.rollback()
+                        except Exception:
+                            pass
+        finally:
+            client.close()
+
+        if result["findings_created"] > 0:
+            session.commit()
+
+        elapsed = time.time() - t0
+        logger.info("Deep scan complete: '%s' → %d scrapers, %d findings, %d identities in %.1fs",
+                     username, result["scrapers_run"],
+                     result["findings_created"], result["identities_created"], elapsed)
+
+    except Exception:
+        logger.exception("Deep scan failed for username '%s' target %s", username, target_id)
+
+    return result
