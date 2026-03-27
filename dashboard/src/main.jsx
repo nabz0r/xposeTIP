@@ -14,6 +14,7 @@ import System from './pages/System'
 import Organization from './pages/Organization'
 import Landing from './pages/Landing'
 import Architecture from './pages/Architecture'
+import UserPreview from './pages/UserPreview'
 import { AuthProvider, useAuth } from './lib/auth'
 import { ToastProvider } from './components/Toast'
 
@@ -41,6 +42,7 @@ function App() {
             <Route path="scrapers" element={<Scrapers />} />
             <Route path="system" element={<System />} />
             <Route path="settings" element={<Settings />} />
+            <Route path="user-preview" element={<UserPreview />} />
           </Route>
         </Routes>
       </BrowserRouter>

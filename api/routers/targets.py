@@ -394,6 +394,30 @@ async def move_target(
     return {"moved": True, "target_id": str(target_id), "new_workspace_id": str(new_ws_id)}
 
 
+@router.get("/{target_id}/remediation")
+async def get_remediation(
+    target_id: uuid.UUID,
+    db: AsyncSession = Depends(get_db),
+    current_user=Depends(get_current_user),
+    workspace_id: uuid.UUID = Depends(get_current_workspace),
+):
+    """Get prioritized remediation actions for a target."""
+    target = await _get_target(db, target_id, workspace_id)
+    profile = dict(target.profile_data or {})
+
+    from api.services.report.pdf_remediation import generate_remediation
+    actions = generate_remediation(profile)
+
+    return {
+        "target_id": str(target_id),
+        "actions": [
+            {"priority": a[0], "action": a[1], "detail": a[2]}
+            for a in actions
+        ],
+        "total": len(actions),
+    }
+
+
 @router.post("/{target_id}/scan-username", status_code=status.HTTP_202_ACCEPTED)
 async def scan_username(
     target_id: uuid.UUID,
