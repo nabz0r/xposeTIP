@@ -237,7 +237,11 @@ def finalize_scan(scan_id: str):
 
         session.commit()
 
-        # Cross-verify findings from multiple sources (boosts confidence)
+        # ═══════════════════════════════════════════════════════════════
+        # PHASE A — GATHER (create all findings before graph/score/profile)
+        # ═══════════════════════════════════════════════════════════════
+
+        # A1. Cross-verify findings from multiple sources (boosts confidence)
         try:
             from api.services.layer4.source_scoring import cross_verify_findings
             cv_count = cross_verify_findings(scan.target_id, session)
@@ -247,7 +251,51 @@ def finalize_scan(scan_id: str):
             logger.exception("Cross-verification failed for target %s", scan.target_id)
         logger.info("PIPELINE[%s]: cross_verify done", scan.target_id)
 
-        # Build identity graph FIRST (needed for graph_context)
+        # A2. Pass 1.5 — Username expansion (re-scan discovered usernames)
+        try:
+            from api.services.layer4.username_expander import expand_usernames
+            target = session.execute(select(Target).where(Target.id == scan.target_id)).scalar_one_or_none()
+            pass15_result = expand_usernames(
+                scan.target_id, scan.workspace_id, session,
+                scan_id=scan.id, email=target.email if target else None,
+            )
+            if pass15_result.get("findings_created", 0) > 0:
+                logger.info(
+                    "Pass 1.5 expanded %d usernames → %d new findings for target %s",
+                    len(pass15_result.get("usernames_selected", [])),
+                    pass15_result["findings_created"], scan.target_id,
+                )
+        except Exception:
+            logger.exception("Pass 1.5 username expansion failed for %s", scan.target_id)
+        logger.info("PIPELINE[%s]: pass1.5 done", scan.target_id)
+
+        # A3. Early profile aggregation (no graph_context — bootstrap primary_name for Pass 2)
+        try:
+            from api.services.layer4.profile_aggregator import aggregate_profile
+            aggregate_profile(scan.target_id, scan.workspace_id, session, graph_context=None)
+        except Exception:
+            logger.exception("PIPELINE[%s]: early profile aggregation failed", scan.target_id)
+        logger.info("PIPELINE[%s]: early_profile done (bootstrap for Pass 2)", scan.target_id)
+
+        # A4. Pass 2 — Public exposure enrichment (name-based scrapers)
+        try:
+            from api.services.layer4.public_exposure_enricher import enrich_public_exposure
+            pass2_result = enrich_public_exposure(scan.target_id, session, scan_id=scan.id)
+            if pass2_result.get("findings_created", 0) > 0:
+                session.commit()  # Persist pass 2 findings + graph edges
+                logger.info(
+                    "Pass 2 created %d public exposure findings for target %s",
+                    pass2_result["findings_created"], scan.target_id,
+                )
+        except Exception:
+            logger.exception("Pass 2 public exposure enrichment failed for %s", scan.target_id)
+        logger.info("PIPELINE[%s]: pass2 done", scan.target_id)
+
+        # ═══════════════════════════════════════════════════════════════
+        # PHASE B — COMPUTE (all findings now in DB)
+        # ═══════════════════════════════════════════════════════════════
+
+        # B1. Build identity graph (sees Pass 1 + 1.5 + 2 findings)
         try:
             from api.services.layer4.graph_builder import build_graph
             build_graph(scan.target_id, scan.workspace_id, session)
@@ -255,7 +303,7 @@ def finalize_scan(scan_id: str):
             logger.exception("Graph build failed for target %s", scan.target_id)
         logger.info("PIPELINE[%s]: graph_builder done", scan.target_id)
 
-        # Propagate confidence through identity graph (PageRank)
+        # B2. Propagate confidence through identity graph (PageRank)
         node_scores = None
         try:
             from api.services.layer4.confidence_propagator import propagate_confidence
@@ -268,7 +316,7 @@ def finalize_scan(scan_id: str):
         logger.info("PIPELINE[%s]: pagerank done — %d nodes",
                     scan.target_id, len(node_scores) if node_scores else 0)
 
-        # Build graph_context — the unified intelligence layer
+        # B3. Build graph_context — the unified intelligence layer
         graph_context = None
         try:
             graph_context = _build_graph_context(scan.target_id, scan.workspace_id, session)
@@ -285,7 +333,7 @@ def finalize_scan(scan_id: str):
                         graph_context.get("edge_count", 0),
                         len(graph_context.get("clusters", [])))
 
-        # Compute exposure score (now WITH graph_context)
+        # B4. Compute exposure score (now WITH graph_context)
         try:
             from api.services.layer4.score_engine import compute_score
             score, threat, breakdown = compute_score(scan.target_id, session, graph_context=graph_context)
@@ -302,15 +350,14 @@ def finalize_scan(scan_id: str):
                     getattr(target, 'exposure_score', '?') if target else '?',
                     getattr(target, 'threat_score', '?') if target else '?')
 
-        # Aggregate profile data (with graph_context)
+        # B5. Aggregate profile data (FINAL — with graph_context, overwrites early profile)
         try:
-            from api.services.layer4.profile_aggregator import aggregate_profile
             aggregate_profile(scan.target_id, scan.workspace_id, session, graph_context=graph_context)
         except Exception:
             logger.exception("Profile aggregation failed for target %s", scan.target_id)
-        logger.info("PIPELINE[%s]: profile_aggregator done", scan.target_id)
+        logger.info("PIPELINE[%s]: profile_aggregator done (final)", scan.target_id)
 
-        # Force bio rejection for Telegram slogans and similar noise
+        # B6. Force bio rejection for Telegram slogans and similar noise
         try:
             target = session.execute(select(Target).where(Target.id == scan.target_id)).scalar_one_or_none()
             if target:
@@ -329,7 +376,7 @@ def finalize_scan(scan_id: str):
         except Exception:
             logger.exception("Bio cleanup failed for target %s", scan.target_id)
 
-        # Force blacklist check on target.display_name
+        # B7. Force blacklist check on target.display_name
         try:
             from api.services.layer4.profile_aggregator import _load_blacklist, _is_valid_name_db
             target = session.execute(select(Target).where(Target.id == scan.target_id)).scalar_one_or_none()
@@ -347,7 +394,7 @@ def finalize_scan(scan_id: str):
         except Exception:
             logger.exception("Display name validation failed for %s", scan.target_id)
 
-        # Store quick_teaser in profile_data (for landing page freemium flow)
+        # B8. Store quick_teaser in profile_data (for landing page freemium flow)
         try:
             target = session.execute(select(Target).where(Target.id == scan.target_id)).scalar_one_or_none()
             if target:
@@ -370,46 +417,7 @@ def finalize_scan(scan_id: str):
         except Exception:
             logger.exception("Quick teaser generation failed for target %s", scan.target_id)
 
-        try:
-            from api.services.event_bus import publish_event
-            publish_event("target.updated", {
-                "target_id": str(scan.target_id),
-                "workspace_id": str(scan.workspace_id),
-            })
-        except Exception:
-            pass
-
-        # Pass 1.5 — Username expansion (re-scan discovered usernames)
-        try:
-            from api.services.layer4.username_expander import expand_usernames
-            target = session.execute(select(Target).where(Target.id == scan.target_id)).scalar_one_or_none()
-            pass15_result = expand_usernames(
-                scan.target_id, scan.workspace_id, session,
-                scan_id=scan.id, email=target.email if target else None,
-            )
-            if pass15_result.get("findings_created", 0) > 0:
-                logger.info(
-                    "Pass 1.5 expanded %d usernames → %d new findings for target %s",
-                    len(pass15_result.get("usernames_selected", [])),
-                    pass15_result["findings_created"], scan.target_id,
-                )
-        except Exception:
-            logger.exception("Pass 1.5 username expansion failed for %s", scan.target_id)
-
-        # Pass 2 — Public exposure enrichment (name-based scrapers)
-        try:
-            from api.services.layer4.public_exposure_enricher import enrich_public_exposure
-            pass2_result = enrich_public_exposure(scan.target_id, session, scan_id=scan.id)
-            if pass2_result.get("findings_created", 0) > 0:
-                session.commit()  # Persist pass 2 findings + graph edges
-                logger.info(
-                    "Pass 2 created %d public exposure findings for target %s",
-                    pass2_result["findings_created"], scan.target_id,
-                )
-        except Exception:
-            logger.exception("Pass 2 public exposure enrichment failed for %s", scan.target_id)
-
-        # Identity enrichment — re-query with discovered name
+        # B9. Identity enrichment — re-query with discovered name
         try:
             from api.services.layer4.identity_enricher import enrich_identity
             target = session.execute(select(Target).where(Target.id == scan.target_id)).scalar_one_or_none()
