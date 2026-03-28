@@ -397,7 +397,7 @@ def _sanitize_for_json(obj):
 
 def _store_result(session: Session, target_id, workspace_id, scan_id,
                   scraper: dict, username: str, found_data: dict,
-                  username_info: dict) -> dict:
+                  username_info: dict, indicator_type: str = "username") -> dict:
     """Store a found account as Finding + Identity + IdentityLink."""
     counts = {"findings": 0, "identities": 0}
     scraper_name = scraper.get("name", "unknown")
@@ -423,7 +423,7 @@ def _store_result(session: Session, target_id, workspace_id, scan_id,
         category=scraper.get("finding_category", "social_media"),
         severity=scraper.get("finding_severity", "info"),
         title=title[:255],
-        description=f"Username '{username}' found on {platform} via {'deep scan' if found_data.get('pass') == 'deep' else 'Pass 1.5 expansion'}",
+        description=f"'{username}' found on {platform} via {'deep ' + indicator_type + ' scan' if found_data.get('pass') == 'deep' else 'Pass 1.5 expansion'}",
         data=_sanitize_for_json({
             "extracted": extracted,
             "url": found_data.get("url"),
@@ -433,7 +433,7 @@ def _store_result(session: Session, target_id, workspace_id, scan_id,
         }),
         url=found_data.get("url"),
         indicator_value=username,
-        indicator_type="username",
+        indicator_type=indicator_type,
         confidence=min(1.0, (username_info.get("score", 0.5) / 3) + 0.3),
         verified=False,
     )
@@ -630,6 +630,7 @@ def scan_single_indicator(target_id, workspace_id, session: Session,
                             created = _store_result(
                                 session, target_id, workspace_id, scan_id,
                                 scraper, value, found_data, username_info,
+                                indicator_type=indicator_type,
                             )
                             if created:
                                 result["findings_created"] += created.get("findings", 0)

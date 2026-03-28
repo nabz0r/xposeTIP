@@ -628,12 +628,9 @@ def deep_username_scan(self, target_id: str, workspace_id: str, username: str, s
 
         # If new findings were created, re-finalize to rebuild graph + profile
         if result.get("findings_created", 0) > 0:
-            logger.info("Deep scan '%s' created %d findings — re-finalizing target %s",
+            logger.info("Deep scan '%s' created %d findings — full re-finalize target %s",
                          username, result["findings_created"], target_id)
-            if scan_id:
-                finalize_scan(scan_id)
-            else:
-                _lightweight_refinalize(target_id, workspace_id, session)
+            _full_refinalize(target_id, workspace_id, session)
         else:
             logger.info("Deep scan '%s' — no new findings for target %s", username, target_id)
 
@@ -649,10 +646,11 @@ def deep_username_scan(self, target_id: str, workspace_id: str, username: str, s
 @celery_app.task(name="api.tasks.scan_orchestrator.deep_indicator_scan", bind=True)
 def deep_indicator_scan(self, target_id: str, workspace_id: str,
                         indicator_type: str, indicator_value: str,
-                        scan_id: str = None):
+                        scan_id: str = None, _cascade_depth: int = 0):
     """Operator-triggered deep scan of any indicator type.
 
     Runs all scrapers matching the indicator_type, then re-finalizes.
+    Cascade depth=0 triggers cross-type discovery; depth>=1 skips cascade.
     """
     from api.services.layer4.username_expander import scan_single_indicator
 
@@ -667,13 +665,27 @@ def deep_indicator_scan(self, target_id: str, workspace_id: str,
             scan_id=uuid.UUID(scan_id) if scan_id else None,
         )
 
+        # Cascade: extract cross-type indicators from new findings (depth=0 only)
+        if result.get("findings_created", 0) > 0 and _cascade_depth < 1:
+            cascades = _extract_cascade_indicators(
+                target_id, workspace_id, indicator_type, indicator_value, session
+            )
+            for cascade_type, cascade_value in cascades:
+                logger.info("CASCADE: %s '%s' -> %s '%s'",
+                             indicator_type, indicator_value,
+                             cascade_type, cascade_value)
+                cascade_result = scan_single_indicator(
+                    uuid.UUID(target_id), uuid.UUID(workspace_id), session,
+                    indicator_type=cascade_type,
+                    indicator_value=cascade_value,
+                    scan_id=uuid.UUID(scan_id) if scan_id else None,
+                )
+                result["findings_created"] += cascade_result.get("findings_created", 0)
+
         if result.get("findings_created", 0) > 0:
-            logger.info("Deep %s scan '%s' created %d findings — re-finalizing",
+            logger.info("Deep %s scan '%s' created %d findings — full re-finalize",
                          indicator_type, indicator_value, result["findings_created"])
-            if scan_id:
-                finalize_scan(scan_id)
-            else:
-                _lightweight_refinalize(target_id, workspace_id, session)
+            _full_refinalize(target_id, workspace_id, session)
         else:
             logger.info("Deep %s scan '%s' — no new findings", indicator_type, indicator_value)
 
@@ -686,10 +698,80 @@ def deep_indicator_scan(self, target_id: str, workspace_id: str,
         session.close()
 
 
-def _lightweight_refinalize(target_id_str: str, workspace_id_str: str, session):
-    """Re-run graph + PageRank + profile + fingerprint without a full scan cycle."""
+def _extract_cascade_indicators(target_id_str, workspace_id_str,
+                                source_type, source_value, session):
+    """Extract cross-type indicators from deep scan findings for cascade."""
+    from api.models.finding import Finding
+    from api.models.identity import Identity
+
+    target_id = uuid.UUID(target_id_str) if isinstance(target_id_str, str) else target_id_str
+    workspace_id = uuid.UUID(workspace_id_str) if isinstance(workspace_id_str, str) else workspace_id_str
+
+    deep_findings = session.execute(
+        select(Finding).where(Finding.target_id == target_id)
+    ).scalars().all()
+    deep_findings = [f for f in deep_findings if f.data and isinstance(f.data, dict)
+                     and f.data.get("pass") == "deep"]
+
+    existing = set()
+    identities = session.execute(
+        select(Identity).where(
+            Identity.target_id == target_id,
+            Identity.workspace_id == workspace_id,
+        )
+    ).scalars().all()
+    for ident in identities:
+        if ident.value:
+            existing.add((ident.type, ident.value.lower().strip()))
+
+    cascades = []
+    seen = set()
+    source_key = (source_type, source_value.lower().strip())
+
+    for f in deep_findings:
+        data = f.data if isinstance(f.data, dict) else {}
+        extracted = data.get("extracted", data)
+
+        for field in ("email", "contact_email", "user_email"):
+            val = extracted.get(field)
+            if val and isinstance(val, str) and "@" in val:
+                key = ("email", val.lower().strip())
+                if key != source_key and key not in existing and key not in seen:
+                    seen.add(key)
+                    cascades.append(key)
+
+        for field in ("twitter_username", "github_username", "username", "login"):
+            val = extracted.get(field)
+            if val and isinstance(val, str) and len(val) >= 2:
+                key = ("username", val.strip())
+                if key != source_key and key not in existing and key not in seen:
+                    seen.add(key)
+                    cascades.append(key)
+
+        for field in ("blog", "website", "website_url", "homepage"):
+            val = extracted.get(field)
+            if val and isinstance(val, str):
+                domain = val.replace("https://", "").replace("http://", "").split("/")[0].lower()
+                if domain and "." in domain and len(domain) >= 4:
+                    key = ("domain", domain)
+                    if key != source_key and key not in existing and key not in seen:
+                        seen.add(key)
+                        cascades.append(key)
+
+    return cascades[:5]
+
+
+def _full_refinalize(target_id_str: str, workspace_id_str: str, session):
+    """Full re-finalize: mirrors finalize_scan() pipeline without Pass 1.5/2.
+
+    Steps: cross-verify -> graph -> PageRank -> graph_context -> score ->
+    profile -> bio cleanup -> name validation -> quick teaser ->
+    identity enrichment -> personas -> intelligence -> fingerprint -> SSE.
+    """
     from api.models.target import Target
     from api.models.finding import Finding
+    from api.models.scan import Scan
+    from api.models.identity import Identity, IdentityLink
 
     target_id = uuid.UUID(target_id_str) if isinstance(target_id_str, str) else target_id_str
     workspace_id = uuid.UUID(workspace_id_str) if isinstance(workspace_id_str, str) else workspace_id_str
@@ -698,57 +780,271 @@ def _lightweight_refinalize(target_id_str: str, workspace_id_str: str, session):
     if not target:
         return
 
-    # 1. Rebuild graph
+    # Resolve latest scan_id (needed for intelligence pipeline)
+    latest_scan = session.execute(
+        select(Scan).where(
+            Scan.target_id == target_id,
+            Scan.status == "completed",
+        ).order_by(Scan.completed_at.desc()).limit(1)
+    ).scalar_one_or_none()
+    scan_id = latest_scan.id if latest_scan else None
+
+    # 1. Cross-verify findings
+    try:
+        from api.services.layer4.source_scoring import cross_verify_findings
+        cross_verify_findings(target_id, session)
+    except Exception:
+        logger.exception("REFINALIZE[%s]: cross-verify failed", target_id)
+    logger.info("REFINALIZE[%s]: cross_verify done", target_id)
+
+    # 2. Build graph
     try:
         from api.services.layer4.graph_builder import build_graph
         build_graph(target_id, workspace_id, session)
     except Exception:
-        logger.exception("Lightweight refinalize: graph build failed")
+        logger.exception("REFINALIZE[%s]: graph build failed", target_id)
+    logger.info("REFINALIZE[%s]: graph_builder done", target_id)
 
-    # 2. PageRank
-    graph_context = None
+    # 3. PageRank
     try:
         from api.services.layer4.confidence_propagator import propagate_confidence
-        graph_context = propagate_confidence(target_id, workspace_id, session)
+        propagate_confidence(target_id, workspace_id, session)
     except Exception:
-        logger.exception("Lightweight refinalize: PageRank failed")
+        logger.exception("REFINALIZE[%s]: PageRank failed", target_id)
+    logger.info("REFINALIZE[%s]: pagerank done", target_id)
 
-    # 3. Profile aggregation
+    # 4. Build graph_context
+    graph_context = None
+    try:
+        graph_context = _build_graph_context(target_id, workspace_id, session)
+    except Exception:
+        logger.exception("REFINALIZE[%s]: graph_context failed", target_id)
+    logger.info("REFINALIZE[%s]: graph_context done", target_id)
+
+    # 5. Score (correct signature: target_id, session, graph_context)
+    try:
+        from api.services.layer4.score_engine import compute_score
+        compute_score(target_id, session, graph_context=graph_context)
+    except Exception:
+        logger.exception("REFINALIZE[%s]: score failed", target_id)
+    logger.info("REFINALIZE[%s]: score done", target_id)
+
+    # 6. Profile aggregation
     try:
         from api.services.layer4.profile_aggregator import aggregate_profile
         aggregate_profile(target_id, workspace_id, session, graph_context=graph_context)
     except Exception:
-        logger.exception("Lightweight refinalize: profile aggregation failed")
+        logger.exception("REFINALIZE[%s]: profile aggregation failed", target_id)
+    logger.info("REFINALIZE[%s]: profile_aggregator done", target_id)
 
-    # 4. Score
+    # 7. Bio cleanup
     try:
-        from api.services.layer4.score_engine import compute_score
-        all_findings = session.execute(
-            select(Finding).where(Finding.target_id == target_id)
-        ).scalars().all()
-        compute_score(target, all_findings, session)
+        target = session.execute(select(Target).where(Target.id == target_id)).scalar_one_or_none()
+        if target:
+            profile = dict(target.profile_data or {})
+            bio = profile.get("bio", "")
+            _BIO_REJECT = [
+                "you can contact", "contact @", "right away",
+                "fast. secure. powerful", "a new era of messaging",
+                "telegram is a cloud", "telegram messenger",
+                "pure instant messaging", "simple, fast, secure",
+            ]
+            if bio and any(p in bio.lower() for p in _BIO_REJECT):
+                profile["bio"] = None
+                target.profile_data = profile
+                session.commit()
     except Exception:
-        logger.exception("Lightweight refinalize: score failed")
+        logger.exception("REFINALIZE[%s]: bio cleanup failed", target_id)
 
-    # 5. Fingerprint
+    # 8. Display name validation
+    try:
+        from api.services.layer4.profile_aggregator import _load_blacklist, _is_valid_name_db
+        target = session.execute(select(Target).where(Target.id == target_id)).scalar_one_or_none()
+        if target:
+            blacklist = _load_blacklist(session)
+            profile = dict(target.profile_data or {})
+            primary = profile.get("primary_name", "")
+            if primary and _is_valid_name_db(primary, blacklist):
+                target.display_name = primary
+            elif target.display_name and not _is_valid_name_db(target.display_name, blacklist):
+                target.display_name = None
+            session.commit()
+    except Exception:
+        logger.exception("REFINALIZE[%s]: name validation failed", target_id)
+
+    # 9. Quick teaser
+    try:
+        target = session.execute(select(Target).where(Target.id == target_id)).scalar_one_or_none()
+        if target:
+            all_target_findings = session.execute(
+                select(Finding).where(Finding.target_id == target_id)
+            ).scalars().all()
+            sev_order = {"critical": 0, "high": 1, "medium": 2, "low": 3, "info": 4}
+            sorted_findings = sorted(all_target_findings, key=lambda f: sev_order.get(f.severity, 5))
+            profile = dict(target.profile_data or {})
+            profile["quick_teaser"] = {
+                "top_findings": [
+                    {"title": f.title, "severity": f.severity, "category": f.category}
+                    for f in sorted_findings[:3]
+                ],
+                "total_findings": len(all_target_findings),
+            }
+            target.profile_data = profile
+            session.commit()
+    except Exception:
+        logger.exception("REFINALIZE[%s]: quick teaser failed", target_id)
+
+    # 10. Identity enrichment
+    try:
+        from api.services.layer4.identity_enricher import enrich_identity
+        target = session.execute(select(Target).where(Target.id == target_id)).scalar_one_or_none()
+        if target:
+            profile = dict(target.profile_data or {})
+            est = profile.get("identity_estimation", {})
+            max_nat_prob = max(
+                (n.get("probability", 0) for n in est.get("nationalities", [{}]) if isinstance(n, dict)),
+                default=0,
+            )
+            if not est.get("gender") or not est.get("age") or max_nat_prob < 0.15:
+                updated_est = enrich_identity(profile, target.email)
+                if updated_est and (updated_est.get("gender") or updated_est.get("age")):
+                    profile["identity_estimation"] = updated_est
+                    target.profile_data = profile
+                    session.commit()
+    except Exception:
+        logger.exception("REFINALIZE[%s]: identity enrichment failed", target_id)
+
+    # Load plan for feature gating
+    try:
+        from api.models.workspace import Workspace
+        from api.models.user import UserWorkspace
+        from api.services.plan_config import check_feature
+        ws = session.execute(select(Workspace).where(Workspace.id == workspace_id)).scalar_one_or_none()
+        plan_name = ws.plan if ws else "free"
+        uw = session.execute(
+            select(UserWorkspace).where(UserWorkspace.workspace_id == workspace_id).limit(1)
+        ).scalar_one_or_none()
+        ws_role = uw.role if uw else "user"
+    except Exception:
+        logger.exception("REFINALIZE[%s]: plan load failed", target_id)
+        plan_name = "free"
+        ws_role = "user"
+        from api.services.plan_config import check_feature
+
+    # 11. Persona clustering (plan-gated)
+    if check_feature(plan_name, "persona_clustering", ws_role):
+        try:
+            from api.services.layer4.persona_engine import cluster_personas
+            target = session.execute(select(Target).where(Target.id == target_id)).scalar_one_or_none()
+            personas = cluster_personas(target_id, workspace_id, session,
+                                        graph_context=graph_context,
+                                        profile_data=dict(target.profile_data or {}))
+            if personas:
+                profile = dict(target.profile_data or {})
+                profile["personas"] = personas
+                target.profile_data = profile
+                session.commit()
+        except Exception:
+            logger.exception("REFINALIZE[%s]: personas failed", target_id)
+    logger.info("REFINALIZE[%s]: personas done", target_id)
+
+    # 12. Intelligence pipeline (plan-gated)
+    if scan_id and check_feature(plan_name, "intelligence_pipeline", ws_role):
+        try:
+            from api.services.layer4.analysis_pipeline import AnalysisPipeline
+            pipeline = AnalysisPipeline()
+            intel_count = pipeline.run(target_id, workspace_id, str(scan_id), session)
+            if intel_count:
+                logger.info("REFINALIZE[%s]: intelligence created %d findings", target_id, intel_count)
+        except Exception:
+            logger.exception("REFINALIZE[%s]: intelligence pipeline failed", target_id)
+    logger.info("REFINALIZE[%s]: intelligence done", target_id)
+
+    # 13. Fingerprint (correct signature: findings, identities, profile_data, email, ...)
     try:
         from api.services.layer4.fingerprint_engine import FingerprintEngine
-        from api.models.identity import Identity, IdentityLink
-        all_findings = session.execute(select(Finding).where(Finding.target_id == target_id)).scalars().all()
-        identities = session.execute(select(Identity).where(Identity.target_id == target_id)).scalars().all()
-        links = session.execute(select(IdentityLink).where(IdentityLink.workspace_id == workspace_id)).scalars().all()
-        engine = FingerprintEngine()
-        fingerprint = engine.compute(target, list(all_findings), list(identities), list(links), graph_context=graph_context)
+        target = session.execute(select(Target).where(Target.id == target_id)).scalar_one_or_none()
+
+        raw_findings = session.execute(
+            select(Finding).where(Finding.target_id == target_id)
+        ).scalars().all()
+        seen_fp = {}
+        for f in raw_findings:
+            key = (f.module, f.title)
+            existing = seen_fp.get(key)
+            if existing is None or (f.created_at and (not existing.created_at or f.created_at > existing.created_at)):
+                seen_fp[key] = f
+        all_findings = list(seen_fp.values())
+
+        all_identities = session.execute(
+            select(Identity).where(Identity.target_id == target_id)
+        ).scalars().all()
+
+        identity_ids = [i.id for i in all_identities]
+        all_links = []
+        if identity_ids:
+            all_links = session.execute(
+                select(IdentityLink).where(IdentityLink.workspace_id == workspace_id)
+            ).scalars().all()
+            id_set = set(identity_ids)
+            all_links = [l for l in all_links if l.source_id in id_set or l.dest_id in id_set]
+
+        fp_engine = FingerprintEngine()
+        fingerprint = fp_engine.compute(
+            all_findings, all_identities, target.profile_data, target.email,
+            links=all_links, graph_context=graph_context,
+            country_code=target.country_code,
+        )
+
         if fingerprint:
-            target.exposure_score = fingerprint["score"]
-            target.risk_level = fingerprint["risk_level"]
-            target.fingerprint_hash = fingerprint["hash"]
-            target.fingerprint_avatar_seed = fingerprint.get("avatar_seed")
+            # 14. History snapshot
+            snapshot = {
+                "hash": fingerprint["hash"],
+                "score": fingerprint["score"],
+                "risk_level": fingerprint["risk_level"],
+                "axes": fingerprint["axes"],
+                "raw_values": fingerprint["raw_values"],
+                "label": fingerprint.get("label", ""),
+                "scan_id": str(scan_id) if scan_id else None,
+                "computed_at": fingerprint["computed_at"],
+                "findings_count": len(all_findings),
+            }
+            history = list(target.fingerprint_history or [])
+            history.append(snapshot)
+            target.fingerprint_history = history[-50:]
+
             profile = dict(target.profile_data or {})
             profile["fingerprint"] = fingerprint
+            timeline = fingerprint.get("timeline_events", [])
+            if timeline:
+                profile["life_timeline"] = timeline
+            if graph_context:
+                ns = graph_context.get("node_scores", {})
+                gc = graph_context.get("clusters", [])
+                profile["graph_context_summary"] = {
+                    "cluster_count": len(gc),
+                    "total_nodes": len(ns),
+                    "total_edges": graph_context.get("edge_count", 0),
+                    "top_cluster_confidence": gc[0]["confidence"] if gc else 0,
+                    "avg_node_confidence": round(sum(ns.values()) / len(ns), 4) if ns else 0,
+                }
             target.profile_data = profile
+            session.commit()
     except Exception:
-        logger.exception("Lightweight refinalize: fingerprint failed")
+        logger.exception("REFINALIZE[%s]: fingerprint failed", target_id)
+    logger.info("REFINALIZE[%s]: fingerprint done", target_id)
 
-    session.commit()
-    logger.info("Lightweight refinalize done for target %s", target_id)
+    # 15. SSE event
+    try:
+        from api.services.event_bus import publish_event
+        target = session.execute(select(Target).where(Target.id == target_id)).scalar_one_or_none()
+        publish_event("target.updated", {
+            "target_id": str(target_id),
+            "workspace_id": str(workspace_id),
+            "exposure_score": target.exposure_score if target else 0,
+            "threat_score": target.threat_score if target else 0,
+        })
+    except Exception:
+        pass
+
+    logger.info("REFINALIZE[%s]: complete", target_id)
