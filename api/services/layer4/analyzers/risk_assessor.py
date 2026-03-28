@@ -78,14 +78,18 @@ class RiskAssessor:
         low = len([f for f in findings if f.severity == "low"])
         info = len([f for f in findings if f.severity == "info"])
 
-        # Generate risk level
-        if critical > 0 or high > 3:
+        # Generate risk level (ratio-based thresholds)
+        total = critical + high + medium + low + info
+        if total == 0:
+            risk_level = "LOW"
+            summary = "This identity has minimal exposure."
+        elif critical >= 3 or (high >= 10 and total > 0 and high / total > 0.15):
             risk_level = "CRITICAL"
             summary = "This identity has critical exposure requiring immediate action."
-        elif high > 0 or medium > 5:
+        elif critical >= 1 or high >= 5 or (medium >= 15 and total > 0 and medium / total > 0.2):
             risk_level = "HIGH"
             summary = "This identity has significant exposure that should be addressed."
-        elif medium > 0:
+        elif high >= 1 or medium >= 3:
             risk_level = "MODERATE"
             summary = "This identity has moderate exposure with room for improvement."
         else:

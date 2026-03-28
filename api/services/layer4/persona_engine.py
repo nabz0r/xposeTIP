@@ -395,10 +395,10 @@ def cluster_personas(target_id, workspace_id, session: Session, graph_context=No
 
         label = max(cluster, key=lambda u: len(username_platforms[u]))
 
-        platform_score = min(1.0, len(all_platforms) / 8)
-        source_score = min(1.0, len(all_sources) / 4)
+        platform_score = min(1.0, len(all_platforms) / 5)
+        source_score = min(1.0, len(all_sources) / 3)
         username_score = min(1.0, len(cluster) / 3)
-        confidence = round(platform_score * 0.5 + source_score * 0.3 + username_score * 0.2, 2)
+        confidence = round(platform_score * 0.6 + source_score * 0.15 + username_score * 0.25, 2)
 
         risk = []
         if len(all_platforms) >= 3:

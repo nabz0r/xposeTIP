@@ -34,6 +34,21 @@ def _set_cache(name: str, api: str, data):
     _identity_cache[key] = {"data": data, "ts": time.time()}
 
 
+def _fetch_with_retry(client, url, max_retries=3):
+    """Fetch URL with exponential backoff on 429 rate limit."""
+    for attempt in range(max_retries):
+        resp = client.get(url)
+        if resp.status_code == 429:
+            retry_after = int(resp.headers.get("Retry-After", 2 ** attempt))
+            wait = min(retry_after, 10)
+            logger.info("429 rate limited on %s, retrying in %ds (attempt %d/%d)",
+                        url.split("?")[0], wait, attempt + 1, max_retries)
+            time.sleep(wait)
+            continue
+        return resp
+    return resp  # return last response even if still 429
+
+
 def enrich_identity(profile: dict, email: str) -> dict:
     """Re-query identity APIs if we have a better name than email prefix.
 
@@ -74,7 +89,7 @@ def enrich_identity(profile: dict, email: str) -> dict:
         else:
             try:
                 time.sleep(0.5)  # Rate limit: max 2 req/sec
-                resp = client.get(GENDERIZE_URL.format(name=discovered_first))
+                resp = _fetch_with_retry(client, GENDERIZE_URL.format(name=discovered_first))
                 if resp.status_code == 200:
                     data = resp.json()
                     result = {}
@@ -84,8 +99,6 @@ def enrich_identity(profile: dict, email: str) -> dict:
                         result["gender_source"] = f"genderize.io (name: {discovered_first})"
                     est.update(result)
                     _set_cache(discovered_first, "genderize", result)
-                elif resp.status_code == 429:
-                    logger.warning("Genderize rate limited, skipping")
             except Exception:
                 logger.debug("Genderize re-query failed")
 
@@ -96,7 +109,7 @@ def enrich_identity(profile: dict, email: str) -> dict:
         else:
             try:
                 time.sleep(0.5)
-                resp = client.get(AGIFY_URL.format(name=discovered_first))
+                resp = _fetch_with_retry(client, AGIFY_URL.format(name=discovered_first))
                 if resp.status_code == 200:
                     data = resp.json()
                     result = {}
@@ -106,8 +119,6 @@ def enrich_identity(profile: dict, email: str) -> dict:
                         result["age_source"] = f"agify.io (name: {discovered_first})"
                     est.update(result)
                     _set_cache(discovered_first, "agify", result)
-                elif resp.status_code == 429:
-                    logger.warning("Agify rate limited, skipping")
             except Exception:
                 logger.debug("Agify re-query failed")
 
@@ -118,7 +129,7 @@ def enrich_identity(profile: dict, email: str) -> dict:
         else:
             try:
                 time.sleep(0.5)
-                resp = client.get(NATIONALIZE_URL.format(name=discovered_first))
+                resp = _fetch_with_retry(client, NATIONALIZE_URL.format(name=discovered_first))
                 if resp.status_code == 200:
                     data = resp.json()
                     result = {}
@@ -131,8 +142,6 @@ def enrich_identity(profile: dict, email: str) -> dict:
                         result["nationality_source"] = f"nationalize.io (name: {discovered_first})"
                     est.update(result)
                     _set_cache(discovered_first, "nationalize", result)
-                elif resp.status_code == 429:
-                    logger.warning("Nationalize rate limited, skipping")
             except Exception:
                 logger.debug("Nationalize re-query failed")
 

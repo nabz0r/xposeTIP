@@ -1,3 +1,4 @@
+import asyncio
 import hashlib
 import json
 import logging
@@ -77,11 +78,19 @@ class ScraperEngine:
             headers = {**dict(self.client.headers), **(scraper.get("headers") or {})}
 
             _t0 = _time.time()
-            if scraper.get("method", "GET").upper() == "POST":
-                body = (scraper.get("body_template") or "").format(**fmt_kwargs)
-                response = await self.client.post(url, content=body, headers=headers)
-            else:
-                response = await self.client.get(url, headers=headers)
+            response = None
+            for _attempt in range(3):
+                if scraper.get("method", "GET").upper() == "POST":
+                    body = (scraper.get("body_template") or "").format(**fmt_kwargs)
+                    response = await self.client.post(url, content=body, headers=headers)
+                else:
+                    response = await self.client.get(url, headers=headers)
+                if response.status_code == 429:
+                    _retry = min(int(response.headers.get("Retry-After", 2 ** _attempt)), 10)
+                    logger.info("429 on %s, retry in %ds (%d/3)", scraper.get("name"), _retry, _attempt + 1)
+                    await asyncio.sleep(_retry)
+                    continue
+                break
             _elapsed_ms = int((_time.time() - _t0) * 1000)
 
             # Record health metric (fire-and-forget)
