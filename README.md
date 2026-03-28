@@ -11,65 +11,121 @@
 [![React 18](https://img.shields.io/badge/React-18-61DAFB?logo=react)](https://react.dev)
 [![Docker](https://img.shields.io/badge/Docker-Compose-2496ED?logo=docker)](https://docker.com)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
-[![Modules](https://img.shields.io/badge/modules-76+-00ff88)](#features)
-[![Scrapers](https://img.shields.io/badge/scrapers-51-3388ff)](#features)
-[![Version](https://img.shields.io/badge/version-0.26.0-green)](#roadmap)
+[![Scrapers](https://img.shields.io/badge/scrapers-120-3388ff)](#scraper-engine)
+[![Sprints](https://img.shields.io/badge/sprints-90-00ff88)](#changelog)
+[![Version](https://img.shields.io/badge/version-0.90.0-green)](#changelog)
 
 **Enter an email. See what the internet knows. Fix it.**
 
-xpose is an identity threat intelligence platform that bridges deep OSINT tools (SpiderFoot, Maltego) with consumer-grade UX (Aura, NordProtect). Every finding is an Identity IOC — with actionable remediation.
+xpose is an identity threat intelligence platform that bridges deep OSINT tools (SpiderFoot, Maltego) with consumer-grade UX (Aura, NordProtect). One email in — identity graph, risk score, digital personas, and remediation plan out.
+
+> **Nexus 2026** — June 10-11, Luxexpo, Luxembourg. Cybersecurity category.
 
 ---
 
+## How It Works
+
+```
+Email input
+    │
+    ▼
+┌─────────── Phase A: GATHER ───────────┐
+│ Cross-verify findings                  │
+│ Pass 1.5: username expansion (72 scr.) │
+│ Early profile (bootstrap primary_name) │
+│ Pass 2: public exposure (GDELT, news)  │
+└─────────────────────────────────────────┘
+    │
+    ▼
+┌─────────── Phase B: COMPUTE ──────────┐
+│ Identity graph → PageRank              │
+│ Score (exposure + threat)              │
+│ Profile → Personas → Intelligence      │
+│ 9-axis fingerprint + pixel art avatar  │
+└────────────────────────────────────────┘
+    │
+    ▼
+Dashboard: graph, timeline, accounts,
+    remediation, PDF export
+```
+
 ## Features
 
-| Layer | Category | Scanners | What it finds |
-|:-----:|----------|----------|---------------|
-| **L1** | Passive Recon | Holehe, Sherlock, HIBP, Gravatar, EmailRep, Epieos, FullContact, GitHub Deep, GHunt, Maigret, h8mail, Username Hunter | Account enumeration (120+ sites), breach history, social profiles, Google metadata, avatar matching |
-| **L2** | Public Databases | DNS Deep, WHOIS, GeoIP, MaxMind, Leaked Domains | Domain security (SPF/DMARC/DKIM), IP geolocation, credential leaks, subdomain discovery |
-| **L3** | Self-Audit | Google OAuth, Microsoft OAuth, Exodus Tracker, Browser Audit | Drive public files, Gmail forwarding rules, OAuth app permissions, app trackers |
-| **L4** | Intelligence | Score Engine, Graph Builder, Profile Aggregator, Persona Engine, Fingerprint Engine, Confidence Propagator | Cross-reference all findings, dual score (exposure + threat), identity graph, PageRank confidence, digital fingerprint |
+### Scanning Layers
 
-### Intelligence Engine (v0.26.0)
+| Layer | What | How |
+|:-----:|------|-----|
+| **L1** | Passive Recon | 120 scrapers: account enumeration, breach history, social profiles, username expansion across 72 platforms |
+| **L2** | Public Databases | DNS deep (SPF/DMARC/DKIM/subdomains), WHOIS, GeoIP, certificate transparency, SaaS detection |
+| **L3** | Self-Audit | Google/Microsoft OAuth app permissions, Drive public files, Gmail forwarding rules |
+| **L4** | Intelligence | Identity graph, PageRank confidence, dual scoring, persona clustering, behavioral profiling, risk assessment |
 
-- **PageRank confidence propagation** — confidence flows through the identity graph (damping=0.85, convergence threshold 0.001)
-- **Eigenvalue topology signature** — adjacency matrix eigenvalues via power iteration create unique graph fingerprints
-- **Generative avatar** — deterministic SVG shape derived from graph eigenvalues + axes values
-- **8-axis digital fingerprint** — accounts, platforms, username reuse, breaches, geo spread, data leaked, email age, security
-- **Persona clustering** — groups digital personas by shared usernames, profile names, and avatars
-- **Dual scoring** — exposure (0-100, weighted by category) + threat (0-100, weighted by breach recency)
-- **Per-field confidence** — blacklist filtering + PageRank graph propagation + source reliability weighting
+### Intelligence Engine
+
+- **Two-phase pipeline** — Phase A gathers all findings (Pass 1 + 1.5 + 2), Phase B computes graph/score/personas on the complete dataset
+- **Identity graph** — nodes (email, usernames, platforms, domains, IPs, locations) linked by typed edges, rebuilt from all findings every scan
+- **PageRank confidence** — confidence propagates through the graph (damping=0.85), cross-verified findings get boosted
+- **Dual scoring** — exposure (digital footprint size) + threat (breach severity, credential leaks) with ratio-based thresholds
+- **Persona clustering** — groups usernames by platform overlap, name similarity, and cross-verification
+- **9-axis digital fingerprint** — accounts, platforms, username_reuse, breaches, geo_spread, data_leaked, email_age, security, public_exposure
+- **Generative pixel art** — deterministic 32x32 CryptoPunk-style avatar from graph eigenvalues (5.4B unique combinations, zero GPU)
+- **Deep Scan** — operator-triggered per-indicator scan across all matching scrapers, with cascade (discovered cross-type indicators are chain-scanned)
 
 ### Scraper Engine
 
-51 data-driven scrapers across 8 categories, all editable via UI:
+120 data-driven scrapers, all configurable via UI (URL template, extraction rules, rate limits):
 
 | Category | Count | Examples |
 |----------|-------|---------|
-| Social | 24 | Reddit, GitHub, Steam, Medium, Mastodon, StackOverflow, Twitch, Telegram |
-| Breach | 3 | XposedOrNot, LeakCheck, Pastebin Dumps |
-| Metadata | 4 | Gravatar, crt.sh, SecurityTrails, Disposable Email |
-| People Search | 3 | GitHub People Search, Gravatar Email Lookup, Snapchat Profile |
-| Identity | 3 | Genderize (gender), Agify (age), Nationalize (nationality) |
-| Archive | 3 | Wayback Domain History, Wayback Snapshots, Wayback Profile Archive |
-| Gaming | 9 | Steam, Xbox, PSN, Epic, Riot, Chess.com, Lichess, CodeWars, RuneScape |
-| Music | 2 | Mixcloud, Duolingo |
+| Social profiles | 35 | Reddit, GitHub, Steam, Medium, Mastodon, Twitch, Telegram, Bluesky, Threads, TikTok |
+| Social search | 18 | StackOverflow, LinkedIn, Pinterest, Behance, Dribbble, ProductHunt, Kaggle |
+| People search | 4 | Google People, Snapchat, Crunchbase, WebMii |
+| Breach / leak | 5 | HIBP, LeakCheck, XposedOrNot, IntelX, LeakLookup |
+| Identity estimation | 3 | Genderize, Agify, Nationalize |
+| Metadata | 12 | DNS DMARC, crt.sh, Disposable Email, Mailcheck, Disify, HackerTarget |
+| Code leak | 3 | GitHub Code Search, GitHub Gists, GitHub Scraper |
+| Archive | 6 | Wayback Machine (domain, profile, LinkedIn, Twitter, Instagram, Facebook) |
+| Gaming | 9 | Steam, Roblox, Chess.com, Lichess, RuneScape, MyAnimeList, Anilist, Speedrun, CodeWars |
+| Music / media | 5 | SoundCloud, Mixcloud, Last.fm, Bandcamp, Discogs |
+
+Every scraper has:
+- **429 retry** — exponential backoff (3 attempts, max 10s)
+- **Per-scraper module attribution** — findings tagged with real scraper name, not generic "scraper_engine"
+- **Extraction rules** — JSON-configured field extraction (json_key, regex, css_selector)
+- **Health monitoring** — response time + success rate tracked per scraper
+
+### Public Exposure (Pass 2)
+
+Name-based enrichment after profile aggregation:
+- **GDELT** — global media mentions via full-text search
+- **Google News RSS** — multi-language news articles (en + detected language)
+- **OpenSanctions** — PEP, sanctions, watchlist matching
+- **OpenCorporates** — corporate officer records
+- **Interpol Red Notices** — wanted persons matching
+
+### Reports & Export
+
+- **PDF Identity Report** — dark-themed, tiered by plan (ReportLab)
+- **CSV export** — all findings exportable
+- **Executive summary** — auto-generated narrative per target
+- **Remediation plan** — prioritized actions based on finding severity
 
 ## Architecture
 
 ```mermaid
 graph LR
-    U[User] --> R[React Dashboard<br/>Vite + Tailwind]
-    R --> A[FastAPI<br/>JWT Auth]
-    A --> C[Celery Workers<br/>Chord Orchestration]
-    A --> PG[(PostgreSQL 16<br/>pgvector)]
+    U[User] --> R[React 18 Dashboard<br/>Vite + Tailwind 4]
+    R --> A[FastAPI<br/>JWT Auth + RBAC]
+    A --> C[Celery Workers<br/>Two-phase orchestration]
+    A --> PG[(PostgreSQL 16)]
     A --> RD[(Redis 7<br/>Broker + Cache)]
-    C --> S1[L1 Scanners<br/>Passive Recon]
-    C --> S2[L2 Scanners<br/>Public DBs]
-    C --> S3[L3 Connectors<br/>OAuth Audit]
-    C --> L4[L4 Intelligence<br/>Score → Graph → Profile → Persona → Fingerprint]
-    L4 --> PG
+    C --> P1[Phase A — Gather<br/>120 scrapers + Pass 1.5 + Pass 2]
+    C --> P2[Phase B — Compute<br/>Graph → PageRank → Score<br/>→ Profile → Personas<br/>→ Intelligence → Fingerprint]
+    P2 --> PG
+    C --> DS[Deep Scan<br/>Per-indicator + Cascade]
 ```
+
+**~38K lines** — 26K Python, 12K React/JSX. 113 Python modules, 26 frontend pages/tabs.
 
 ## Quick Start
 
@@ -77,12 +133,15 @@ graph LR
 git clone https://github.com/nabz0r/xposeTIP.git && cd xposeTIP
 cp .env.example .env                          # configure API keys
 docker compose up -d                          # start all 5 services
+docker compose exec api alembic upgrade head  # run migrations
 docker compose exec api python scripts/seed_modules.py
 docker compose exec api python scripts/seed_scrapers.py
-# Register at http://localhost:5173 → Add target → Scan
+docker compose exec api python scripts/seed_blacklist.py
+docker compose exec api python scripts/sync_avatars.py
+# → http://localhost:5173 — Register → Add target → Scan
 ```
 
-First registered user = **superadmin** + **Enterprise** plan. Subsequent users = **Free** plan.
+First registered user = **superadmin** with **Enterprise** plan.
 
 ## Plans
 
@@ -90,52 +149,51 @@ First registered user = **superadmin** + **Enterprise** plan. Subsequent users =
 |------|-------|---------|----------|--------|-------------|
 | Free | €0 | 1 | 5 | L1 | Basic exposure scan |
 | Consultant | €49/mo | 25 | 100 | L1+L2 | Persona clustering, multi-workspace, PDF reports |
-| Enterprise | €199/mo | Unlimited | Unlimited | All | Intelligence pipeline, API access, custom modules |
+| Enterprise | €199/mo | Unlimited | Unlimited | All | Full intelligence pipeline, API access, deep scan |
 
-## Roadmap
+## Principles
 
-| Version | Sprint | Status |
-|---------|--------|--------|
-| v0.1.0 | Docker, Auth, Holehe, Celery, React dashboard | Done |
-| v0.2.0 | HIBP, Sherlock, Score engine, Identity graph | Done |
-| v0.3.0 | Gravatar, Social Enricher, GeoIP, Settings UI | Done |
-| v0.4.0 | Dynamic API keys (Fernet), Location mapping | Done |
-| v0.5.0 | 7 new scanners, Profile aggregation, SVG world map | Done |
-| v0.6.0 | Source scoring, Premium scanners, SaaS connectors | Done |
-| v0.7.0 | Intelligence engine, Google OAuth audit, Demo flow | Done |
-| v0.8.0 | Digital fingerprint, 8-axis radar, evolution timeline | Done |
-| v0.9.0 | Scraper engine, modular scrapers with editable regex | Done |
-| v0.10.0 | Quality polish, dedup, profile name fix | Done |
-| v0.11.0 | 15 new scrapers: identity, archive, social expansion | Done |
-| v0.12.0 | IdentityCard, photo strip, profile aggregator fix | Done |
-| v0.13.0 | Persona clustering, per-field confidence, PersonaCard | Done |
-| v0.14.0 | Dual score (exposure + threat), score history, LifeTimeline | Done |
-| v0.15.0 | Real-time log viewer, Redis ring buffer, structured logging | Done |
-| v0.16.0 | Multi-workspace, workspace CRUD, member invites, Organization | Done |
-| v0.17.0 | Connected accounts, Google/Microsoft OAuth audit | Done |
-| v0.18.0 | 7 gaming scrapers, 6 social scrapers, import/export (43 total) | Done |
-| v0.19.0 | Scraper UI: test runner, toggle, YAML export/import | Done |
-| v0.20.0 | Plans (Free/Consultant/Enterprise), open registration, billing UI | Done |
-| v0.21.0 | Admin panel, quick scan, invite flow fix | Done |
-| v0.22.0 | Documentation update | Done |
-| v0.23.0 | Name blacklist, targets rework, scan metadata | Done |
-| v0.24.0 | DNS SaaS blocklist, executive summary, CSV export | Done |
-| v0.25.0 | 8 new scrapers: people search, gaming, social (51 total) | Done |
-| v0.26.0 | PageRank confidence, eigenvalue fingerprint, generative avatar | Done |
-| **v0.27.0** | **Landing page redesign, demo script, documentation** | **Done** |
+### Ethical OSINT
+- **Consent-first**: scan yourself or with DPA authorization
+- **Transparency**: every finding shows its source, every score explains its reasoning
+- **Purpose limitation**: expose to protect, not to exploit
 
-> **Nexus 2026 — June 10-11, Luxembourg** &nbsp; Target: Grand Prize (€100K)
+### Green Intelligence
+- Maximum insight per watt — Amiga 500 philosophy
+- Data-driven scrapers (JSON config, not code per source)
+- Single PostgreSQL, no distributed clusters
+- Pixel art avatars: 5.4B combos, zero GPU, zero API call
+- Every architecture decision: "is this the lightest way?"
+
+## Changelog
+
+90 sprints delivered. Key milestones:
+
+| Version | Highlights |
+|---------|-----------|
+| v0.90.0 | Docs update, full architecture documentation |
+| v0.89.0 | **Per-scraper module attribution** — real names, enrichment unblocked |
+| v0.88.0 | Graph data keys fix, Deep Scan Activity panel |
+| v0.87.0 | Ratio-based risk levels, persona confidence rebalance, 429 retry |
+| v0.86.0 | **Two-phase pipeline** — gather-then-compute architecture |
+| v0.84.0 | Deep Scan cascade + full re-finalize |
+| v0.82.0 | Generic Deep Indicator Scan |
+| v0.80.0 | Account Depth Profiling |
+| v0.78.0 | User Dashboard Preview (Nexus pitch) |
+| v0.76.0 | Deep Username Scan |
+| v0.74.0 | PDF Identity Report Export |
+| v0.66.0 | Public Exposure enrichment (GDELT, OpenSanctions) |
+| v0.55.0 | Username expansion (Pass 1.5) |
+| v0.45.0 | Scraper engine (data-driven, 51 scrapers) |
+| v0.26.0 | PageRank confidence, eigenvalue fingerprint |
+| v0.13.0 | Persona clustering |
+| v0.1.0 | Docker, Auth, first scanner |
+
+Full sprint log: [docs/SPRINT_LOG.md](docs/SPRINT_LOG.md)
 
 ## Tech Stack
 
-`FastAPI` `SQLAlchemy 2.0` `Celery` `PostgreSQL 16` `Redis 7` `React 18` `Vite` `Tailwind CSS 4` `D3.js` `Recharts` `Docker Compose` `Fernet AES-256` `JWT` `OAuth 2.0` `RBAC` `Genderize` `Agify` `Nationalize` `Wayback Machine CDX`
-
-## Global Scope
-
-xpose works worldwide with varying depth:
-- **US targets**: Maximum data. Voter rolls, court records, Spokeo, WhitePages, BeenVerified — all public.
-- **EU targets**: GDPR applies but we reveal exposure that already exists publicly.
-- **Rest of world**: Varies. Module system adapts per region.
+`Python 3.11` `FastAPI` `SQLAlchemy 2.0` `Celery` `PostgreSQL 16` `Redis 7` `React 18` `Vite` `Tailwind CSS 4` `D3.js` `Recharts` `Docker Compose` `JWT` `OAuth 2.0` `RBAC` `ReportLab` `Fernet AES-256`
 
 ## License
 
@@ -144,6 +202,6 @@ MIT License. See [LICENSE](LICENSE).
 ---
 
 <p align="center">
-Built in Luxembourg &nbsp;|&nbsp; GDPR compliant &nbsp;|&nbsp; MIT License<br/>
+Built in Luxembourg 🇱🇺 &nbsp;|&nbsp; Ethical OSINT &nbsp;|&nbsp; MIT License<br/>
 <sub>Your personal SOC for privacy.</sub>
 </p>
