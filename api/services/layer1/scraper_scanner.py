@@ -94,7 +94,7 @@ class ScraperScanner(BaseScanner):
                     title = f"{scraper.display_name or scraper.name}: profile found"
 
                 results.append(ScanResult(
-                    module=self.MODULE_ID,
+                    module=scraper.name,
                     layer=self.LAYER,
                     category=scraper.finding_category or "social_account",
                     severity=scraper.finding_severity or "low",
@@ -107,7 +107,11 @@ class ScraperScanner(BaseScanner):
                         "extracted": extracted,
                         "status_code": result.get("status_code"),
                     },
-                    indicator_value=extracted.get("display_name") or extracted.get("username"),
+                    indicator_value=(
+                        extracted.get("display_name") or
+                        extracted.get("username") or
+                        input_value
+                    ),
                     indicator_type=scraper.identity_type or "username",
                 ))
 

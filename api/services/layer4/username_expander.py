@@ -253,14 +253,27 @@ def _load_username_scrapers(session: Session) -> list:
 
 
 def _get_existing_indicators(target_id, session: Session) -> set:
-    """Get existing finding dedup keys: 'module:indicator_value'."""
+    """Get existing finding dedup keys: 'module:indicator_value'.
+
+    Also maps legacy 'scraper_engine' findings to their real scraper name
+    (using data->scraper field) so deep scan/Pass 1.5 don't create duplicates.
+    """
     findings = session.execute(
-        select(Finding.module, Finding.indicator_value).where(
+        select(Finding.module, Finding.indicator_value, Finding.data).where(
             Finding.target_id == target_id,
         )
     ).all()
 
-    return {f"{mod}:{val}" for mod, val in findings if mod and val}
+    keys = set()
+    for mod, val, data in findings:
+        if mod and val:
+            keys.add(f"{mod}:{val}")
+        # Map scraper_engine findings to their real scraper name for dedup
+        if mod == "scraper_engine" and data and isinstance(data, dict):
+            real_name = data.get("scraper")
+            if real_name and val:
+                keys.add(f"{real_name}:{val}")
+    return keys
 
 
 def _execute_scraper(client: httpx.Client, scraper: dict, username: str,
