@@ -5,10 +5,11 @@
 Identity Threat Intelligence platform. Scans email → builds identity graph →
 PageRank/Markov confidence → clusters personas → pixel art avatar → remediation plan.
 
-## Current version: v0.80.0
+## Current version: v0.85.0
 
-80 sprints. 120 scrapers, 35 scanners, 7 intelligence analyzers, 9-axis fingerprint.
+85 sprints. 120 scrapers, 35 scanners, 7 intelligence analyzers, 9-axis fingerprint.
 3-pass pipeline (email → username expansion → name-based enrichment).
+Deep Scan triggers cascade (discovered emails/usernames/domains → chain-scanned, depth=1, max=5).
 PDF identity report export (ReportLab, dark theme, tiered by plan).
 
 ## Developer
@@ -65,7 +66,7 @@ Nexus 2026 — June 10-11, Luxexpo, Luxembourg (€50 cybersecurity category, su
 
 ```bash
 killall -9 node && sleep 2
-git fetch origin && git reset --hard origin/claude/sprint-1-operator-mvp-0sq70
+git fetch origin && git reset --hard origin/main
 docker compose up -d --build
 docker compose exec api alembic upgrade head
 docker compose exec api python scripts/seed_modules.py
@@ -81,7 +82,7 @@ After deploy: System → Recalculate Fingerprints → Recalculate Profiles
 ## Key files
 
 ### Backend
-- `api/tasks/scan_orchestrator.py` — 3-pass pipeline, finalize_scan, graph_context
+- `api/tasks/scan_orchestrator.py` — 3-pass pipeline, finalize_scan, graph_context, _full_refinalize (15-step Deep Scan pipeline), _extract_cascade_indicators
 - `api/tasks/module_tasks.py` — module execution, pre-flush truncation
 - `api/services/layer4/graph_builder.py` — identity graph construction
 - `api/services/layer4/confidence_propagator.py` — PageRank (damping=0.85, 20 iter)
@@ -92,7 +93,7 @@ After deploy: System → Recalculate Fingerprints → Recalculate Profiles
 - `api/services/layer4/analysis_pipeline.py` — 7 intelligence analyzers
 - `api/services/layer4/analyzers/code_leak_analyzer.py` — GitHub/paste code leak detection
 - `api/services/layer4/analyzers/behavioral_profiler.py` — 5 archetypes behavioral classification
-- `api/services/layer4/username_expander.py` — Pass 1.5 username expansion
+- `api/services/layer4/username_expander.py` — Pass 1.5 username expansion, scan_single_indicator (generic deep scan)
 - `api/services/layer4/username_validator.py` — is_valid_username() junk filter
 - `api/services/layer4/source_scoring.py` — source reliability weights
 - `api/services/plan_config.py` — plan definitions, feature gates

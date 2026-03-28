@@ -29,7 +29,7 @@ export function ArchFooter() {
           <Shield className="w-4 h-4 text-[#00ff88]" />
           <span className="font-bold text-sm font-['Instrument_Sans',sans-serif]">xpose</span>
           <span className="text-[10px] font-mono text-gray-600">TIP</span>
-          <span className="text-xs text-gray-600 font-mono ml-2">v0.80.0</span>
+          <span className="text-xs text-gray-600 font-mono ml-2">v0.85.0</span>
         </div>
         <div className="flex items-center gap-4 text-xs text-gray-500">
           <Link to="/welcome" className="hover:text-white transition-colors">Home</Link>

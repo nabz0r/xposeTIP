@@ -1,4 +1,4 @@
-# Sprint Log — xposeTIP v0.80.0
+# Sprint Log — xposeTIP v0.85.0
 
 ## Sprint history
 
@@ -30,6 +30,11 @@
 | 78 | User Dashboard Preview (/user-preview): score hero + GenerativeAvatar 160px, evolution chart (Recharts), remediation checklist, GET /targets/{id}/remediation endpoint |
 | 79 | Code Leak & Paste Monitoring: 3 new scrapers (GitHub Code Search email+username, GitHub Gists), psbdmp re-enabled, CodeLeakAnalyzer (10 sensitive patterns), code_leak category |
 | 80 | Account Depth Profiling: enriched extraction on 5 scrapers (+19 fields), BehavioralProfiler analyzer (5 archetypes + longevity + high-activity detection) |
+| 81 | Full docs & landing update to v0.80.0: CLAUDE.md, SPRINT_LOG.md, ARCHITECTURE.md, API_REFERENCE.md |
+| 82 | Generic Deep Indicator Scan: POST /targets/{id}/scan-indicator (username/email/domain/name), Deep Scan button on all findings |
+| 83 | The xpose Manifesto: /manifesto page, 3 pillars (Ethical OSINT, Green Intelligence, Education First), landing trust bar |
+| 84 | CRITICAL FIX — Deep Scan Pipeline: _full_refinalize (15 steps replacing broken _lightweight_refinalize), cascade scan (cross-type indicator chaining), _store_result indicator_type fix |
+| 85 | Docs, landing & version bump to v0.85.0 |
 
 ## Known issues
 
@@ -60,6 +65,8 @@
 - [x] Remediation engine (prioritized action plan)
 - [x] Avatar quality gate (reject identicons/defaults)
 - [x] Product manifesto: Ethical OSINT + Green Intelligence + Education First
+- [x] Generic deep indicator scan (any indicator type, not just username)
+- [x] Cascade scan (cross-type indicator chaining after deep scan)
 - [ ] Graph zoom/pan improvement
 - [ ] Corporate intelligence via Hunter.io (domain → employees)
 

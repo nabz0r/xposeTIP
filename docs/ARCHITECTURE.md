@@ -1,4 +1,4 @@
-# Architecture — xposeTIP v0.80.0
+# Architecture — xposeTIP v0.85.0
 
 ## Design Philosophy
 
@@ -138,6 +138,23 @@ activity metrics: GitHub repos/followers, Reddit karma, Kaggle competitions, Med
 
 5 archetypes: Developer (senior/active/present), Gamer, Creative/Designer, Social Influencer,
 Privacy-conscious. Also detects account longevity and high-activity patterns.
+
+## Deep Scan Pipeline (Sprint 82 + 84)
+
+Operator-triggered deep scan on any indicator (username, email, domain, name).
+
+Flow:
+1. `POST /targets/{id}/scan-indicator` → Celery task `deep_indicator_scan`
+2. `scan_single_indicator()` loads all scrapers matching input_type, executes against value
+3. **Cascade** (depth=0 only): extract cross-type indicators from new findings
+   - Username scraper finds email → chain email scrapers
+   - Username scraper finds twitter_username → chain username scrapers
+   - Username scraper finds blog/website → chain domain scrapers
+   - Max 5 cascades, depth limit = 1 (no cascading cascades)
+4. `_full_refinalize()` — 15-step pipeline mirror of finalize_scan:
+   cross-verify → graph → PageRank → graph_context → score → profile →
+   bio cleanup → name validation → quick teaser → identity enrichment →
+   personas → intelligence → fingerprint → history → SSE
 
 ## Markov Chain / graph_context
 
