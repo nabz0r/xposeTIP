@@ -5,11 +5,13 @@
 Identity Threat Intelligence platform. Scans email → builds identity graph →
 PageRank/Markov confidence → clusters personas → pixel art avatar → remediation plan.
 
-## Current version: v0.85.0
+## Current version: v0.90.0
 
-85 sprints. 120 scrapers, 35 scanners, 7 intelligence analyzers, 9-axis fingerprint.
-3-pass pipeline (email → username expansion → name-based enrichment).
+90 sprints. 120 scrapers, 35 scanners, 7 intelligence analyzers, 9-axis fingerprint.
+Two-phase pipeline: Phase A (gather: cross-verify → Pass 1.5 → early profile → Pass 2)
+→ Phase B (compute: graph → PageRank → score → profile → personas → intelligence → fingerprint).
 Deep Scan triggers cascade (discovered emails/usernames/domains → chain-scanned, depth=1, max=5).
+Per-scraper module attribution (Sprint 89). 429 exponential backoff on all scrapers.
 PDF identity report export (ReportLab, dark theme, tiered by plan).
 
 ## Developer
@@ -82,7 +84,7 @@ After deploy: System → Recalculate Fingerprints → Recalculate Profiles
 ## Key files
 
 ### Backend
-- `api/tasks/scan_orchestrator.py` — 3-pass pipeline, finalize_scan, graph_context, _full_refinalize (15-step Deep Scan pipeline), _extract_cascade_indicators
+- `api/tasks/scan_orchestrator.py` — two-phase pipeline (gather→compute), finalize_scan, graph_context, _full_refinalize (15-step Deep Scan pipeline), _extract_cascade_indicators
 - `api/tasks/module_tasks.py` — module execution, pre-flush truncation
 - `api/services/layer4/graph_builder.py` — identity graph construction
 - `api/services/layer4/confidence_propagator.py` — PageRank (damping=0.85, 20 iter)

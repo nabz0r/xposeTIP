@@ -1,4 +1,4 @@
-# Sprint Log — xposeTIP v0.85.0
+# Sprint Log — xposeTIP v0.90.0
 
 ## Sprint history
 
@@ -35,6 +35,11 @@
 | 83 | The xpose Manifesto: /manifesto page, 3 pillars (Ethical OSINT, Green Intelligence, Education First), landing trust bar |
 | 84 | CRITICAL FIX — Deep Scan Pipeline: _full_refinalize (15 steps replacing broken _lightweight_refinalize), cascade scan (cross-type indicator chaining), _store_result indicator_type fix |
 | 85 | Docs, landing & version bump to v0.85.0 |
+| 86 | Pipeline Reorder: two-phase Gather-then-Compute (Pass 1.5/2 before graph build, early profile bootstrap) |
+| 87 | Bug Fix Blitz II: ratio-based risk levels, persona confidence rebalance, 429 exponential backoff retry |
+| 88 | Graph username nodes fix (platform/username keys in _store_result), Deep Scan Activity panel in OverviewTab |
+| 89 | CRITICAL — Scraper real module names (not scraper_engine), indicator_value fallback, dedup maps legacy findings |
+| 90 | Docs, landing & architecture update to v0.90.0 |
 
 ## Known issues
 
@@ -42,9 +47,12 @@
 - Some scraper timestamps not parsed (field names vary per API)
 - Life timeline sparse (most findings don't include timestamps)
 - Fingerprint evolution avatars identical when score stable (by design)
-- BUG 4 (deferred): Add exponential backoff with 1 retry on HTTP 429 for Roblox, Agify, Nationalize scrapers
+- ~~BUG 4 (deferred): 429 retry~~ — Fixed in Sprint 87 (exponential backoff on all scrapers)
 - Intelligence analyzer confidence now severity-based (0.40-0.85), fixed in Sprint 77
 - Code leak scrapers require GitHub API rate limit awareness (5 req/min unauth)
+- BUG A: Timeline dates — DNS/archive dates may leak into timeline (shows 1999)
+- BUG F: GitHub code search requires auth token for higher rate limits
+- Graph label cleanup (_profile/_scraper suffix in node labels) — cosmetic
 
 ## Roadmap
 
@@ -67,6 +75,10 @@
 - [x] Product manifesto: Ethical OSINT + Green Intelligence + Education First
 - [x] Generic deep indicator scan (any indicator type, not just username)
 - [x] Cascade scan (cross-type indicator chaining after deep scan)
+- [x] Two-phase pipeline (gather all findings before graph/score/profile)
+- [x] Per-scraper module attribution (real scraper names in findings)
+- [x] 429 exponential backoff retry on all scrapers
+- [x] Ratio-based risk level thresholds
 - [ ] Graph zoom/pan improvement
 - [ ] Corporate intelligence via Hunter.io (domain → employees)
 

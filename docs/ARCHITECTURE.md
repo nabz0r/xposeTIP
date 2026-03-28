@@ -1,4 +1,4 @@
-# Architecture — xposeTIP v0.85.0
+# Architecture — xposeTIP v0.90.0
 
 ## Design Philosophy
 
@@ -74,14 +74,38 @@ graph TB
     Fernet -.-> PG
 ```
 
-## 3-Pass Scan Pipeline
+## Two-Phase Scan Pipeline (Sprint 86)
 
-| Pass | Name | What it does |
+All findings are gathered BEFORE graph/score/profile computation.
+
+### Phase A — GATHER
+
+| Step | Name | What it does |
 |------|------|-------------|
 | 1 | Email scan | Run all enabled scanner modules against email address |
-| 1.5 | Username expansion | Select top 3 discovered usernames, re-scan across username-capable scrapers |
-| 2 | Name enrichment | Use discovered real name for public exposure scrapers (media, corporate) |
-| Deep | Username drill-down | Operator-triggered: scan single username across all 80+ username-capable scrapers |
+| A1 | Cross-verify | Boost confidence on findings confirmed by multiple sources |
+| A2 | Pass 1.5 — Username expansion | Select top 3 usernames, re-scan across username-capable scrapers |
+| A3 | Early profile | Bootstrap primary_name (no graph_context) for Pass 2 |
+| A4 | Pass 2 — Name enrichment | Use discovered real name for public exposure scrapers (GDELT, GNews, OpenSanctions) |
+
+### Phase B — COMPUTE (all findings now in DB)
+
+| Step | Name | What it does |
+|------|------|-------------|
+| B1 | Graph build | Build identity graph from ALL findings (Pass 1 + 1.5 + 2) |
+| B2 | PageRank | Propagate confidence through graph (damping=0.85, 20 iter) |
+| B3 | graph_context | Build unified context (node_scores, node_map, transition_matrix, clusters) |
+| B4 | Score | Compute exposure + threat (ratio-based thresholds) |
+| B5 | Profile | Final aggregation with graph_context (overwrites A3) |
+| B6-B8 | Cleanup | Bio rejection, name validation, quick teaser |
+| B9 | Identity enrichment | Re-query gender/age/nationality with discovered name (429 retry) |
+| B10-B12 | Intelligence | Personas → 7 analyzers → fingerprint → SSE |
+
+### Deep Scan
+
+| | |
+|------|-------------|
+| Deep | Operator-triggered: scan any indicator type across all matching scrapers (cascade depth=1, max=5) |
 
 ```mermaid
 sequenceDiagram

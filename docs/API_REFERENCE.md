@@ -1,4 +1,4 @@
-# API Reference — xposeTIP v0.85.0
+# API Reference — xposeTIP v0.90.0
 
 All endpoints prefixed with `/api/v1/`. All require auth (JWT Bearer) except health.
 All scoped to workspace via middleware (extracts workspace_id from JWT claims).
