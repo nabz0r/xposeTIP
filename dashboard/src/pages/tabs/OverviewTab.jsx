@@ -1,5 +1,5 @@
-import React from 'react'
-import { Shield, AlertTriangle, Globe, Radar } from 'lucide-react'
+import React, { useMemo } from 'react'
+import { Shield, AlertTriangle, Globe, Radar, Search } from 'lucide-react'
 import FingerprintRadar, { FingerprintTimeline } from '../../components/FingerprintRadar'
 import PlatformIcon from '../../components/PlatformIcon'
 import IdentityCard from '../../components/IdentityCard'
@@ -16,6 +16,59 @@ const scoreColor = (score) => {
   if (score >= 61) return '#ff2244'
   if (score >= 31) return '#ff8800'
   return '#00ff88'
+}
+
+function DeepScanActivity({ findings }) {
+  const stats = useMemo(() => {
+    const deepFindings = findings.filter(f => f.data?.pass === 'deep')
+    if (!deepFindings.length) return null
+
+    const sources = new Set(deepFindings.map(f => f.data?.source_username).filter(Boolean))
+    const types = new Set(deepFindings.map(f => f.indicator_type).filter(Boolean))
+    const latest = deepFindings.reduce((best, f) => {
+      if (!best || (f.created_at && f.created_at > best)) return f.created_at
+      return best
+    }, null)
+
+    return {
+      scanCount: sources.size,
+      findingCount: deepFindings.length,
+      types: [...types],
+      latestDate: latest ? new Date(latest).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : null,
+    }
+  }, [findings])
+
+  if (!stats) return null
+
+  return (
+    <div className="bg-[#12121a] border border-[#1e1e2e] rounded-xl p-4">
+      <div className="flex items-center gap-2 mb-3">
+        <Search className="w-4 h-4 text-[#3388ff]" />
+        <h3 className="text-xs font-semibold uppercase tracking-wider text-gray-500">Deep Scan Activity</h3>
+      </div>
+      <div className="flex items-center gap-4 text-xs text-gray-400">
+        <span>
+          <span className="text-white font-semibold font-mono">{stats.scanCount}</span> deep scan{stats.scanCount !== 1 ? 's' : ''} completed
+        </span>
+        <span className="text-gray-600">|</span>
+        <span>
+          <span className="text-white font-semibold font-mono">{stats.findingCount}</span> finding{stats.findingCount !== 1 ? 's' : ''} discovered
+        </span>
+        {stats.types.length > 0 && (
+          <>
+            <span className="text-gray-600">|</span>
+            <span className="font-mono text-[#3388ff]">{stats.types.join(', ')}</span>
+          </>
+        )}
+        {stats.latestDate && (
+          <>
+            <span className="text-gray-600">|</span>
+            <span>Last: {stats.latestDate}</span>
+          </>
+        )}
+      </div>
+    </div>
+  )
 }
 
 export default function OverviewTab({ target, findings, profile, fingerprint, fpHistory, sourcesData, socialFindings, breachFindings, geoFindings, riskAssessment, remediations, criticalCount, setActiveTab, setShowScanModal }) {
@@ -104,6 +157,9 @@ export default function OverviewTab({ target, findings, profile, fingerprint, fp
 
       {/* Persona Clusters */}
       <PersonaCard personas={profile?.personas} />
+
+      {/* Deep Scan Activity */}
+      <DeepScanActivity findings={findings} />
 
       {/* Digital Fingerprint */}
       {fingerprint && (
