@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react'
 import { Link } from 'react-router-dom'
-import { Shield, Zap, BookOpen, ArrowRight, ChevronRight } from 'lucide-react'
+import { Shield, Zap, BookOpen, Lock, ArrowRight, ChevronRight, X } from 'lucide-react'
 
 function useScrollReveal() {
   const ref = useRef(null)
@@ -46,7 +46,7 @@ function Rule({ num, title, children }) {
       <span className="text-lg font-mono font-bold text-gray-700 shrink-0 w-8">{num}</span>
       <div>
         <h3 className="text-sm font-bold text-white uppercase tracking-wider mb-1">{title}</h3>
-        <p className="text-sm text-gray-400 leading-relaxed">{children}</p>
+        <div className="text-sm text-gray-400 leading-relaxed">{children}</div>
       </div>
     </div>
   )
@@ -100,10 +100,11 @@ export default function Manifesto() {
         <section className="mb-32">
           <Pillar num="01" icon={Shield} color="#00ff88" title="Ethical OSINT">
             <div className="bg-[#12121a] border border-[#1e1e2e] rounded-xl p-6 md:p-8">
-              <Rule num="01" title="Consent First">
-                You scan yourself. Or someone who asked you to.
-                No mass surveillance. No unconsented profiling.
-                Every scan requires a purpose.
+              <Rule num="01" title="Consent Model">
+                <p className="mb-2"><span className="text-white font-semibold">Self-scan:</span> Anyone can scan their own email. Free, no justification needed.</p>
+                <p className="mb-2"><span className="text-white font-semibold">Third-party scan:</span> Requires documented consent — a signed DPA, an employer policy, or explicit written authorization from the data subject.</p>
+                <p className="mb-2"><span className="text-white font-semibold">Bulk scan:</span> Permitted for organizations scanning their own workforce under GDPR Article 6(1)(f) legitimate interest — never for profiling external individuals.</p>
+                <p>No scan is ever anonymous to us. Every scan is logged with who authorized it, when, and why.</p>
               </Rule>
               <Rule num="02" title="Transparency">
                 Every finding shows its source. Every score explains its reasoning.
@@ -124,6 +125,34 @@ export default function Manifesto() {
                 No upsell scare tactics. No inflated scores to push premium plans.
                 A score of 6 means you're fine. We tell you that.
               </Rule>
+            </div>
+
+            {/* Rule 06 — Red Lines */}
+            <div className="reveal opacity-0 translate-y-8 transition-all duration-700 mt-6 bg-[#0a0a0f] border-2 border-[#ff2244]/30 rounded-xl p-6 md:p-8">
+              <div className="flex items-center gap-3 mb-5">
+                <X className="w-5 h-5 text-[#ff2244]" />
+                <h3 className="text-sm font-bold text-[#ff2244] uppercase tracking-wider">06 — We Will Never</h3>
+              </div>
+              <ul className="space-y-3 text-sm font-mono text-gray-300">
+                {[
+                  'Accept contracts for unconsented pre-employment screening',
+                  'Sell, license, or share scan data with data brokers, advertisers, or intelligence agencies',
+                  'Accept military, mass surveillance, or law enforcement contracts for profiling civilians',
+                  'Build facial recognition, social scoring, or predictive profiling features',
+                  'Monetize scan results, even anonymized or aggregated',
+                  'Retain data for users who delete their account — purge is cryptographic, not soft delete',
+                  'Comply with data requests from authoritarian regimes, regardless of legal pressure',
+                ].map((line, i) => (
+                  <li key={i} className="flex items-start gap-3">
+                    <X className="w-3.5 h-3.5 text-[#ff2244] shrink-0 mt-0.5" />
+                    <span>{line}</span>
+                  </li>
+                ))}
+              </ul>
+              <p className="text-xs text-gray-500 mt-6 leading-relaxed">
+                These aren't aspirational. They're hardcoded. If a future version of xpose violates any of these,
+                fork the repo and call us out. The code is MIT-licensed for exactly this reason.
+              </p>
             </div>
           </Pillar>
         </section>
@@ -150,53 +179,48 @@ export default function Manifesto() {
                   constraints breed creativity.
                 </p>
                 <div className="space-y-3 text-sm text-gray-300">
-                  <div className="flex items-start gap-3">
-                    <ChevronRight className="w-4 h-4 text-[#3388ff] shrink-0 mt-0.5" />
-                    <span>Data-driven scrapers (no code per source — just JSON config)</span>
-                  </div>
-                  <div className="flex items-start gap-3">
-                    <ChevronRight className="w-4 h-4 text-[#3388ff] shrink-0 mt-0.5" />
-                    <span>Single PostgreSQL (no distributed cluster)</span>
-                  </div>
-                  <div className="flex items-start gap-3">
-                    <ChevronRight className="w-4 h-4 text-[#3388ff] shrink-0 mt-0.5" />
-                    <span>Celery + Redis (not Kafka + ZooKeeper + 7 brokers)</span>
-                  </div>
-                  <div className="flex items-start gap-3">
-                    <ChevronRight className="w-4 h-4 text-[#3388ff] shrink-0 mt-0.5" />
-                    <span>Pixel art avatars (5.4B combinations, zero GPU, zero API call)</span>
-                  </div>
-                  <div className="flex items-start gap-3">
-                    <ChevronRight className="w-4 h-4 text-[#3388ff] shrink-0 mt-0.5" />
-                    <span>Every architectural decision asks: "is this the lightest way?"</span>
-                  </div>
+                  {[
+                    'Data-driven scrapers (no code per source — just JSON config)',
+                    'Single PostgreSQL (no distributed cluster)',
+                    'Celery + Redis (not Kafka + ZooKeeper + 7 brokers)',
+                    'Pixel art avatars (5.4B combinations, zero GPU, zero API call)',
+                    'Every architectural decision asks: "is this the lightest way?"',
+                  ].map((item, i) => (
+                    <div key={i} className="flex items-start gap-3">
+                      <ChevronRight className="w-4 h-4 text-[#3388ff] shrink-0 mt-0.5" />
+                      <span>{item}</span>
+                    </div>
+                  ))}
                 </div>
               </div>
 
               <div className="reveal opacity-0 translate-y-8 transition-all duration-700 bg-[#12121a] border border-[#1e1e2e] rounded-xl p-6 md:p-8">
-                <h3 className="text-sm font-bold text-[#3388ff] uppercase tracking-wider mb-6">
-                  The Math
+                <h3 className="text-sm font-bold text-[#3388ff] uppercase tracking-wider mb-4">
+                  Our Benchmark
                 </h3>
+                <p className="text-xs text-gray-500 mb-4">Measured on a 2019 MacBook Pro, 50W TDP</p>
                 <div className="grid grid-cols-2 gap-8">
-                  <div>
-                    <p className="text-xs text-gray-500 uppercase tracking-wider mb-4">Typical Enterprise Scan</p>
-                    <div className="space-y-3">
-                      <Stat value="~$0.50" label="per scan (compute + API)" color="#ff8800" />
-                      <Stat value="~2g" label="CO2 per scan" color="#ff8800" />
-                      <Stat value="12+" label="containers, 3 managed services" color="#ff8800" />
-                    </div>
-                  </div>
                   <div>
                     <p className="text-xs text-gray-500 uppercase tracking-wider mb-4">xpose Scan</p>
                     <div className="space-y-3">
-                      <Stat value="~$0.001" label="per scan (local compute)" color="#00ff88" />
-                      <Stat value="~0.02g" label="CO2 per scan" color="#00ff88" />
+                      <Stat value="~90s" label="of compute per scan" color="#00ff88" />
+                      <Stat value="~1.25 Wh" label="energy per scan" color="#00ff88" />
+                      <Stat value="~0.9g" label="CO2 (EU grid avg 722g/kWh)" color="#00ff88" />
                       <Stat value="5" label="containers, 0 managed services" color="#00ff88" />
                     </div>
                   </div>
+                  <div>
+                    <p className="text-xs text-gray-500 uppercase tracking-wider mb-4">Typical Cloud OSINT</p>
+                    <div className="space-y-3">
+                      <Stat value="3-5 min" label="on m5.xlarge ($0.19/hr)" color="#ff8800" />
+                      <Stat value="5-10x" label="energy footprint" color="#ff8800" />
+                      <Stat value="+" label="Elasticsearch + API costs" color="#ff8800" />
+                      <Stat value="12+" label="containers, 3+ managed services" color="#ff8800" />
+                    </div>
+                  </div>
                 </div>
-                <p className="text-center text-sm text-gray-500 mt-6 font-mono">
-                  100x cheaper. 100x greener. Same depth.
+                <p className="text-center text-xs text-gray-600 mt-6 font-mono">
+                  We don't claim 100x. We claim significantly less — and we show our math.
                 </p>
               </div>
             </div>
@@ -215,18 +239,12 @@ export default function Manifesto() {
               </div>
 
               {[
-                {
-                  quote: '"Your score is 42 because you reuse the same username across 12 platforms. Here\'s why that\'s risky: an attacker who compromises one account can try the same credentials on all 12."',
-                },
-                {
-                  quote: '"We found your email in the LinkedIn 2021 breach. This means your password hash was exposed. Even if you changed your LinkedIn password, attackers test these credentials on every other service."',
-                },
-                {
-                  quote: '"Your GitHub profile reveals your real name, employer, location, and timezone. This is enough for a targeted phishing email that mentions your company by name."',
-                },
-              ].map((ex, i) => (
+                '"Your score is 42 because you reuse the same username across 12 platforms. Here\'s why that\'s risky: an attacker who compromises one account can try the same credentials on all 12."',
+                '"We found your email in the LinkedIn 2021 breach. This means your password hash was exposed. Even if you changed your LinkedIn password, attackers test these credentials on every other service."',
+                '"Your GitHub profile reveals your real name, employer, location, and timezone. This is enough for a targeted phishing email that mentions your company by name."',
+              ].map((quote, i) => (
                 <div key={i} className="reveal opacity-0 translate-y-8 transition-all duration-700 bg-[#12121a] border border-[#1e1e2e] rounded-xl p-6">
-                  <p className="text-sm text-gray-300 leading-relaxed italic">{ex.quote}</p>
+                  <p className="text-sm text-gray-300 leading-relaxed italic">{quote}</p>
                 </div>
               ))}
 
@@ -236,6 +254,86 @@ export default function Manifesto() {
                   <span className="text-[#ffcc00]">The goal isn't to make you dependent on xpose.
                   It's to make you not need xpose anymore.</span>
                 </p>
+                <p className="text-xs text-gray-600 mt-3">
+                  We measure success by how many people improve their score to A — not by how many people renew their subscription.
+                </p>
+              </div>
+            </div>
+          </Pillar>
+        </section>
+
+        {/* Pillar 4 — Data Commitment */}
+        <section className="mb-32">
+          <Pillar num="04" icon={Lock} color="#ff8800" title="Data Commitment">
+            <div className="space-y-6">
+              {[
+                {
+                  title: 'What we store',
+                  color: '#ff8800',
+                  items: [
+                    'Scan results (findings, scores, graph) — tied to your workspace, encrypted at rest',
+                    'Account credentials — hashed (bcrypt), never reversible',
+                    'API keys — AES-256 encrypted (Fernet), never stored in plaintext',
+                  ],
+                },
+                {
+                  title: 'What we don\'t store',
+                  color: '#00ff88',
+                  items: [
+                    'Raw HTML from scraped pages (discarded after extraction)',
+                    'Passwords found in breaches (we note the breach, not the credential)',
+                    'Biometric data (no facial recognition, no voiceprint, no behavioral biometrics)',
+                  ],
+                },
+                {
+                  title: 'Retention',
+                  color: '#3388ff',
+                  items: [
+                    'Active accounts: data retained while account is active',
+                    'Inactive accounts: scan data auto-purged after 12 months of inactivity',
+                    'Deleted accounts: cryptographic purge within 72 hours — not soft delete, not "archived"',
+                    'Workspace deletion: cascade purge of all targets, findings, identities, scans',
+                  ],
+                },
+              ].map((section, i) => (
+                <div key={i} className="reveal opacity-0 translate-y-8 transition-all duration-700 bg-[#12121a] border border-[#1e1e2e] rounded-xl p-6">
+                  <h3 className="text-sm font-bold uppercase tracking-wider mb-4" style={{ color: section.color }}>
+                    {section.title}
+                  </h3>
+                  <ul className="space-y-2">
+                    {section.items.map((item, j) => (
+                      <li key={j} className="flex items-start gap-3 text-sm text-gray-400">
+                        <ChevronRight className="w-3.5 h-3.5 shrink-0 mt-0.5" style={{ color: section.color }} />
+                        <span>{item}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              ))}
+
+              <div className="reveal opacity-0 translate-y-8 transition-all duration-700 bg-[#0a0a0f] border-2 border-[#ff8800]/30 rounded-xl p-6">
+                <h3 className="text-sm font-bold text-[#ff8800] uppercase tracking-wider mb-4">
+                  What we will never do with your data
+                </h3>
+                <ul className="space-y-2 text-sm font-mono text-gray-300">
+                  {[
+                    'Train AI/ML models on scan results',
+                    'Sell aggregated intelligence reports',
+                    'Share data with any third party without explicit per-instance consent',
+                    'Use scan patterns for competitive intelligence',
+                  ].map((item, i) => (
+                    <li key={i} className="flex items-start gap-3">
+                      <X className="w-3.5 h-3.5 text-[#ff8800] shrink-0 mt-0.5" />
+                      <span>{item}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+
+              <div className="reveal opacity-0 translate-y-8 transition-all duration-700 text-center mt-4">
+                <p className="text-sm text-gray-500 italic">
+                  "Your scan data exists to protect you. The moment it stops serving that purpose, it should stop existing."
+                </p>
               </div>
             </div>
           </Pillar>
@@ -243,10 +341,13 @@ export default function Manifesto() {
 
         {/* Footer */}
         <footer className="reveal opacity-0 translate-y-8 transition-all duration-700 border-t border-[#1e1e2e] pt-16 text-center">
-          <p className="text-gray-500 text-sm mb-6">
-            Built in Luxembourg. Open OSINT. Ethical by design. Green by philosophy.
+          <p className="text-gray-500 text-sm mb-2">
+            Built in Luxembourg — Ethical by constitution, not by marketing.
           </p>
-          <div className="flex items-center justify-center gap-6">
+          <p className="text-gray-600 text-xs mb-6">
+            Open source (MIT) so you can verify every claim on this page.
+          </p>
+          <div className="flex items-center justify-center gap-6 mb-8">
             <Link to="/welcome"
               className="flex items-center gap-2 text-sm text-[#00ff88] hover:underline">
               Back to product <ArrowRight className="w-4 h-4" />
@@ -256,6 +357,7 @@ export default function Manifesto() {
               Read the architecture <ArrowRight className="w-4 h-4" />
             </Link>
           </div>
+          <p className="text-[10px] text-gray-700 font-mono">Manifesto v2 — March 2026</p>
         </footer>
 
       </div>
