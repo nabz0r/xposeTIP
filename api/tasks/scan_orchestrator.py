@@ -110,11 +110,20 @@ def _build_graph_context(target_id, workspace_id, session):
                     queue.append(neighbor)
 
         if len(component) >= 2:
-            cluster_conf = sum(node_scores.get(n, 0) for n in component) / len(component)
             internal_edges = [l for l in relevant_links
                              if l.source_id in component and l.dest_id in component]
             max_edges = len(component) * (len(component) - 1)
             density = len(internal_edges) / max_edges if max_edges > 0 else 0
+
+            # Composite confidence: size + density + accumulated PageRank mass
+            total_pagerank = sum(node_scores.get(n, 0) for n in component)
+            size_factor = min(1.0, len(component) / 20)
+            density_factor = density
+            pagerank_factor = min(1.0, total_pagerank / 0.5)
+            cluster_conf = round(
+                size_factor * 0.35 + density_factor * 0.30 + pagerank_factor * 0.35,
+                4
+            )
 
             type_counts = defaultdict(int)
             for n in component:

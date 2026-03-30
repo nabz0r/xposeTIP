@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useCallback, useRef } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import { Radar, CheckCircle, AlertTriangle, XCircle, ArrowRightLeft, FileDown } from 'lucide-react'
-import { getTarget, getFindings, getScans, createScan, getModules, getScan, getGraph, patchFinding, getTargetSources, getAccounts, startOAuth, auditAccount, disconnectAccount, getFingerprint, getFingerprintHistory, getTargetProfile, cancelScan, getWorkspaces, moveTarget } from '../lib/api'
+import { getTarget, getFindings, getScans, createScan, getModules, getScan, getGraph, patchFinding, getTargetSources, getAccounts, startOAuth, auditAccount, disconnectAccount, getFingerprint, getFingerprintHistory, getTargetProfile, cancelScan, getWorkspaces, moveTarget, getScraperProgress } from '../lib/api'
 import IdentityGraph from '../components/IdentityGraph'
 import LocationMap from '../components/LocationMap'
 import ProfileHeader from '../components/ProfileHeader'
@@ -46,6 +46,7 @@ export default function TargetDetail() {
   // Move target
   const [workspaces, setWorkspaces] = useState([])
   const [showMoveMenu, setShowMoveMenu] = useState(false)
+  const [scraperProgress, setScraperProgress] = useState(null)
 
   const load = useCallback(async () => {
     try {
@@ -96,6 +97,13 @@ export default function TargetDetail() {
           const u = updated.find(x => x.id === s.id)
           return u || s
         }))
+        // Fetch scraper-level progress for richer display
+        const runningScanObj = updated.find(s => s.status === 'running')
+        if (runningScanObj?.module_progress?.scraper_engine === 'running') {
+          try { const sp = await getScraperProgress(runningScanObj.id); setScraperProgress(sp) } catch {}
+        } else {
+          setScraperProgress(null)
+        }
         getFingerprint(id).then(setFingerprint).catch(() => {})
 
         if (done) {
@@ -268,7 +276,12 @@ export default function TargetDetail() {
         const progress = runningScan?.module_progress || {}
         const total = Object.keys(progress).length
         const completed = Object.values(progress).filter(s => s === 'completed' || s === 'failed' || s === 'skipped').length
-        const pct = total > 0 ? Math.round((completed / total) * 100) : 0
+        // Enhanced percentage: interpolate scraper sub-progress
+        let pct = total > 0 ? Math.round((completed / total) * 100) : 0
+        if (scraperProgress && total > 0 && progress.scraper_engine === 'running') {
+          const scraperFrac = (scraperProgress.current || 0) / (scraperProgress.total || 120)
+          pct = Math.round(((completed + scraperFrac) / total) * 100)
+        }
         return (
           <div className="bg-[#12121a] border border-[#00ff88]/20 rounded-xl p-4 animate-pulse-subtle">
             <div className="flex items-center justify-between mb-3">
@@ -300,6 +313,17 @@ export default function TargetDetail() {
             <div className="h-1.5 bg-[#0a0a0f] rounded-full overflow-hidden mb-3">
               <div className="h-full rounded-full bg-[#00ff88] transition-all duration-500" style={{ width: `${pct}%` }} />
             </div>
+            {scraperProgress && progress.scraper_engine === 'running' && (
+              <div className="flex items-center gap-2 mb-2 text-xs text-gray-500">
+                <span className="font-mono text-[#3388ff]">
+                  {scraperProgress.current || 0}/{scraperProgress.total || 120}
+                </span>
+                <span>scrapers</span>
+                {scraperProgress.current_name && (
+                  <span className="text-gray-400 truncate">— {scraperProgress.current_name}</span>
+                )}
+              </div>
+            )}
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-1.5">
               {Object.entries(progress).map(([mod, st]) => (
                 <div key={mod} className="flex items-center gap-1.5 text-xs font-mono px-2 py-1 rounded bg-[#0a0a0f]">
@@ -324,7 +348,15 @@ export default function TargetDetail() {
         {['overview', 'findings', 'graph', 'timeline', 'photos', 'exposure', 'locations', 'accounts', 'usernames', 'scans'].map(tab => (
           <button key={tab} onClick={() => setActiveTab(tab)}
             className={`px-4 py-2 text-sm capitalize transition-colors ${activeTab === tab ? 'text-[#00ff88] border-b-2 border-[#00ff88]' : 'text-gray-400 hover:text-white'}`}>
-            {tab} {tab === 'findings' ? `(${findings.length})` : tab === 'scans' ? `(${scans.length})` : tab === 'accounts' ? `(${socialFindings.length + accounts.length})` : tab === 'photos' ? `(${(profile?.avatars || []).length})` : tab === 'usernames' ? `(${new Set(findings.filter(f => f.indicator_type === 'username' && f.indicator_value).map(f => f.indicator_value.toLowerCase())).size})` : tab === 'exposure' ? `(${findings.filter(f => f.category === 'public_exposure' || f.category === 'compliance' || f.category === 'corporate' || f.indicator_type === 'media_mention' || f.indicator_type === 'sanctions_match' || f.indicator_type === 'pep_match' || f.indicator_type === 'corporate_officer').length})` : ''}
+            {tab} {(() => {
+              if (tab === 'findings') return `(${findings.length})`
+              if (tab === 'scans') return `(${scans.length})`
+              if (tab === 'accounts') { const c = socialFindings.length + accounts.length; return c > 0 ? `(${c})` : '' }
+              if (tab === 'photos') { const c = (profile?.avatars || []).length; return c > 0 ? `(${c})` : '' }
+              if (tab === 'usernames') { const c = new Set(findings.filter(f => f.indicator_type === 'username' && f.indicator_value).map(f => f.indicator_value.toLowerCase())).size; return c > 0 ? `(${c})` : '' }
+              if (tab === 'exposure') { const c = findings.filter(f => f.category === 'public_exposure' || f.category === 'compliance' || f.category === 'corporate' || f.indicator_type === 'media_mention' || f.indicator_type === 'sanctions_match' || f.indicator_type === 'pep_match' || f.indicator_type === 'corporate_officer').length; return c > 0 ? `(${c})` : '' }
+              return ''
+            })()}
           </button>
         ))}
       </div>

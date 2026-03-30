@@ -40,15 +40,26 @@ class EmailValidatorScanner(BaseScanner):
         if not is_valid:
             return results
 
-        # MX record check
+        # MX record check (real MX lookup via dnspython)
         has_mx = False
         mx_records = []
         try:
+            import dns.resolver
             loop = asyncio.get_event_loop()
-            answers = await loop.run_in_executor(None, lambda: socket.getaddrinfo(domain, None, socket.AF_INET))
-            if answers:
+
+            def _resolve_mx():
+                try:
+                    answers = dns.resolver.resolve(domain, 'MX')
+                    return [(str(r.exchange).rstrip('.'), r.preference) for r in answers]
+                except (dns.resolver.NoAnswer, dns.resolver.NXDOMAIN, dns.resolver.NoNameservers):
+                    return []
+                except Exception:
+                    return []
+
+            mx_result = await loop.run_in_executor(None, _resolve_mx)
+            if mx_result:
                 has_mx = True
-                mx_records = [a[4][0] for a in answers[:5]]
+                mx_records = [f"{host} (priority {pref})" for host, pref in sorted(mx_result, key=lambda x: x[1])[:5]]
         except Exception:
             pass
 

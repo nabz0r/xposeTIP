@@ -5,9 +5,9 @@
 Identity Threat Intelligence platform. Scans email → builds identity graph →
 PageRank/Markov confidence → clusters personas → pixel art avatar → remediation plan.
 
-## Current version: v0.97.0
+## Current version: v1.0.0
 
-97 sprints. 120 scrapers, 35 scanners, 9 intelligence analyzers, 9-axis fingerprint.
+100 sprints. 120 scrapers, 35 scanners, 9 intelligence analyzers, 9-axis fingerprint.
 Two-phase pipeline: Phase A (gather: cross-verify → Pass 1.5 → early profile → Pass 2)
 → Phase B (compute: graph → PageRank → score → profile → personas → intelligence → fingerprint).
 Deep Scan triggers cascade (discovered emails/usernames/domains → chain-scanned, depth=1, max=5).
