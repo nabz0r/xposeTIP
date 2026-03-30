@@ -984,6 +984,20 @@ def aggregate_profile(target_id, workspace_id, session: Session, graph_context=N
         logger.debug("Timezone analysis failed: %s", e)
         profile["timezone"] = None
 
+    # --- Geographic consistency analysis ---
+    try:
+        from api.services.layer4.analyzers.geo_consistency import analyze_geo_consistency
+        # Load target country_code for ground truth signal
+        _target = session.execute(
+            select(Target).where(Target.id == target_id)
+        ).scalar_one_or_none()
+        _cc = getattr(_target, "country_code", None) if _target else None
+        geo_result = analyze_geo_consistency(profile, findings, country_code=_cc)
+        profile["geo_consistency"] = geo_result
+    except Exception as e:
+        logger.debug("Geo consistency analysis failed: %s", e)
+        profile["geo_consistency"] = None
+
     # --- Profile confidence score ---
     name_sources = len(profile["names"])
     avatar_sources = len(profile["avatars"])

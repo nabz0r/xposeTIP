@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react'
-import { Shield, AlertTriangle, Globe, Radar, Search, Clock } from 'lucide-react'
+import { Shield, AlertTriangle, Globe, Radar, Search, Clock, MapPin } from 'lucide-react'
 import FingerprintRadar, { FingerprintTimeline } from '../../components/FingerprintRadar'
 import PlatformIcon from '../../components/PlatformIcon'
 import IdentityCard from '../../components/IdentityCard'
@@ -175,6 +175,36 @@ export default function OverviewTab({ target, findings, profile, fingerprint, fp
             <span className="text-gray-600">|</span>
             <span>{profile.timezone.sample_count} timestamps analyzed</span>
           </div>
+        </div>
+      )}
+
+      {/* Geographic Intelligence */}
+      {profile?.geo_consistency && profile.geo_consistency.primary_country && (
+        <div className="bg-[#12121a] border border-[#1e1e2e] rounded-xl p-4">
+          <div className="flex items-center gap-2 mb-2">
+            <MapPin className="w-4 h-4 text-[#00ff88]" />
+            <span className="text-xs font-semibold uppercase tracking-wider text-gray-500">Geographic Intelligence</span>
+            <span className={`text-[10px] px-1.5 py-0.5 rounded font-mono ${
+              profile.geo_consistency.consistency_score >= 0.8 ? 'bg-[#00ff88]/15 text-[#00ff88]' :
+              profile.geo_consistency.consistency_score >= 0.5 ? 'bg-[#ffcc00]/15 text-[#ffcc00]' :
+              'bg-[#ff2244]/15 text-[#ff2244]'
+            }`}>
+              {Math.round(profile.geo_consistency.consistency_score * 100)}% consistent
+            </span>
+          </div>
+          <p className="text-xs text-gray-400 mb-2">{profile.geo_consistency.verdict}</p>
+          <div className="flex flex-wrap gap-1.5">
+            {Object.entries(profile.geo_consistency.country_votes || {}).slice(0, 5).map(([cc, score]) => (
+              <span key={cc} className="text-[10px] bg-[#0a0a0f] border border-[#1e1e2e] px-2 py-0.5 rounded font-mono text-gray-300">
+                {cc} <span className="text-gray-600">({typeof score === 'number' ? score.toFixed(1) : score})</span>
+              </span>
+            ))}
+          </div>
+          {profile.geo_consistency.anomalies?.length > 0 && (
+            <p className="mt-2 text-[10px] text-[#ffcc00]/70">
+              {profile.geo_consistency.anomalies.length} anomal{profile.geo_consistency.anomalies.length === 1 ? 'y' : 'ies'} detected
+            </p>
+          )}
         </div>
       )}
 
