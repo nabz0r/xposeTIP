@@ -272,7 +272,8 @@ def finalize_scan(scan_id: str):
         # A3. Early profile aggregation (no graph_context — bootstrap primary_name for Pass 2)
         try:
             from api.services.layer4.profile_aggregator import aggregate_profile
-            aggregate_profile(scan.target_id, scan.workspace_id, session, graph_context=None)
+            aggregate_profile(scan.target_id, scan.workspace_id, session, graph_context=None,
+                              country_code=getattr(target, "country_code", None))
         except Exception:
             logger.exception("PIPELINE[%s]: early profile aggregation failed", scan.target_id)
         logger.info("PIPELINE[%s]: early_profile done (bootstrap for Pass 2)", scan.target_id)
@@ -294,6 +295,29 @@ def finalize_scan(scan_id: str):
         # ═══════════════════════════════════════════════════════════════
         # PHASE B — COMPUTE (all findings now in DB)
         # ═══════════════════════════════════════════════════════════════
+
+        # B0. Email deliverability check — tag in profile_data for frontend banner
+        try:
+            email_findings = session.execute(
+                select(Finding).where(Finding.scan_id == scan.id, Finding.module == "email_validator")
+            ).scalars().all()
+            email_status = "valid"
+            for ef in email_findings:
+                d = ef.data or {}
+                if d.get("format_valid") is False:
+                    email_status = "invalid_format"
+                    break
+                if d.get("has_dns") is False:
+                    email_status = "no_dns"
+                    break
+            target = session.execute(select(Target).where(Target.id == scan.target_id)).scalar_one_or_none()
+            if target and email_status != "valid":
+                profile = dict(target.profile_data or {})
+                profile["email_status"] = email_status
+                target.profile_data = profile
+                session.commit()
+        except Exception:
+            logger.debug("Email status check failed for %s", scan.target_id)
 
         # B1. Build identity graph (sees Pass 1 + 1.5 + 2 findings)
         try:
@@ -352,7 +376,9 @@ def finalize_scan(scan_id: str):
 
         # B5. Aggregate profile data (FINAL — with graph_context, overwrites early profile)
         try:
-            aggregate_profile(scan.target_id, scan.workspace_id, session, graph_context=graph_context)
+            target = session.execute(select(Target).where(Target.id == scan.target_id)).scalar_one_or_none()
+            aggregate_profile(scan.target_id, scan.workspace_id, session, graph_context=graph_context,
+                              country_code=getattr(target, "country_code", None))
         except Exception:
             logger.exception("Profile aggregation failed for target %s", scan.target_id)
         logger.info("PIPELINE[%s]: profile_aggregator done (final)", scan.target_id)
@@ -840,7 +866,8 @@ def _full_refinalize(target_id_str: str, workspace_id_str: str, session):
     # 6. Profile aggregation
     try:
         from api.services.layer4.profile_aggregator import aggregate_profile
-        aggregate_profile(target_id, workspace_id, session, graph_context=graph_context)
+        aggregate_profile(target_id, workspace_id, session, graph_context=graph_context,
+                          country_code=getattr(target, "country_code", None))
     except Exception:
         logger.exception("REFINALIZE[%s]: profile aggregation failed", target_id)
     logger.info("REFINALIZE[%s]: profile_aggregator done", target_id)

@@ -21,7 +21,7 @@ _TIMESTAMP_FIELDS = [
 ]
 
 # Modules whose timestamps refer to DOMAIN age, not USER account age
-_DOMAIN_AGE_MODULES = {"dns_deep", "whois_lookup", "domain_analyzer", "crt_sh", "dns_resolver", "email_dns"}
+_DOMAIN_AGE_MODULES = {"dns_deep", "whois_lookup", "domain_analyzer", "crt_sh", "dns_resolver", "email_dns", "wayback_domain", "wayback_count"}
 
 # Caps: no email account can predate the service launch
 _DOMAIN_LAUNCH_DATES = {

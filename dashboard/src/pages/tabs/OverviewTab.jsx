@@ -74,6 +74,21 @@ function DeepScanActivity({ findings }) {
 export default function OverviewTab({ target, findings, profile, fingerprint, fpHistory, sourcesData, socialFindings, breachFindings, geoFindings, riskAssessment, remediations, criticalCount, setActiveTab, setShowScanModal }) {
   return (
     <div className="space-y-4">
+      {/* Email deliverability banner */}
+      {profile?.email_status && profile.email_status !== 'valid' && (
+        <div className="bg-[#332800] border border-[#665500] rounded-xl p-4 flex items-center gap-3">
+          <AlertTriangle className="w-5 h-5 text-[#ffcc00] shrink-0" />
+          <div>
+            <p className="text-[#ffcc00] text-sm font-semibold">
+              {profile.email_status === 'invalid_format' ? 'Invalid email format' : 'Inactive or non-existent email'}
+            </p>
+            <p className="text-gray-400 text-xs mt-1">
+              This email appears inactive or undeliverable. Results below are based on historical data and username analysis.
+            </p>
+          </div>
+        </div>
+      )}
+
       {/* Risk Dashboard */}
       {riskAssessment && (
         <div className={`rounded-xl p-5 border ${

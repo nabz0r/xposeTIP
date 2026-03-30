@@ -614,7 +614,7 @@ def _find_finding_for_name(findings, name_value, source_name):
     return None
 
 
-def aggregate_profile(target_id, workspace_id, session: Session, graph_context=None) -> dict:
+def aggregate_profile(target_id, workspace_id, session: Session, graph_context=None, country_code=None) -> dict:
     """Build a unified profile from all findings for a target. Sync for Celery.
 
     If graph_context is provided, uses pre-computed node confidence map
@@ -987,12 +987,7 @@ def aggregate_profile(target_id, workspace_id, session: Session, graph_context=N
     # --- Geographic consistency analysis ---
     try:
         from api.services.layer4.analyzers.geo_consistency import analyze_geo_consistency
-        # Load target country_code for ground truth signal
-        _target = session.execute(
-            select(Target).where(Target.id == target_id)
-        ).scalar_one_or_none()
-        _cc = getattr(_target, "country_code", None) if _target else None
-        geo_result = analyze_geo_consistency(profile, findings, country_code=_cc)
+        geo_result = analyze_geo_consistency(profile, findings, country_code=country_code)
         profile["geo_consistency"] = geo_result
     except Exception as e:
         logger.debug("Geo consistency analysis failed: %s", e)
