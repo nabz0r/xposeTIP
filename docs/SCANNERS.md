@@ -1,160 +1,101 @@
-# Scanners Reference
+# Intelligence Modules — xposeTIP v0.98.1
 
 ## Overview
 
-xpose has **25 scanner modules** across 4 layers + **43 data-driven scrapers** across 7 categories. Scanners are lazy-loaded via `importlib` — missing dependencies don't crash the worker.
+xposeTIP has **35 scanner modules** across 4 layers, **120 data-driven scrapers**
+across 10 categories, and **9 intelligence analyzers** that run post-scan.
 
-## Scanner Registry
+## Scanner Modules (35)
 
-### Layer 1 — Passive Recon
+### Layer 1 — Passive Recon (16)
 
-| Scanner | ID | Category | Auth | Description |
-|---------|----|----------|:----:|-------------|
-| Email Validator | `email_validator` | metadata | - | MX records, disposable provider detection, format validation |
-| Holehe | `holehe` | social | - | Email-to-account enumeration across 120+ services |
-| Have I Been Pwned | `hibp` | breach | API key | Breach history lookup — names, dates, data types exposed |
-| Sherlock | `sherlock` | social | - | Username search across 400+ social networks |
-| Maigret | `maigret` | social | - | Username enumeration across 2500+ sites |
-| GHunt | `ghunt` | metadata | Special | Google account metadata (requires DroidGuard patch) |
-| h8mail | `h8mail` | breach | - | Email breach and credential leak search |
-| Gravatar | `gravatar` | metadata | - | Profile, avatar, linked social accounts via email hash |
-| Social Enricher | `social_enricher` | social | - | GitHub profile — name, bio, location, repos, followers |
-| Email Reputation | `emailrep` | metadata | - | Reputation score, breach status, domain security (emailrep.io) |
-| Epieos Google | `epieos` | metadata | - | Google account discovery — ID, name, photo (epieos.com) |
-| FullContact | `fullcontact` | metadata | API key | Person enrichment — name, age, social profiles, company |
-| GitHub Deep | `github_deep` | social | - | Full profile, events, gists, alternate emails from commits |
-| Google Profile | `google_profile` | metadata | - | Gmail/Workspace detection, YouTube presence |
-| Username Hunter | `username_hunter` | social | - | Username permutations across Reddit, Steam, Keybase, GitLab, etc. |
-| Reverse Image | `reverse_image` | metadata | API key | Face matching via PimEyes + TinEye reverse search |
+| Scanner | ID | Description |
+|---------|----|-------------|
+| Email Validator | `email_validator` | MX records, disposable provider detection, format validation |
+| Holehe | `holehe` | Email-to-account enumeration across 120+ services |
+| Have I Been Pwned | `hibp` | Breach history lookup — names, dates, data types exposed |
+| Sherlock | `sherlock` | Username search across 400+ social networks |
+| Maigret | `maigret` | Username enumeration across 2500+ sites |
+| GHunt | `ghunt` | Google account metadata (requires DroidGuard patch) |
+| h8mail | `h8mail` | Email breach and credential leak search |
+| Gravatar | `gravatar` | Profile, avatar, linked social accounts via email hash |
+| Social Enricher | `social_enricher` | GitHub profile — name, bio, location, repos, followers |
+| Email Reputation | `emailrep` | Reputation score, breach status, domain security |
+| Epieos Google | `epieos` | Google account discovery — ID, name, photo |
+| FullContact | `fullcontact` | Person enrichment — name, age, social profiles, company |
+| GitHub Deep | `github_deep` | Full profile, events, gists, alternate emails from commits |
+| Google Profile | `google_profile` | Gmail/Workspace detection, YouTube presence |
+| Username Hunter | `username_hunter` | Username permutations across Reddit, Steam, Keybase, GitLab |
+| Scraper Engine | `scraper_engine` | Runs all 120 data-driven scrapers (see below) |
 
-### Layer 2 — Public Databases
+### Layer 2 — Public Databases (12)
 
-| Scanner | ID | Category | Auth | Description |
-|---------|----|----------|:----:|-------------|
-| DNS Intelligence | `dns_deep` | metadata | - | SPF, DMARC, DKIM, MX, NS — email security posture |
-| WHOIS Lookup | `whois_lookup` | domain | - | Domain registration and ownership data |
-| Free GeoIP | `geoip` | geolocation | - | IP geolocation via ip-api.com (45 req/min) |
-| MaxMind GeoIP | `maxmind_geo` | geolocation | License | IP geolocation via local GeoLite2 database |
-| Leaked Domains | `leaked_domains` | breach | - | Breach check via XposedOrNot — history, data types |
-| Data Broker Check | `databroker_check` | data_broker | - | Spokeo, WhitePages, BeenVerified presence (US/UK/CA/AU) |
-| Paste Monitor | `paste_monitor` | paste | - | Email/username search in public paste sites |
-| VirusTotal | `virustotal` | metadata | API key | Domain reputation, malware, SSL certs, subdomains |
-| Shodan | `shodan` | metadata | API key | Ports, services, OS, vulnerabilities |
-| Intelligence X | `intelx` | breach | API key | Darkweb, paste, breach, document search |
-| Hunter.io | `hunter` | metadata | API key | Email discovery, domain search, verification |
-| Dehashed | `dehashed` | breach | API key | Credential search — hashed passwords, IPs, phones |
+| Scanner | ID | Description |
+|---------|----|-------------|
+| DNS Intelligence | `dns_deep` | SPF, DMARC, DKIM, MX, NS — email security posture |
+| WHOIS Lookup | `whois_lookup` | Domain registration and ownership data |
+| Free GeoIP | `geoip` | IP geolocation via ip-api.com |
+| MaxMind GeoIP | `maxmind_geo` | IP geolocation via local GeoLite2 database |
+| Leaked Domains | `leaked_domains` | Breach check via XposedOrNot |
+| Data Broker Check | `databroker_check` | Spokeo, WhitePages, BeenVerified presence |
+| Paste Monitor | `paste_monitor` | Email/username search in public paste sites |
+| VirusTotal | `virustotal` | Domain reputation, malware, SSL certs, subdomains |
+| Shodan | `shodan` | Ports, services, OS, vulnerabilities |
+| Intelligence X | `intelx` | Darkweb, paste, breach, document search |
+| Hunter.io | `hunter` | Email discovery, domain search, verification |
+| Dehashed | `dehashed` | Credential search — hashed passwords, IPs, phones |
 
-### Layer 3 — Self-Audit (OAuth)
+### Layer 3 — Self-Audit / OAuth (4)
 
-| Scanner | ID | Category | Auth | Description |
-|---------|----|----------|:----:|-------------|
-| Google Audit | `google_audit` | app_permission | OAuth | Drive public files, Gmail forwarding, connected apps |
-| Microsoft Audit | `microsoft_audit` | app_permission | OAuth | OAuth app grants, profile, device list |
-| Exodus Tracker | `exodus_tracker` | tracking | - | App tracker detection via Exodus Privacy DB |
-| Browser Audit | `browser_auditor` | browser | - | Extensions, cookies, tracking exposure |
+| Scanner | ID | Description |
+|---------|----|-------------|
+| Google Audit | `google_audit` | Drive public files, Gmail forwarding, connected apps |
+| Microsoft Audit | `microsoft_audit` | OAuth app grants, profile, device list |
+| Exodus Tracker | `exodus_tracker` | App tracker detection via Exodus Privacy DB |
+| Browser Audit | `browser_auditor` | Extensions, cookies, tracking exposure |
 
-### Layer 4 — Intelligence
+### Layer 4 — Intelligence (3)
 
-| Analyzer | Category | Description |
-|----------|----------|-------------|
-| IP Analyzer | infrastructure | ASN lookup, reverse DNS, geolocation cross-reference |
-| Domain Analyzer | security | Subdomain discovery, security headers, SSL analysis |
-| Username Correlator | identity | Cross-platform username reuse and variation detection |
-| Breach Correlator | breach | Password reuse risk, exposure timeline analysis |
-| Risk Assessor | risk | Overall risk level + prioritized remediation actions |
+| Scanner | ID | Description |
+|---------|----|-------------|
+| Intelligence Pipeline | `intelligence` | Runs all 9 analyzers (see below) |
+| Reverse Image | `reverse_image` | Face matching via PimEyes + TinEye reverse search |
+| Scraper Scanner | `scraper_scanner` | Meta-scanner that dispatches all enabled scraper definitions |
 
-## Implementation Status
+## Intelligence Analyzers (9)
 
-- **Implemented**: 17 scanners with full `BaseScanner` classes in `SCANNER_REGISTRY`
-- **Placeholder**: 8 modules seeded in DB, scanner class not yet built
-- **Intelligence**: 5 analyzers in analysis pipeline (always runs post-scan)
+| Analyzer | File | Description |
+|----------|------|-------------|
+| Behavioral Profiler | `behavioral_profiler.py` | 5 archetypes from cross-platform activity metrics |
+| Breach Correlator | `breach_correlator.py` | Password reuse risk, exposure timeline |
+| Code Leak Analyzer | `code_leak_analyzer.py` | GitHub Code Search, Gists, paste dump detection |
+| Domain Analyzer | `domain_analyzer.py` | Subdomain discovery, security headers, SSL |
+| Geo Consistency | `geo_consistency.py` | 6-signal geographic consistency analysis |
+| IP Analyzer | `ip_analyzer.py` | ASN lookup, reverse DNS, geolocation cross-ref |
+| Risk Assessor | `risk_assessor.py` | Overall risk level + prioritized remediation actions |
+| Timezone Analyzer | `timezone_analyzer.py` | Timezone inference from activity timestamps |
+| Username Correlator | `username_correlator.py` | Cross-platform username reuse detection |
 
-Modules without a registered scanner are marked `implemented: false` in the API and excluded from scan dispatch.
+## Scraper Engine (120 scrapers across 10 categories)
 
-## Scraper Engine
+| Category | Count | Examples |
+|----------|-------|---------|
+| Social | 51 | Reddit, Steam, Telegram, Twitch, Pinterest, Strava, Snapchat, Threads, Bluesky... |
+| Metadata | 14 | DNS, WHOIS, Gravatar, crt.sh, disposable check, mailcheck, disify... |
+| People Search | 11 | WebMii, Google Scholar, Google Groups, npm, PyPI... |
+| Gaming | 10 | Steam, Chess.com, Roblox, Lichess, Xbox, RuneScape, MyAnimeList... |
+| Breach | 9 | LeakCheck, IntelX, EmailRep, HackerTarget, XposedOrNot... |
+| Archive | 9 | Wayback Domain, Wayback Count, Wayback LinkedIn/Twitter/Instagram... |
+| Public Exposure | 7 | GDELT, GNews, Google News RSS, OpenSanctions, Interpol, OpenCorporates, LBR |
+| Identity Estimation | 3 | Agify (age), Genderize (gender), Nationalize (nationality) |
+| Code Leak | 3 | GitHub Code Search (email), GitHub Code Search (username), GitHub Gists |
+| Social Account | 2 | Misc profile scrapers |
 
-The scraper engine executes data-driven scraper definitions stored in the database.
-Unlike scanners (Python classes), scrapers are defined as JSON records with:
-- URL template with placeholders: `{email}`, `{username}`, `{domain}`, `{first_name}`, `{fullname}`
-- Extraction rules: regex or JSONPath patterns
-- Rate limiting configuration
-- Finding output mapping (title template, category, severity)
+Scrapers are data-driven JSON configs stored in the database. Editable via Scrapers UI —
+no code deploy needed. Each scraper has: URL template, extraction rules (regex/JSONPath),
+rate limiting, finding output mapping (title, category, severity). Per-scraper module
+attribution means each finding is tagged with the real scraper name (Sprint 89).
 
-Scrapers are editable via the Scrapers UI page — no code deploy needed.
-
-### Identity Estimation Scrapers
-| Scraper | API | Input | Output |
-|---------|-----|-------|--------|
-| Genderize | genderize.io | first_name | gender + probability |
-| Agify | agify.io | first_name | age estimate + sample count |
-| Nationalize | nationalize.io | first_name | top 3 nationalities + probabilities |
-
-### Archive Scrapers
-| Scraper | API | Input | Output |
-|---------|-----|-------|--------|
-| Wayback Domain | archive.org CDX | domain | first snapshot date, archive presence |
-| Wayback Count | archive.org CDX | domain | total snapshot pages |
-| Wayback Profile | archive.org CDX | username | archived Twitter profile check |
-
-### Social Profile Scrapers
-| Scraper | Input | Output |
-|---------|-------|--------|
-| Reddit | username | display name, karma, bio, avatar |
-| GitHub (scraper) | username | full profile, repos, followers, twitter |
-| Steam | username | display name, avatar, location, real name |
-| Keybase | username | display name, bio, location, avatar, proofs |
-| Medium | username | display name, bio, followers, twitter |
-| Hacker News | username | display name, karma, about |
-| Dev.to | username | display name, bio, location, github/twitter |
-| GitLab | username | display name, bio, location, avatar |
-| About.me | username | display name, bio, avatar |
-| Imgur | username | display name, avatar |
-| Mastodon | username | display name, bio, avatar, followers |
-| StackOverflow | username | display name, reputation, avatar, location |
-| Pinterest | username | display name, bio, avatar |
-| Linktree | username | display name, bio, avatar |
-| Disqus | username | display name, avatar, bio |
-| Twitch | username | display name, bio, avatar, followers, partner status |
-| Telegram | username | display name, bio, avatar |
-| Letterboxd | username | display name, bio, avatar, film stats |
-| BuyMeACoffee | username | display name, bio, avatar |
-| Pastebin User | username | public paste count, account presence |
-| Docker Hub | username | display name, avatar, repo count |
-
-### Gaming Profile Scrapers
-| Scraper | Input | Output |
-|---------|-------|--------|
-| Steam (expanded) | username | full profile, games owned, hours played, friends |
-| Xbox Gamertag | username | gamertag presence, avatar, gamerscore |
-| PSN Profile | username | PSN profile, trophies, avatar |
-| Epic Games | username | account presence, display name |
-| Riot Games | username | account presence, region |
-| Chess.com | username | rating, games played, avatar, country |
-| Lichess | username | rating, games played, profile bio |
-
-### Music / Learning Scrapers
-| Scraper | Input | Output |
-|---------|-------|--------|
-| Mixcloud | username | display name, bio, avatar, followers |
-| Duolingo | username | display name, learning languages, streak |
-
-### Breach / Enrichment Scrapers
-| Scraper | Input | Output |
-|---------|-------|--------|
-| XposedOrNot | email | breach count, exposed data, first breach |
-| LeakCheck | email | leak source count |
-| Pastebin Dumps | email | paste dump presence |
-
-### Metadata Scrapers
-| Scraper | Input | Output |
-|---------|-------|--------|
-| Gravatar (scraper) | email | display name, username, about, location, avatar |
-| crt.sh Subdomains | domain | certificate transparency subdomains |
-| SecurityTrails | domain | DNS history availability |
-| Disposable Email | domain | disposable email provider detection |
-
-Free tier limits: Genderize/Agify/Nationalize = 100 requests/day each. No API key needed.
-
-## Adding a New Scanner
+## Adding a New Module
 
 See [CONTRIBUTING.md](CONTRIBUTING.md).

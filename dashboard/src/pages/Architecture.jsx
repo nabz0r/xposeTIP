@@ -52,6 +52,17 @@ export default function Architecture() {
         <ScraperBreakdown />
         <DesignPrinciples />
         <StageLocate />
+
+        {/* PDF Report */}
+        <Section className="py-12">
+          <div className="max-w-3xl mx-auto px-6 text-center">
+            <p className="text-gray-500 text-sm">
+              Every scan produces a <span className="text-white font-semibold">5-page PDF identity report</span> —
+              dark-themed, plan-tiered, downloadable. Built with ReportLab.
+            </p>
+          </div>
+        </Section>
+
         <RoadmapSection />
         <ArchCTA />
       </div>

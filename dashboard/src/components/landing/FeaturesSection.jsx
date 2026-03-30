@@ -31,7 +31,7 @@ export default function FeaturesSection() {
                 <AtSign className="w-6 h-6 text-[#3388ff]" />
               </div>
               <div>
-                <div className="text-2xl font-mono font-bold text-white">31</div>
+                <div className="text-2xl font-mono font-bold text-white">33</div>
                 <div className="text-xs text-gray-500">accounts across the internet</div>
               </div>
             </div>

@@ -1,7 +1,8 @@
 # NEXUS 2026 DEMO SCRIPT — xpose Identity Threat Intelligence
 
-**Event**: Nexus 2026 · Luxembourg · June 10-11 · €100K Grand Prize
+**Event**: Nexus 2026 · Luxembourg · June 10-11 · Cybersecurity category
 **Duration**: 3 minutes
+**Demo target**: laura.morgana@ing.lu (33 accounts, 43 sources, 87 findings)
 
 ---
 
@@ -16,21 +17,23 @@
 - Type demo email into the scan form
 - Click **Scan**
 - Show real-time module progress badges updating
-- "25 scanners running in parallel — breaches, social networks, DNS, metadata, archives"
+- "35 scanner modules running in parallel — breaches, social networks, DNS, metadata, archives, code leaks"
 
 **Scan completes** → navigate to target detail.
 
-## [1:00] Exposure Dashboard (30s)
+## [1:00] Exposure Dashboard (40s)
 
 > "Exposure score: 73 out of 100. That's not good."
 
 Walk through:
-1. **Profile header**: "Real name, location, 8 social profiles — all from one email"
+1. **Profile header**: "Real name, location, 33 social profiles — all from one email"
 2. **Identity card**: "Gender, estimated age, probable nationality — derived from public APIs"
-3. **Digital fingerprint**: "8-axis radar — unique identity signature. Eigenvalue topology means no two people get the same shape"
-4. **Generative avatar**: "This abstract shape is generated from the identity graph structure. Same data = same avatar. Data changes = avatar evolves"
+3. **Digital fingerprint**: "9-axis behavioral radar — the person's digital DNA. Unique identity signature. Unlike an IP, this fingerprint persists"
+4. **Generative avatar**: "This pixel art is generated from the identity graph structure. Same data = same avatar. Data changes = avatar evolves"
+5. **Geographic intelligence**: "6 independent signals cross-correlated — timezone, location, nationality, language — all agree on Luxembourg"
+6. **PDF export**: Click download → "A 5-page identity report, generated in seconds"
 
-## [1:30] Identity Graph (30s)
+## [1:40] Identity Graph (20s)
 
 **Switch to Graph tab.**
 
@@ -38,7 +41,7 @@ Walk through:
 
 - **Zoom into cluster**: "These 3 accounts share the same username — persona engine grouped them automatically"
 - **Highlight breach nodes**: "Two breaches connected to the same credentials — password reuse detected"
-- **Point out edge weights**: "Confidence scores propagate through the graph like Google's PageRank. A name confirmed by 3 independent paths gets higher confidence"
+- **Edge confidence**: "Confidence scores propagate through the graph like PageRank"
 
 ## [2:00] Remediation (20s)
 
@@ -47,8 +50,7 @@ Walk through:
 > "Every finding is actionable."
 
 - Show critical findings: passwords leaked in cleartext
-- Show finding status toggle: active → resolved
-- Show remediation progress bar
+- Show Deep Scan button: "Drill into any indicator — usernames, emails, domains"
 - Quick mention: CSV export for compliance
 
 ## [2:20] Differentiator (25s)
@@ -56,8 +58,8 @@ Walk through:
 > "What makes xpose different?"
 
 1. "SpiderFoot and Maltego are powerful — but built for analysts. xpose gives the same intelligence with consumer-grade UX"
-2. "Aura and NordProtect monitor breaches — but they don't show you the identity graph. They don't cluster personas. They don't give you a digital fingerprint"
-3. "76 intelligence modules. Open source. GDPR compliant. On-premise deployment"
+2. "Aura and NordProtect monitor breaches — but they don't build identity graphs, cluster personas, or generate behavioral fingerprints"
+3. "120 intelligence sources. 9 analyzers. Open source. On-premise. GDPR compliant"
 
 ## [2:45] Close (15s)
 
@@ -66,6 +68,14 @@ Walk through:
 **End on landing page with scan form visible.**
 
 ---
+
+## Pricing (if asked)
+
+| Plan | Price | Key Features |
+|------|-------|-------------|
+| Free | €0 | 5 scans/month, 30 sources, basic exposure |
+| Pro | €49/month | Unlimited, 120 sources, 3-pass pipeline, identity graph, personas, PDF |
+| Enterprise | €299/month | Multi-workspace, API, sanctions/PEP, custom scrapers, SLA |
 
 ## Demo Checklist
 
@@ -83,14 +93,15 @@ Walk through:
 
 | Metric | Value |
 |--------|-------|
-| Scanners | 25 (17 implemented + 8 planned) |
-| Scrapers | 51 across 8 categories |
-| Intelligence analyzers | 5 |
-| Fingerprint axes | 8 |
-| Scan time | ~30 seconds |
-| Sites checked | 120+ (via Holehe + scrapers) |
-| Breach databases | HIBP + XposedOrNot + paste sites |
-| Confidence model | PageRank (damping=0.85) |
+| Scanner modules | 35 (all active) |
+| Data-driven scrapers | 120 across 10 categories |
+| Intelligence analyzers | 9 |
+| Fingerprint axes | 9 |
+| Scan time | ~90 seconds |
+| Sites checked | 120 (via scraper engine + scanners) |
+| Breach databases | HIBP + XposedOrNot + LeakCheck + IntelX + paste sites |
+| Confidence model | PageRank (damping=0.85, 20 iterations) |
+| Geo signals | 6 (self-reported, timezone, nationalize, language, geoip, ground truth) |
 
 ## Fallback Plan
 

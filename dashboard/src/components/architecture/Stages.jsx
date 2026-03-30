@@ -21,6 +21,12 @@ export function StageCollect() {
               contributes more to the identity graph than an anonymous scraper (<span className="text-gray-400 font-mono">0.60</span>).
               The goal isn't to collect more data — it's to collect <span className="text-white">the right data</span> about a person.
             </p>
+            <p className="text-sm text-gray-500 mt-3">
+              After the initial email scan, <span className="text-white">Pass 1.5</span> takes every
+              discovered username and expands the search — finding accounts the email alone
+              would miss. Then <span className="text-white">Pass 2</span> uses the resolved
+              name to search news, sanctions, and corporate registries.
+            </p>
           </div>
           <CollectDiagram />
         </div>
@@ -237,7 +243,7 @@ export function StageMeasure() {
             { axis: 'breaches', color: '#ff2244', desc: 'Breach exposure count', sources: 'HIBP, LeakCheck, IntelX' },
             { axis: 'username_reuse', color: '#ff8800', desc: 'Same username across sites', sources: 'Cross-platform matching' },
             { axis: 'data_leaked', color: '#cc88ff', desc: 'Volume of exposed data', sources: 'Breach content analysis' },
-            { axis: 'geo_spread', color: '#00ddcc', desc: 'Geographic distribution', sources: 'GeoIP, user-reported locations' },
+            { axis: 'geo_spread', color: '#00ddcc', desc: 'Geographic distribution', sources: 'GeoIP, self-reported, timezone, nationalize, language, geo consistency' },
             { axis: 'security', color: '#888888', desc: 'Security posture', sources: 'SPF, DKIM, DMARC, security headers' },
             { axis: 'public_exposure', color: '#ff5588', desc: 'Media + sanctions + corporate visibility', sources: 'GDELT, GNews, OpenSanctions, Interpol' },
           ].map(a => (
