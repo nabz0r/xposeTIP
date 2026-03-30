@@ -970,6 +970,20 @@ def aggregate_profile(target_id, workspace_id, session: Session, graph_context=N
 
     profile["user_locations"] = user_locations
 
+    # --- Timezone inference from activity timestamps ---
+    try:
+        from api.services.layer4.analyzers.timezone_analyzer import analyze_timezone
+        tz_result = analyze_timezone(findings)
+        if tz_result and tz_result["confidence"] >= 0.3:
+            profile["timezone"] = tz_result
+            if not profile["location"] and tz_result.get("regions"):
+                profile["timezone_geo_hint"] = tz_result["regions"][0]
+        else:
+            profile["timezone"] = None
+    except Exception as e:
+        logger.debug("Timezone analysis failed: %s", e)
+        profile["timezone"] = None
+
     # --- Profile confidence score ---
     name_sources = len(profile["names"])
     avatar_sources = len(profile["avatars"])

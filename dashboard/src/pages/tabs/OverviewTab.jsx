@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react'
-import { Shield, AlertTriangle, Globe, Radar, Search } from 'lucide-react'
+import { Shield, AlertTriangle, Globe, Radar, Search, Clock } from 'lucide-react'
 import FingerprintRadar, { FingerprintTimeline } from '../../components/FingerprintRadar'
 import PlatformIcon from '../../components/PlatformIcon'
 import IdentityCard from '../../components/IdentityCard'
@@ -157,6 +157,26 @@ export default function OverviewTab({ target, findings, profile, fingerprint, fp
 
       {/* Persona Clusters */}
       <PersonaCard personas={profile?.personas} />
+
+      {/* Timezone Intelligence */}
+      {profile?.timezone && profile.timezone.confidence >= 0.4 && (
+        <div className="bg-[#12121a] border border-[#1e1e2e] rounded-xl p-4">
+          <div className="flex items-center gap-2">
+            <Clock className="w-4 h-4 text-[#ffcc00]" />
+            <span className="text-xs font-semibold uppercase tracking-wider text-gray-500">Timezone Intelligence</span>
+          </div>
+          <div className="flex items-center gap-4 mt-2 text-xs text-gray-400">
+            <span className="text-white font-mono font-semibold">
+              UTC{profile.timezone.utc_offset >= 0 ? '+' : ''}{profile.timezone.utc_offset}
+            </span>
+            <span>{profile.timezone.regions?.[0]}</span>
+            <span className="text-gray-600">|</span>
+            <span>{Math.round(profile.timezone.confidence * 100)}% confidence</span>
+            <span className="text-gray-600">|</span>
+            <span>{profile.timezone.sample_count} timestamps analyzed</span>
+          </div>
+        </div>
+      )}
 
       {/* Deep Scan Activity */}
       <DeepScanActivity findings={findings} />

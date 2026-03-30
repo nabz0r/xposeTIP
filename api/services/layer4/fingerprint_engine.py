@@ -477,6 +477,15 @@ class FingerprintEngine:
             # User-reported countries worth 1 each, server countries worth 0.25
             geo_spread_value = len(countries_user) + len(countries_server) * 0.25
 
+        # Timezone country hints as weak geo signal
+        if isinstance(profile_data, dict):
+            tz = profile_data.get("timezone")
+            if isinstance(tz, dict) and tz.get("confidence", 0) >= 0.4:
+                for hint_code in tz.get("country_hints", [])[:3]:
+                    hint_lower = hint_code.lower()
+                    if hint_lower not in countries_user and hint_lower not in countries_server:
+                        geo_spread_value += 0.15
+
         # Data types leaked
         data_types = set()
         for f in findings:
