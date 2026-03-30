@@ -34,6 +34,7 @@ def search_gnews(
     api_key: str,
     lang: str = "en",
     country: str | None = None,
+    context: str | None = None,
 ) -> list[dict]:
     """Search GNews.io for recent news articles about a person.
 
@@ -42,6 +43,7 @@ def search_gnews(
         api_key: GNews.io API key
         lang: Language code (en, fr, de, etc.)
         country: Optional country code filter (us, fr, de, lu, etc.)
+        context: Optional context keywords (company, city) appended to query
 
     Returns:
         List of article dicts with title, url, source, date, description.
@@ -49,8 +51,10 @@ def search_gnews(
     if not name or not api_key:
         return []
 
-    # Exact name match via quotes
+    # Exact name match via quotes, plus optional context keywords
     query = f'"{name}"'
+    if context:
+        query += f" {context}"
 
     params = {
         "q": query,

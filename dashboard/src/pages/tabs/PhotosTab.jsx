@@ -1,25 +1,88 @@
 import { useState } from 'react'
-import { Camera, X } from 'lucide-react'
+import { Camera, X, ChevronDown } from 'lucide-react'
 
 function getAvatarQuality(url) {
   if (!url) return 0
   const low = url.toLowerCase()
+  // Score 1 — known defaults/generated
   if (low.includes('d=identicon') || low.includes('d=retro') || low.includes('d=wavatar')) return 1
   if (low.includes('redditstatic.com/avatars/defaults')) return 1
   if (low.includes('simg-ssl.duolingo.com/avatar/default')) return 1
   if (url.startsWith('//')) return 1
+  // Score 3 — verified platform CDNs (real photos)
   if (low.includes('githubusercontent.com')) return 3
   if (low.includes('linktr.ee')) return 3
   if (low.includes('pbs.twimg.com')) return 3
   if (low.includes('googleusercontent.com')) return 3
   if (low.includes('fullcontact.com')) return 3
+  if (low.includes('steamcdn-a.akamaihd.net')) return 3
+  if (low.includes('cdn.cloudflare.steamstatic.com')) return 3
+  if (low.includes('avatars.reddit.com')) return 3
+  if (low.includes('keybase.io')) return 3
+  if (low.includes('dev-to-uploads')) return 3
+  if (low.includes('gitlab.com/uploads')) return 3
+  if (low.includes('strava.com')) return 3
+  // Score 2 — likely real but unverified CDN
+  if (low.includes('chess.com/bundles')) return 2
+  if (low.includes('roblox.com')) return 2
   return 2
+}
+
+function PhotoTier({ title, avatars, primaryAvatar, onEnlarge, cols = "lg:grid-cols-4", muted = false }) {
+  if (!avatars.length) return null
+  return (
+    <div>
+      {title && (
+        <h3 className="text-xs font-semibold uppercase tracking-wider text-gray-500 mb-3">
+          {title} ({avatars.length})
+        </h3>
+      )}
+      <div className={`grid grid-cols-2 md:grid-cols-3 ${cols} gap-4`}>
+        {avatars.map((a, i) => (
+          <div
+            key={i}
+            className={`bg-[#0a0a0f] border rounded-lg p-3 cursor-pointer hover:border-[#00ff88]/30 transition-colors ${
+              a.url === primaryAvatar ? 'border-[#00ff88]/40' : 'border-[#1e1e2e]'
+            } ${muted ? 'opacity-60' : ''}`}
+            onClick={() => onEnlarge(a.url)}
+          >
+            <img
+              src={a.url} alt=""
+              className="w-full h-32 object-cover rounded"
+              onError={(e) => { e.target.parentElement.style.display = 'none' }}
+            />
+            <div className="mt-2 flex items-center justify-between">
+              <span className="text-[10px] font-mono text-[#3388ff]">
+                {(a.source || 'unknown').replace(/_profile|_scraper|_search/g, '')}
+              </span>
+              <div className="flex items-center gap-1">
+                <span className={`text-[9px] px-1.5 py-0.5 rounded font-mono ${
+                  getAvatarQuality(a.url) >= 3 ? 'bg-[#00ff88]/15 text-[#00ff88]' :
+                  getAvatarQuality(a.url) >= 2 ? 'bg-[#ffcc00]/15 text-[#ffcc00]' :
+                  'bg-[#ff2244]/15 text-[#ff2244]'
+                }`}>
+                  {getAvatarQuality(a.url) >= 3 ? 'Verified' :
+                   getAvatarQuality(a.url) >= 2 ? 'Likely' : 'Default'}
+                </span>
+                {a.url === primaryAvatar && (
+                  <span className="text-[9px] bg-[#00ff88]/15 text-[#00ff88] px-1.5 py-0.5 rounded font-mono">
+                    Primary
+                  </span>
+                )}
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  )
 }
 
 export default function PhotosTab({ profile, target }) {
   const avatars = profile?.avatars || []
   const primaryAvatar = profile?.primary_avatar || target?.avatar_url
   const [enlarged, setEnlarged] = useState(null)
+  const [showDefaults, setShowDefaults] = useState(false)
 
   if (!avatars.length && !primaryAvatar) {
     return (
@@ -57,56 +120,57 @@ export default function PhotosTab({ profile, target }) {
         </div>
       )}
 
-      {/* All discovered photos */}
-      <div>
-        <h3 className="text-xs font-semibold uppercase tracking-wider text-gray-500 mb-3">
-          All Discovered Photos ({avatars.length})
-        </h3>
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-          {avatars.map((a, i) => (
-            <div
-              key={i}
-              className={`bg-[#0a0a0f] border rounded-lg p-3 cursor-pointer hover:border-[#00ff88]/30 transition-colors ${
-                a.url === primaryAvatar ? 'border-[#00ff88]/40' : 'border-[#1e1e2e]'
-              }`}
-              onClick={() => setEnlarged(a.url)}
-            >
-              <img
-                src={a.url}
-                alt=""
-                className="w-full h-32 object-cover rounded"
-                onError={(e) => {
-                  e.target.parentElement.style.display = 'none'
-                }}
+      {/* Photos grouped by quality tier */}
+      <PhotoTier
+        title="Verified Photos"
+        avatars={avatars.filter(a => getAvatarQuality(a.url) >= 3)}
+        primaryAvatar={primaryAvatar}
+        onEnlarge={setEnlarged}
+        cols="lg:grid-cols-3"
+      />
+
+      <PhotoTier
+        title="Platform Avatars"
+        avatars={avatars.filter(a => getAvatarQuality(a.url) === 2)}
+        primaryAvatar={primaryAvatar}
+        onEnlarge={setEnlarged}
+        cols="lg:grid-cols-4"
+      />
+
+      {/* Default/generated — collapsed by default */}
+      {avatars.filter(a => getAvatarQuality(a.url) <= 1).length > 0 && (
+        <div>
+          <button
+            onClick={() => setShowDefaults(!showDefaults)}
+            className="flex items-center gap-2 text-xs text-gray-500 hover:text-gray-300 transition-colors"
+          >
+            <ChevronDown className={`w-3.5 h-3.5 transition-transform ${showDefaults ? 'rotate-180' : ''}`} />
+            Show {avatars.filter(a => getAvatarQuality(a.url) <= 1).length} default/generated avatar{avatars.filter(a => getAvatarQuality(a.url) <= 1).length !== 1 ? 's' : ''}
+          </button>
+          {showDefaults && (
+            <div className="mt-3">
+              <PhotoTier
+                title=""
+                avatars={avatars.filter(a => getAvatarQuality(a.url) <= 1)}
+                primaryAvatar={primaryAvatar}
+                onEnlarge={setEnlarged}
+                cols="lg:grid-cols-5"
+                muted
               />
-              <div className="mt-2 flex items-center justify-between">
-                <span className="text-[10px] font-mono text-[#3388ff]">
-                  {(a.source || 'unknown').replace(/_profile|_scraper|_search/g, '')}
-                </span>
-                <div className="flex items-center gap-1">
-                  <span className={`text-[9px] px-1.5 py-0.5 rounded font-mono ${
-                    getAvatarQuality(a.url) >= 3 ? 'bg-[#00ff88]/15 text-[#00ff88]' :
-                    getAvatarQuality(a.url) >= 2 ? 'bg-[#ffcc00]/15 text-[#ffcc00]' :
-                    'bg-[#ff2244]/15 text-[#ff2244]'
-                  }`}>
-                    {getAvatarQuality(a.url) >= 3 ? 'Verified' :
-                     getAvatarQuality(a.url) >= 2 ? 'Likely' : 'Default'}
-                  </span>
-                  <span className="text-[9px] font-mono text-gray-500">
-                    {getAvatarQuality(a.url) >= 3 ? '95%' :
-                     getAvatarQuality(a.url) >= 2 ? '60%' : '20%'}
-                  </span>
-                  {a.url === primaryAvatar && (
-                    <span className="text-[9px] bg-[#00ff88]/15 text-[#00ff88] px-1.5 py-0.5 rounded font-mono">
-                      Primary
-                    </span>
-                  )}
-                </div>
-              </div>
             </div>
-          ))}
+          )}
         </div>
-      </div>
+      )}
+
+      {/* Context when few photos vs many accounts */}
+      {avatars.length < 5 && (profile?.social_profiles?.length || 0) > 10 && (
+        <div className="bg-[#12121a] border border-[#1e1e2e] rounded-lg p-4">
+          <p className="text-xs text-gray-500">
+            {avatars.length} photo{avatars.length !== 1 ? 's' : ''} found across {profile.social_profiles?.length || 'multiple'} accounts.
+            Many platforms use default or generated avatars that are filtered from this view.
+          </p>
+        </div>
+      )}
 
       {/* Cross-platform note */}
       {avatars.length >= 2 && (

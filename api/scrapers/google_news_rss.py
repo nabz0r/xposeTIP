@@ -35,12 +35,14 @@ GOOGLE_NEWS_LOCALE_MAP = {
 def search_google_news_rss(
     name: str,
     lang: str = "en",
+    context: str | None = None,
 ) -> list[dict]:
     """Search Google News RSS for recent articles mentioning a person.
 
     Args:
         name: Full name to search (e.g., "Mario Grotz")
         lang: Language code (en, fr, de, etc.)
+        context: Optional context keywords (company, city) appended to query
 
     Returns:
         List of article dicts with title, url, source, date, description.
@@ -54,8 +56,10 @@ def search_google_news_rss(
         logger.warning("Google News RSS: feedparser not installed")
         return []
 
-    # Build URL with quoted name
+    # Build URL with quoted name + optional context keywords
     query = f'"{name}"'
+    if context:
+        query += f" {context}"
     locale = GOOGLE_NEWS_LOCALE_MAP.get(lang, GOOGLE_NEWS_LOCALE_MAP["en"])
 
     params = {

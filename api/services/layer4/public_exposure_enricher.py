@@ -444,6 +444,31 @@ def enrich_public_exposure(target_id, session: Session, scan_id=None) -> dict:
     email = getattr(target, "email", "") or ""
     email_domain = email.split("@")[1] if "@" in email else None
 
+    # Build search context from email domain + profile location
+    _FREEMAIL = {"gmail", "yahoo", "hotmail", "outlook", "protonmail", "icloud",
+                 "aol", "live", "mail", "email", "ymail", "rocketmail", "gmx",
+                 "zoho", "fastmail", "tutanota", "hey", "pm", "posteo", "mailbox",
+                 "free", "orange", "wanadoo", "sfr", "laposte", "bbox", "web"}
+    search_context = None
+    if email_domain and "." in email_domain:
+        company = email_domain.split(".")[0]
+        if len(company) > 3 and company.lower() not in _FREEMAIL:
+            search_context = company
+
+    # Enrich with city if available
+    _profile = target.profile_data or {}
+    _user_locs = _profile.get("user_locations", [])
+    if isinstance(_user_locs, list):
+        for _loc in _user_locs:
+            if isinstance(_loc, dict):
+                _city = _loc.get("city", "")
+                if _city and len(_city) > 2:
+                    search_context = f"{search_context} {_city}" if search_context else _city
+                    break
+
+    if search_context:
+        logger.info("PASS2: Search context for '%s': %s", primary_name, search_context)
+
     # === MEDIA LAYER ===
 
     # 1. GDELT (free, deep archive)
@@ -479,7 +504,7 @@ def enrich_public_exposure(target_id, session: Session, scan_id=None) -> dict:
 
                 gnews_all = []
                 for lang in search_langs:
-                    gnews_results = search_gnews(primary_name, api_key=gnews_api_key, lang=lang)
+                    gnews_results = search_gnews(primary_name, api_key=gnews_api_key, lang=lang, context=search_context)
                     _increment_gnews_usage(1)
                     if gnews_results:
                         for r in gnews_results:
@@ -504,7 +529,7 @@ def enrich_public_exposure(target_id, session: Session, scan_id=None) -> dict:
 
         rss_all = []
         for lang in search_langs:
-            rss_results = search_google_news_rss(primary_name, lang=lang)
+            rss_results = search_google_news_rss(primary_name, lang=lang, context=search_context)
             if rss_results:
                 for r in rss_results:
                     r.setdefault("data", {})["scraper"] = "google_news_rss"
