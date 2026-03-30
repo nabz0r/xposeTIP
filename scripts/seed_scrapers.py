@@ -679,7 +679,7 @@ DEFAULT_SCRAPERS = [
             {"field": "username", "type": "json_key", "pattern": "username"},
             {"field": "avatar", "type": "json_key", "pattern": "avatar"},
             {"field": "followers", "type": "json_key", "pattern": "followers", "transform": "parse_int"},
-            {"field": "country", "type": "json_key", "pattern": "country"},
+            {"field": "country", "type": "json_key", "pattern": "country", "transform": "url_last_segment"},
             {"field": "title", "type": "json_key", "pattern": "title"},
             {"field": "joined", "type": "json_key", "pattern": "joined"},
             {"field": "is_streamer", "type": "json_key", "pattern": "is_streamer"},

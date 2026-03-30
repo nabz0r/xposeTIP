@@ -254,4 +254,6 @@ class ScraperEngine:
             return int(nums[0]) if nums else 0
         if transform == "strip":
             return value.strip().strip('"').strip("'")
+        if transform == "url_last_segment":
+            return value.rstrip("/").rsplit("/", 1)[-1].strip()
         return value
