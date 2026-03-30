@@ -1,0 +1,22 @@
+{
+    "LU": "paperjam.lu OR chronicle.lu OR luxtimes.lu OR wort.lu",
+    "FR": "lefigaro.fr OR lemonde.fr OR liberation.fr",
+    "DE": "spiegel.de OR zeit.de OR heise.de",
+    "BE": "lesoir.be OR standaard.be OR rtbf.be",
+    "NL": "nos.nl OR volkskrant.nl OR tweakers.net",
+    "GB": "bbc.co.uk OR theguardian.com OR theregister.com",
+    "US": "nytimes.com OR washingtonpost.com OR techcrunch.com",
+    "CH": "swissinfo.ch OR nzz.ch OR tdg.ch",
+    "IT": "corriere.it OR repubblica.it OR ansa.it",
+    "ES": "elpais.com OR elmundo.es OR lavanguardia.com",
+    "AT": "derstandard.at OR diepresse.com OR orf.at",
+    "SE": "svt.se OR aftonbladet.se OR dn.se",
+    "NO": "nrk.no OR vg.no OR dagbladet.no",
+    "DK": "dr.dk OR politiken.dk OR berlingske.dk",
+    "IE": "rte.ie OR irishtimes.com OR independent.ie",
+    "PT": "publico.pt OR dn.pt OR sapo.pt",
+    "JP": "nhk.or.jp OR asahi.com OR nikkei.com",
+    "AU": "abc.net.au OR smh.com.au OR theaustralian.com.au",
+    "CA": "cbc.ca OR globalnews.ca OR nationalpost.com",
+    "IN": "ndtv.com OR thehindu.com OR indianexpress.com"
+}
