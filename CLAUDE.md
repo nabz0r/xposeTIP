@@ -5,9 +5,9 @@
 Identity Threat Intelligence platform. Scans email → builds identity graph →
 PageRank/Markov confidence → clusters personas → pixel art avatar → remediation plan.
 
-## Current version: v0.90.0
+## Current version: v0.97.0
 
-90 sprints. 120 scrapers, 35 scanners, 7 intelligence analyzers, 9-axis fingerprint.
+97 sprints. 120 scrapers, 35 scanners, 9 intelligence analyzers, 9-axis fingerprint.
 Two-phase pipeline: Phase A (gather: cross-verify → Pass 1.5 → early profile → Pass 2)
 → Phase B (compute: graph → PageRank → score → profile → personas → intelligence → fingerprint).
 Deep Scan triggers cascade (discovered emails/usernames/domains → chain-scanned, depth=1, max=5).
@@ -41,6 +41,7 @@ Nexus 2026 — June 10-11, Luxexpo, Luxembourg (€50 cybersecurity category, su
 9. API keys AES-256 encrypted at rest (Fernet)
 10. Every DB query scoped to workspace_id
 11. SCANNER_REGISTRY IDs must match scripts/seed_modules.py
+12. wayback_domain and wayback_count are domain-age modules — excluded from identity timeline
 
 ## Product Principles (Manifesto)
 
@@ -92,9 +93,11 @@ After deploy: System → Recalculate Fingerprints → Recalculate Profiles
 - `api/services/layer4/score_engine.py` — dual exposure/threat score
 - `api/services/layer4/persona_engine.py` — graph cluster + SequenceMatcher personas
 - `api/services/layer4/fingerprint_engine.py` — 9-axis radar, eigenvalues, avatar_seed
-- `api/services/layer4/analysis_pipeline.py` — 7 intelligence analyzers
+- `api/services/layer4/analysis_pipeline.py` — 9 intelligence analyzers
 - `api/services/layer4/analyzers/code_leak_analyzer.py` — GitHub/paste code leak detection
 - `api/services/layer4/analyzers/behavioral_profiler.py` — 5 archetypes behavioral classification
+- `api/services/layer4/analyzers/geo_consistency.py` — 6-signal geographic consistency analysis
+- `api/services/layer4/analyzers/timezone_analyzer.py` — timezone inference from activity timestamps
 - `api/services/layer4/username_expander.py` — Pass 1.5 username expansion, scan_single_indicator (generic deep scan)
 - `api/services/layer4/username_validator.py` — is_valid_username() junk filter
 - `api/services/layer4/source_scoring.py` — source reliability weights

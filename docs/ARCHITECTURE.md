@@ -1,4 +1,4 @@
-# Architecture — xposeTIP v0.90.0
+# Architecture — xposeTIP v0.97.0
 
 ## Design Philosophy
 

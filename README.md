@@ -12,8 +12,8 @@
 [![Docker](https://img.shields.io/badge/Docker-Compose-2496ED?logo=docker)](https://docker.com)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 [![Scrapers](https://img.shields.io/badge/scrapers-120-3388ff)](#scraper-engine)
-[![Sprints](https://img.shields.io/badge/sprints-90-00ff88)](#changelog)
-[![Version](https://img.shields.io/badge/version-0.90.0-green)](#changelog)
+[![Sprints](https://img.shields.io/badge/sprints-97-00ff88)](#changelog)
+[![Version](https://img.shields.io/badge/version-0.97.0-green)](#changelog)
 
 **Enter an email. See what the internet knows. Fix it.**
 
@@ -167,10 +167,17 @@ First registered user = **superadmin** with **Enterprise** plan.
 
 ## Changelog
 
-90 sprints delivered. Key milestones:
+97 sprints delivered. Key milestones:
 
 | Version | Highlights |
 |---------|-----------|
+| v0.97.0 | Timeline wayback fix, geo perf, email validation banner |
+| v0.96.0 | **Geo Consistency Scoring** — 6-signal cross-correlation |
+| v0.95.0 | **Timezone Intelligence** — infer location from activity timestamps |
+| v0.94.0 | Geographic Intelligence: 132 countries, 123 cities, location normalization |
+| v0.93.0 | Extraction rules enrichment: 17 scrapers, ~68 new fields |
+| v0.92.0 | Manifesto v2: red lines, data commitment, B2B clarity |
+| v0.91.0 | README rewrite |
 | v0.90.0 | Docs update, full architecture documentation |
 | v0.89.0 | **Per-scraper module attribution** — real names, enrichment unblocked |
 | v0.88.0 | Graph data keys fix, Deep Scan Activity panel |

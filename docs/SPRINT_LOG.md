@@ -1,4 +1,4 @@
-# Sprint Log — xposeTIP v0.90.0
+# Sprint Log — xposeTIP v0.97.0
 
 ## Sprint history
 
@@ -40,6 +40,13 @@
 | 88 | Graph username nodes fix (platform/username keys in _store_result), Deep Scan Activity panel in OverviewTab |
 | 89 | CRITICAL — Scraper real module names (not scraper_engine), indicator_value fallback, dedup maps legacy findings |
 | 90 | Docs, landing & architecture update to v0.90.0 |
+| 91 | README rewrite: v0.90.0, two-phase pipeline, 120 scrapers, changelog |
+| 92 | Manifesto v2: red lines, data commitment, B2B consent model, sourced green numbers |
+| 93 | Extraction rules enrichment: 17 scrapers, ~68 new fields (bios, followers, dates, skills) |
+| 94 | Geographic Intelligence: 132 countries, 123 cities, location normalization, url_last_segment transform |
+| 95 | Timezone Intelligence: sleep window detection, UTC offset inference, 27 offset→region mappings |
+| 96 | Geo Consistency Scoring: 6-signal cross-correlation (ground truth, self-reported, timezone, nationalize, language, geoip) |
+| 97 | HOTFIX: Timeline wayback leak, profile perf (country_code param), email non-deliverable banner |
 
 ## Known issues
 
@@ -57,7 +64,7 @@
 ## Roadmap
 
 ### v1.0 — Nexus 2026 (June)
-- [x] 120 scrapers, 35 scanners, 7 intelligence analyzers
+- [x] 120 scrapers, 35 scanners, 9 intelligence analyzers
 - [x] PageRank / Markov chain confidence propagation
 - [x] 32x32 pixel art identity avatars with quality gate
 - [x] Freemium quick scan (zero friction)

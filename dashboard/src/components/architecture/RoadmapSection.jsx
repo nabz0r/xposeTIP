@@ -25,7 +25,7 @@ export default function RoadmapSection() {
                 { done: true, text: 'Operator identity assertions (ground truth override)' },
                 { done: true, text: 'Geographic exposure map (self-reported + server locations)' },
                 { done: true, text: 'Freemium quick scan with zero-friction onboarding' },
-                { done: true, text: 'Plans: Free / Consultant €49 / Enterprise €199' },
+                { done: true, text: 'Plans: Free / Pro €49 / Enterprise €299' },
                 { done: true, text: 'PDF identity report export (ReportLab, dark theme, plan-tiered)' },
                 { done: true, text: 'Deep username scan — operator-triggered investigation' },
                 { done: true, text: 'Code leak monitoring — GitHub Code Search + paste dumps' },

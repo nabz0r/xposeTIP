@@ -49,9 +49,9 @@ export const EXPOSURES = [
 ]
 
 export const AUDIENCES = [
-  { label: 'Individual', desc: 'Check your own exposure.', price: 'Free forever.', href: '/setup', cta: 'Start free' },
-  { label: 'Security consultant', desc: 'Audit clients at scale.', price: '€49/month.', href: '/setup?plan=consultant', cta: 'Start trial' },
-  { label: 'Organization', desc: 'Protect your team.', price: '€199/month.', href: '/setup?plan=enterprise', cta: 'Contact sales' },
+  { label: 'Free', desc: 'Check your own exposure.', price: '€0 forever', href: '/setup', cta: 'Start free', features: ['5 quick scans / month', 'Basic exposure check', '30 sources', 'No identity graph'] },
+  { label: 'Pro', desc: 'Full identity intelligence.', price: '€49/month', href: '/setup?plan=pro', cta: 'Start trial', features: ['Unlimited full scans', '120 sources + 3-pass pipeline', '9-axis behavioral radar', 'Identity graph + personas'] },
+  { label: 'Enterprise', desc: 'Team-scale identity ops.', price: '€299/month', href: '/setup?plan=enterprise', cta: 'Contact us', features: ['Multi-workspace + team', 'API access (SIEM/SOAR)', 'Sanctions & PEP screening', 'Custom scrapers + SLA'] },
 ]
 
 export function hashEmail(email) {
