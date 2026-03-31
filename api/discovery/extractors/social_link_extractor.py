@@ -1,5 +1,5 @@
 import re
-from urllib.parse import urlparse
+from urllib.parse import urlparse, unquote
 
 from .base import BaseExtractor, RawLead
 
@@ -54,7 +54,7 @@ class SocialLinkExtractor(BaseExtractor):
         source_domain = urlparse(url).netloc.lower()
 
         for tag in soup.find_all("a", href=True):
-            href = tag["href"].strip()
+            href = unquote(tag["href"].strip())
 
             if any(href.startswith(p) for p in _SKIP_PREFIXES):
                 continue
@@ -72,6 +72,8 @@ class SocialLinkExtractor(BaseExtractor):
                     match = regex.search(href)
                     if match:
                         username = match.group(1)
+                        if len(username) < 3:
+                            continue
                         if username.lower() in _SKIP_USERNAMES:
                             continue
                         key = f"username:{username.lower()}"

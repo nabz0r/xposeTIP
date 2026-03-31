@@ -11,20 +11,38 @@
     {
         "id": "name_documents",
         "tier": 1,
-        "template": "\"{resolved_name}\" filetype:pdf OR filetype:doc",
+        "template": "\"{resolved_name}\" \"{email_domain}\" filetype:pdf OR filetype:doc",
         "identifier_types": [],
-        "requires": {"resolved_name": true},
+        "requires": {"resolved_name": true, "email_domain": true},
         "priority": 2,
-        "reason": "documents containing resolved name"
+        "reason": "documents containing resolved name + employer context"
     },
     {
         "id": "name_broad",
         "tier": 1,
+        "template": "\"{resolved_name}\" \"{email_domain}\" -linkedin.com",
+        "identifier_types": [],
+        "requires": {"resolved_name": true, "email_domain": true},
+        "priority": 2,
+        "reason": "name web presence with employer context"
+    },
+    {
+        "id": "name_documents_generic",
+        "tier": 1,
+        "template": "\"{resolved_name}\" filetype:pdf OR filetype:doc",
+        "identifier_types": [],
+        "requires": {"resolved_name": true},
+        "priority": 3,
+        "reason": "documents containing resolved name (no employer context)"
+    },
+    {
+        "id": "name_broad_generic",
+        "tier": 1,
         "template": "\"{resolved_name}\" -linkedin.com",
         "identifier_types": [],
         "requires": {"resolved_name": true},
-        "priority": 2,
-        "reason": "name web presence excluding LinkedIn"
+        "priority": 3,
+        "reason": "name web presence (no employer context)"
     },
     {
         "id": "developer_platforms",
@@ -32,7 +50,7 @@
         "template": "\"{identifier}\" site:stackoverflow.com OR site:dev.to OR site:news.ycombinator.com OR site:hashnode.com",
         "identifier_types": ["username"],
         "requires": {"axes.developer_activity": ">0.5"},
-        "priority": 3,
+        "priority": 4,
         "reason": "developer axis {axis_value}"
     },
     {
@@ -41,7 +59,7 @@
         "template": "\"{identifier}\" site:reddit.com OR site:discord.com OR site:steamcommunity.com",
         "identifier_types": ["username"],
         "requires": {"axes.gaming_presence": ">0.4"},
-        "priority": 4,
+        "priority": 5,
         "reason": "gaming axis {axis_value}"
     },
     {
@@ -50,7 +68,7 @@
         "template": "\"{identifier}\" site:medium.com OR site:substack.com OR site:wordpress.com OR site:blogspot.com",
         "identifier_types": ["username"],
         "requires": {"axes.content_creation": ">0.3"},
-        "priority": 4,
+        "priority": 5,
         "reason": "content creation axis {axis_value}"
     },
     {
@@ -59,7 +77,7 @@
         "template": "\"{identifier}\" site:facebook.com OR site:tiktok.com OR site:threads.net",
         "identifier_types": ["username"],
         "requires": {"axes.social_activity": ">0.4"},
-        "priority": 4,
+        "priority": 5,
         "reason": "social activity axis {axis_value}"
     },
     {
@@ -68,7 +86,7 @@
         "template": "\"{resolved_name}\" site:{local_domains}",
         "identifier_types": [],
         "requires": {"resolved_name": true, "geo_country": true},
-        "priority": 5,
+        "priority": 6,
         "reason": "local media for {geo_country}"
     },
     {
@@ -77,7 +95,7 @@
         "template": "\"{variant}\"",
         "identifier_types": ["variant"],
         "requires": {},
-        "priority": 6,
+        "priority": 7,
         "reason": "username variant: {variant}"
     },
     {
@@ -86,7 +104,7 @@
         "template": "\"{name_variant}\"",
         "identifier_types": ["name_variant"],
         "requires": {"resolved_name": true},
-        "priority": 6,
+        "priority": 7,
         "reason": "name-based username variant: {name_variant}"
     },
     {
@@ -95,7 +113,7 @@
         "template": "\"{identifier}\" \"{resolved_name}\"",
         "identifier_types": ["username"],
         "requires": {"resolved_name": true},
-        "priority": 7,
+        "priority": 8,
         "reason": "cross-reference username + resolved name"
     }
 ]

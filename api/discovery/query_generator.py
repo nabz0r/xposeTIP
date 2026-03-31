@@ -66,6 +66,14 @@ class QueryGenerator:
         platforms_found: list of platform domain strings
     """
 
+    _GENERIC_DOMAINS = {
+        "gmail.com", "yahoo.com", "hotmail.com", "outlook.com", "protonmail.com",
+        "icloud.com", "live.com", "aol.com", "mail.com", "ymail.com", "gmx.com",
+        "zoho.com", "fastmail.com", "tutanota.com", "hey.com", "pm.me", "posteo.de",
+        "free.fr", "orange.fr", "wanadoo.fr", "sfr.fr", "laposte.net",
+        "web.de", "t-online.de",
+    }
+
     def __init__(self):
         self.templates = _load_json("query_templates.json")
         self.local_domains = _load_json("local_domains.json")
@@ -104,10 +112,22 @@ class QueryGenerator:
             elif key == "geo_country":
                 if condition is True and not profile.get("geo_country"):
                     return False
+            elif key == "email_domain":
+                if condition is True and not self._get_email_domain_context(profile):
+                    return False
             else:
                 if condition is True and not profile.get(key):
                     return False
         return True
+
+    def _get_email_domain_context(self, profile: dict) -> str | None:
+        """Extract employer/org domain from email for disambiguation."""
+        for ident in profile.get("identifiers", []):
+            if ident.get("type") == "email" and "@" in ident.get("value", ""):
+                domain = ident["value"].split("@")[1]
+                if domain not in self._GENERIC_DOMAINS:
+                    return domain.split(".")[0]
+        return None
 
     def _expand_template(self, tmpl: dict, profile: dict) -> list[dict]:
         """Expand a single template into concrete queries."""
@@ -124,6 +144,7 @@ class QueryGenerator:
         geo_country = (profile.get("geo_country") or "").upper()
 
         exclusions = self._build_exclusions(platforms)
+        email_domain = self._get_email_domain_context(profile) or ""
 
         # Variant-type templates
         if "variant" in id_types:
@@ -157,9 +178,13 @@ class QueryGenerator:
         if id_types:
             matching = [i for i in identifiers if i.get("type") in id_types]
             for ident in matching[:3]:
+                # Skip too-generic identifiers for broad sweep
+                if template_id == "broad_sweep" and len(ident["value"]) < 5:
+                    continue
                 query = template_str.replace("{identifier}", ident["value"])
                 query = query.replace("{exclusions}", exclusions)
                 query = query.replace("{resolved_name}", resolved_name)
+                query = query.replace("{email_domain}", email_domain)
 
                 # Local domains
                 if "{local_domains}" in query:
@@ -190,6 +215,7 @@ class QueryGenerator:
             query = template_str.replace("{resolved_name}", resolved_name)
             query = query.replace("{exclusions}", exclusions)
             query = query.replace("{identifier}", resolved_name)
+            query = query.replace("{email_domain}", email_domain)
 
             if "{local_domains}" in query:
                 local = self.local_domains.get(geo_country, "")

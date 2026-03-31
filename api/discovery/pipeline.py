@@ -36,9 +36,10 @@ class DiscoveryPipeline:
         self.search_client = get_search_client()
         self.page_fetcher = PageFetcher()
         self.query_generator = QueryGenerator()
-        self.quality_gate = QualityGate(target_id, db_session if not dry_run else None)
+        self.quality_gate = QualityGate(target_id, db_session)  # always pass DB for reads
         self.all_leads = []
         self.filtered_count = 0
+        self.seen_leads = {}  # (type, value_lower) → confidence for cross-page dedup
 
     def run(self, profile_snapshot: dict = None) -> dict:
         """Execute the full discovery pipeline."""
@@ -166,8 +167,14 @@ class DiscoveryPipeline:
         filtered = self.quality_gate.filter(raw_leads)
         self.filtered_count += len(raw_leads) - len(filtered)
 
-        # Store/emit each lead
+        # Store/emit each lead (cross-page dedup)
         for lead in filtered:
+            dedup_key = (lead.lead_type, lead.value.lower())
+            existing_conf = self.seen_leads.get(dedup_key, -1)
+            if lead.confidence <= existing_conf:
+                continue  # already have a better version from another page
+            self.seen_leads[dedup_key] = lead.confidence
+
             lead_chain = chain + [{"step": "extract", "extractor": lead.extractor_type, "value": lead.value}]
             self._store_lead(lead, url, title or page.get("title", ""), lead_chain, depth)
             self._emit("lead", f"{lead.lead_type}: {lead.value}", {

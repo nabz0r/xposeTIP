@@ -1,6 +1,18 @@
 from .base import BaseExtractor, RawLead
 
 
+_PLATFORM_HANDLES = {
+    "rocketreachco", "rocketreach", "zoominfo", "lusha", "apollo",
+    "crunchbase", "pitchbook", "owler",
+    "threatconnect", "recordedfuture", "crowdstrike", "mandiant",
+    "nytimes", "washingtonpost", "reuters", "bloomberg", "bbc",
+    "medium", "substack", "wordpress", "ghost", "wix",
+    "youtube", "twitter", "facebook", "instagram", "tiktok", "linkedin",
+    "github", "gitlab", "stackoverflow", "reddit",
+    "paperjam", "chronicle", "wort",
+}
+
+
 class MetaTagExtractor(BaseExtractor):
     name = "meta_tag"
     reliability = 0.8
@@ -49,11 +61,11 @@ class MetaTagExtractor(BaseExtractor):
                         context=f'meta {list(selector.values())[0]}',
                     ))
 
-        # twitter:creator
+        # twitter:creator (skip platform handles)
         tag = soup.find("meta", attrs={"name": "twitter:creator"})
         if tag and tag.get("content"):
             val = tag["content"].strip().lstrip("@")
-            if val and len(val) >= 3 and val.lower() not in seen:
+            if val and len(val) >= 3 and val.lower() not in seen and val.lower() not in _PLATFORM_HANDLES:
                 seen.add(val.lower())
                 leads.append(RawLead(
                     lead_type="username",

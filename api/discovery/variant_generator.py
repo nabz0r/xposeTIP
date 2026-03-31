@@ -41,9 +41,9 @@ def generate_username_variants(username: str) -> list[str]:
     # 5. Common suffix
     variants.add(f"{original}_")
 
-    # Remove original and cap at 5
+    # Remove original, filter short variants, cap at 5
     variants.discard(original)
-    return sorted(variants)[:5]
+    return sorted(v for v in variants if len(v) >= 4)[:5]
 
 
 def generate_name_variants(first: str, last: str) -> list[str]:

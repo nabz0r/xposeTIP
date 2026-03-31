@@ -87,20 +87,32 @@ def main():
     elif args.target_id:
         print("=" * 60)
         print(f"Discovery Engine Test — TARGET {args.target_id}")
-        print(f"dry_run={args.dry_run or True}")
+        print(f"dry_run=True (test script always dry-run)")
         print("=" * 60)
 
         from api.tasks.utils import get_sync_session
         session = get_sync_session()
 
         try:
+            # Pass DB session even in dry-run — needed for quality gate + profile builder
+            # Only DB WRITES are skipped in dry-run mode
             pipeline = DiscoveryPipeline(
                 target_id=args.target_id,
                 budget=budget,
                 db_session=session,
-                dry_run=args.dry_run or True,  # Always dry-run for safety in test
+                dry_run=True,
             )
-            result = pipeline.run()
+            # Build profile and show quality gate stats
+            profile = pipeline._build_profile_snapshot(args.target_id)
+            if profile:
+                print(f"\nProfile: {len(profile.get('identifiers', []))} identifiers, "
+                      f"name={profile.get('resolved_name')}, "
+                      f"geo={profile.get('geo_country')}, "
+                      f"{len(profile.get('platforms_found', []))} platforms")
+                print(f"Quality gate: {len(pipeline.quality_gate.known_identifiers)} identifiers, "
+                      f"{len(pipeline.quality_gate.known_platforms)} platforms loaded")
+
+            result = pipeline.run(profile_snapshot=profile)
             print(f"\nResult: {result}")
         finally:
             session.close()
