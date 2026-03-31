@@ -134,3 +134,19 @@ class TargetLink(UUIDMixin, Base):
         Index("idx_target_links_source", "source_target_id"),
         Index("idx_target_links_linked", "linked_target_id"),
     )
+
+
+class DiscoveryEvent(UUIDMixin, Base):
+    """Persisted event from a Phase C discovery pipeline run."""
+    __tablename__ = "discovery_events"
+
+    session_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("discovery_sessions.id", ondelete="CASCADE"))
+    event_type: Mapped[str] = mapped_column(String(20))
+    payload: Mapped[dict | None] = mapped_column(JSONB)
+    created_at: Mapped[datetime] = mapped_column(TIMESTAMP(timezone=True), default=func.now())
+
+    session = relationship("DiscoverySession")
+
+    __table_args__ = (
+        Index("idx_discovery_events_session", "session_id", "created_at"),
+    )

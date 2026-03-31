@@ -12,7 +12,7 @@ from api.models.report import Report
 from api.models.audit_log import AuditLog
 from api.models.workspace_target import WorkspaceTarget
 from api.models.name_blacklist import NameBlacklist
-from api.models.discovery import DiscoverySession, DiscoveryLead, TargetLink
+from api.models.discovery import DiscoverySession, DiscoveryLead, TargetLink, DiscoveryEvent
 
 __all__ = [
     "Base",
@@ -34,4 +34,5 @@ __all__ = [
     "DiscoverySession",
     "DiscoveryLead",
     "TargetLink",
+    "DiscoveryEvent",
 ]

@@ -24,12 +24,15 @@ export default function DiscoveredTab({ targetId, targetStatus }) {
   const [statusFilter, setStatusFilter] = useState(null)
   const [toast, setToast] = useState(null)
   const [expandedLead, setExpandedLead] = useState(null)
+  const [events, setEvents] = useState([])
+  const [showLog, setShowLog] = useState(false)
 
   const loadDiscovery = useCallback(async () => {
     try {
       const data = await getDiscovery(targetId, statusFilter)
       setSessions(data.sessions || [])
       setLeads(data.leads || [])
+      setEvents(data.events || [])
     } catch (e) {
       console.error('Failed to load discovery:', e)
     } finally {
@@ -160,6 +163,34 @@ export default function DiscoveredTab({ targetId, targetStatus }) {
           </span>
           {latestSession.status === 'error' && (
             <span className="text-red-400">Error: {latestSession.error_message}</span>
+          )}
+        </div>
+      )}
+
+      {/* Discovery Log */}
+      {events.length > 0 && (
+        <div>
+          <button onClick={() => setShowLog(!showLog)}
+            className="flex items-center gap-1 text-[11px] text-gray-600 hover:text-gray-400 transition-colors">
+            {showLog ? <ChevronDown className="w-3 h-3" /> : <ChevronRight className="w-3 h-3" />}
+            Discovery Log ({events.length} events)
+          </button>
+          {(showLog || isRunning) && (
+            <div className="mt-2 bg-[#0a0a0f] border border-[#1e1e2e] rounded-lg p-3 max-h-48 overflow-y-auto font-mono text-[11px] text-gray-500 space-y-0.5">
+              {events.map(ev => (
+                <div key={ev.id}>
+                  {ev.event_type === 'query' && <span>🔍 {truncate(ev.payload?.label || ev.payload?.query || '', 80)}</span>}
+                  {ev.event_type === 'hit' && <span>📄 {truncate(ev.payload?.label || ev.payload?.title || '', 70)}</span>}
+                  {ev.event_type === 'lead' && <span>💡 {ev.payload?.label || `${ev.payload?.type}: ${ev.payload?.value}`}</span>}
+                  {!['query', 'hit', 'lead'].includes(ev.event_type) && <span>• {ev.event_type}: {truncate(ev.payload?.label || '', 60)}</span>}
+                </div>
+              ))}
+              {!isRunning && latestSession?.status === 'completed' && (
+                <div className="text-[#00ff88]">
+                  ✅ Complete — {latestSession.queries_executed} queries · {latestSession.pages_fetched} pages · {latestSession.leads_found} leads
+                </div>
+              )}
+            </div>
           )}
         </div>
       )}

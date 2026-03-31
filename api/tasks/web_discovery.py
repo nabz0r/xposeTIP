@@ -56,7 +56,28 @@ def run_discovery(self, target_id: str, session_id: str, workspace_id: str,
             max_seconds=bc.get("budget_seconds", session_obj.budget_seconds),
         )
 
+        from api.models.discovery import DiscoveryEvent
+        _event_count = [0]
+
         def on_discovery(node):
+            # Persist event to DB
+            try:
+                event = DiscoveryEvent(
+                    session_id=sid,
+                    event_type=node.get("node_type", "unknown"),
+                    payload=node,
+                )
+                db.add(event)
+                _event_count[0] += 1
+                # Periodic commit every 5 events for live polling visibility
+                if _event_count[0] % 5 == 0:
+                    # Also update session counters
+                    session_obj.queries_executed = budget.queries_used
+                    session_obj.pages_fetched = budget.pages_used
+                    db.commit()
+            except Exception:
+                pass
+            # SSE event
             publish_event("discovery.node", {
                 "workspace_id": workspace_id,
                 "target_id": target_id,

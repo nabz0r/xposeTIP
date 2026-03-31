@@ -764,7 +764,23 @@ async def get_discovery(
     """Get discovery sessions and leads for a target."""
     await _get_target(db, target_id, workspace_id)
 
-    from api.models.discovery import DiscoverySession, DiscoveryLead
+    from api.models.discovery import DiscoverySession, DiscoveryLead, DiscoveryEvent
+    from datetime import datetime, timezone, timedelta
+
+    # Zombie guard: expire sessions stuck running > 5 min
+    zombie_cutoff = datetime.now(timezone.utc) - timedelta(minutes=5)
+    await db.execute(
+        update(DiscoverySession).where(
+            DiscoverySession.target_id == target_id,
+            DiscoverySession.status == "running",
+            DiscoverySession.started_at < zombie_cutoff,
+        ).values(
+            status="error",
+            error_message="Session timed out (zombie guard)",
+            completed_at=datetime.now(timezone.utc),
+        )
+    )
+    await db.commit()
 
     # Sessions
     sessions_result = await db.execute(
@@ -818,7 +834,29 @@ async def get_discovery(
             }
             for l in leads
         ],
+        "events": [],
     }
+
+    # Events for the latest session (cap at 200)
+    if sessions:
+        latest_sid = sessions[0].id
+        events_result = await db.execute(
+            select(DiscoveryEvent).where(
+                DiscoveryEvent.session_id == latest_sid,
+            ).order_by(DiscoveryEvent.created_at.asc()).limit(200)
+        )
+        events = events_result.scalars().all()
+        result = {**result, "events": [
+            {
+                "id": str(e.id),
+                "event_type": e.event_type,
+                "payload": e.payload,
+                "created_at": e.created_at.isoformat() if e.created_at else None,
+            }
+            for e in events
+        ]}
+
+    return result
 
 
 @router.patch("/{target_id}/discovery/leads/{lead_id}")

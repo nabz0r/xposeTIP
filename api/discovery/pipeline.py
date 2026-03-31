@@ -22,6 +22,25 @@ from .extractors import extract_all
 logger = logging.getLogger(__name__)
 
 
+_JUNK_KEYWORDS = {"fashion", "outfit", "recipe", "lyrics", "download", "free",
+                   "buy", "shop", "a new era", "official", "cookie policy",
+                   "terms of service", "privacy policy"}
+
+
+def _is_junk_lead(lead_type: str, lead_value: str) -> bool:
+    """Filter obvious false positives (page titles as names, tag lists)."""
+    if lead_type != "name":
+        return False
+    if len(lead_value) > 80:
+        return True
+    if lead_value.count("|") >= 1:
+        return True
+    if lead_value.count(",") >= 3:
+        return True
+    val_lower = lead_value.lower()
+    return any(kw in val_lower for kw in _JUNK_KEYWORDS)
+
+
 class DiscoveryPipeline:
     """Orchestrate a complete Phase C discovery session."""
 
@@ -109,6 +128,8 @@ class DiscoveryPipeline:
                 break
             new_leads = self._process_query(qdata, depth)
             leads.extend(new_leads)
+            # Incremental counter update for live polling
+            self._update_session_counters()
         return leads
 
     def _run_url_depth(self, url_leads: list, depth: int) -> list:
@@ -185,9 +206,18 @@ class DiscoveryPipeline:
                 print(f"    \u23ed\ufe0f [skip] page doesn't mention target identifiers")
             return []
 
+        # Junk filter + JSON-LD name confidence cap
+        clean = []
+        for lead in filtered:
+            if _is_junk_lead(lead.lead_type, lead.value):
+                continue
+            if lead.lead_type == "name" and lead.extractor_type == "jsonld":
+                lead.confidence = min(lead.confidence, 0.60)
+            clean.append(lead)
+
         # Store/emit each lead (cross-page dedup)
         new_leads = []
-        for lead in filtered:
+        for lead in clean:
             dedup_key = (lead.lead_type, lead.value.lower())
             existing = self.seen_leads.get(dedup_key)
             if existing and existing["confidence"] >= lead.confidence:
@@ -245,6 +275,24 @@ class DiscoveryPipeline:
             self.db.flush()
         except Exception as e:
             logger.debug("Failed to store lead %s: %s", lead.value, e)
+
+    def _update_session_counters(self):
+        """Update session row with current counters for live polling."""
+        if self.dry_run or not self.db or not self.session_id:
+            return
+        try:
+            from sqlalchemy import select as sa_select
+            from api.models.discovery import DiscoverySession
+            session_obj = self.db.execute(
+                sa_select(DiscoverySession).where(DiscoverySession.id == uuid.UUID(str(self.session_id)))
+            ).scalar_one_or_none()
+            if session_obj:
+                session_obj.queries_executed = self.budget.queries_used
+                session_obj.pages_fetched = self.budget.pages_used
+                session_obj.leads_found = len(self.seen_leads)
+                self.db.commit()
+        except Exception:
+            pass
 
     def _is_page_relevant(self, page_text: str) -> bool:
         """Check if page mentions target's unique identifiers (not just name)."""
