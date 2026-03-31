@@ -627,6 +627,15 @@ def finalize_scan(scan_id: str):
             logger.exception("Fingerprint computation failed for target %s", scan.target_id)
         logger.info("PIPELINE[%s]: fingerprint done", scan.target_id)
 
+        # Update target.updated_at for UI refresh detection
+        try:
+            target = session.execute(select(Target).where(Target.id == scan.target_id)).scalar_one_or_none()
+            if target:
+                target.updated_at = datetime.now(timezone.utc)
+                session.commit()
+        except Exception:
+            pass
+
         # Publish scan.completed event for SSE
         try:
             from api.services.event_bus import publish_event
@@ -1088,6 +1097,15 @@ def _full_refinalize(target_id_str: str, workspace_id_str: str, session):
             "exposure_score": target.exposure_score if target else 0,
             "threat_score": target.threat_score if target else 0,
         })
+    except Exception:
+        pass
+
+    # Update target.updated_at for UI refresh detection
+    try:
+        target = session.execute(select(Target).where(Target.id == target_id)).scalar_one_or_none()
+        if target:
+            target.updated_at = datetime.now(timezone.utc)
+            session.commit()
     except Exception:
         pass
 
