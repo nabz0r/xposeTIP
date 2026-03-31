@@ -39,7 +39,8 @@ class DiscoveryPipeline:
         self.quality_gate = QualityGate(target_id, db_session)  # always pass DB for reads
         self.all_leads = []
         self.filtered_count = 0
-        self.seen_leads = {}  # (type, value_lower) → confidence for cross-page dedup
+        self.seen_leads = {}  # (type, value_lower) → {lead, confidence} for cross-page dedup
+        self._profile = {}
 
     def run(self, profile_snapshot: dict = None) -> dict:
         """Execute the full discovery pipeline."""
@@ -75,16 +76,18 @@ class DiscoveryPipeline:
             current_leads = self._run_url_depth(url_leads, depth)
 
         elapsed = time.time() - t0
+        # Build final leads from dedup dict (not from all_leads accumulator)
+        final_leads = sorted(self.seen_leads.values(), key=lambda x: -x["confidence"])
         summary = {
             "queries_executed": self.budget.queries_used,
             "pages_fetched": self.budget.pages_used,
-            "leads_found": len(self.all_leads),
+            "leads_found": len(final_leads),
             "leads_filtered": self.filtered_count,
             "duration_seconds": round(elapsed, 1),
             "leads": [
-                {"type": l.lead_type, "value": l.value, "confidence": l.confidence,
-                 "extractor": l.extractor_type, "context": l.context}
-                for l in self.all_leads
+                {"type": l["type"], "value": l["value"], "confidence": l["confidence"],
+                 "extractor": l["extractor"], "context": l["context"]}
+                for l in final_leads
             ],
         }
 
@@ -123,6 +126,7 @@ class DiscoveryPipeline:
         """Execute one query: search → fetch results → extract leads."""
         query = query_data["query"]
         reason = query_data.get("reason", "")
+        query_type = query_data.get("query_type", "identifier")
 
         query_id = self._emit("query", query[:80], {"reason": reason}, depth)
         self.budget.use_query()
@@ -138,7 +142,7 @@ class DiscoveryPipeline:
             if not self.budget.can_fetch():
                 break
             chain = [
-                {"step": "query", "value": query, "reason": reason},
+                {"step": "query", "value": query, "reason": reason, "query_type": query_type},
                 {"step": "hit", "url": result["url"], "title": result.get("title", "")},
             ]
             hit_id = self._emit("hit", result.get("title", "")[:60], result, depth, query_id)
@@ -155,25 +159,41 @@ class DiscoveryPipeline:
         if not page:
             return []
 
-        # Run all extractors with relevance scoring
+        # Run all extractors with relevance + geo scoring
         known = self.quality_gate.known_identifiers
-        resolved_name = getattr(self, "_profile", {}).get("resolved_name")
+        resolved_name = self._profile.get("resolved_name")
+        target_geo = self._profile.get("geo_country")
         raw_leads = extract_all(
             page["url"], page.get("text", ""), page.get("html", ""),
             known_identifiers=known, resolved_name=resolved_name,
+            target_geo=target_geo,
         )
 
         # Quality gate filter
         filtered = self.quality_gate.filter(raw_leads)
         self.filtered_count += len(raw_leads) - len(filtered)
 
+        # Page relevance check for name-based queries (homonyme protection)
+        is_name_query = any(step.get("query_type") == "name_based" for step in chain if isinstance(step, dict))
+        if is_name_query and not self._is_page_relevant(page.get("text", "")):
+            if self.dry_run:
+                print(f"    \u23ed\ufe0f [skip] page doesn't mention target identifiers")
+            return []
+
         # Store/emit each lead (cross-page dedup)
+        new_leads = []
         for lead in filtered:
             dedup_key = (lead.lead_type, lead.value.lower())
-            existing_conf = self.seen_leads.get(dedup_key, -1)
-            if lead.confidence <= existing_conf:
-                continue  # already have a better version from another page
-            self.seen_leads[dedup_key] = lead.confidence
+            existing = self.seen_leads.get(dedup_key)
+            if existing and existing["confidence"] >= lead.confidence:
+                continue
+
+            lead_data = {
+                "type": lead.lead_type, "value": lead.value,
+                "confidence": lead.confidence, "extractor": lead.extractor_type,
+                "context": lead.context,
+            }
+            self.seen_leads[dedup_key] = lead_data
 
             lead_chain = chain + [{"step": "extract", "extractor": lead.extractor_type, "value": lead.value}]
             self._store_lead(lead, url, title or page.get("title", ""), lead_chain, depth)
@@ -181,9 +201,9 @@ class DiscoveryPipeline:
                 "type": lead.lead_type, "confidence": lead.confidence,
                 "extractor": lead.extractor_type,
             }, depth)
-            self.all_leads.append(lead)
+            new_leads.append(lead)
 
-        return filtered
+        return new_leads
 
     def _store_lead(self, lead, source_url, source_title, chain, depth):
         """Write lead to discovery_leads DB. Skipped in dry-run."""
@@ -220,6 +240,25 @@ class DiscoveryPipeline:
             self.db.flush()
         except Exception as e:
             logger.debug("Failed to store lead %s: %s", lead.value, e)
+
+    def _is_page_relevant(self, page_text: str) -> bool:
+        """Check if page mentions target's unique identifiers (not just name)."""
+        text_lower = page_text.lower()
+        profile = self._profile
+
+        for ident in profile.get("identifiers", []):
+            if ident.get("type") in ("username", "email"):
+                if ident["value"].lower() in text_lower:
+                    return True
+
+        # Check email domain as employer marker
+        for ident in profile.get("identifiers", []):
+            if ident.get("type") == "email" and "@" in ident.get("value", ""):
+                domain = ident["value"].split("@")[1].split(".")[0].lower()
+                if len(domain) > 3 and domain in text_lower:
+                    return True
+
+        return False
 
     def _build_profile_snapshot(self, target_id) -> dict:
         """Build profile snapshot from existing target data in DB."""

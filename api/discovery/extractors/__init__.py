@@ -18,6 +18,36 @@ ALL_EXTRACTORS = [
 
 MIN_CONFIDENCE = 0.3
 
+_COUNTRY_TLDS = {
+    "US": {".com", ".edu", ".org", ".us", ".gov"},
+    "PT": {".pt", ".com"}, "LU": {".lu", ".com", ".eu"},
+    "DE": {".de", ".com"}, "FR": {".fr", ".com"},
+    "GB": {".uk", ".co.uk", ".com"}, "CA": {".ca", ".com"},
+    "NL": {".nl", ".com"}, "BE": {".be", ".com"},
+    "CH": {".ch", ".com"}, "IT": {".it", ".com"},
+    "ES": {".es", ".com"}, "SE": {".se", ".com"},
+    "JP": {".jp", ".com"}, "AU": {".au", ".com"},
+    "IN": {".in", ".com"}, "BR": {".br", ".com"},
+}
+
+
+def _geo_penalty(lead, target_geo: str) -> float:
+    """Penalize email leads with TLDs from a different country."""
+    if not target_geo or lead.lead_type != "email":
+        return 1.0
+    email_domain = lead.value.split("@")[-1] if "@" in lead.value else ""
+    tld = "." + email_domain.split(".")[-1] if email_domain else ""
+    if tld == ".com":
+        return 1.0
+    expected = _COUNTRY_TLDS.get(target_geo.upper(), {".com"})
+    if tld in expected:
+        return 1.0
+    if len(tld) == 3 and tld != ".com":
+        return 0.3
+    if tld in {".edu", ".org", ".gov"}:
+        return 0.6
+    return 1.0
+
 
 def score_relevance(lead: RawLead, known_identifiers: set, resolved_name: str = None) -> float:
     """Score how relevant a lead is to the target. Returns 0.0-1.0 multiplier."""
@@ -75,8 +105,9 @@ def _apply_source_penalties(leads: list, source_url: str,
 
 def extract_all(url: str, text: str, html: str,
                 known_identifiers: set = None,
-                resolved_name: str = None) -> list:
-    """Run all extractors, apply relevance scoring, deduplicate, filter."""
+                resolved_name: str = None,
+                target_geo: str = None) -> list:
+    """Run all extractors, apply relevance + geo scoring, deduplicate, filter."""
     known = {k.lower() for k in (known_identifiers or set())}
     seen_values = {}
 
@@ -105,6 +136,8 @@ def extract_all(url: str, text: str, html: str,
         if relevance == 0.0:
             continue
         lead.confidence = round(lead.confidence * relevance, 3)
+        # Geo penalty for emails from wrong country
+        lead.confidence = round(lead.confidence * _geo_penalty(lead, target_geo), 3)
         scored.append(lead)
 
     # Minimum confidence cutoff

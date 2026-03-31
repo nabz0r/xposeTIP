@@ -78,11 +78,26 @@ class QueryGenerator:
         self.templates = _load_json("query_templates.json")
         self.local_domains = _load_json("local_domains.json")
 
+    _COMMON_FIRST_NAMES = {
+        "james", "john", "robert", "michael", "david", "richard", "joseph", "thomas",
+        "charles", "christopher", "daniel", "matthew", "anthony", "mark", "donald",
+        "steven", "paul", "andrew", "joshua", "kenneth", "kevin", "brian", "george",
+        "mary", "patricia", "jennifer", "linda", "elizabeth", "barbara", "susan",
+        "jessica", "sarah", "karen", "lisa", "nancy", "betty", "margaret", "sandra",
+        "mohammed", "ahmed", "ali", "nabil", "sebastien", "sebastian", "balaji",
+        "mike", "peter", "hans", "pierre", "jean", "anna", "maria", "laura",
+        "nicolas", "thomas", "martin", "max", "felix", "alex", "chris",
+    }
+
     def generate(self, profile: dict, max_queries: int = 20) -> list[dict]:
         """Generate prioritized query list from profile snapshot."""
         queries = []
+        email_domain = self._get_email_domain_context(profile)
 
         for tmpl in self.templates:
+            # Skip generic name fallbacks if we have corporate email disambiguation
+            if email_domain and tmpl.get("id") in ("name_broad_generic", "name_documents_generic"):
+                continue
             if not self._check_requires(tmpl.get("requires", {}), profile):
                 continue
             expanded = self._expand_template(tmpl, profile)
@@ -179,8 +194,14 @@ class QueryGenerator:
             matching = [i for i in identifiers if i.get("type") in id_types]
             for ident in matching[:3]:
                 # Skip too-generic identifiers for broad sweep
-                if template_id == "broad_sweep" and len(ident["value"]) < 5:
-                    continue
+                val = ident["value"]
+                if template_id == "broad_sweep":
+                    if len(val) < 5:
+                        continue
+                    if val.isalpha() and val.islower() and len(val) < 8:
+                        continue
+                    if val.lower() in self._COMMON_FIRST_NAMES:
+                        continue
                 query = template_str.replace("{identifier}", ident["value"])
                 query = query.replace("{exclusions}", exclusions)
                 query = query.replace("{resolved_name}", resolved_name)
@@ -230,6 +251,7 @@ class QueryGenerator:
                 "priority": priority,
                 "reason": r,
                 "template_id": template_id,
+                "query_type": "name_based",  # flag for page relevance check
             })
 
         return results
