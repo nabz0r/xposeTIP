@@ -651,6 +651,10 @@ def finalize_scan(scan_id: str):
         except Exception:
             pass
 
+        # No-cascade guard: Phase A.5 rescans do NOT trigger follow-up discovery
+        if getattr(scan, "scan_type", None) == "discovery_rescan":
+            logger.info("Skipping discovery trigger for Phase A.5 rescan %s", scan_id)
+
     except Exception:
         session.rollback()
         logger.exception("finalize_scan failed for %s", scan_id)

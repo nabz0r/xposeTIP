@@ -24,6 +24,7 @@ class Scan(UUIDMixin, Base):
     new_findings: Mapped[int] = mapped_column(Integer, default=0)
     error_log: Mapped[str | None] = mapped_column(Text)
     celery_task_id: Mapped[str | None] = mapped_column(String(255))
+    scan_type: Mapped[str | None] = mapped_column(String(50))
     created_at: Mapped[datetime] = mapped_column(TIMESTAMP(timezone=True), default=func.now())
 
     workspace = relationship("Workspace", back_populates="scans")
