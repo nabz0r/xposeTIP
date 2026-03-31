@@ -17,8 +17,8 @@ logger = logging.getLogger(__name__)
 @celery_app.task(
     name="api.tasks.web_discovery.run_discovery",
     bind=True,
-    soft_time_limit=120,
-    time_limit=180,
+    soft_time_limit=600,
+    time_limit=660,
 )
 def run_discovery(self, target_id: str, session_id: str, workspace_id: str,
                   triggered_by: str = None, budget_config: dict = None):
@@ -206,8 +206,8 @@ _LEAD_TYPE_TO_INDICATOR = {
 @celery_app.task(
     name="api.tasks.web_discovery.auto_ingest_leads",
     bind=True,
-    soft_time_limit=60,
-    time_limit=90,
+    soft_time_limit=120,
+    time_limit=180,
 )
 def auto_ingest_leads(self, target_id: str, session_id: str, workspace_id: str):
     """Auto-ingest high-confidence discovery leads as findings + Phase A.5 rescan."""

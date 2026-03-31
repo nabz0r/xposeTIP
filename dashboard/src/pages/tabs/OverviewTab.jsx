@@ -74,13 +74,13 @@ function DeepScanActivity({ findings }) {
 export default function OverviewTab({ target, findings, profile, fingerprint, fpHistory, sourcesData, socialFindings, breachFindings, geoFindings, riskAssessment, remediations, criticalCount, setActiveTab, setShowScanModal }) {
   return (
     <div className="space-y-4">
-      {/* Email deliverability banner */}
-      {profile?.email_status && profile.email_status !== 'valid' && (
+      {/* Email deliverability banner — only show for genuinely bad emails */}
+      {profile?.email_status && typeof profile.email_status === 'object' && profile.email_status.deliverable === false && (
         <div className="bg-[#332800] border border-[#665500] rounded-xl p-4 flex items-center gap-3">
           <AlertTriangle className="w-5 h-5 text-[#ffcc00] shrink-0" />
           <div>
             <p className="text-[#ffcc00] text-sm font-semibold">
-              {profile.email_status === 'invalid_format' ? 'Invalid email format' : 'Inactive or non-existent email'}
+              {profile.email_status.suspicious ? 'Suspicious email detected' : 'Inactive or non-existent email'}
             </p>
             <p className="text-gray-400 text-xs mt-1">
               This email appears inactive or undeliverable. Results below are based on historical data and username analysis.
@@ -320,37 +320,13 @@ export default function OverviewTab({ target, findings, profile, fingerprint, fp
         </div>
       )}
 
-      {/* Breach summary cards */}
+      {/* Breach summary cards — moved to dedicated Breaches tab */}
       {breachFindings.length > 0 && (
-        <div>
-          <h3 className="text-xs font-semibold uppercase tracking-wider text-gray-500 mb-3">Breaches ({breachFindings.length})</h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-            {breachFindings.slice(0, 6).map(f => (
-              <div key={f.id} className="bg-[#12121a] border border-[#1e1e2e] rounded-lg p-3 hover:border-[#ff2244]/30 transition-colors">
-                <div className="flex items-center gap-2 mb-1">
-                  <span className="inline-block text-[10px] font-medium px-1.5 py-0.5 rounded-full"
-                    style={{ backgroundColor: (severityColors[f.severity] || '#666688') + '26', color: severityColors[f.severity] }}>
-                    {f.severity}
-                  </span>
-                  <span className="text-sm font-medium truncate">{f.title}</span>
-                </div>
-                <p className="text-xs text-gray-400 line-clamp-2">{f.description}</p>
-                {f.data?.DataClasses && (
-                  <div className="flex flex-wrap gap-1 mt-2">
-                    {f.data.DataClasses.slice(0, 4).map(dc => (
-                      <span key={dc} className="text-[10px] px-1.5 py-0.5 rounded bg-[#ff2244]/10 text-[#ff8800]">{dc}</span>
-                    ))}
-                    {f.data.DataClasses.length > 4 && <span className="text-[10px] text-gray-500">+{f.data.DataClasses.length - 4}</span>}
-                  </div>
-                )}
-              </div>
-            ))}
-          </div>
-          {breachFindings.length > 6 && (
-            <button onClick={() => setActiveTab('findings')} className="text-xs text-[#3388ff] hover:underline mt-2">
-              View all {breachFindings.length} breaches
-            </button>
-          )}
+        <div className="flex items-center gap-2">
+          <span className="text-xs text-gray-500">{breachFindings.length} breach{breachFindings.length !== 1 ? 'es' : ''} detected</span>
+          <button onClick={() => setActiveTab('breaches')} className="text-xs text-[#3388ff] hover:underline">
+            View details
+          </button>
         </div>
       )}
 
@@ -392,45 +368,13 @@ export default function OverviewTab({ target, findings, profile, fingerprint, fp
         </div>
       )}
 
-      {/* Source reliability */}
+      {/* Source reliability — moved to dedicated Sources tab */}
       {sourcesData?.sources?.length > 0 && (
-        <div>
-          <h3 className="text-xs font-semibold uppercase tracking-wider text-gray-500 mb-3">
-            Sources ({sourcesData.sources.length})
-            {sourcesData.overall_confidence > 0 && (
-              <span className="ml-2 text-[10px] font-normal normal-case text-gray-600">
-                Overall confidence: {Math.round(sourcesData.overall_confidence * 100)}%
-                {sourcesData.cross_verified_count > 0 && ` | ${sourcesData.cross_verified_count} cross-verified`}
-              </span>
-            )}
-          </h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
-            {sourcesData.sources.map(s => {
-              const relColor = s.reliability >= 0.8 ? '#00ff88' : s.reliability >= 0.6 ? '#ffcc00' : '#ff8800'
-              const pct = Math.round(s.reliability * 100)
-              return (
-                <div key={s.module} className="bg-[#12121a] border border-[#1e1e2e] rounded-lg p-3 flex items-center gap-3">
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2">
-                      <span className="text-xs font-mono font-medium truncate">{s.module}</span>
-                      <span className="text-[10px] px-1.5 py-0.5 rounded-full font-mono"
-                        style={{ backgroundColor: relColor + '20', color: relColor }}>
-                        {pct}%
-                      </span>
-                    </div>
-                    <div className="mt-1.5 h-1.5 rounded-full bg-[#0a0a0f] overflow-hidden">
-                      <div className="h-full rounded-full transition-all" style={{ width: `${pct}%`, backgroundColor: relColor }} />
-                    </div>
-                    <div className="flex gap-3 mt-1 text-[10px] text-gray-500">
-                      <span>{s.findings_count} findings</span>
-                      <span>{s.verified_count} verified</span>
-                      <span>avg {Math.round(s.avg_confidence * 100)}%</span>
-                    </div>
-                  </div>
-                </div>
-              )
-            })}
-          </div>
+        <div className="flex items-center gap-2">
+          <span className="text-xs text-gray-500">{sourcesData.sources.length} intelligence sources</span>
+          <button onClick={() => setActiveTab('sources')} className="text-xs text-[#3388ff] hover:underline">
+            View details
+          </button>
         </div>
       )}
 

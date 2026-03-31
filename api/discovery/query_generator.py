@@ -24,7 +24,7 @@ def _load_json(filename):
 class DiscoveryBudget:
     """Tracks query/page/time budget for a discovery session."""
 
-    def __init__(self, max_queries=15, max_pages=40, max_seconds=90):
+    def __init__(self, max_queries=15, max_pages=40, max_seconds=300):
         self.max_queries = max_queries
         self.max_pages = max_pages
         self.queries_used = 0

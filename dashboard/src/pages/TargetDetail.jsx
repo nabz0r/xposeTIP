@@ -15,6 +15,8 @@ import ScansTab from './tabs/ScansTab'
 import PublicExposureTab from '../components/target/PublicExposureTab'
 import UsernameTab from './tabs/UsernameTab'
 import DiscoveredTab from './tabs/DiscoveredTab'
+import SourcesTab from './tabs/SourcesTab'
+import BreachesTab from './tabs/BreachesTab'
 import SanctionsAlert from '../components/target/SanctionsAlert'
 
 export default function TargetDetail() {
@@ -346,7 +348,7 @@ export default function TargetDetail() {
 
       {/* Tabs */}
       <div className="flex gap-1 border-b border-[#1e1e2e]">
-        {['overview', 'findings', 'graph', 'timeline', 'photos', 'exposure', 'locations', 'accounts', 'usernames', 'discovered', 'scans'].map(tab => (
+        {['overview', 'findings', 'graph', 'timeline', 'photos', 'exposure', 'breaches', 'locations', 'accounts', 'usernames', 'discovered', 'sources', 'scans'].map(tab => (
           <button key={tab} onClick={() => setActiveTab(tab)}
             className={`px-4 py-2 text-sm capitalize transition-colors ${activeTab === tab ? 'text-[#00ff88] border-b-2 border-[#00ff88]' : 'text-gray-400 hover:text-white'}`}>
             {tab} {(() => {
@@ -356,6 +358,8 @@ export default function TargetDetail() {
               if (tab === 'photos') { const c = (profile?.avatars || []).length; return c > 0 ? `(${c})` : '' }
               if (tab === 'usernames') { const c = new Set(findings.filter(f => f.indicator_type === 'username' && f.indicator_value).map(f => f.indicator_value.toLowerCase())).size; return c > 0 ? `(${c})` : '' }
               if (tab === 'exposure') { const c = findings.filter(f => f.category === 'public_exposure' || f.category === 'compliance' || f.category === 'corporate' || f.indicator_type === 'media_mention' || f.indicator_type === 'sanctions_match' || f.indicator_type === 'pep_match' || f.indicator_type === 'corporate_officer').length; return c > 0 ? `(${c})` : '' }
+              if (tab === 'breaches') { const c = breachFindings.length; return c > 0 ? `(${c})` : '' }
+              if (tab === 'sources') { const c = sourcesData?.sources?.length || 0; return c > 0 ? `(${c})` : '' }
               return ''
             })()}
           </button>
@@ -411,8 +415,16 @@ export default function TargetDetail() {
         <UsernameTab findings={findings} graphData={graphData} targetId={id} onRefresh={load} />
       )}
 
+      {activeTab === 'breaches' && (
+        <BreachesTab breachFindings={breachFindings} />
+      )}
+
       {activeTab === 'discovered' && (
         <DiscoveredTab targetId={id} targetStatus={target?.status} />
+      )}
+
+      {activeTab === 'sources' && (
+        <SourcesTab sourcesData={sourcesData} />
       )}
 
       {activeTab === 'scans' && (

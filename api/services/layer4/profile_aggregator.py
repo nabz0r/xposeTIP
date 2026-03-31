@@ -540,7 +540,7 @@ def _synthesize_email_status(findings, target_id, session) -> dict:
     # Timeline from non-domain findings
     if not status["first_seen"] or not status["last_seen"]:
         dates = []
-        _SKIP = {"dns_deep", "whois_lookup", "domain_analyzer", "wayback_domain", "wayback_count"}
+        _SKIP = {"dns_deep", "whois_lookup", "domain_analyzer", "wayback_domain", "wayback_count", "rdap_domain"}
         for f in findings:
             if not f.data or f.module in _SKIP:
                 continue
