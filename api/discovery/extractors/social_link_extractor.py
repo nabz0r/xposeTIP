@@ -41,6 +41,16 @@ class SocialLinkExtractor(BaseExtractor):
         except Exception:
             return leads
 
+        # Strip nav/footer/header/sidebar to focus on content area
+        for tag in soup.find_all(["nav", "footer", "header", "aside"]):
+            tag.decompose()
+        for selector in ['[class*="nav"]', '[class*="footer"]', '[class*="sidebar"]',
+                         '[class*="menu"]', '[class*="widget"]', '[class*="cookie"]',
+                         '[id*="nav"]', '[id*="footer"]', '[id*="sidebar"]',
+                         '[id*="menu"]', '[id*="widget"]']:
+            for tag in soup.select(selector):
+                tag.decompose()
+
         source_domain = urlparse(url).netloc.lower()
 
         for tag in soup.find_all("a", href=True):

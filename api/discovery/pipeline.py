@@ -50,6 +50,8 @@ class DiscoveryPipeline:
         if not profile_snapshot:
             return {"error": "No profile snapshot available", "leads": []}
 
+        self._profile = profile_snapshot  # Store for _process_page access
+
         # Load quality gate from profile (for dry-run) or DB (already loaded in __init__)
         if self.dry_run:
             self.quality_gate.load_from_profile(profile_snapshot)
@@ -152,9 +154,13 @@ class DiscoveryPipeline:
         if not page:
             return []
 
-        # Run all extractors
+        # Run all extractors with relevance scoring
         known = self.quality_gate.known_identifiers
-        raw_leads = extract_all(page["url"], page.get("text", ""), page.get("html", ""), known)
+        resolved_name = getattr(self, "_profile", {}).get("resolved_name")
+        raw_leads = extract_all(
+            page["url"], page.get("text", ""), page.get("html", ""),
+            known_identifiers=known, resolved_name=resolved_name,
+        )
 
         # Quality gate filter
         filtered = self.quality_gate.filter(raw_leads)
