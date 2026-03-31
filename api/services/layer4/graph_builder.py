@@ -136,6 +136,10 @@ def build_graph(target_id, workspace_id, session: Session):
     email_value = email_finding.indicator_value if email_finding else None
 
     def get_or_create_identity(type_, value, platform=None, source_module=None, source_finding_id=None):
+        # Truncate long values (Google News RSS URLs can be 300+ chars)
+        if value and len(value) > 500:
+            value = value[:497] + "..."
+
         existing = session.execute(
             select(Identity).where(
                 Identity.workspace_id == workspace_id,
@@ -166,7 +170,30 @@ def build_graph(target_id, workspace_id, session: Session):
             confidence=get_source_reliability(source_module) if source_module else 0.5,
         )
         session.add(identity)
-        session.flush()
+        try:
+            session.flush()
+        except Exception:
+            session.rollback()
+            # Re-fetch after rollback — it was likely a duplicate
+            existing = session.execute(
+                select(Identity).where(
+                    Identity.workspace_id == workspace_id,
+                    Identity.target_id == target_id,
+                    Identity.type == type_,
+                    Identity.value == value,
+                )
+            ).scalar_one_or_none()
+            if existing:
+                return existing
+            logger.debug("Identity flush failed for %s/%s, re-creating", type_, value[:80])
+            identity = Identity(
+                workspace_id=workspace_id, target_id=target_id,
+                type=type_, value=value, platform=platform,
+                source_module=source_module, source_finding=source_finding_id,
+                confidence=get_source_reliability(source_module) if source_module else 0.5,
+            )
+            session.add(identity)
+            session.flush()
         return identity
 
     def get_or_create_link(source_id, dest_id, link_type, source_module=None, evidence=None):
@@ -197,7 +224,11 @@ def build_graph(target_id, workspace_id, session: Session):
             evidence=evidence,
         )
         session.add(link)
-        session.flush()
+        try:
+            session.flush()
+        except Exception:
+            session.rollback()
+            logger.debug("Link flush failed for %s→%s, skipping", source_id, dest_id)
         return link
 
     # Process each finding

@@ -3,6 +3,8 @@ import logging
 import uuid
 from datetime import datetime, timezone
 
+from celery.exceptions import SoftTimeLimitExceeded
+
 from sqlalchemy import select
 
 from api.tasks import celery_app
@@ -30,6 +32,7 @@ def run_discovery(self, target_id: str, session_id: str, workspace_id: str,
 
         tid = uuid.UUID(target_id)
         sid = uuid.UUID(session_id)
+        pipeline = None  # initialized later, accessible in timeout handler
 
         target = db.execute(select(Target).where(Target.id == tid)).scalar_one_or_none()
         if not target:
@@ -119,6 +122,29 @@ def run_discovery(self, target_id: str, session_id: str, workspace_id: str,
         logger.info("Discovery complete for %s: %d leads in %.1fs",
                      target_id, result.get("leads_found", 0),
                      result.get("duration_seconds", 0))
+
+    except SoftTimeLimitExceeded:
+        logger.warning("Discovery soft timeout for %s — saving progress", target_id)
+        try:
+            session_obj = db.execute(
+                select(DiscoverySession).where(DiscoverySession.id == sid)
+            ).scalar_one_or_none()
+            if session_obj:
+                session_obj.status = "completed"
+                session_obj.queries_executed = pipeline.budget.queries_used if pipeline else 0
+                session_obj.pages_fetched = pipeline.budget.pages_used if pipeline else 0
+                session_obj.leads_found = len(pipeline.seen_leads) if pipeline else 0
+                session_obj.completed_at = datetime.now(timezone.utc)
+                session_obj.error_message = "Completed with timeout (partial results)"
+                db.commit()
+            if pipeline and pipeline.seen_leads:
+                auto_ingest_leads.delay(target_id, session_id, workspace_id)
+            publish_event("discovery.timeout", {
+                "workspace_id": workspace_id, "target_id": target_id,
+                "session_id": session_id,
+            })
+        except Exception:
+            logger.exception("Failed to save discovery progress on timeout")
 
     except Exception as e:
         logger.exception("Discovery failed for %s: %s", target_id, e)

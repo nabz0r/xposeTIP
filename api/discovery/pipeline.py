@@ -24,23 +24,42 @@ logger = logging.getLogger(__name__)
 
 _JUNK_KEYWORDS = {"fashion", "outfit", "recipe", "lyrics", "download", "free",
                    "buy", "shop", "a new era", "official", "cookie policy",
-                   "terms of service", "privacy policy"}
+                   "terms of service", "privacy policy",
+                   "wiki", "wikipedia", "bulbapedia", "fandom",
+                   "encyclopedia", "dictionary", "community-driven", "the free",
+                   "pinterest", "tumblr"}
+
+_JUNK_USERNAME_SET = {
+    "articles", "article", "news", "home", "about", "contact",
+    "search", "login", "signup", "register", "help", "support",
+    "blog", "posts", "tags", "categories", "page", "pages",
+    "index", "main", "default", "admin", "user", "users",
+    "share", "follow", "subscribe", "comments", "status",
+    "explore", "trending", "popular", "latest", "new",
+    "privacy", "terms", "policy", "cookies", "settings",
+    "null", "undefined", "none", "true", "false",
+}
 
 MAX_ROUNDS = 3
+ROUND1_MAX_QUERIES = 8
 
 
 def _is_junk_lead(lead_type: str, lead_value: str) -> bool:
-    """Filter obvious false positives (page titles as names, tag lists)."""
-    if lead_type != "name":
-        return False
-    if len(lead_value) > 80:
-        return True
-    if lead_value.count("|") >= 1:
-        return True
-    if lead_value.count(",") >= 3:
-        return True
-    val_lower = lead_value.lower()
-    return any(kw in val_lower for kw in _JUNK_KEYWORDS)
+    """Filter obvious false positives (page titles as names, generic usernames)."""
+    if lead_type == "name":
+        if len(lead_value) > 80:
+            return True
+        if lead_value.count("|") >= 1 or " | " in lead_value:
+            return True
+        if lead_value.count(",") >= 3:
+            return True
+        if " - " in lead_value or " \u2014 " in lead_value:
+            return True
+        val_lower = lead_value.lower()
+        return any(kw in val_lower for kw in _JUNK_KEYWORDS)
+    if lead_type == "username":
+        return lead_value.lower().strip() in _JUNK_USERNAME_SET
+    return False
 
 
 class DiscoveryPipeline:
@@ -99,7 +118,7 @@ class DiscoveryPipeline:
             # Round 1: queries from profile (existing behavior)
             # Round 2+: queries from PivotStrategy
             if round_num == 1:
-                queries = self.query_generator.generate(profile_snapshot, self.budget.max_queries)
+                queries = self.query_generator.generate(profile_snapshot, min(ROUND1_MAX_QUERIES, self.budget.max_queries))
                 logger.info("Discovery R%d: %d profile queries for %s", round_num, len(queries), self.target_id)
             else:
                 queries = self._generate_pivot_queries(round_leads)
