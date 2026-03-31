@@ -173,8 +173,13 @@ class DiscoveryPipeline:
         filtered = self.quality_gate.filter(raw_leads)
         self.filtered_count += len(raw_leads) - len(filtered)
 
-        # Page relevance check for name-based queries (homonyme protection)
-        is_name_query = any(step.get("query_type") == "name_based" for step in chain if isinstance(step, dict))
+        # Page relevance check: if query contains the resolved name, verify page
+        # actually mentions unique target identifiers (homonyme protection)
+        resolved_name = self._profile.get("resolved_name", "")
+        query_str = " ".join(
+            step.get("value", "") for step in chain if isinstance(step, dict) and step.get("step") == "query"
+        )
+        is_name_query = resolved_name and resolved_name.lower() in query_str.lower()
         if is_name_query and not self._is_page_relevant(page.get("text", "")):
             if self.dry_run:
                 print(f"    \u23ed\ufe0f [skip] page doesn't mention target identifiers")
