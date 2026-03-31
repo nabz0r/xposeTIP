@@ -689,3 +689,176 @@ def _target_dict(t: Target) -> dict:
         "geo_locations": profile.get("geo_locations", []),
         "user_locations": profile.get("user_locations", []),
     }
+
+
+# ═══════════════════════════════════════════════
+# Phase C — Discovery Engine endpoints
+# ═══════════════════════════════════════════════
+
+@router.post("/{target_id}/discover", status_code=status.HTTP_202_ACCEPTED)
+async def launch_discovery(
+    target_id: uuid.UUID,
+    body: dict = None,
+    db: AsyncSession = Depends(get_db),
+    workspace_id: uuid.UUID = Depends(get_current_workspace),
+    user=Depends(get_current_user),
+):
+    """Launch Phase C Web Discovery for a target."""
+    target = await _get_target(db, target_id, workspace_id)
+
+    # Verify target has been scanned
+    finding_count = (await db.execute(
+        select(func.count()).select_from(Finding).where(Finding.target_id == target_id)
+    )).scalar() or 0
+    if finding_count == 0:
+        raise HTTPException(status_code=400, detail="Target must be scanned before discovery")
+
+    # Check no session already running
+    from api.models.discovery import DiscoverySession
+    existing = (await db.execute(
+        select(DiscoverySession).where(
+            DiscoverySession.target_id == target_id,
+            DiscoverySession.status == "running",
+        )
+    )).scalar_one_or_none()
+    if existing:
+        raise HTTPException(status_code=409, detail="Discovery session already running for this target")
+
+    # Create session record
+    bc = body or {}
+    session_obj = DiscoverySession(
+        id=uuid.uuid4(),
+        target_id=target_id,
+        workspace_id=workspace_id,
+        max_queries=bc.get("max_queries", 20),
+        max_pages=bc.get("max_pages", 50),
+        max_depth=bc.get("max_depth", 2),
+        budget_seconds=bc.get("budget_seconds", 60),
+        triggered_by=user.id,
+    )
+    db.add(session_obj)
+    await db.commit()
+
+    # Dispatch Celery task
+    from api.tasks.web_discovery import run_discovery
+    run_discovery.delay(
+        str(target_id), str(session_obj.id), str(workspace_id),
+        str(user.id), bc if bc else None,
+    )
+
+    return {
+        "session_id": str(session_obj.id),
+        "status": "running",
+        "started_at": session_obj.started_at.isoformat() if session_obj.started_at else None,
+    }
+
+
+@router.get("/{target_id}/discovery")
+async def get_discovery(
+    target_id: uuid.UUID,
+    status_filter: str = Query(None, alias="status"),
+    db: AsyncSession = Depends(get_db),
+    workspace_id: uuid.UUID = Depends(get_current_workspace),
+    user=Depends(get_current_user),
+):
+    """Get discovery sessions and leads for a target."""
+    await _get_target(db, target_id, workspace_id)
+
+    from api.models.discovery import DiscoverySession, DiscoveryLead
+
+    # Sessions
+    sessions_result = await db.execute(
+        select(DiscoverySession).where(
+            DiscoverySession.target_id == target_id,
+            DiscoverySession.workspace_id == workspace_id,
+        ).order_by(DiscoverySession.started_at.desc())
+    )
+    sessions = sessions_result.scalars().all()
+
+    # Leads
+    leads_query = select(DiscoveryLead).where(
+        DiscoveryLead.target_id == target_id,
+        DiscoveryLead.workspace_id == workspace_id,
+    )
+    if status_filter:
+        leads_query = leads_query.where(DiscoveryLead.status == status_filter)
+    leads_query = leads_query.order_by(DiscoveryLead.confidence.desc())
+
+    leads_result = await db.execute(leads_query)
+    leads = leads_result.scalars().all()
+
+    return {
+        "sessions": [
+            {
+                "id": str(s.id),
+                "status": s.status,
+                "queries_executed": s.queries_executed,
+                "pages_fetched": s.pages_fetched,
+                "leads_found": s.leads_found,
+                "started_at": s.started_at.isoformat() if s.started_at else None,
+                "completed_at": s.completed_at.isoformat() if s.completed_at else None,
+                "error_message": s.error_message,
+            }
+            for s in sessions
+        ],
+        "leads": [
+            {
+                "id": str(l.id),
+                "lead_type": l.lead_type,
+                "lead_value": l.lead_value,
+                "source_url": l.source_url,
+                "source_title": l.source_title,
+                "source_snippet": l.source_snippet,
+                "discovery_chain": l.discovery_chain,
+                "depth": l.depth,
+                "confidence": l.confidence,
+                "extractor_type": l.extractor_type,
+                "status": l.status,
+                "created_at": l.created_at.isoformat() if l.created_at else None,
+            }
+            for l in leads
+        ],
+    }
+
+
+@router.patch("/{target_id}/discovery/leads/{lead_id}")
+async def update_discovery_lead(
+    target_id: uuid.UUID,
+    lead_id: uuid.UUID,
+    body: dict,
+    db: AsyncSession = Depends(get_db),
+    workspace_id: uuid.UUID = Depends(get_current_workspace),
+    user=Depends(get_current_user),
+):
+    """Update a discovery lead status (dismiss or undo)."""
+    from api.models.discovery import DiscoveryLead
+    from datetime import datetime, timezone
+
+    lead = (await db.execute(
+        select(DiscoveryLead).where(
+            DiscoveryLead.id == lead_id,
+            DiscoveryLead.target_id == target_id,
+            DiscoveryLead.workspace_id == workspace_id,
+        )
+    )).scalar_one_or_none()
+
+    if not lead:
+        raise HTTPException(status_code=404, detail="Lead not found")
+
+    new_status = body.get("status")
+    if new_status not in ("dismissed", "new"):
+        raise HTTPException(status_code=400, detail="Status must be 'dismissed' or 'new'")
+
+    if lead.status == "ingested":
+        raise HTTPException(status_code=400, detail="Cannot modify ingested lead")
+
+    lead.status = new_status
+    lead.reviewed_at = datetime.now(timezone.utc)
+    lead.reviewed_by = user.id
+    await db.commit()
+
+    return {
+        "id": str(lead.id),
+        "status": lead.status,
+        "reviewed_at": lead.reviewed_at.isoformat(),
+    }

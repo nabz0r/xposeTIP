@@ -24,6 +24,7 @@ celery_app.conf.update(
 # (autodiscover_tasks alone doesn't reliably find them in this package layout)
 import api.tasks.scan_orchestrator  # noqa: E402, F401
 import api.tasks.module_tasks  # noqa: E402, F401
+import api.tasks.web_discovery  # noqa: E402, F401
 
 
 @celery_app.on_after_configure.connect
