@@ -168,11 +168,16 @@ class QueryGenerator:
                         continue
                     query = query.replace("{local_domains}", local)
 
-                # Axis value in reason
+                # Axis value in reason — use the specific axis from requires
                 r = reason
-                for axis_key in ("developer_activity", "gaming_presence", "content_creation", "social_activity"):
-                    val = (profile.get("axes") or {}).get(axis_key, 0)
-                    r = r.replace("{axis_value}", f"{val:.2f}")
+                requires = tmpl.get("requires", {})
+                for req_key in requires:
+                    if req_key.startswith("axes."):
+                        axis_name = req_key.split(".", 1)[1]
+                        val = (profile.get("axes") or {}).get(axis_name, 0)
+                        r = r.replace("{axis_value}", f"{val:.2f}")
+                        break
+                r = r.replace("{axis_value}", "")
 
                 results.append({
                     "query": query.strip(),

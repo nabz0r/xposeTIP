@@ -25,3 +25,6 @@ cryptography
 dnspython
 reportlab
 beautifulsoup4
+google-search-results
+trafilatura
+pdfplumber
