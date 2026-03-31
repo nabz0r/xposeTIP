@@ -168,3 +168,17 @@ export const importScraper = (data) => request('/scrapers/import', { method: 'PO
 // User profile
 export const updateProfile = (data) => request('/auth/profile', { method: 'PATCH', body: JSON.stringify(data) })
 export const changePassword = (data) => request('/auth/password', { method: 'POST', body: JSON.stringify(data) })
+
+// Discovery Engine
+export const launchDiscovery = (targetId, budget = null) =>
+  request(`/targets/${targetId}/discover`, {
+    method: 'POST',
+    body: JSON.stringify(budget || {}),
+  })
+export const getDiscovery = (targetId, statusFilter = null) =>
+  request(`/targets/${targetId}/discovery${statusFilter ? '?status=' + statusFilter : ''}`)
+export const updateDiscoveryLead = (targetId, leadId, status) =>
+  request(`/targets/${targetId}/discovery/leads/${leadId}`, {
+    method: 'PATCH',
+    body: JSON.stringify({ status }),
+  })

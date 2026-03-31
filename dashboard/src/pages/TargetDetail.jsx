@@ -14,6 +14,7 @@ import PhotosTab from './tabs/PhotosTab'
 import ScansTab from './tabs/ScansTab'
 import PublicExposureTab from '../components/target/PublicExposureTab'
 import UsernameTab from './tabs/UsernameTab'
+import DiscoveredTab from './tabs/DiscoveredTab'
 import SanctionsAlert from '../components/target/SanctionsAlert'
 
 export default function TargetDetail() {
@@ -345,7 +346,7 @@ export default function TargetDetail() {
 
       {/* Tabs */}
       <div className="flex gap-1 border-b border-[#1e1e2e]">
-        {['overview', 'findings', 'graph', 'timeline', 'photos', 'exposure', 'locations', 'accounts', 'usernames', 'scans'].map(tab => (
+        {['overview', 'findings', 'graph', 'timeline', 'photos', 'exposure', 'locations', 'accounts', 'usernames', 'discovered', 'scans'].map(tab => (
           <button key={tab} onClick={() => setActiveTab(tab)}
             className={`px-4 py-2 text-sm capitalize transition-colors ${activeTab === tab ? 'text-[#00ff88] border-b-2 border-[#00ff88]' : 'text-gray-400 hover:text-white'}`}>
             {tab} {(() => {
@@ -408,6 +409,10 @@ export default function TargetDetail() {
 
       {activeTab === 'usernames' && (
         <UsernameTab findings={findings} graphData={graphData} targetId={id} onRefresh={load} />
+      )}
+
+      {activeTab === 'discovered' && (
+        <DiscoveredTab targetId={id} targetStatus={target?.status} />
       )}
 
       {activeTab === 'scans' && (
