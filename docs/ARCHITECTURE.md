@@ -1,4 +1,4 @@
-# Architecture — xposeTIP v0.97.0
+# Architecture — xposeTIP v1.1.0
 
 ## Design Philosophy
 
@@ -179,6 +179,29 @@ Flow:
    cross-verify → graph → PageRank → graph_context → score → profile →
    bio cleanup → name validation → quick teaser → identity enrichment →
    personas → intelligence → fingerprint → history → SSE
+
+## Phase C — Web Discovery (operator-triggered)
+
+Fingerprint-driven web reconnaissance. Explores the open web for leads
+not covered by the 120 fixed scrapers.
+
+Flow:
+1. Operator clicks "Launch Discovery" in Discovered tab
+2. Celery task `run_discovery` starts
+3. Query Generator composes 15-20 search queries from known identifiers,
+   behavioral fingerprint axes, geographic context, and username/name variants.
+   Name queries disambiguated with corporate email domain (homonyme prevention).
+4. SerpAPI executes queries, top results returned
+5. Page Fetcher (trafilatura) downloads and extracts clean text from top 50 pages
+6. 6 Extractors run on each page:
+   rel=me (0.95), JSON-LD (0.95), Social links (0.85), Email (0.90), Meta tags (0.80), Username (0.60)
+7. Quality gate filters leads (5 layers):
+   nav/footer stripping, relevance scoring, LinkedIn penalty, geo penalty, page relevance check
+8. Leads stored in `discovery_leads` with full discovery chain (JSONB)
+9. Depth iteration: URL-type leads from depth 0 fetched at depth 1
+
+Budget: 20 queries, 50 pages, 60 seconds default. Cost: ~$0.20/run (SerpAPI).
+Data model: `discovery_sessions`, `discovery_leads`, `target_links`.
 
 ## Markov Chain / graph_context
 

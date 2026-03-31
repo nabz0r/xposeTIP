@@ -1,4 +1,4 @@
-# API Reference — xposeTIP v0.97.0
+# API Reference — xposeTIP v1.1.0
 
 All endpoints prefixed with `/api/v1/`. All require auth (JWT Bearer) except health.
 All scoped to workspace via middleware (extracts workspace_id from JWT claims).
@@ -25,6 +25,13 @@ GET    /api/v1/targets/{id}/remediation    — Prioritized remediation actions
 POST   /api/v1/targets/{id}/scan-indicator — Deep scan any indicator type (202 Accepted)
   Body: {"type": "username|email|domain|name|fullname", "value": "..."}
   Notes: Triggers cascade (cross-type discovery, depth=1, max=5)
+POST   /api/v1/targets/{id}/discover         — Launch Phase C Web Discovery (202 Accepted)
+  Body (optional): {"max_queries": 20, "max_pages": 50, "budget_seconds": 60}
+  Errors: 400 (not scanned), 409 (already running)
+GET    /api/v1/targets/{id}/discovery         — Get discovery sessions + leads
+  Query: ?status=new|dismissed|ingested (optional filter)
+PATCH  /api/v1/targets/{id}/discovery/leads/{lead_id} — Update lead status
+  Body: {"status": "dismissed"} or {"status": "new"} (undo)
 ```
 
 ## Scans

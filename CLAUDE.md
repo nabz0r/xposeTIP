@@ -5,14 +5,17 @@
 Identity Threat Intelligence platform. Scans email → builds identity graph →
 PageRank/Markov confidence → clusters personas → pixel art avatar → remediation plan.
 
-## Current version: v1.0.0
+## Current version: v1.1.0
 
-100 sprints. 120 scrapers, 35 scanners, 9 intelligence analyzers, 9-axis fingerprint.
+110 sprints. 120 scrapers, 35 scanners, 9 intelligence analyzers, 9-axis fingerprint.
 Two-phase pipeline: Phase A (gather: cross-verify → Pass 1.5 → early profile → Pass 2)
 → Phase B (compute: graph → PageRank → score → profile → personas → intelligence → fingerprint).
 Deep Scan triggers cascade (discovered emails/usernames/domains → chain-scanned, depth=1, max=5).
 Per-scraper module attribution (Sprint 89). 429 exponential backoff on all scrapers.
 PDF identity report export (ReportLab, dark theme, tiered by plan).
+Phase C (web discovery, operator-triggered): fingerprint-driven Google dorking → trafilatura
+page fetch → 6 extractors (rel_me/jsonld/social_link/email/meta_tag/username) → quality gate
+→ discovery_leads DB. Budget: 20 queries, 50 pages, 60s default.
 
 ## Developer
 
@@ -42,6 +45,8 @@ Nexus 2026 — June 10-11, Luxexpo, Luxembourg (€50 cybersecurity category, su
 10. Every DB query scoped to workspace_id
 11. SCANNER_REGISTRY IDs must match scripts/seed_modules.py
 12. wayback_domain and wayback_count are domain-age modules — excluded from identity timeline
+13. Discovery leads are NOT findings — separate table (discovery_leads), separate workflow
+14. Phase C queries MUST be disambiguated with email domain for name-based searches (homonyme prevention)
 
 ## Product Principles (Manifesto)
 
@@ -103,9 +108,14 @@ After deploy: System → Recalculate Fingerprints → Recalculate Profiles
 - `api/services/layer4/source_scoring.py` — source reliability weights
 - `api/services/plan_config.py` — plan definitions, feature gates
 - `api/services/scraper_engine.py` — URL template + regex/JSONPath extraction
-- `api/routers/targets.py` — CRUD + profile + fingerprint + geo_locations
+- `api/routers/targets.py` — CRUD + profile + fingerprint + geo_locations + discovery endpoints
 - `api/routers/scans.py` — scan CRUD + quick scan + paginated total
 - `api/services/report/pdf_generator.py` — PDF identity report (ReportLab)
+- `api/discovery/pipeline.py` — Phase C Web Discovery orchestrator
+- `api/discovery/extractors/` — 6 lead extractors (rel_me, jsonld, social_link, email, meta_tag, username)
+- `api/discovery/quality_gate.py` — dedup discovery leads vs existing findings
+- `api/discovery/query_generator.py` — fingerprint-driven search query composition
+- `api/tasks/web_discovery.py` — Celery task for Phase C
 - `scripts/seed_scrapers.py` — 120 scraper definitions
 - `scripts/seed_modules.py` — 35 scanner modules
 
@@ -118,6 +128,7 @@ After deploy: System → Recalculate Fingerprints → Recalculate Profiles
 - `dashboard/src/components/FingerprintRadar.jsx` — 9-axis radar chart
 - `dashboard/src/components/WorkspaceGeoMap.jsx` — D3 geographic heatmap
 - `dashboard/src/pages/UserPreview.jsx` — consumer dashboard preview (/user-preview)
+- `dashboard/src/pages/tabs/DiscoveredTab.jsx` — Phase C discovery UI (launch, leads, dismiss)
 
 ## Details
 

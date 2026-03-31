@@ -12,8 +12,8 @@
 [![Docker](https://img.shields.io/badge/Docker-Compose-2496ED?logo=docker)](https://docker.com)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 [![Scrapers](https://img.shields.io/badge/scrapers-120-3388ff)](#scraper-engine)
-[![Sprints](https://img.shields.io/badge/sprints-97-00ff88)](#changelog)
-[![Version](https://img.shields.io/badge/version-0.97.0-green)](#changelog)
+[![Sprints](https://img.shields.io/badge/sprints-110-00ff88)](#changelog)
+[![Version](https://img.shields.io/badge/version-1.1.0-green)](#changelog)
 
 **Enter an email. See what the internet knows. Fix it.**
 
@@ -70,6 +70,7 @@ Dashboard: graph, timeline, accounts,
 - **9-axis digital fingerprint** — accounts, platforms, username_reuse, breaches, geo_spread, data_leaked, email_age, security, public_exposure
 - **Generative pixel art** — deterministic 32x32 CryptoPunk-style avatar from graph eigenvalues (5.4B unique combinations, zero GPU)
 - **Deep Scan** — operator-triggered per-indicator scan across all matching scrapers, with cascade (discovered cross-type indicators are chain-scanned)
+- **Web Discovery (Phase C)** — fingerprint-driven Google dorking + 6 content extractors (rel=me, JSON-LD, social links, email, meta tags, username patterns) — explores the open web beyond the 120 fixed scrapers
 
 ### Scraper Engine
 
@@ -171,6 +172,8 @@ First registered user = **superadmin** with **Enterprise** plan.
 
 | Version | Highlights |
 |---------|-----------|
+| v1.1.0 | **Web Discovery Engine** — Phase C: Google dorking + 6 extractors + quality gate |
+| v1.0.0 | Persona confidence, tab labels, scan progress, MX lookup |
 | v0.97.0 | Timeline wayback fix, geo perf, email validation banner |
 | v0.96.0 | **Geo Consistency Scoring** — 6-signal cross-correlation |
 | v0.95.0 | **Timezone Intelligence** — infer location from activity timestamps |

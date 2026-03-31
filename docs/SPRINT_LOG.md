@@ -1,4 +1,4 @@
-# Sprint Log — xposeTIP v0.97.0
+# Sprint Log — xposeTIP v1.1.0
 
 ## Sprint history
 
@@ -47,6 +47,19 @@
 | 95 | Timezone Intelligence: sleep window detection, UTC offset inference, 27 offset→region mappings |
 | 96 | Geo Consistency Scoring: 6-signal cross-correlation (ground truth, self-reported, timezone, nationalize, language, geoip) |
 | 97 | HOTFIX: Timeline wayback leak, profile perf (country_code param), email non-deliverable banner |
+| 98 | Full documentation & landing alignment for Nexus (v0.98.0) |
+| 98b | SCANNERS.md rewrite + architecture visual updates + demo script |
+| 99 | Smarter Pass 2 queries (context from email domain + city) + photo quality tiers |
+| 100 | v1.0.0: Persona confidence formula + tab labels + scan progress + MX lookup |
+| 101 (A) | Discovery Engine: DB migration — 3 tables (discovery_sessions, discovery_leads, target_links) |
+| 102 (B) | Discovery Engine: 6 extractors (rel_me 0.95, jsonld 0.95, social_link 0.85, email 0.90, meta_tag 0.80, username 0.60) |
+| 103 (C) | Discovery Engine: Query generator (11 templates, 4 tiers) + variant engine + budget manager |
+| 104 (D) | Discovery Engine: Fetch pipeline — SerpAPI → trafilatura → extractors → quality gate → DB |
+| 104.5 | Discovery Engine: Relevance filter + nav/footer stripping |
+| 104.6 | Discovery Engine: 8 quality fixes — LinkedIn penalty, geo, disambiguation, platform blocklist, dedup |
+| 104.7 | Discovery Engine: Final quality — page relevance, common name blocklist, generic fallback removal |
+| 105 (E) | Discovery Engine: Celery task + 3 API endpoints + 4 SSE event types |
+| 106 (F) | Discovery Engine: Discovered tab — launch, lead cards, dismiss/undo, filter pills, chain view |
 
 ## Known issues
 
@@ -60,6 +73,9 @@
 - BUG A: Timeline dates — DNS/archive dates may leak into timeline (shows 1999)
 - BUG F: GitHub code search requires auth token for higher rate limits
 - Graph label cleanup (_profile/_scraper suffix in node labels) — cosmetic
+- Discovery: common first names need adding to COMMON_FIRST_NAMES blocklist
+- Discovery: JSON-LD Article titles extracted as name leads (filter @type)
+- Discovery: session stats show "0 queries" during running (updates on completion only)
 
 ## Roadmap
 
@@ -90,6 +106,14 @@
 - [ ] Corporate intelligence via Hunter.io (domain → employees)
 
 ### v1.1 — Post-Nexus (July-August)
+- [x] Phase C Web Discovery (fingerprint-driven Google dorking)
+- [x] 6 content extractors (rel=me, JSON-LD, social links, email, meta, username)
+- [x] Quality gate (5-layer anti-noise: nav strip, relevance, LinkedIn penalty, geo, page relevance)
+- [x] Discovery leads workflow (dismiss/undo, filter by status)
+- [x] Discovered tab in UI with launch button + polling
+- [ ] D3 discovery tree visualization (Sprint G)
+- [ ] Ingest workflow: Enrich target / New linked target (Sprint H)
+- [ ] Target links navigation (Sprint I)
 - [ ] Consumer auth flow (self-service scan + save)
 - [ ] Score evolution tracking (before/after comparison)
 - [ ] Reverse image search (TinEye, cross-platform photo matching)
