@@ -15,12 +15,16 @@ class EmailRepScanner(BaseScanner):
 
     async def scan(self, email: str, **kwargs) -> list[ScanResult]:
         results = []
+        headers = {"User-Agent": "xpose-tip", "Accept": "application/json"}
+        api_key = kwargs.get("api_key")
+        if api_key:
+            headers["Key"] = api_key
 
         async with httpx.AsyncClient(timeout=15) as client:
             try:
                 resp = await client.get(
                     f"https://emailrep.io/{email}",
-                    headers={"User-Agent": "xpose-tip", "Accept": "application/json"},
+                    headers=headers,
                 )
                 if resp.status_code == 429:
                     logger.warning("EmailRep rate limited for %s", email)

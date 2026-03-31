@@ -107,6 +107,11 @@ def run_module(self, scan_id: str, module_id: str, email: str):
             key = get_workspace_api_key(scan.workspace_id, "FULLCONTACT_API_KEY", session)
             if key:
                 scanner_kwargs["api_key"] = key
+        elif module_id in ("emailrep",):
+            from api.routers.settings import get_workspace_api_key
+            key = get_workspace_api_key(scan.workspace_id, "EMAILREP_API_KEY", session)
+            if key:
+                scanner_kwargs["api_key"] = key
         elif module_id in ("github_deep",):
             from api.routers.settings import get_workspace_api_key
             key = get_workspace_api_key(scan.workspace_id, "GITHUB_TOKEN", session)

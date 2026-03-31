@@ -198,6 +198,36 @@ export default function ProfileHeader({ target, findings, animScore, profileData
                   onUpdate={(code) => onTargetUpdate?.({ ...target, country_code: code })}
                 />
               </div>
+              {/* Email Status Banner */}
+              {profileData?.email_status && (
+                <div className="flex items-center gap-1.5 text-[11px] mt-1">
+                  {profileData.email_status.suspicious
+                    ? <span className="text-red-400">&#9888;&#65039; Suspicious</span>
+                    : profileData.email_status.deliverable === true
+                      ? <span className="text-[#00ff88]">&#9989; Deliverable</span>
+                      : profileData.email_status.deliverable === false
+                        ? <span className="text-red-400">&#10060; Undeliverable</span>
+                        : <span className="text-cyan-400">&#128231; DNS valid</span>}
+                  {profileData.email_status.provider && (
+                    <><span className="text-gray-600">&middot;</span><span className="text-gray-300">{profileData.email_status.provider}</span></>
+                  )}
+                  {profileData.email_status.reputation && profileData.email_status.source === 'emailrep' && (
+                    <><span className="text-gray-600">&middot;</span><span className={
+                      profileData.email_status.reputation === 'high' ? 'text-[#00ff88]' :
+                      profileData.email_status.reputation === 'medium' ? 'text-amber-400' : 'text-red-400'
+                    }>Rep: {profileData.email_status.reputation}</span></>
+                  )}
+                  {profileData.email_status.first_seen && (
+                    <><span className="text-gray-600">&middot;</span><span className="text-gray-500">Seen {profileData.email_status.first_seen.slice(0, 4)}&ndash;{(profileData.email_status.last_seen || '').slice(0, 4) || 'now'}</span></>
+                  )}
+                  {profileData.email_status.breach_count > 0 && (
+                    <><span className="text-gray-600">&middot;</span><span className="text-orange-400">{profileData.email_status.breach_count} breach{profileData.email_status.breach_count > 1 ? 'es' : ''}</span></>
+                  )}
+                  {profileData.email_status.credentials_leaked && (
+                    <><span className="text-gray-600">&middot;</span><span className="text-red-400">Credentials leaked</span></>
+                  )}
+                </div>
+              )}
               {title && company && <p className="text-xs text-gray-400 mt-0.5">{title} at {company}</p>}
               {bio && <p className="text-sm text-gray-300 mt-1 line-clamp-2">{bio}</p>}
               <div className="flex flex-wrap gap-3 mt-2 text-xs text-gray-400">

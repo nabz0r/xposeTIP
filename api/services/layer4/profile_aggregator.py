@@ -493,6 +493,77 @@ def _normalize_location(loc_string):
     return _LOCATION_ALIASES.get(loc, loc)
 
 
+def _synthesize_email_status(findings, target_id, session) -> dict:
+    """Aggregate email status from all available sources."""
+    status = {
+        "deliverable": None, "reputation": None, "suspicious": False,
+        "provider": None, "first_seen": None, "last_seen": None,
+        "breach_count": 0, "credentials_leaked": False, "source": "synthesized",
+    }
+
+    # Priority 1: EmailRep data
+    emailrep = next((f for f in findings if f.module == "emailrep" and f.category == "metadata"
+                     and f.data and f.data.get("reputation")), None)
+    if emailrep:
+        d = emailrep.data
+        status["deliverable"] = d.get("deliverable")
+        status["reputation"] = d.get("reputation")
+        status["suspicious"] = d.get("suspicious", False)
+        status["first_seen"] = d.get("first_seen")
+        status["last_seen"] = d.get("last_seen")
+        status["source"] = "emailrep"
+
+    # Priority 2: email_validator DNS
+    if status["deliverable"] is None:
+        ev = next((f for f in findings if f.module == "email_validator" and f.data), None)
+        if ev and (ev.data.get("has_dns") or ev.data.get("format_valid")):
+            status["deliverable"] = True
+
+    # Provider detection from MX/DNS
+    for f in findings:
+        if f.module in ("email_validator", "dns_deep") and f.data:
+            combined = str(f.data.get("records", [])).lower() + str(f.data.get("mx_records", [])).lower()
+            if "microsoft" in combined or "outlook" in combined or "office365" in combined:
+                status["provider"] = "Microsoft 365"
+            elif "google" in combined or "aspmx" in combined:
+                status["provider"] = "Google Workspace"
+            elif "protonmail" in combined or "proton" in combined:
+                status["provider"] = "ProtonMail"
+
+    # Breach stats
+    breach_findings = [f for f in findings if f.category == "breach"]
+    status["breach_count"] = len(breach_findings)
+    status["credentials_leaked"] = any(
+        f.data and f.data.get("credentials_leaked") for f in breach_findings if f.data
+    )
+
+    # Timeline from non-domain findings
+    if not status["first_seen"] or not status["last_seen"]:
+        dates = []
+        _SKIP = {"dns_deep", "whois_lookup", "domain_analyzer", "wayback_domain", "wayback_count"}
+        for f in findings:
+            if not f.data or f.module in _SKIP:
+                continue
+            for key in ("BreachDate", "breach_date", "created_at", "joined",
+                        "first_seen", "last_seen", "signup_date", "member_since"):
+                val = f.data.get(key)
+                if val and isinstance(val, str) and len(val) >= 4:
+                    try:
+                        year = int(val[:4])
+                        if 2000 <= year <= 2027:
+                            dates.append(val)
+                    except (ValueError, TypeError):
+                        pass
+        if dates:
+            dates.sort()
+            if not status["first_seen"]:
+                status["first_seen"] = dates[0]
+            if not status["last_seen"]:
+                status["last_seen"] = dates[-1]
+
+    return status
+
+
 def _geocode_location(loc_string):
     """Static geocoding — no API calls. Returns dict with lat/lon or None."""
     loc = _normalize_location(loc_string)
@@ -993,6 +1064,13 @@ def aggregate_profile(target_id, workspace_id, session: Session, graph_context=N
         logger.debug("Geo consistency analysis failed: %s", e)
         profile["geo_consistency"] = None
 
+    # --- Email status synthesis ---
+    try:
+        profile["email_status"] = _synthesize_email_status(findings, target_id, session)
+    except Exception as e:
+        logger.debug("Email status synthesis failed: %s", e)
+        profile["email_status"] = None
+
     # --- Profile confidence score ---
     name_sources = len(profile["names"])
     avatar_sources = len(profile["avatars"])
@@ -1410,8 +1488,11 @@ def aggregate_profile(target_id, workspace_id, session: Session, graph_context=N
 
     # Pick primary avatar: quality score first, then source priority as tiebreaker
     AVATAR_SOURCE_PRIORITY = {
-        "google_audit": 6, "github_deep": 5, "fullcontact": 4,
-        "social_enricher": 3, "epieos": 2, "gravatar": 1, "scraper_engine": 0,
+        "gravatar": 10, "google_audit": 9, "github_deep": 8, "fullcontact": 7,
+        "social_enricher": 6, "epieos": 5, "keybase": 5,
+        "linkedin": 7, "twitter": 4, "facebook": 3,
+        "steam": 1, "roblox": 1, "xbox": 1, "discord": 1,
+        "scraper_engine": 2,
     }
     primary_avatar = None
     best_score = (-1, -1)  # (quality, source_priority)
