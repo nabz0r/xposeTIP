@@ -47,6 +47,13 @@ class DiscoveryBudget:
     def time_remaining(self) -> float:
         return max(0, self.deadline - time.time())
 
+    @property
+    def queries_remaining(self) -> int:
+        return max(0, self.max_queries - self.queries_used)
+
+    def is_exhausted(self) -> bool:
+        return not self.can_query() and not self.can_fetch()
+
     def summary(self) -> dict:
         return {
             "queries": f"{self.queries_used}/{self.max_queries}",

@@ -26,6 +26,8 @@ _JUNK_KEYWORDS = {"fashion", "outfit", "recipe", "lyrics", "download", "free",
                    "buy", "shop", "a new era", "official", "cookie policy",
                    "terms of service", "privacy policy"}
 
+MAX_ROUNDS = 3
+
 
 def _is_junk_lead(lead_type: str, lead_value: str) -> bool:
     """Filter obvious false positives (page titles as names, tag lists)."""
@@ -62,8 +64,12 @@ class DiscoveryPipeline:
         self._profile = {}
 
     def run(self, profile_snapshot: dict = None) -> dict:
-        """Execute the full discovery pipeline."""
+        """Execute the full discovery pipeline with multi-round pivot loop."""
         t0 = time.time()
+        self._rounds_completed = 0
+        self._leads_per_round = []
+        self._pivot_query_count = 0
+        self._previous_queries = []
 
         # Build or use provided profile
         if profile_snapshot is None and self.db and self.target_id:
@@ -71,31 +77,57 @@ class DiscoveryPipeline:
         if not profile_snapshot:
             return {"error": "No profile snapshot available", "leads": []}
 
-        self._profile = profile_snapshot  # Store for _process_page access
+        self._profile = profile_snapshot
 
-        # Load quality gate from profile (for dry-run) or DB (already loaded in __init__)
         if self.dry_run:
             self.quality_gate.load_from_profile(profile_snapshot)
 
-        # Generate queries
-        queries = self.query_generator.generate(profile_snapshot, self.budget.max_queries)
-        logger.info("Discovery: generated %d queries for target %s", len(queries), self.target_id)
-
-        # Depth 0: search + fetch + extract
-        depth0_leads = self._run_depth(queries, depth=0)
-
-        # Depth 1+: follow URL-type leads
-        current_leads = depth0_leads
-        for depth in range(1, self.budget.max_queries):  # max_depth not in budget, use 2
-            if depth > 1:
+        # Extract email for pivot strategy
+        self._email = ""
+        for ident in profile_snapshot.get("identifiers", []):
+            if ident.get("type") == "email":
+                self._email = ident["value"]
                 break
-            url_leads = [l for l in current_leads if l.lead_type == "url"]
-            if not url_leads or not self.budget.can_fetch():
-                break
-            current_leads = self._run_url_depth(url_leads, depth)
 
+        # ═══ ROUND LOOP ═══
+        round_leads = []  # leads from current round (for pivot input)
+
+        for round_num in range(1, MAX_ROUNDS + 1):
+            if not self.budget.can_query():
+                break
+
+            # Round 1: queries from profile (existing behavior)
+            # Round 2+: queries from PivotStrategy
+            if round_num == 1:
+                queries = self.query_generator.generate(profile_snapshot, self.budget.max_queries)
+                logger.info("Discovery R%d: %d profile queries for %s", round_num, len(queries), self.target_id)
+            else:
+                queries = self._generate_pivot_queries(round_leads)
+                self._pivot_query_count += len(queries)
+                if not queries:
+                    break
+                logger.info("Discovery R%d: %d pivot queries for %s", round_num, len(queries), self.target_id)
+
+            self._emit("round_start", f"Round {round_num}: {len(queries)} queries" + (" (pivot)" if round_num > 1 else ""),
+                        {"round": round_num, "queries_planned": len(queries)}, 0)
+
+            # Execute queries
+            round_leads = self._run_depth(queries, depth=0)
+
+            # Depth 1: follow URL-type leads from this round
+            url_leads = [l for l in round_leads if l.lead_type == "url"]
+            if url_leads and self.budget.can_fetch():
+                depth1_leads = self._run_url_depth(url_leads[:5], depth=1)
+                round_leads.extend(depth1_leads)
+
+            self._rounds_completed = round_num
+            self._leads_per_round.append(len(round_leads))
+
+            self._emit("round_end", f"Round {round_num} complete: {len(round_leads)} leads",
+                        {"round": round_num, "leads_found": len(round_leads)}, 0)
+
+        # Build final summary
         elapsed = time.time() - t0
-        # Build final leads from dedup dict (not from all_leads accumulator)
         final_leads = sorted(self.seen_leads.values(), key=lambda x: -x["confidence"])
         summary = {
             "queries_executed": self.budget.queries_used,
@@ -103,6 +135,9 @@ class DiscoveryPipeline:
             "leads_found": len(final_leads),
             "leads_filtered": self.filtered_count,
             "duration_seconds": round(elapsed, 1),
+            "rounds_completed": self._rounds_completed,
+            "leads_per_round": self._leads_per_round,
+            "pivot_queries_generated": self._pivot_query_count,
             "leads": [
                 {"type": l["type"], "value": l["value"], "confidence": l["confidence"],
                  "extractor": l["extractor"], "context": l["context"]}
@@ -112,13 +147,51 @@ class DiscoveryPipeline:
 
         if self.dry_run:
             print(f"\n{'='*60}")
-            print(f"Discovery complete: {summary['leads_found']} leads found, "
-                  f"{summary['leads_filtered']} filtered, "
+            print(f"Discovery complete: {summary['leads_found']} leads, "
+                  f"{summary['rounds_completed']} rounds, "
+                  f"{summary['pivot_queries_generated']} pivots, "
                   f"{summary['queries_executed']} queries, "
                   f"{summary['pages_fetched']} pages, "
                   f"{summary['duration_seconds']}s")
 
         return summary
+
+    def _generate_pivot_queries(self, round_leads: list) -> list[dict]:
+        """Generate pivot queries from leads using PivotStrategy."""
+        try:
+            from api.discovery.pivot_strategy import generate_pivots
+
+            lead_dicts = []
+            for key, lead_data in self.seen_leads.items():
+                lead_dicts.append({
+                    "lead_type": lead_data["type"],
+                    "lead_value": lead_data["value"],
+                    "confidence": lead_data["confidence"],
+                    "id": None,
+                })
+
+            pivots = generate_pivots(
+                leads=lead_dicts,
+                profile=self._profile,
+                email=self._email,
+                budget_remaining=self.budget.queries_remaining,
+                previous_queries=self._previous_queries,
+            )
+
+            # Convert PivotQuery objects to query_data dicts for _process_query
+            return [
+                {
+                    "query": p.query,
+                    "reason": p.reason,
+                    "query_type": p.pivot_type,
+                    "template_id": f"pivot_{p.pivot_type}",
+                    "priority": p.priority,
+                }
+                for p in pivots
+            ]
+        except Exception as e:
+            logger.warning("Pivot generation failed: %s — falling back to single round", e)
+            return []
 
     def _run_depth(self, queries: list, depth: int) -> list:
         """Run queries at a given depth level."""
@@ -126,9 +199,9 @@ class DiscoveryPipeline:
         for qdata in queries:
             if not self.budget.can_query():
                 break
+            self._previous_queries.append(qdata.get("query", ""))
             new_leads = self._process_query(qdata, depth)
             leads.extend(new_leads)
-            # Incremental counter update for live polling
             self._update_session_counters()
         return leads
 
