@@ -8,6 +8,7 @@ PageRank/Markov confidence → clusters personas → pixel art avatar → remedi
 ## Current version: v1.1.0
 
 110 sprints. 120 scrapers, 35 scanners, 9 intelligence analyzers, 9-axis fingerprint.
+Scanners: 26 registered (SCANNER_REGISTRY) + 9 analyzers. 5 disabled placeholders (maigret, h8mail, ghunt, paste_monitor, databroker_check).
 Two-phase pipeline: Phase A (gather: cross-verify → Pass 1.5 → early profile → Pass 2)
 → Phase B (compute: graph → PageRank → score → profile → personas → intelligence → fingerprint).
 Deep Scan triggers cascade (discovered emails/usernames/domains → chain-scanned, depth=1, max=5).
@@ -117,7 +118,7 @@ After deploy: System → Recalculate Fingerprints → Recalculate Profiles
 - `api/discovery/query_generator.py` — fingerprint-driven search query composition
 - `api/tasks/web_discovery.py` — Celery task for Phase C
 - `scripts/seed_scrapers.py` — 120 scraper definitions
-- `scripts/seed_modules.py` — 35 scanner modules
+- `scripts/seed_modules.py` — 32 scanner modules (26 active + 5 disabled + 1 virtual)
 
 ### Frontend
 - `dashboard/src/pages/Landing.jsx` — landing page (composed from components/landing/)
