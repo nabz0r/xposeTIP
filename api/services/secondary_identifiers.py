@@ -55,17 +55,39 @@ def _extract_phones(findings):
         return []
 
     raw_phones = set()
+
+    # Pass 1: Key-based extraction from structured JSONB
+    _PHONE_KEYS = ["phoneNumber", "phone", "mobile", "telephone", "cell",
+                   "phone_number", "mobile_number", "tel"]
+
+    for f in findings:
+        if not f.data or not isinstance(f.data, dict):
+            continue
+        if f.module in PHONE_SKIP_MODULES:
+            continue
+        for key in _PHONE_KEYS:
+            val = f.data.get(key)
+            if val and isinstance(val, str) and len(val) >= 7 and val != "None":
+                raw_phones.add(val.strip())
+        # Nested: {"details": {"phone": "..."}} or {"extracted": {"phone": "..."}}
+        for nested_key in ("details", "extracted"):
+            nested = f.data.get(nested_key, {})
+            if isinstance(nested, dict):
+                for key in _PHONE_KEYS:
+                    val = nested.get(key)
+                    if val and isinstance(val, str) and len(val) >= 7 and val != "None":
+                        raw_phones.add(val.strip())
+
+    # Pass 2: Regex scan on stringified data + description
     for f in findings:
         if f.module in PHONE_SKIP_MODULES:
             continue
-        # Search in finding data JSONB + description
         text_parts = []
         if f.data and isinstance(f.data, dict):
             text_parts.append(str(f.data))
         if f.description:
             text_parts.append(f.description)
         text = " ".join(text_parts)
-
         for match in PHONE_REGEX.findall(text):
             raw_phones.add(match.strip())
 
@@ -90,6 +112,39 @@ def _extract_wallets(findings):
     wallets = []
     seen = set()
 
+    _WALLET_KEYS = ["btc_address", "bitcoin_address", "eth_address",
+                    "ethereum_address", "wallet", "crypto_address"]
+
+    # Pass 1: Key-based extraction
+    for f in findings:
+        if not f.data or not isinstance(f.data, dict):
+            continue
+        for key in _WALLET_KEYS:
+            val = f.data.get(key)
+            if not val or not isinstance(val, str) or len(val) < 26:
+                continue
+            if val.startswith(("1", "3", "bc1")) and val not in seen:
+                seen.add(val)
+                wallets.append({"chain": "btc", "address": val})
+            elif val.startswith("0x") and len(val) == 42 and val.lower() not in seen:
+                seen.add(val.lower())
+                wallets.append({"chain": "eth", "address": val.lower()})
+        # Check nested
+        for nested_key in ("details", "extracted"):
+            nested = f.data.get(nested_key, {})
+            if isinstance(nested, dict):
+                for key in _WALLET_KEYS:
+                    val = nested.get(key)
+                    if not val or not isinstance(val, str) or len(val) < 26:
+                        continue
+                    if val.startswith(("1", "3", "bc1")) and val not in seen:
+                        seen.add(val)
+                        wallets.append({"chain": "btc", "address": val})
+                    elif val.startswith("0x") and len(val) == 42 and val.lower() not in seen:
+                        seen.add(val.lower())
+                        wallets.append({"chain": "eth", "address": val.lower()})
+
+    # Pass 2: Regex scan
     for f in findings:
         text_parts = []
         if f.data and isinstance(f.data, dict):
