@@ -62,6 +62,11 @@ class ScraperEngine:
 
             email_md5 = hashlib.md5(input_value.lower().strip().encode()).hexdigest() if "@" in input_value else ""
 
+            # Phone/crypto placeholders
+            phone = input_value if scraper.get("input_type") == "phone" else ""
+            phone_clean = phone.replace("+", "") if phone else ""
+            crypto_address = input_value if scraper.get("input_type") == "crypto_wallet" else ""
+
             fmt_kwargs = dict(
                 email=input_value,
                 username=transformed,
@@ -71,6 +76,9 @@ class ScraperEngine:
                 fullname=fullname,
                 fullname_encoded=url_quote(fullname),
                 email_md5=email_md5,
+                phone=phone,
+                phone_clean=phone_clean,
+                crypto_address=crypto_address,
             )
 
             url = scraper["url_template"].format(**fmt_kwargs)

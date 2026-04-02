@@ -260,6 +260,29 @@ def finalize_scan(scan_id: str):
             logger.exception("Cross-verification failed for target %s", scan.target_id)
         logger.info("PIPELINE[%s]: cross_verify done", scan.target_id)
 
+        # A1.5. Extract secondary identifiers (phone, crypto) from findings
+        try:
+            from api.services.secondary_identifiers import extract_secondary_identifiers
+            target = session.execute(select(Target).where(Target.id == scan.target_id)).scalar_one_or_none()
+            all_findings_a15 = session.execute(
+                select(Finding).where(Finding.target_id == scan.target_id)
+            ).scalars().all()
+            if target:
+                extract_secondary_identifiers(target, all_findings_a15, session)
+        except Exception:
+            logger.exception("PIPELINE[%s]: A1.5 secondary identifier extraction failed", scan.target_id)
+        logger.info("PIPELINE[%s]: secondary_identifiers done", scan.target_id)
+
+        # A1.6. Enrich secondary identifiers via dedicated scrapers
+        try:
+            from api.services.secondary_identifier_enricher import enrich_secondary_identifiers
+            target = session.execute(select(Target).where(Target.id == scan.target_id)).scalar_one_or_none()
+            if target:
+                enrich_secondary_identifiers(target, scan, session)
+        except Exception:
+            logger.exception("PIPELINE[%s]: A1.6 secondary identifier enrichment failed", scan.target_id)
+        logger.info("PIPELINE[%s]: secondary_enrichment done", scan.target_id)
+
         # A2. Pass 1.5 — Username expansion (re-scan discovered usernames)
         try:
             from api.services.layer4.username_expander import expand_usernames

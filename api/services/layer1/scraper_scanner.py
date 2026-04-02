@@ -31,7 +31,7 @@ class ScraperScanner(BaseScanner):
             scrapers = session.execute(
                 select(Scraper).where(
                     Scraper.enabled == True,
-                    Scraper.input_type.in_(["email", "username", "domain", "first_name"]),
+                    Scraper.input_type.in_(["email", "username", "domain", "first_name", "phone", "crypto_wallet"]),
                 )
             ).scalars().all()
 
@@ -44,7 +44,26 @@ class ScraperScanner(BaseScanner):
             cleaned_prefix = re.sub(r"\d+", "", username)
             name_parts = re.split(r"[._]", cleaned_prefix)
             first_name = name_parts[0].lower() if name_parts else username
-            inputs = {"email": email, "username": username, "domain": domain, "first_name": first_name}
+            # Get secondary identifiers from profile_data (populated by A1.5)
+            _phones = []
+            _wallets = []
+            try:
+                from api.models.target import Target
+                _tgt = session.execute(select(Target).where(Target.email == email)).scalars().first()
+                if _tgt and _tgt.profile_data:
+                    _phones = _tgt.profile_data.get("phones", [])
+                    _wallets = _tgt.profile_data.get("crypto_wallets", [])
+            except Exception:
+                pass
+
+            inputs = {
+                "email": email,
+                "username": username,
+                "domain": domain,
+                "first_name": first_name,
+                "phone": _phones[0] if _phones else None,
+                "crypto_wallet": _wallets[0]["address"] if _wallets else None,
+            }
 
             # Write scraper progress to Redis
             scan_id = kwargs.get("scan_id")
@@ -60,7 +79,9 @@ class ScraperScanner(BaseScanner):
 
             total_scrapers = len(scrapers)
             for idx, scraper in enumerate(scrapers):
-                input_value = inputs.get(scraper.input_type, email)
+                input_value = inputs.get(scraper.input_type)
+                if input_value is None:
+                    continue  # Skip scrapers whose input isn't available
 
                 # Update Redis progress
                 if redis_client and scan_id:

@@ -28,3 +28,4 @@ beautifulsoup4
 google-search-results
 trafilatura
 pdfplumber
+phonenumbers>=8.13
