@@ -1,9 +1,10 @@
-# Intelligence Modules — xposeTIP v0.98.1
+# Intelligence Modules — xposeTIP v1.1.10
 
 ## Overview
 
-xposeTIP has **35 scanner modules** across 4 layers, **120 data-driven scrapers**
-across 10 categories, and **9 intelligence analyzers** that run post-scan.
+xposeTIP has **26 active scanner modules** across 4 layers, **126 data-driven scrapers**
+across 12 categories, and **9 intelligence analyzers** that run post-scan.
+5 scanner modules are disabled placeholders (maigret, h8mail, ghunt, paste_monitor, databroker_check).
 
 ## Scanner Modules (35)
 
@@ -76,7 +77,7 @@ across 10 categories, and **9 intelligence analyzers** that run post-scan.
 | Timezone Analyzer | `timezone_analyzer.py` | Timezone inference from activity timestamps |
 | Username Correlator | `username_correlator.py` | Cross-platform username reuse detection |
 
-## Scraper Engine (120 scrapers across 10 categories)
+## Scraper Engine (126 scrapers across 12 categories)
 
 | Category | Count | Examples |
 |----------|-------|---------|
@@ -87,6 +88,8 @@ across 10 categories, and **9 intelligence analyzers** that run post-scan.
 | Breach | 9 | LeakCheck, IntelX, EmailRep, HackerTarget, XposedOrNot... |
 | Archive | 9 | Wayback Domain, Wayback Count, Wayback LinkedIn/Twitter/Instagram... |
 | Public Exposure | 7 | GDELT, GNews, Google News RSS, OpenSanctions, Interpol, OpenCorporates, LBR |
+| Phone | 4 | NumVerify, Veriphone, Carrier Lookup, Google Phone Dork |
+| Financial | 3 | Blockchain.info (BTC), Blockchair (multi-chain), ChainAbuse (scam flags) |
 | Identity Estimation | 3 | Agify (age), Genderize (gender), Nationalize (nationality) |
 | Code Leak | 3 | GitHub Code Search (email), GitHub Code Search (username), GitHub Gists |
 | Social Account | 2 | Misc profile scrapers |

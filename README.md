@@ -11,9 +11,9 @@
 [![React 18](https://img.shields.io/badge/React-18-61DAFB?logo=react)](https://react.dev)
 [![Docker](https://img.shields.io/badge/Docker-Compose-2496ED?logo=docker)](https://docker.com)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
-[![Scrapers](https://img.shields.io/badge/scrapers-120-3388ff)](#scraper-engine)
-[![Sprints](https://img.shields.io/badge/sprints-110-00ff88)](#changelog)
-[![Version](https://img.shields.io/badge/version-1.1.0-green)](#changelog)
+[![Scrapers](https://img.shields.io/badge/scrapers-126-3388ff)](#scraper-engine)
+[![Sprints](https://img.shields.io/badge/sprints-110+-00ff88)](#changelog)
+[![Version](https://img.shields.io/badge/version-1.1.10-green)](#changelog)
 
 **Enter an email. See what the internet knows. Fix it.**
 
@@ -55,7 +55,7 @@ Dashboard: graph, timeline, accounts,
 
 | Layer | What | How |
 |:-----:|------|-----|
-| **L1** | Passive Recon | 120 scrapers: account enumeration, breach history, social profiles, username expansion across 72 platforms |
+| **L1** | Passive Recon | 126 scrapers: account enumeration, breach history, social profiles, username expansion, phone/crypto enrichment |
 | **L2** | Public Databases | DNS deep (SPF/DMARC/DKIM/subdomains), WHOIS, GeoIP, certificate transparency, SaaS detection |
 | **L3** | Self-Audit | Google/Microsoft OAuth app permissions, Drive public files, Gmail forwarding rules |
 | **L4** | Intelligence | Identity graph, PageRank confidence, dual scoring, persona clustering, behavioral profiling, risk assessment |
@@ -70,7 +70,9 @@ Dashboard: graph, timeline, accounts,
 - **9-axis digital fingerprint** — accounts, platforms, username_reuse, breaches, geo_spread, data_leaked, email_age, security, public_exposure
 - **Generative pixel art** — deterministic 32x32 CryptoPunk-style avatar from graph eigenvalues (5.4B unique combinations, zero GPU)
 - **Deep Scan** — operator-triggered per-indicator scan across all matching scrapers, with cascade (discovered cross-type indicators are chain-scanned)
-- **Web Discovery (Phase C)** — fingerprint-driven Google dorking + 6 content extractors (rel=me, JSON-LD, social links, email, meta tags, username patterns) — explores the open web beyond the 120 fixed scrapers
+- **Web Discovery (Phase C)** — fingerprint-driven Google dorking + 6 content extractors — explores the open web beyond the 126 fixed scrapers
+- **Phone Intelligence** — automatic phone number extraction from breach data + carrier/line type enrichment
+- **Crypto Wallet Tracking** — BTC/ETH wallet identification with balance, transaction history, and scam flag detection via ChainAbuse
 
 ### Scraper Engine
 
@@ -120,7 +122,7 @@ graph LR
     A --> C[Celery Workers<br/>Two-phase orchestration]
     A --> PG[(PostgreSQL 16)]
     A --> RD[(Redis 7<br/>Broker + Cache)]
-    C --> P1[Phase A — Gather<br/>120 scrapers + Pass 1.5 + Pass 2]
+    C --> P1[Phase A — Gather<br/>126 scrapers + Pass 1.5 + Pass 2]
     C --> P2[Phase B — Compute<br/>Graph → PageRank → Score<br/>→ Profile → Personas<br/>→ Intelligence → Fingerprint]
     P2 --> PG
     C --> DS[Deep Scan<br/>Per-indicator + Cascade]
