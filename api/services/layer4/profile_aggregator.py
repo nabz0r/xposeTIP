@@ -1519,6 +1519,12 @@ def aggregate_profile(target_id, workspace_id, session: Session, graph_context=N
         select(Target).where(Target.id == target_id, Target.workspace_id == workspace_id)
     ).scalar_one_or_none()
     if target:
+        # Preserve secondary identifiers extracted by A1.5
+        _PRESERVE_KEYS = ("phones", "crypto_wallets")
+        existing_pd = target.profile_data or {}
+        for _key in _PRESERVE_KEYS:
+            if _key in existing_pd and _key not in profile:
+                profile[_key] = existing_pd[_key]
         target.profile_data = profile
         # Operator-asserted name always wins for display_name
         has_operator_name = (getattr(target, 'user_first_name', None) or
