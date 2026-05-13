@@ -147,7 +147,7 @@ export default function Manifesto() {
                 { k: 'Behavioral', v: 'identity reconstructed from observable patterns across public sources, not assumed from registered identifiers' },
                 { k: 'Addressable', v: 'any indicator — email, username, phone, wallet — resolves into the same persona graph' },
                 { k: 'Persistent', v: 'when infrastructure rotates, the persona survives; matching is on behavioral signature, not on credentials' },
-                { k: 'Open', v: 'the format of a behavioral fingerprint is published, not proprietary; the protocol matters more than any single implementation' },
+                { k: 'Composable', v: 'identity primitives can be addressed by any tool, queried by any system, and built upon by any implementation' },
               ].map((item, i) => (
                 <div key={i} className="flex items-start gap-3">
                   <ChevronRight className="w-4 h-4 text-[#00ff88] shrink-0 mt-0.5" />
@@ -189,11 +189,7 @@ export default function Manifesto() {
               </li>
               <li className="flex items-start gap-3">
                 <ChevronRight className="w-4 h-4 text-[#00ff88] shrink-0 mt-0.5" />
-                <span>xposeTIP is not the layer itself. That's a protocol question, and protocols emerge from multiple implementations.</span>
-              </li>
-              <li className="flex items-start gap-3">
-                <ChevronRight className="w-4 h-4 text-[#00ff88] shrink-0 mt-0.5" />
-                <span>The fingerprint format will be published, not patented. So others can implement it too.</span>
+                <span>xposeTIP is not the layer itself. The layer is bigger than any single tool, and emerges from multiple implementations over time.</span>
               </li>
               <li className="flex items-start gap-3">
                 <ChevronRight className="w-4 h-4 text-[#00ff88] shrink-0 mt-0.5" />

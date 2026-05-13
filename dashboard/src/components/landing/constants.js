@@ -49,9 +49,38 @@ export const EXPOSURES = [
 ]
 
 export const AUDIENCES = [
-  { label: 'Free', desc: 'Check your own exposure.', price: '€0 forever', href: '/setup', cta: 'Start free', features: ['5 quick scans / month', 'Basic exposure check', '30 sources', 'No identity graph'] },
-  { label: 'Pro', desc: 'Full identity intelligence.', price: '€49/month', href: '/setup?plan=pro', cta: 'Start trial', features: ['Unlimited full scans', '124 sources + 3-pass pipeline', '9-axis behavioral radar', 'Identity graph + personas'] },
-  { label: 'Enterprise', desc: 'Team-scale identity ops.', price: '€299/month', href: '/setup?plan=enterprise', cta: 'Contact us', features: ['Multi-workspace + team', 'API access (SIEM/SOAR)', 'Sanctions & PEP screening', 'Custom scrapers + SLA'] },
+  {
+    label: 'Free',
+    desc: 'Check your own exposure.',
+    price: '€0 forever',
+    href: '/setup',
+    cta: 'Start free',
+    features: ['25 quick scans / month', 'Basic exposure check', '9-axis fingerprint preview', 'Single identifier'],
+  },
+  {
+    label: 'Starter',
+    desc: 'For individual professionals.',
+    price: '€49/month',
+    href: '/setup?plan=starter',
+    cta: 'Join waitlist',
+    features: ['250 full scans / month', 'Full 124-source pipeline', 'Identity graph + personas', 'PDF identity reports'],
+  },
+  {
+    label: 'Team',
+    desc: 'For security teams.',
+    price: '€299/month',
+    href: '/setup?plan=team',
+    cta: 'Join waitlist',
+    features: ['2 000 scans / month', '5 seats included', 'API access (SIEM/SOAR)', 'Multi-workspace + shared targets'],
+  },
+  {
+    label: 'Enterprise',
+    desc: 'For organizations.',
+    price: 'From €2 500/month',
+    href: 'mailto:contact@redbird.co.com?subject=xposeTIP%20Enterprise%20inquiry',
+    cta: 'Contact sales',
+    features: ['Multi-tenant + SSO', 'Audit log + SLA', 'Custom scrapers on demand', 'Managed third-party API integrations'],
+  },
 ]
 
 export function hashEmail(email) {

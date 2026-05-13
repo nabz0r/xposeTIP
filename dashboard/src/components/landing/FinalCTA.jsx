@@ -22,6 +22,9 @@ export default function FinalCTA({ email, setEmail, loading, error, onSubmit }) 
         <p className="text-xs text-gray-500 mt-3">
           Ethical OSINT &middot; Green intelligence &middot; <a href="/manifesto" className="text-[#00ff88] hover:underline">Read our manifesto</a>
         </p>
+        <p className="text-xs text-gray-600 mt-6 max-w-xl mx-auto">
+          Need a custom identity intelligence report for due diligence, compliance, or threat attribution? <a href="mailto:contact@redbird.co.com?subject=Custom%20investigation%20inquiry" className="text-gray-400 hover:text-[#00ff88] hover:underline">Contact us</a>.
+        </p>
       </div>
     </Section>
   )

@@ -12,14 +12,12 @@
 [![Docker](https://img.shields.io/badge/Docker-Compose-2496ED?logo=docker)](https://docker.com)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 [![Scrapers](https://img.shields.io/badge/scrapers-124-3388ff)](#scraper-engine)
-[![Sprints](https://img.shields.io/badge/sprints-110+-00ff88)](#changelog)
+[![Sprints](https://img.shields.io/badge/sprints-112+-00ff88)](#changelog)
 [![Version](https://img.shields.io/badge/version-1.1.10-green)](#changelog)
 
 **Enter an email. See what the internet knows. Fix it.**
 
 xpose is an identity threat intelligence platform that bridges deep OSINT tools (SpiderFoot, Maltego) with consumer-grade UX (Aura, NordProtect). One email in — identity graph, risk score, digital personas, and remediation plan out.
-
-> **Nexus 2026** — June 10-11, Luxexpo, Luxembourg. Cybersecurity category.
 
 ---
 
@@ -76,7 +74,7 @@ Dashboard: graph, timeline, accounts,
 
 ### Scraper Engine
 
-120 data-driven scrapers, all configurable via UI (URL template, extraction rules, rate limits):
+124 data-driven scrapers, all configurable via UI (URL template, extraction rules, rate limits):
 
 | Category | Count | Examples |
 |----------|-------|---------|
@@ -148,11 +146,14 @@ First registered user = **superadmin** with **Enterprise** plan.
 
 ## Plans
 
-| Plan | Price | Targets | Scans/mo | Layers | Key Features |
-|------|-------|---------|----------|--------|-------------|
-| Free | €0 | 1 | 5 | L1 | Basic exposure scan |
-| Consultant | €49/mo | 25 | 100 | L1+L2 | Persona clustering, multi-workspace, PDF reports |
-| Enterprise | €199/mo | Unlimited | Unlimited | All | Full intelligence pipeline, API access, deep scan |
+| Plan | Price | Scans/mo | Seats | Key Features |
+|------|-------|----------|-------|--------------|
+| Free | €0 | 25 | 1 | Basic exposure scan, single identifier, fingerprint preview |
+| Starter | €49/mo | 250 | 1 | Full 124-source pipeline, identity graph + personas, PDF reports |
+| Team | €299/mo | 2 000 | 5 | API access (SIEM/SOAR), multi-workspace, shared targets |
+| Enterprise | From €2 500/mo | Custom | Unlimited | Multi-tenant + SSO, audit log + SLA, custom scrapers, managed APIs |
+
+Custom identity intelligence reports (due diligence, compliance, threat attribution) are available as a separate service. [Contact us](mailto:contact@redbird.co.com).
 
 ## Principles
 
@@ -170,7 +171,7 @@ First registered user = **superadmin** with **Enterprise** plan.
 
 ## Changelog
 
-97 sprints delivered. Key milestones:
+112 sprints delivered. Key milestones:
 
 | Version | Highlights |
 |---------|-----------|
@@ -215,5 +216,5 @@ MIT License. See [LICENSE](LICENSE).
 
 <p align="center">
 Built in Luxembourg 🇱🇺 &nbsp;|&nbsp; Ethical OSINT &nbsp;|&nbsp; MIT License<br/>
-<sub>Your personal SOC for privacy.</sub>
+<sub>Identity is a layer. We're building it.</sub>
 </p>
