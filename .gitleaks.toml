@@ -1,0 +1,27 @@
+# gitleaks configuration for xposeTIP
+# Run locally: docker run --rm -v "$(pwd):/repo" zricethezav/gitleaks:latest dir /repo
+#              docker run --rm -v "$(pwd):/repo" zricethezav/gitleaks:latest git /repo
+
+[extend]
+# Inherit default ruleset
+useDefault = true
+
+[allowlist]
+description = "False positives — known dev placeholders and gitignored local files (verified not in git history)"
+
+# Exact paths only — no broad regex. These are gitignored local-only artifacts
+# that gitleaks `dir` scans but that never reach the public repository.
+# Patterns anchor to path suffix ($) without leading wildcard, so they
+# match exactly the files listed below — nothing else.
+paths = [
+  '''(^|/)\.env$''',                                # gitignored, real SerpAPI key lives here locally
+  '''(^|/)\.claude/settings\.local\.json$''',       # gitignored globally, contains short-lived test JWTs
+  '''(^|/)dashboard/package-lock\.json$''',         # npm lockfile, no real secrets
+  '''(^|/)\.gitleaks-report-[a-z]+\.json$''',       # our own scan reports — exclude from re-scans
+]
+
+# Dev placeholders that may appear in committed files (.env.example, docker-compose.yml, README)
+regexes = [
+  '''xpose:xpose''',
+  '''change-me-please-use-a-real-secret''',
+]

@@ -263,7 +263,7 @@ export default function Manifesto() {
               </ul>
               <p className="text-xs text-gray-500 mt-6 leading-relaxed">
                 These aren't aspirational. They're hardcoded. If a future version of xpose violates any of these,
-                fork the repo and call us out. The code is MIT-licensed for exactly this reason.
+                fork the repo and call us out. The code is AGPL-3.0 licensed for exactly this reason.
               </p>
             </div>
           </Pillar>
@@ -457,7 +457,7 @@ export default function Manifesto() {
             Built in Luxembourg — Ethical by constitution, not by marketing.
           </p>
           <p className="text-gray-600 text-xs mb-6">
-            Open source (MIT) so you can verify every claim on this page.
+            Open source (AGPL-3.0) so you can verify every claim on this page.
           </p>
           <div className="flex items-center justify-center gap-6 mb-8">
             <Link to="/welcome"

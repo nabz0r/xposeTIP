@@ -1,0 +1,16 @@
+# Configuration for cla-assistant.io GitHub App
+# Install the App at https://github.com/apps/cla-assistant after this lands
+
+# Path to the CLA text in this repo
+clafile: .github/CLA.md
+
+# Where signatures are stored (cla-assistant manages this automatically once the App is installed)
+# No additional config needed for default behavior
+
+# Pull request behavior
+custom-message:
+  signed-message: "Thanks for signing the CLA. Your contribution is now eligible for merge."
+  unsigned-message: "Please sign the CLA at the link above before this pull request can be merged."
+
+# Block merges until signed
+block-on-not-signed: true

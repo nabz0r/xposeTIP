@@ -10,7 +10,7 @@
 [![Python 3.11+](https://img.shields.io/badge/Python-3.11+-blue?logo=python)](https://python.org)
 [![React 18](https://img.shields.io/badge/React-18-61DAFB?logo=react)](https://react.dev)
 [![Docker](https://img.shields.io/badge/Docker-Compose-2496ED?logo=docker)](https://docker.com)
-[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
+[![License: AGPL v3](https://img.shields.io/badge/License-AGPL_v3-blue.svg)](LICENSE)
 [![Scrapers](https://img.shields.io/badge/scrapers-124-3388ff)](#scraper-engine)
 [![Sprints](https://img.shields.io/badge/sprints-112+-00ff88)](#changelog)
 [![Version](https://img.shields.io/badge/version-1.1.10-green)](#changelog)
@@ -208,13 +208,27 @@ Full sprint log: [docs/SPRINT_LOG.md](docs/SPRINT_LOG.md)
 
 `Python 3.11` `FastAPI` `SQLAlchemy 2.0` `Celery` `PostgreSQL 16` `Redis 7` `React 18` `Vite` `Tailwind CSS 4` `D3.js` `Recharts` `Docker Compose` `JWT` `OAuth 2.0` `RBAC` `ReportLab` `Fernet AES-256`
 
+## Contributing
+
+Pull requests welcome. See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines and the contributor license process.
+
+Security disclosures: see [SECURITY.md](SECURITY.md). **Do not** open public issues for vulnerabilities.
+
+## Community
+
+- **Code of Conduct**: [Contributor Covenant 2.1](CODE_OF_CONDUCT.md)
+- **License**: AGPL-3.0 (see [LICENSE](LICENSE))
+- **Commercial licensing**: see [NOTICE.md](NOTICE.md), inquiries to `contact@redbird.co.com`
+
 ## License
 
-MIT License. See [LICENSE](LICENSE).
+GNU Affero General Public License v3.0. See [LICENSE](LICENSE).
+
+Commercial licensing without AGPL obligations is available. See [NOTICE.md](NOTICE.md).
 
 ---
 
 <p align="center">
-Built in Luxembourg 🇱🇺 &nbsp;|&nbsp; Ethical OSINT &nbsp;|&nbsp; MIT License<br/>
+Built in Luxembourg 🇱🇺 &nbsp;|&nbsp; Ethical OSINT &nbsp;|&nbsp; AGPL-3.0 License<br/>
 <sub>Identity is a layer. We're building it.</sub>
 </p>

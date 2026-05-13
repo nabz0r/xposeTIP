@@ -16,3 +16,10 @@ dashboard/dist/
 dashboard/node_modules/
 .DS_Store
 *.log
+
+# Consulting case deliverables — never commit (client confidential, GDPR-sensitive)
+var/consulting/*
+!var/consulting/.gitkeep
+
+# Secrets scan reports — generated during S114 secrets audit
+.gitleaks-report-*.json
