@@ -5,9 +5,9 @@
 Identity Threat Intelligence platform. Scans email → builds identity graph →
 PageRank/Markov confidence → clusters personas → pixel art avatar → remediation plan.
 
-## Current version: v1.1.10
+## Current version: v1.1.11
 
-110 sprints. 124 scrapers, 26 scanners, 9 intelligence analyzers, 9-axis fingerprint.
+114 sprints. 124 scrapers, 26 scanners, 9 intelligence analyzers, 9-axis fingerprint.
 Scanners: 26 registered (SCANNER_REGISTRY) + 9 analyzers. 5 disabled placeholders (maigret, h8mail, ghunt, paste_monitor, databroker_check).
 Two-phase pipeline: Phase A (gather: cross-verify → A1.5 phone/crypto extraction → A1.6 secondary enrichment → Pass 1.5 → early profile → Pass 2)
 → Phase B (compute: graph → PageRank → score → profile → personas → intelligence → fingerprint).
@@ -17,6 +17,14 @@ PDF identity report export (ReportLab, dark theme, tiered by plan).
 Phase C (web discovery, operator-triggered): fingerprint-driven Google dorking → trafilatura
 page fetch → 6 extractors (rel_me/jsonld/social_link/email/meta_tag/username) → quality gate
 → discovery_leads DB. Budget: 20 queries, 50 pages, 60s default.
+
+## Recent sprints
+
+- **S114 (Sprint A)** — OSS readiness: LICENSE flip MIT→AGPL-3.0, CLA infra, gitleaks audit clean
+- **S113 (Sprint B)** — Public positioning refresh: Pricing 4-tier locked, BFP-silent manifesto sanitization, Nexus 2026 removed, contact@redbird.co.com
+- **S112 (Sprint C)** — Identity Intelligence Report templates: consulting Markdown generator + intake form, internal Play 1 delivery infra
+
+Full S107a–S111 backfill + PRD update pending (S115).
 
 ## Developer
 

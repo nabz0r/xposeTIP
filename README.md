@@ -12,7 +12,7 @@
 [![Docker](https://img.shields.io/badge/Docker-Compose-2496ED?logo=docker)](https://docker.com)
 [![License: AGPL v3](https://img.shields.io/badge/License-AGPL_v3-blue.svg)](LICENSE)
 [![Scrapers](https://img.shields.io/badge/scrapers-124-3388ff)](#scraper-engine)
-[![Sprints](https://img.shields.io/badge/sprints-112+-00ff88)](#changelog)
+[![Sprints](https://img.shields.io/badge/sprints-114+-00ff88)](#changelog)
 [![Version](https://img.shields.io/badge/version-1.1.10-green)](#changelog)
 
 **Enter an email. See what the internet knows. Fix it.**
@@ -171,7 +171,7 @@ Custom identity intelligence reports (due diligence, compliance, threat attribut
 
 ## Changelog
 
-112 sprints delivered. Key milestones:
+114 sprints delivered. Key milestones:
 
 | Version | Highlights |
 |---------|-----------|
