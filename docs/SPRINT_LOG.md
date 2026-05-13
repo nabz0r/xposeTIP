@@ -114,6 +114,7 @@
 - [x] S107e — Docs closure + `mastodon_search` dedupe: removed broken duplicate (invalid regex `"accounts":[{`), aligned all docs on 124 scrapers, PRD metadata refreshed, backfilled sprint log entries 107a-d
 - [x] S108 — Secondary identifier extraction tests: 8 pytest characterization tests on `_extract_phones` and `_extract_wallets` covering key-based extraction, nested keys, module blacklist, dedupe across findings, BTC/ETH chain detection, and SECONDARY_INPUT_TYPES contract (no production code change)
 - [x] S110 — Landing hero identity-layer rewrite: nav exposes Manifesto link, eyebrow reframed "Identity Layer · Free lookup", two intro paragraphs rewritten to identity-as-a-layer thesis (record→layer narrative), chip badges include "Identity layer · alpha", form caption rephrased
+- [x] S111 — Manifesto identity-layer thesis section: hero reframed "Identity is a layer of the internet", new Foundation section (4 cards: thesis / what the layer looks like / why this matters now / what xposeTIP is and isn't), bridge intro to four operational pillars, version bumped v2→v3
 
 ### v1.1 — Post-Nexus (July-August)
 - [x] Phase C Web Discovery (fingerprint-driven Google dorking)

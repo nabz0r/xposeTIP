@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react'
 import { Link } from 'react-router-dom'
-import { Shield, Zap, BookOpen, Lock, ArrowRight, ChevronRight, X } from 'lucide-react'
+import { Shield, Zap, BookOpen, Lock, ArrowRight, ChevronRight, X, Layers } from 'lucide-react'
 
 function useScrollReveal() {
   const ref = useRef(null)
@@ -86,13 +86,129 @@ export default function Manifesto() {
 
         {/* Hero */}
         <section className="reveal opacity-0 translate-y-8 transition-all duration-700 mb-32 text-center">
+          <div className="inline-flex items-center gap-2 text-xs font-mono text-[#00ff88]/70 mb-8">
+            <span className="w-1.5 h-1.5 bg-[#00ff88] rounded-full animate-pulse" />
+            Manifesto · The Identity Layer
+          </div>
           <h1 className="text-4xl md:text-5xl font-bold mb-6 font-['Instrument_Sans',sans-serif] leading-tight">
-            We build mirrors,<br />
-            <span className="text-[#00ff88]">not weapons.</span>
+            Identity is a layer<br />
+            <span className="text-[#00ff88]">of the internet.</span>
           </h1>
-          <p className="text-lg text-gray-400 max-w-xl mx-auto leading-relaxed">
-            xpose reveals what the internet already knows about you.
-            Not to exploit it. To fix it.
+          <p className="text-lg text-gray-400 max-w-2xl mx-auto leading-relaxed mb-4">
+            Today it's a layer-7 mess — every app's own silo, every breach the same model failing again.
+            xposeTIP is building the layer below: behavioral, addressable, persistent.
+            The foundation that was missing.
+          </p>
+          <p className="text-sm text-gray-500 max-w-xl mx-auto leading-relaxed italic">
+            We build mirrors, not weapons. We're building infrastructure, not extracting data.
+          </p>
+        </section>
+
+        {/* Foundation — the identity-layer thesis */}
+        <section className="mb-32">
+          <div className="reveal opacity-0 translate-y-8 transition-all duration-700">
+            <div className="flex items-center gap-3 mb-8">
+              <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#00ff8815' }}>
+                <Layers className="w-5 h-5" style={{ color: '#00ff88' }} />
+              </div>
+              <span className="text-xs font-mono text-gray-500">FOUNDATION</span>
+            </div>
+            <h2 className="text-2xl md:text-3xl font-bold mb-8 font-['Instrument_Sans',sans-serif] text-[#00ff88]">
+              The thesis: identity belongs in the stack.
+            </h2>
+          </div>
+
+          <div className="reveal opacity-0 translate-y-8 transition-all duration-700 bg-[#12121a] border border-[#1e1e2e] rounded-xl p-6 md:p-8 mb-6">
+            <p className="text-gray-300 leading-relaxed mb-4">
+              The internet was designed around addressing machines. IP. DNS. BGP. TLS.
+              Every primitive routes bytes between endpoints. Identity, though, was bolted on at layer 7 —
+              every app reinvents authentication, every silo holds its own record, every breach
+              proves the model is failing at scale.
+            </p>
+            <p className="text-gray-300 leading-relaxed mb-4">
+              But there's a signal underneath the silos. When infrastructure rotates,
+              something persists. The IP changes. The hash morphs. The domain rotates.
+              Yet the person behind them — their writing rhythm, their platform mix,
+              their geographic stamps, their interest signature — stays.
+            </p>
+            <p className="text-gray-300 leading-relaxed">
+              <span className="text-white font-semibold">Identity is not the credential. It's the behavior.</span>
+              {' '}And behavior, observed across enough public sources, becomes addressable.
+              That's the layer.
+            </p>
+          </div>
+
+          <div className="reveal opacity-0 translate-y-8 transition-all duration-700 bg-[#12121a] border border-[#1e1e2e] rounded-xl p-6 md:p-8 mb-6">
+            <h3 className="text-sm font-bold text-[#00ff88] uppercase tracking-wider mb-4">
+              What the layer looks like
+            </h3>
+            <div className="space-y-3 text-sm text-gray-300">
+              {[
+                { k: 'Behavioral', v: 'identity reconstructed from observable patterns across public sources, not assumed from registered identifiers' },
+                { k: 'Addressable', v: 'any indicator — email, username, phone, wallet — resolves into the same persona graph' },
+                { k: 'Persistent', v: 'when infrastructure rotates, the persona survives; matching is on behavioral signature, not on credentials' },
+                { k: 'Open', v: 'the format of a behavioral fingerprint is published, not proprietary; the protocol matters more than any single implementation' },
+              ].map((item, i) => (
+                <div key={i} className="flex items-start gap-3">
+                  <ChevronRight className="w-4 h-4 text-[#00ff88] shrink-0 mt-0.5" />
+                  <div>
+                    <span className="text-white font-semibold">{item.k}.</span>
+                    <span className="text-gray-400"> {item.v}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="reveal opacity-0 translate-y-8 transition-all duration-700 bg-[#12121a] border border-[#1e1e2e] rounded-xl p-6 md:p-8 mb-6">
+            <h3 className="text-sm font-bold text-[#00ff88] uppercase tracking-wider mb-4">
+              Why this matters now
+            </h3>
+            <p className="text-sm text-gray-400 leading-relaxed mb-3">
+              Identity-aware regulation (NIS2, DORA in the EU) is starting to treat identity as a security primitive,
+              not an application-layer concern.
+            </p>
+            <p className="text-sm text-gray-400 leading-relaxed mb-3">
+              Cyber-physical threats — supply chain compromises, deepfake-driven fraud, infrastructure rotation by APTs —
+              demand identity context faster than current SOCs can produce it.
+            </p>
+            <p className="text-sm text-gray-400 leading-relaxed">
+              The breach epidemic of 2024 — 26B records leaked — proved at scale what we already knew:
+              the silo model has failed. Something has to take its place. We think that something is a layer.
+            </p>
+          </div>
+
+          <div className="reveal opacity-0 translate-y-8 transition-all duration-700 bg-[#0a0a0f] border-2 border-[#00ff88]/30 rounded-xl p-6 md:p-8">
+            <h3 className="text-sm font-bold text-[#00ff88] uppercase tracking-wider mb-4">
+              What xposeTIP is — and what it isn't
+            </h3>
+            <ul className="space-y-3 text-sm text-gray-300">
+              <li className="flex items-start gap-3">
+                <ChevronRight className="w-4 h-4 text-[#00ff88] shrink-0 mt-0.5" />
+                <span>xposeTIP is an early implementation of this layer.</span>
+              </li>
+              <li className="flex items-start gap-3">
+                <ChevronRight className="w-4 h-4 text-[#00ff88] shrink-0 mt-0.5" />
+                <span>xposeTIP is not the layer itself. That's a protocol question, and protocols emerge from multiple implementations.</span>
+              </li>
+              <li className="flex items-start gap-3">
+                <ChevronRight className="w-4 h-4 text-[#00ff88] shrink-0 mt-0.5" />
+                <span>The fingerprint format will be published, not patented. So others can implement it too.</span>
+              </li>
+              <li className="flex items-start gap-3">
+                <ChevronRight className="w-4 h-4 text-[#00ff88] shrink-0 mt-0.5" />
+                <span>xposeTIP is operated commercially today — because the layer needs operational economics to mature, and pure open-source rarely funds the long road.</span>
+              </li>
+            </ul>
+          </div>
+        </section>
+
+        {/* Pillars intro — bridge from Foundation */}
+        <section className="reveal opacity-0 translate-y-8 transition-all duration-700 mb-16 text-center">
+          <p className="text-xs font-mono text-gray-500 uppercase tracking-wider mb-3">Four principles · How we build this layer</p>
+          <p className="text-gray-400 max-w-2xl mx-auto leading-relaxed">
+            These aren't aspirational. They're constraints we accept upfront,
+            encoded in the product. The layer is only worth building if we build it like this.
           </p>
         </section>
 
@@ -357,7 +473,7 @@ export default function Manifesto() {
               Read the architecture <ArrowRight className="w-4 h-4" />
             </Link>
           </div>
-          <p className="text-[10px] text-gray-700 font-mono">Manifesto v2 — March 2026</p>
+          <p className="text-[10px] text-gray-700 font-mono">Manifesto v3 — May 2026</p>
         </footer>
 
       </div>
