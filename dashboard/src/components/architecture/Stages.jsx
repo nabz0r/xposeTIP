@@ -13,7 +13,7 @@ export function StageCollect() {
             <h2 className="text-2xl font-bold mb-3 font-['Instrument_Sans',sans-serif]">Discover</h2>
             <p className="text-gray-400 mb-4">
               Every identity investigation starts with a single anchor: an email address.
-              xposeTIP scans <span className="text-white font-semibold">120 sources</span> in parallel —
+              xposeTIP scans <span className="text-white font-semibold">124 sources</span> in parallel —
               social networks, breach databases, archives, gaming platforms, developer registries, professional networks.
             </p>
             <p className="text-sm text-gray-500">

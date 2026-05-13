@@ -7,7 +7,7 @@ PageRank/Markov confidence → clusters personas → pixel art avatar → remedi
 
 ## Current version: v1.1.10
 
-110 sprints. 126 scrapers, 26 scanners, 9 intelligence analyzers, 9-axis fingerprint.
+110 sprints. 124 scrapers, 26 scanners, 9 intelligence analyzers, 9-axis fingerprint.
 Scanners: 26 registered (SCANNER_REGISTRY) + 9 analyzers. 5 disabled placeholders (maigret, h8mail, ghunt, paste_monitor, databroker_check).
 Two-phase pipeline: Phase A (gather: cross-verify → A1.5 phone/crypto extraction → A1.6 secondary enrichment → Pass 1.5 → early profile → Pass 2)
 → Phase B (compute: graph → PageRank → score → profile → personas → intelligence → fingerprint).
@@ -117,7 +117,7 @@ After deploy: System → Recalculate Fingerprints → Recalculate Profiles
 - `api/discovery/quality_gate.py` — dedup discovery leads vs existing findings
 - `api/discovery/query_generator.py` — fingerprint-driven search query composition
 - `api/tasks/web_discovery.py` — Celery task for Phase C
-- `scripts/seed_scrapers.py` — 126 scraper definitions
+- `scripts/seed_scrapers.py` — 124 scraper definitions
 - `scripts/seed_modules.py` — 32 scanner modules (26 active + 5 disabled + 1 virtual)
 
 ### Frontend

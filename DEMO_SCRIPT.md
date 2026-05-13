@@ -17,7 +17,7 @@
 - Type demo email into the scan form
 - Click **Scan**
 - Show real-time module progress badges updating
-- "35 scanner modules running in parallel — breaches, social networks, DNS, metadata, archives, code leaks"
+- "26 scanner modules running in parallel — breaches, social networks, DNS, metadata, archives, code leaks"
 
 **Scan completes** → navigate to target detail.
 
@@ -74,7 +74,7 @@ Walk through:
 | Plan | Price | Key Features |
 |------|-------|-------------|
 | Free | €0 | 5 scans/month, 30 sources, basic exposure |
-| Pro | €49/month | Unlimited, 120 sources, 3-pass pipeline, identity graph, personas, PDF |
+| Pro | €49/month | Unlimited, 124 sources, 3-pass pipeline, identity graph, personas, PDF |
 | Enterprise | €299/month | Multi-workspace, API, sanctions/PEP, custom scrapers, SLA |
 
 ## Demo Checklist

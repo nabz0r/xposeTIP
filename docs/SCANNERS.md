@@ -2,7 +2,7 @@
 
 ## Overview
 
-xposeTIP has **26 active scanner modules** across 4 layers, **126 data-driven scrapers**
+xposeTIP has **26 active scanner modules** across 4 layers, **124 data-driven scrapers**
 across 12 categories, and **9 intelligence analyzers** that run post-scan.
 5 scanner modules are disabled placeholders (maigret, h8mail, ghunt, paste_monitor, databroker_check).
 
@@ -77,7 +77,7 @@ across 12 categories, and **9 intelligence analyzers** that run post-scan.
 | Timezone Analyzer | `timezone_analyzer.py` | Timezone inference from activity timestamps |
 | Username Correlator | `username_correlator.py` | Cross-platform username reuse detection |
 
-## Scraper Engine (126 scrapers across 12 categories)
+## Scraper Engine (124 scrapers across 12 categories)
 
 | Category | Count | Examples |
 |----------|-------|---------|

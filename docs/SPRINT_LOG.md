@@ -80,7 +80,7 @@
 ## Roadmap
 
 ### v1.0 — Nexus 2026 (June)
-- [x] 120 scrapers, 35 scanners, 9 intelligence analyzers
+- [x] 124 scrapers, 26 scanners, 9 intelligence analyzers
 - [x] PageRank / Markov chain confidence propagation
 - [x] 32x32 pixel art identity avatars with quality gate
 - [x] Freemium quick scan (zero friction)
@@ -104,6 +104,14 @@
 - [x] Ratio-based risk level thresholds
 - [ ] Graph zoom/pan improvement
 - [ ] Corporate intelligence via Hunter.io (domain → employees)
+
+### Sprint 107 series — Phone + crypto identifiers + docs alignment (Apr–May 2026)
+
+- [x] S107a — Phantom module cleanup: 9 phantoms removed/disabled, 4 undocumented live modules documented in CLAUDE.md (v1.1.8)
+- [x] S107b — Secondary identifier infrastructure: `secondary_identifiers.py` + `secondary_identifier_enricher.py` services, `finalize_scan` A1.5/A1.6 steps, scraper engine `phone` and `crypto_wallet` input types (v1.1.9)
+- [x] S107c — Phone + crypto scrapers: 6 new scrapers seeded disabled (numverify_phone, veriphone_phone, google_phone_dork, blockchain_info_btc, blockchair_wallet, chainabuse_check), key-based JSONB extraction (v1.1.10)
+- [x] S107d — Docs sync (partial): 7 files aligned on count, did not catch all references — closure handled in S107e
+- [x] S107e — Docs closure + `mastodon_search` dedupe: removed broken duplicate (invalid regex `"accounts":[{`), aligned all docs on 124 scrapers, PRD metadata refreshed, backfilled sprint log entries 107a-d
 
 ### v1.1 — Post-Nexus (July-August)
 - [x] Phase C Web Discovery (fingerprint-driven Google dorking)

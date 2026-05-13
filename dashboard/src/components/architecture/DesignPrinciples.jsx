@@ -29,7 +29,7 @@ export default function DesignPrinciples() {
             },
             {
               num: '06', title: 'Green Intelligence', color: '#00ddcc',
-              desc: 'Maximum insight per watt. 120 scrapers, PageRank, Markov chains — on a single machine. No GPU clusters, no cloud bloat. Data-driven scrapers (JSON config, not code per source). Pixel art avatars: 5.4B combos, zero GPU. Every decision asks: is this the lightest way?',
+              desc: 'Maximum insight per watt. 124 scrapers, PageRank, Markov chains — on a single machine. No GPU clusters, no cloud bloat. Data-driven scrapers (JSON config, not code per source). Pixel art avatars: 5.4B combos, zero GPU. Every decision asks: is this the lightest way?',
             },
           ].map(p => (
             <div key={p.num} className="flex gap-4">

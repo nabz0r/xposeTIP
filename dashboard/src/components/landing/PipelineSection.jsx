@@ -16,7 +16,7 @@ export default function PipelineSection() {
             <div className="text-5xl font-mono font-bold text-[#00ff88]/15 mb-4">01</div>
             <h3 className="text-lg font-semibold mb-3 text-[#00ff88]">Discover</h3>
             <p className="text-sm text-gray-400 leading-relaxed mb-3">
-              Scan 126 sources in parallel for accounts, breaches, usernames, archives, and metadata.
+              Scan 124 sources in parallel for accounts, breaches, usernames, archives, and metadata.
             </p>
             <p className="text-xs text-gray-600">
               Social networks, dev platforms, gaming, breach databases, people search engines — everything tied to that email.

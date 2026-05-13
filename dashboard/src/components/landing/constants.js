@@ -50,7 +50,7 @@ export const EXPOSURES = [
 
 export const AUDIENCES = [
   { label: 'Free', desc: 'Check your own exposure.', price: '€0 forever', href: '/setup', cta: 'Start free', features: ['5 quick scans / month', 'Basic exposure check', '30 sources', 'No identity graph'] },
-  { label: 'Pro', desc: 'Full identity intelligence.', price: '€49/month', href: '/setup?plan=pro', cta: 'Start trial', features: ['Unlimited full scans', '126 sources + 3-pass pipeline', '9-axis behavioral radar', 'Identity graph + personas'] },
+  { label: 'Pro', desc: 'Full identity intelligence.', price: '€49/month', href: '/setup?plan=pro', cta: 'Start trial', features: ['Unlimited full scans', '124 sources + 3-pass pipeline', '9-axis behavioral radar', 'Identity graph + personas'] },
   { label: 'Enterprise', desc: 'Team-scale identity ops.', price: '€299/month', href: '/setup?plan=enterprise', cta: 'Contact us', features: ['Multi-workspace + team', 'API access (SIEM/SOAR)', 'Sanctions & PEP screening', 'Custom scrapers + SLA'] },
 ]
 

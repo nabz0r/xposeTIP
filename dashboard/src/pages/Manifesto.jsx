@@ -164,7 +164,7 @@ export default function Manifesto() {
               <div className="reveal opacity-0 translate-y-8 transition-all duration-700">
                 <p className="text-gray-400 leading-relaxed mb-6">
                   The cybersecurity industry runs 256GB RAM clusters to grep logs.
-                  We run 120 OSINT scrapers, PageRank, Markov chains, and a rules engine
+                  We run 124 OSINT scrapers, PageRank, Markov chains, and a rules engine
                   on a 7-year-old MacBook. 50 watts.
                 </p>
               </div>

@@ -1,9 +1,9 @@
-# xpose — Product Vision & Requirements Document
+# xposeTIP — Product Vision & Requirements Document
 
-**Version**: 0.1 (Draft)
-**Author**: Nabil Sontini (nabz0r) — PM + Lead Dev
-**Date**: March 2026
-**Status**: Pre-development — Vision lock
+**Version**: 1.1 (live)
+**Author**: Nabil Ksontini (nabz0r) — PM + Lead Dev
+**Date**: May 2026
+**Status**: In production — v1.1.10
 
 ---
 
