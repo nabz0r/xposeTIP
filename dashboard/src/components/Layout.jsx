@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Outlet, NavLink, useNavigate, useLocation } from 'react-router-dom'
-import { LayoutDashboard, Crosshair, Settings, LogOut, Shield, ServerCog, Building2, ChevronDown, Plus, Menu, X, Globe } from 'lucide-react'
+import { LayoutDashboard, Crosshair, Settings, LogOut, Shield, ServerCog, Building2, ChevronDown, Plus, Menu, X, Globe, Briefcase } from 'lucide-react'
 import { useAuth } from '../lib/auth'
 import { getMe, getWorkspaces, switchWorkspace } from '../lib/api'
 
@@ -9,6 +9,7 @@ const navItems = [
   { to: '/targets', icon: Crosshair, label: 'Targets' },
   { to: '/scrapers', icon: Globe, label: 'Scrapers' },
   { to: '/organization', icon: Building2, label: 'Organization' },
+  { to: '/consulting', icon: Briefcase, label: 'Consulting', roles: ['superadmin', 'admin', 'consultant'] },
   { to: '/system', icon: ServerCog, label: 'System' },
   { to: '/settings', icon: Settings, label: 'Settings' },
 ]
@@ -23,6 +24,7 @@ const pageTitles = {
   '/targets': 'Targets',
   '/scrapers': 'Scrapers',
   '/organization': 'Organization',
+  '/consulting': 'Consulting',
   '/system': 'System',
   '/settings': 'Settings',
 }
@@ -156,7 +158,9 @@ export default function Layout() {
       </div>
 
       <nav className="flex-1 px-3 space-y-1">
-        {navItems.map(({ to, icon: Icon, label }) => (
+        {navItems
+          .filter(item => !item.roles || item.roles.includes(currentWs?.role))
+          .map(({ to, icon: Icon, label }) => (
           <NavLink
             key={to}
             to={to}

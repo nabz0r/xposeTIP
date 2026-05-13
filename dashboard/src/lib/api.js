@@ -182,3 +182,25 @@ export const updateDiscoveryLead = (targetId, leadId, status) =>
     method: 'PATCH',
     body: JSON.stringify({ status }),
   })
+
+// --- Consulting ---
+export const createConsultingCase = (data) =>
+  request('/consulting/cases', { method: 'POST', body: JSON.stringify(data) })
+export const listConsultingCases = () => request('/consulting/cases')
+export const getConsultingCase = (id) => request(`/consulting/cases/${id}`)
+export const deleteConsultingCase = (id) =>
+  request(`/consulting/cases/${id}`, { method: 'DELETE' })
+export const downloadConsultingCase = async (id) => {
+  const token = localStorage.getItem('xpose_token')
+  const res = await fetch(`/api/v1/consulting/cases/${id}/download`, {
+    headers: { Authorization: `Bearer ${token}` },
+  })
+  if (!res.ok) throw new Error('Download failed')
+  const blob = await res.blob()
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  a.href = url
+  a.download = `xposeTIP_case_${id.slice(0, 8)}.md`
+  a.click()
+  URL.revokeObjectURL(url)
+}

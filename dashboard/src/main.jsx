@@ -16,6 +16,7 @@ import Landing from './pages/Landing'
 import Architecture from './pages/Architecture'
 import UserPreview from './pages/UserPreview'
 import Manifesto from './pages/Manifesto'
+import Consulting from './pages/Consulting'
 import { AuthProvider, useAuth } from './lib/auth'
 import { ToastProvider } from './components/Toast'
 
@@ -45,6 +46,7 @@ function App() {
             <Route path="system" element={<System />} />
             <Route path="settings" element={<Settings />} />
             <Route path="user-preview" element={<UserPreview />} />
+            <Route path="consulting" element={<Consulting />} />
           </Route>
         </Routes>
       </BrowserRouter>
