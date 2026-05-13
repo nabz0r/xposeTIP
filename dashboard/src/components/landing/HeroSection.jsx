@@ -14,6 +14,7 @@ export default function HeroSection({ email, setEmail, loading, error, onSubmit,
           <span className="text-[10px] font-mono text-gray-600 ml-1">TIP</span>
         </div>
         <div className="flex items-center gap-3">
+          <a href="/manifesto" className="text-sm text-gray-400 hover:text-white px-3 py-1.5 transition-colors">Manifesto</a>
           <a href="/login" className="text-sm text-gray-400 hover:text-white px-3 py-1.5 transition-colors">Sign in</a>
           <a href="/setup" className="text-sm bg-[#00ff88] text-black font-semibold rounded-lg px-4 py-1.5 hover:bg-[#00ff88]/90 transition-colors">
             Create account
@@ -34,7 +35,7 @@ export default function HeroSection({ email, setEmail, loading, error, onSubmit,
           <div className="max-w-2xl">
             <div className="inline-flex items-center gap-2 text-xs font-mono text-[#00ff88]/70 mb-8">
               <span className="w-1.5 h-1.5 bg-[#00ff88] rounded-full animate-pulse" />
-              Threat Identity Platform · Free scan
+              The Identity Layer · Free lookup
             </div>
 
             <h1 className="text-5xl md:text-6xl lg:text-7xl font-bold tracking-tight leading-[1.1] mb-6 font-['Instrument_Sans',sans-serif]">
@@ -44,16 +45,16 @@ export default function HeroSection({ email, setEmail, loading, error, onSubmit,
             </h1>
 
             <p className="text-gray-400 text-lg mb-4 max-w-lg leading-relaxed">
-              The threat intelligence industry is drowning in noise. 100,000 IOCs a day.
-              IPs that change. Blocklists stale by morning.
+              The internet treats identity as a record. Stored, siloed, lost.
+              Every app reinvents login. Every breach proves the model is broken.
             </p>
             <p className="text-gray-300 text-lg mb-6 max-w-lg leading-relaxed">
-              xposeTIP doesn't store indicators.<br />
-              <span className="text-white font-semibold">xposeTIP builds identities.</span>
+              xposeTIP treats identity as a layer.<br />
+              <span className="text-white font-semibold">Behavioral. Persistent. Foundational.</span>
             </p>
 
             <div className="flex flex-wrap gap-3 text-[11px] font-mono text-gray-500 mb-8">
-              <span className="bg-[#1e1e2e] px-2.5 py-1 rounded-full">1 email → 1 complete persona</span>
+              <span className="bg-[#1e1e2e] px-2.5 py-1 rounded-full">Identity layer · alpha</span>
               <span className="bg-[#1e1e2e] px-2.5 py-1 rounded-full">9-axis behavioral fingerprint</span>
               <span className="bg-[#1e1e2e] px-2.5 py-1 rounded-full">124 OSINT sources</span>
             </div>
@@ -63,7 +64,7 @@ export default function HeroSection({ email, setEmail, loading, error, onSubmit,
             </div>
 
             <p className="text-sm text-gray-600">
-              Enter any email. In 2 minutes, you'll see the person behind it.
+              One email in. A complete persona out. The person — not the IP — at the center of every query.
             </p>
 
             {/* Loading with phase messages */}
