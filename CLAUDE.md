@@ -24,13 +24,10 @@ page fetch → 6 extractors (rel_me/jsonld/social_link/email/meta_tag/username) 
 - **S113 (Sprint B)** — Public positioning refresh: Pricing 4-tier locked, BFP-silent manifesto sanitization, Nexus 2026 removed, contact@redbird.co.com
 - **S112 (Sprint C)** — Identity Intelligence Report templates: consulting Markdown generator + intake form, internal Play 1 delivery infra
 
-Full S107a–S111 backfill + PRD update pending (S115).
-
 ## Developer
 
 Nabil (nabz0r). Solo founder. Network/security engineer 20+ years.
 Master Mathematics (Sorbonne), CCNA, NSE 1-4, JNCIA.
-Nexus 2026 — June 10-11, Luxexpo, Luxembourg (€50 cybersecurity category, submitted).
 
 ## Tech stack
 

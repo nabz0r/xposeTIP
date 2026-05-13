@@ -13,7 +13,7 @@
 [![License: AGPL v3](https://img.shields.io/badge/License-AGPL_v3-blue.svg)](LICENSE)
 [![Scrapers](https://img.shields.io/badge/scrapers-124-3388ff)](#scraper-engine)
 [![Sprints](https://img.shields.io/badge/sprints-114+-00ff88)](#changelog)
-[![Version](https://img.shields.io/badge/version-1.1.10-green)](#changelog)
+[![Version](https://img.shields.io/badge/version-1.1.11-green)](#changelog)
 
 **Enter an email. See what the internet knows. Fix it.**
 
@@ -175,6 +175,17 @@ Custom identity intelligence reports (due diligence, compliance, threat attribut
 
 | Version | Highlights |
 |---------|-----------|
+| v1.1.11 | **OSS readiness** — LICENSE flip to AGPL-3.0, CLA infra, CONTRIBUTING/SECURITY/CODE_OF_CONDUCT, gitleaks audit clean |
+| v1.1.10 | **Phone + crypto scrapers** — 6 new sources seeded disabled, key-based JSONB extraction, profile aggregator preserves secondary identifiers |
+| v1.1.9 | **Secondary identifier pipeline** — phone + crypto infra, finalize_scan A1.5/A1.6 steps |
+| v1.1.8 | Module cleanup — 9 phantoms removed/disabled |
+| v1.1.7 | Comprehensive hotfix — timeouts, UI, email_age, tabs |
+| v1.1.6 | Stability hotfixes — graph dedup, discovery timeout, junk filter |
+| v1.1.5 | **Auto-ingest + Phase A.5 targeted rescan** |
+| v1.1.4 | Discovery loop — multi-round pivot execution |
+| v1.1.3 | PivotStrategy engine + target updated_at |
+| v1.1.2 | Email status banner + EmailRep API key + avatar fix |
+| v1.1.1 | Discovery UX — event trail, zombie guard, junk filter |
 | v1.1.0 | **Web Discovery Engine** — Phase C: Google dorking + 6 extractors + quality gate |
 | v1.0.0 | Persona confidence, tab labels, scan progress, MX lookup |
 | v0.97.0 | Timeline wayback fix, geo perf, email validation banner |

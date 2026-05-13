@@ -12,6 +12,8 @@ Why a CLA: xposeTIP is dual-licensed (AGPL-3.0 + commercial). The CLA grants the
 
 See [INSTALL.md](docs/INSTALL.md) for the full local stack setup (Docker Compose, Postgres, Redis, Celery, FastAPI, React).
 
+For scraper-specific extension instructions, see [docs/ADDING_A_SCANNER.md](docs/ADDING_A_SCANNER.md).
+
 Quick start:
 
 ```bash

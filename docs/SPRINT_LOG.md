@@ -116,6 +116,12 @@
 - [x] S110 — Landing hero identity-layer rewrite: nav exposes Manifesto link, eyebrow reframed "Identity Layer · Free lookup", two intro paragraphs rewritten to identity-as-a-layer thesis (record→layer narrative), chip badges include "Identity layer · alpha", form caption rephrased
 - [x] S111 — Manifesto identity-layer thesis section: hero reframed "Identity is a layer of the internet", new Foundation section (4 cards: thesis / what the layer looks like / why this matters now / what xposeTIP is and isn't), bridge intro to four operational pillars, version bumped v2→v3
 
+### Trilogy C→B→A — Play 1 + Play 2 foundation (May 2026)
+
+- [x] S112 — Identity Intelligence Report templates (Sprint C): consulting Markdown generator + client intake form for Play 1 delivery, internal infra only (no public surface), report tiers Quick Profile / Identity Assessment / Deep Investigation (v1.1.11)
+- [x] S113 — Public positioning refresh (Sprint B): pricing 4-tier locked on landing (Free/Starter/Team/Enterprise), manifesto BFP-silent, Nexus 2026 references removed, contact@redbird.co.com surface
+- [x] S114 — OSS readiness (Sprint A): LICENSE flip MIT→AGPL-3.0, CLA infra (cla-assistant.yml + .github/CLA.md), CONTRIBUTING.md, CODE_OF_CONDUCT.md, SECURITY.md, NOTICE.md, .gitleaks.toml audit clean (0 history leaks)
+
 ### v1.1 — Post-Nexus (July-August)
 - [x] Phase C Web Discovery (fingerprint-driven Google dorking)
 - [x] 6 content extractors (rel=me, JSON-LD, social links, email, meta, username)
