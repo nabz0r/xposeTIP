@@ -200,4 +200,12 @@ ALL_API_SERVICES = [
         "free": True,
         "module": "opensanctions_search",
     },
+    {
+        "key": "courtlistener_api_key",
+        "name": "Courtlistener",
+        "description": "US federal court records search (PACER + RECAP) — free token required, anonymous rate limit unusable",
+        "url": "https://www.courtlistener.com/sign-in/",
+        "free": True,
+        "module": "courtlistener_search",
+    },
 ]

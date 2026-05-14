@@ -406,7 +406,7 @@ def enrich_public_exposure(target_id, session: Session, scan_id=None) -> dict:
     An error in one scraper NEVER prevents other scrapers from running.
     """
     results = {
-        "media": [], "sanctions": [], "corporate": [],
+        "media": [], "sanctions": [], "corporate": [], "legal": [],
         "errors": [], "scrapers_run": 0, "findings_created": 0,
         "skipped_reason": None,
     }
@@ -601,6 +601,22 @@ def enrich_public_exposure(target_id, session: Session, scan_id=None) -> dict:
         logger.warning("PASS2: Interpol failed: %s", e)
         results["errors"].append(f"interpol_red_notices: {str(e)[:100]}")
 
+    # 5b. Courtlistener (US federal court records — MVP: collection only, no axis math)
+    try:
+        from api.scrapers.courtlistener_search import search_courtlistener
+
+        cl_api_key = _get_courtlistener_api_key(session, target.workspace_id)
+        cl_results = search_courtlistener(primary_name, api_key=cl_api_key)
+        if cl_results:
+            results["legal"].extend(cl_results)
+            logger.info("PASS2: Courtlistener found %d legal records", len(cl_results))
+
+        results["scrapers_run"] += 1
+        time.sleep(1.5)
+    except Exception as e:
+        logger.warning("PASS2: Courtlistener failed: %s", e)
+        results["errors"].append(f"courtlistener_search: {str(e)[:100]}")
+
     # === CORPORATE LAYER ===
 
     # 6. OpenCorporates
@@ -651,7 +667,7 @@ def enrich_public_exposure(target_id, session: Session, scan_id=None) -> dict:
     results["corporate"] = results["corporate"][:MAX_CORPORATE_FINDINGS]
 
     # === STORE ALL (even partial results) ===
-    all_to_store = results["media"] + results["sanctions"] + results["corporate"]
+    all_to_store = results["media"] + results["sanctions"] + results["corporate"] + results["legal"]
 
     if all_to_store:
         created = 0
@@ -706,9 +722,9 @@ def enrich_public_exposure(target_id, session: Session, scan_id=None) -> dict:
             logger.warning("PASS2: Graph edge creation failed", exc_info=True)
 
     logger.info(
-        "PASS2 complete for '%s': %d media, %d sanctions, %d corporate, %d errors",
+        "PASS2 complete for '%s': %d media, %d sanctions, %d corporate, %d legal, %d errors",
         primary_name, len(results["media"]), len(results["sanctions"]),
-        len(results["corporate"]), len(results["errors"]),
+        len(results["corporate"]), len(results["legal"]), len(results["errors"]),
     )
     if results["errors"]:
         logger.warning("PASS2 errors: %s", results["errors"])
@@ -883,6 +899,31 @@ def _get_opensanctions_api_key(session: Session, workspace_id) -> str | None:
         settings = ws.settings or {}
         for store in ("custom_api_keys", "api_keys"):
             entry = settings.get(store, {}).get("opensanctions_api_key")
+            if entry and isinstance(entry, dict) and entry.get("encrypted"):
+                try:
+                    from api.routers.settings import _get_fernet
+                    return _get_fernet().decrypt(entry["encrypted"].encode()).decode()
+                except Exception:
+                    return None
+            elif entry and isinstance(entry, str):
+                return entry
+    except Exception:
+        pass
+    return None
+
+
+def _get_courtlistener_api_key(session: Session, workspace_id) -> str | None:
+    """Retrieve Courtlistener API token from workspace settings."""
+    try:
+        from api.models.workspace import Workspace
+        ws = session.execute(
+            select(Workspace).where(Workspace.id == workspace_id)
+        ).scalar_one_or_none()
+        if not ws:
+            return None
+        settings = ws.settings or {}
+        for store in ("custom_api_keys", "api_keys"):
+            entry = settings.get(store, {}).get("courtlistener_api_key")
             if entry and isinstance(entry, dict) and entry.get("encrypted"):
                 try:
                     from api.routers.settings import _get_fernet

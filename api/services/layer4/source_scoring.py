@@ -85,6 +85,7 @@ SCRAPER_RELIABILITY_OVERRIDES = {
     "interpol_red_notices": 0.95,  # Interpol — official law enforcement source
     "opencorporates_officers": 0.85, # OpenCorporates — largest company database
     "lbr_luxembourg": 0.92,        # Luxembourg RCS — official government register
+    "courtlistener_search": 0.85,  # Courtlistener — Free Law Project, PACER archive (US fed courts)
 }
 
 
