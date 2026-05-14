@@ -6,6 +6,7 @@ import IdentityCard from '../../components/IdentityCard'
 import PersonaCard from '../../components/PersonaCard'
 import GenerativeAvatar from '../../components/GenerativeAvatar'
 import LifeTimeline from '../../components/LifeTimeline'
+import RiskSignalsBlock from '../../components/RiskSignalsBlock'
 
 const severityColors = {
   critical: '#ff2244', high: '#ff8800', medium: '#ffcc00', low: '#3388ff', info: '#666688',
@@ -319,6 +320,9 @@ export default function OverviewTab({ target, findings, profile, fingerprint, fp
           </div>
         </div>
       )}
+
+      {/* Risk Signals (phone / crypto / legal — secondary indicators) */}
+      <RiskSignalsBlock findings={findings} setActiveTab={setActiveTab} />
 
       {/* Breach summary cards — moved to dedicated Breaches tab */}
       {breachFindings.length > 0 && (
