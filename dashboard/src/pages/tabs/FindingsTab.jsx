@@ -1,6 +1,7 @@
 import React, { Fragment, useState } from 'react'
-import { ChevronDown, ChevronRight, ExternalLink, Shield, Globe, Search, Loader2 } from 'lucide-react'
+import { ChevronDown, ChevronRight, ExternalLink, Shield, Globe, Search, Loader2, Phone, Wallet, Scale } from 'lucide-react'
 import { scanIndicator } from '../../lib/api'
+import { isPhoneSignal, isCryptoSignal, isLegalSignal } from '../../lib/findingFilters'
 
 const severityColors = {
   critical: '#ff2244', high: '#ff8800', medium: '#ffcc00', low: '#3388ff', info: '#666688',
@@ -215,7 +216,7 @@ function FindingDataCard({ finding }) {
 const SCANNABLE_TYPES = new Set(['username', 'email', 'domain', 'name', 'fullname',
     'media_mention', 'sanctions_match', 'corporate_officer', 'pep_match'])
 
-export default function FindingsTab({ target, findings, filteredFindings, expanded, setExpanded, sevFilter, setSevFilter, modFilter, setModFilter, statusFilter, setStatusFilter, findingsLimit, setFindingsLimit, uniqueModules, load, patchFinding, targetId, onRefresh }) {
+export default function FindingsTab({ target, findings, filteredFindings, expanded, setExpanded, sevFilter, setSevFilter, modFilter, setModFilter, statusFilter, setStatusFilter, presetFilter, setPresetFilter, findingsLimit, setFindingsLimit, uniqueModules, load, patchFinding, targetId, onRefresh }) {
   const [scanningIndicator, setScanningIndicator] = useState(null)
 
   async function handleDeepScan(e, finding) {
@@ -263,6 +264,52 @@ export default function FindingsTab({ target, findings, filteredFindings, expand
             </div>
           </div>
         ) : null
+      })()}
+
+      {/* S120: preset filter chips — phone / crypto / legal */}
+      {(() => {
+        const phoneCount = findings.filter(isPhoneSignal).length
+        const cryptoCount = findings.filter(isCryptoSignal).length
+        const legalCount = findings.filter(isLegalSignal).length
+        if (phoneCount + cryptoCount + legalCount === 0) return null
+        const chips = [
+          { key: 'all',    label: 'All',    count: findings.length, icon: null,   color: '#666688' },
+          { key: 'phone',  label: 'Phone',  count: phoneCount,      icon: Phone,  color: '#3388ff' },
+          { key: 'crypto', label: 'Crypto', count: cryptoCount,     icon: Wallet, color: '#aa66ff' },
+          { key: 'legal',  label: 'Legal',  count: legalCount,      icon: Scale,  color: '#ff8800' },
+        ]
+        return (
+          <div className="flex flex-wrap items-center gap-2 mb-4">
+            {chips.map(({ key, label, count, icon: Icon, color }) => {
+              const active = presetFilter === key
+              return (
+                <button
+                  key={key}
+                  onClick={() => setPresetFilter(key)}
+                  disabled={key !== 'all' && count === 0}
+                  className="flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-full border transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                  style={{
+                    backgroundColor: active ? color + '26' : 'transparent',
+                    borderColor: active ? color + '80' : '#1e1e2e',
+                    color: active ? color : '#9ca3af',
+                  }}
+                >
+                  {Icon && <Icon className="w-3 h-3" />}
+                  <span>{label}</span>
+                  <span
+                    className="font-mono text-[10px] px-1.5 py-0.5 rounded-full"
+                    style={{
+                      backgroundColor: active ? color + '40' : '#1e1e2e',
+                      color: active ? color : '#6b7280',
+                    }}
+                  >
+                    {count}
+                  </span>
+                </button>
+              )
+            })}
+          </div>
+        )
       })()}
 
       {/* Filters + CSV export */}

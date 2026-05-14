@@ -1,18 +1,6 @@
 import React, { useMemo } from 'react'
 import { Phone, Wallet, Scale, ChevronRight } from 'lucide-react'
-
-const PHONE_SCRAPERS = [
-  'numverify_phone',
-  'veriphone_phone',
-  'carrier_lookup',
-  'google_phone_dork',
-]
-
-const CRYPTO_SCRAPERS = [
-  'blockchain_info_btc',
-  'blockchair_wallet',
-  'chainabuse_lookup',
-]
+import { PHONE_SCRAPERS, CRYPTO_SCRAPERS } from '../lib/findingFilters'
 
 const SEVERITY_COLORS = {
   critical: '#ff2244',
@@ -67,7 +55,7 @@ function SignalColumn({ icon: Icon, label, accent, findings, onViewAll, renderIt
   )
 }
 
-export default function RiskSignalsBlock({ findings, setActiveTab }) {
+export default function RiskSignalsBlock({ findings, onViewAll }) {
   const { phoneFindings, cryptoFindings, legalFindings } = useMemo(() => {
     const phone = []
     const crypto = []
@@ -102,7 +90,7 @@ export default function RiskSignalsBlock({ findings, setActiveTab }) {
           label="Phone"
           accent="#3388ff"
           findings={phoneFindings}
-          onViewAll={() => setActiveTab && setActiveTab('findings')}
+          onViewAll={() => onViewAll && onViewAll('phone')}
           renderItem={(f) => {
             const data = f.data || {}
             const number = data.intl_format || data.phone || f.indicator_value || ''
@@ -123,7 +111,7 @@ export default function RiskSignalsBlock({ findings, setActiveTab }) {
           label="Crypto"
           accent="#aa66ff"
           findings={cryptoFindings}
-          onViewAll={() => setActiveTab && setActiveTab('findings')}
+          onViewAll={() => onViewAll && onViewAll('crypto')}
           renderItem={(f) => {
             const data = f.data || {}
             const address = f.indicator_value || data.address || ''
@@ -145,7 +133,7 @@ export default function RiskSignalsBlock({ findings, setActiveTab }) {
           label="Legal"
           accent="#ff8800"
           findings={legalFindings}
-          onViewAll={() => setActiveTab && setActiveTab('findings')}
+          onViewAll={() => onViewAll && onViewAll('legal')}
           renderItem={(f) => {
             const data = f.data || {}
             const jurisdiction = data.jurisdiction || 'unknown'

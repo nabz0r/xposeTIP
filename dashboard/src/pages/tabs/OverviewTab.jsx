@@ -72,7 +72,7 @@ function DeepScanActivity({ findings }) {
   )
 }
 
-export default function OverviewTab({ target, findings, profile, fingerprint, fpHistory, sourcesData, socialFindings, breachFindings, geoFindings, riskAssessment, remediations, criticalCount, setActiveTab, setShowScanModal }) {
+export default function OverviewTab({ target, findings, profile, fingerprint, fpHistory, sourcesData, socialFindings, breachFindings, geoFindings, riskAssessment, remediations, criticalCount, setActiveTab, setShowScanModal, onRiskSignalViewAll }) {
   return (
     <div className="space-y-4">
       {/* Email deliverability banner — only show for genuinely bad emails */}
@@ -322,7 +322,7 @@ export default function OverviewTab({ target, findings, profile, fingerprint, fp
       )}
 
       {/* Risk Signals (phone / crypto / legal — secondary indicators) */}
-      <RiskSignalsBlock findings={findings} setActiveTab={setActiveTab} />
+      <RiskSignalsBlock findings={findings} onViewAll={onRiskSignalViewAll} />
 
       {/* Breach summary cards — moved to dedicated Breaches tab */}
       {breachFindings.length > 0 && (

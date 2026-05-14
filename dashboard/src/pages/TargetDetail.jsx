@@ -2,6 +2,7 @@ import React, { useEffect, useState, useCallback, useRef } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import { Radar, CheckCircle, AlertTriangle, XCircle, ArrowRightLeft, FileDown } from 'lucide-react'
 import { getTarget, getFindings, getScans, createScan, getModules, getScan, getGraph, patchFinding, getTargetSources, getAccounts, startOAuth, auditAccount, disconnectAccount, getFingerprint, getFingerprintHistory, getTargetProfile, cancelScan, getWorkspaces, moveTarget, getScraperProgress } from '../lib/api'
+import { applyPreset } from '../lib/findingFilters'
 import IdentityGraph from '../components/IdentityGraph'
 import LocationMap from '../components/LocationMap'
 import ProfileHeader from '../components/ProfileHeader'
@@ -42,6 +43,7 @@ export default function TargetDetail() {
   const [sevFilter, setSevFilter] = useState('all')
   const [modFilter, setModFilter] = useState('all')
   const [statusFilter, setStatusFilter] = useState('all')
+  const [presetFilter, setPresetFilter] = useState('all')
   const [findingsLimit, setFindingsLimit] = useState(20)
   // Score animation
   const [animScore, setAnimScore] = useState(0)
@@ -205,8 +207,17 @@ export default function TargetDetail() {
     </div>
   )
 
+  // S120: handle "View all N →" clicks from RiskSignalsBlock
+  const handleRiskSignalViewAll = (preset) => {
+    setPresetFilter(preset)
+    setSevFilter('all')
+    setModFilter('all')
+    setStatusFilter('all')
+    setActiveTab('findings')
+  }
+
   // Filtered findings
-  const filteredFindings = findings.filter(f => {
+  const filteredFindings = applyPreset(findings, presetFilter).filter(f => {
     if (sevFilter !== 'all' && f.severity !== sevFilter) return false
     if (modFilter !== 'all' && f.module !== modFilter) return false
     if (statusFilter !== 'all' && f.status !== statusFilter) return false
@@ -375,6 +386,7 @@ export default function TargetDetail() {
           geoFindings={geoFindings} riskAssessment={riskAssessment}
           remediations={remediations} criticalCount={criticalCount}
           setActiveTab={setActiveTab} setShowScanModal={setShowScanModal}
+          onRiskSignalViewAll={handleRiskSignalViewAll}
         />
       )}
 
@@ -385,6 +397,7 @@ export default function TargetDetail() {
           sevFilter={sevFilter} setSevFilter={setSevFilter}
           modFilter={modFilter} setModFilter={setModFilter}
           statusFilter={statusFilter} setStatusFilter={setStatusFilter}
+          presetFilter={presetFilter} setPresetFilter={setPresetFilter}
           findingsLimit={findingsLimit} setFindingsLimit={setFindingsLimit}
           uniqueModules={uniqueModules} load={load} patchFinding={patchFinding}
           targetId={id} onRefresh={load}
