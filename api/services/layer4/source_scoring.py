@@ -86,6 +86,8 @@ SCRAPER_RELIABILITY_OVERRIDES = {
     "opencorporates_officers": 0.85, # OpenCorporates — largest company database
     "lbr_luxembourg": 0.92,        # Luxembourg RCS — official government register
     "courtlistener_search": 0.85,  # Courtlistener — Free Law Project, PACER archive (US fed courts)
+    "bodacc_search": 0.90,           # BODACC — French official commercial register, gov-issued
+    "uk_gazette_search": 0.92,       # UK Gazette — Crown record since 1665, statutory authority
 }
 
 

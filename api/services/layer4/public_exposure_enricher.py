@@ -617,6 +617,36 @@ def enrich_public_exposure(target_id, session: Session, scan_id=None) -> dict:
         logger.warning("PASS2: Courtlistener failed: %s", e)
         results["errors"].append(f"courtlistener_search: {str(e)[:100]}")
 
+    # 5c. BODACC (FR commercial register / procédures collectives)
+    try:
+        from api.scrapers.bodacc_search import search_bodacc
+
+        bodacc_results = search_bodacc(primary_name)
+        if bodacc_results:
+            results["legal"].extend(bodacc_results)
+            logger.info("PASS2: BODACC found %d legal records", len(bodacc_results))
+
+        results["scrapers_run"] += 1
+        time.sleep(1.5)
+    except Exception as e:
+        logger.warning("PASS2: BODACC failed: %s", e)
+        results["errors"].append(f"bodacc_search: {str(e)[:100]}")
+
+    # 5d. UK Gazette (UK official public record / insolvency / probate)
+    try:
+        from api.scrapers.uk_gazette_search import search_uk_gazette
+
+        gazette_results = search_uk_gazette(primary_name)
+        if gazette_results:
+            results["legal"].extend(gazette_results)
+            logger.info("PASS2: UK Gazette found %d notices", len(gazette_results))
+
+        results["scrapers_run"] += 1
+        time.sleep(11)  # robots.txt mandated crawl delay
+    except Exception as e:
+        logger.warning("PASS2: UK Gazette failed: %s", e)
+        results["errors"].append(f"uk_gazette_search: {str(e)[:100]}")
+
     # === CORPORATE LAYER ===
 
     # 6. OpenCorporates
