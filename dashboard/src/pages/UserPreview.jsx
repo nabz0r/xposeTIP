@@ -351,7 +351,7 @@ export default function UserPreview() {
       <section className="py-16 text-center border-t border-[#1e1e2e]">
         <h3 className="text-xl font-bold mb-2">Want continuous monitoring?</h3>
         <p className="text-gray-500 text-sm mb-8 max-w-md mx-auto">
-          Upgrade to Consultant plan for recurring scans, dark web monitoring, and team collaboration.
+          Upgrade to Starter for recurring scans, dark web monitoring, and PDF reports.
         </p>
         <div className="flex items-center justify-center gap-4">
           <button onClick={() => navigate('/welcome')}

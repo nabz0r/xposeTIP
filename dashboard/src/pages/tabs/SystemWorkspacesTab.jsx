@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import { adminListWorkspaces, updateWorkspacePlan } from '../../lib/api'
-
-const planColors = { free: '#666688', consultant: '#3388ff', enterprise: '#00ff88' }
+import { planColors } from '../../lib/planColors'
 
 export default function SystemWorkspacesTab() {
   const [workspaces, setWorkspaces] = useState([])
@@ -54,7 +53,8 @@ export default function SystemWorkspacesTab() {
                     className="bg-[#0a0a0f] border border-[#1e1e2e] rounded px-2 py-1 text-xs focus:outline-none focus:border-[#00ff88]/50"
                     style={{ color: planColors[ws.plan] || '#666688' }}>
                     <option value="free">free</option>
-                    <option value="consultant">consultant</option>
+                    <option value="starter">starter</option>
+                    <option value="team">team</option>
                     <option value="enterprise">enterprise</option>
                   </select>
                 </td>

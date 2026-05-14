@@ -3,6 +3,7 @@ import { Outlet, NavLink, useNavigate, useLocation } from 'react-router-dom'
 import { LayoutDashboard, Crosshair, Settings, LogOut, Shield, ServerCog, Building2, ChevronDown, Plus, Menu, X, Globe, Briefcase } from 'lucide-react'
 import { useAuth } from '../lib/auth'
 import { getMe, getWorkspaces, switchWorkspace } from '../lib/api'
+import { planColor } from '../lib/planColors'
 
 const navItems = [
   { to: '/', icon: LayoutDashboard, label: 'Dashboard' },
@@ -113,11 +114,10 @@ export default function Layout() {
               <div className="truncate">
                 <span className="text-gray-300">{currentWs?.name || 'Workspace'}</span>
                 {currentWs?.plan && (
-                  <span className={`ml-1.5 text-[9px] font-mono font-bold px-1.5 py-0.5 rounded-full ${
-                    currentWs.plan === 'enterprise' ? 'bg-[#00ff88]/15 text-[#00ff88]' :
-                    currentWs.plan === 'consultant' ? 'bg-[#3388ff]/15 text-[#3388ff]' :
-                    'bg-[#666688]/15 text-[#666688]'
-                  }`}>{currentWs.plan}</span>
+                  <span className="ml-1.5 text-[9px] font-mono font-bold px-1.5 py-0.5 rounded-full"
+                    style={{ backgroundColor: planColor(currentWs.plan) + '26', color: planColor(currentWs.plan) }}>
+                    {currentWs.plan}
+                  </span>
                 )}
               </div>
               <ChevronDown className={`w-3 h-3 text-gray-500 transition-transform ${showWsSwitcher ? 'rotate-180' : ''}`} />
@@ -136,11 +136,10 @@ export default function Layout() {
                           {ws.role}
                         </span>
                         {ws.plan && (
-                          <span className={`text-[9px] font-mono px-1 py-0.5 rounded ${
-                            ws.plan === 'enterprise' ? 'bg-[#00ff88]/10 text-[#00ff88]' :
-                            ws.plan === 'consultant' ? 'bg-[#3388ff]/10 text-[#3388ff]' :
-                            'bg-[#666688]/10 text-[#666688]'
-                          }`}>{ws.plan}</span>
+                          <span className="text-[9px] font-mono px-1 py-0.5 rounded"
+                            style={{ backgroundColor: planColor(ws.plan) + '1a', color: planColor(ws.plan) }}>
+                            {ws.plan}
+                          </span>
                         )}
                         <span className="text-[10px] text-gray-600">{ws.target_count} targets</span>
                       </div>

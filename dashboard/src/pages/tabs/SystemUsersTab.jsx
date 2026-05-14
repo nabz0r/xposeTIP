@@ -1,11 +1,11 @@
 import React, { useEffect, useState } from 'react'
 import { Search, ChevronDown, ChevronRight } from 'lucide-react'
 import { adminListUsers, adminUpdateUser } from '../../lib/api'
+import { planColors } from '../../lib/planColors'
 
 const roleColors = {
   superadmin: '#ff2244', admin: '#ff8800', consultant: '#3388ff', client: '#00ff88', user: '#666688',
 }
-const planColors = { free: '#666688', consultant: '#3388ff', enterprise: '#00ff88' }
 
 export default function SystemUsersTab() {
   const [users, setUsers] = useState([])

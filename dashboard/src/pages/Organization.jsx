@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { Users, Plus, Trash2, AlertTriangle, Building2, CheckCircle, XCircle, CreditCard } from 'lucide-react'
 import { useAuth } from '../lib/auth'
 import { getWorkspaces, createWorkspace, getWorkspaceMembers, inviteMember, updateMemberRole, removeMember, deleteWorkspace, updateWorkspacePlan, getWorkspaceUsage, getPlans } from '../lib/api'
+import { planColor } from '../lib/planColors'
 
 const roleColors = {
   superadmin: '#ff2244', admin: '#ff8800', consultant: '#3388ff', client: '#00ff88', user: '#666688',
@@ -156,11 +157,10 @@ export default function Organization() {
               }`}>
               {ws.name}
               {ws.plan && (
-                <span className={`text-[9px] font-mono font-bold px-1.5 py-0.5 rounded-full uppercase ${
-                  ws.plan === 'enterprise' ? 'bg-[#00ff88]/15 text-[#00ff88]' :
-                  ws.plan === 'consultant' ? 'bg-[#3388ff]/15 text-[#3388ff]' :
-                  'bg-[#666688]/15 text-[#666688]'
-                }`}>{ws.plan}</span>
+                <span className="text-[9px] font-mono font-bold px-1.5 py-0.5 rounded-full uppercase"
+                  style={{ backgroundColor: planColor(ws.plan) + '26', color: planColor(ws.plan) }}>
+                  {ws.plan}
+                </span>
               )}
             </button>
           ))}
@@ -330,7 +330,7 @@ export default function Organization() {
                 <div className="flex items-center gap-3">
                   <h4 className="text-sm font-semibold">Current Plan</h4>
                   <span className="text-xs font-mono font-bold px-2 py-0.5 rounded-full"
-                    style={{ backgroundColor: ({ free: '#666688', consultant: '#3388ff', enterprise: '#00ff88' }[usage.plan] || '#666688') + '26', color: { free: '#666688', consultant: '#3388ff', enterprise: '#00ff88' }[usage.plan] || '#666688' }}>
+                    style={{ backgroundColor: planColor(usage.plan) + '26', color: planColor(usage.plan) }}>
                     {usage.plan_label}
                   </span>
                   {isSuperAdmin && (
@@ -373,10 +373,10 @@ export default function Organization() {
                   </div>
                 )}
                 {/* Plan cards */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-3 pt-2">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3 pt-2">
                   {Object.entries(plans).map(([name, plan]) => {
                     const isCurrent = name === usage.plan
-                    const color = { free: '#666688', consultant: '#3388ff', enterprise: '#00ff88' }[name] || '#666688'
+                    const color = planColor(name)
                     return (
                       <div key={name} className={`bg-[#0a0a0f] border rounded-xl p-4 ${isCurrent ? 'border-[' + color + ']/50' : 'border-[#1e1e2e]'}`}>
                         <div className="flex items-center justify-between mb-2">
