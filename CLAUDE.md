@@ -5,9 +5,9 @@
 Identity Threat Intelligence platform. Scans email → builds identity graph →
 PageRank/Markov confidence → clusters personas → pixel art avatar → remediation plan.
 
-## Current version: v1.1.11
+## Current version: v1.1.16
 
-114 sprints. 124 scrapers, 26 scanners, 9 intelligence analyzers, 9-axis fingerprint.
+120 sprints. 127 scrapers, 26 scanners, 9 intelligence analyzers, 9-axis fingerprint.
 Scanners: 26 registered (SCANNER_REGISTRY) + 9 analyzers. 5 disabled placeholders (maigret, h8mail, ghunt, paste_monitor, databroker_check).
 Two-phase pipeline: Phase A (gather: cross-verify → A1.5 phone/crypto extraction → A1.6 secondary enrichment → Pass 1.5 → early profile → Pass 2)
 → Phase B (compute: graph → PageRank → score → profile → personas → intelligence → fingerprint).
@@ -20,9 +20,11 @@ page fetch → 6 extractors (rel_me/jsonld/social_link/email/meta_tag/username) 
 
 ## Recent sprints
 
-- **S114 (Sprint A)** — OSS readiness: LICENSE flip MIT→AGPL-3.0, CLA infra, gitleaks audit clean
-- **S113 (Sprint B)** — Public positioning refresh: Pricing 4-tier locked, BFP-silent manifesto sanitization, Nexus 2026 removed, contact@redbird.co.com
-- **S112 (Sprint C)** — Identity Intelligence Report templates: consulting Markdown generator + intake form, internal Play 1 delivery infra
+- **S120** — Findings tab preset filter chips: shared lib/findingFilters.js classifier (single source of truth), "View all N →" from Risk Signals deep-links to filtered Findings tab, RiskSignalsBlock refactored to import from shared lib
+- **S119** — Risk Signals UI block on Overview tab: phone/crypto/legal findings surfaced in 3-column self-hiding block, accent colors match plan colors
+- **S118** — EU legal scrapers: BODACC (FR Bulletin officiel des annonces civiles et commerciales) + UK Gazette (London/Edinburgh/Belfast). Both no-auth, person-centric. Judilibre rejected (pseudonymized), UK Insolvency Register rejected (no API)
+- **S117** — Courtlistener legal scraper (MVP, collection only): US federal courts via RECAP archive, token-based auth, indicator_type=legal_record, no axis math change
+- **S116** — 4-tier SaaS plan alignment (a backend + b frontend): consultant→starter rename, new Team tier, alembic migration 012, frontend planColors shared module, pricing aligned with S113 landing
 
 ## Developer
 

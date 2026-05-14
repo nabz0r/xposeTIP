@@ -3,7 +3,7 @@
 **Version**: 1.1 (live)
 **Author**: Nabil Ksontini (nabz0r) — PM + Lead Dev
 **Date**: May 2026
-**Status**: In production — v1.1.11
+**Status**: In production — v1.1.16
 
 ---
 

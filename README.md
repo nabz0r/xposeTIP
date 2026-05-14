@@ -13,7 +13,7 @@
 [![License: AGPL v3](https://img.shields.io/badge/License-AGPL_v3-blue.svg)](LICENSE)
 [![Scrapers](https://img.shields.io/badge/scrapers-124-3388ff)](#scraper-engine)
 [![Sprints](https://img.shields.io/badge/sprints-114+-00ff88)](#changelog)
-[![Version](https://img.shields.io/badge/version-1.1.11-green)](#changelog)
+[![Version](https://img.shields.io/badge/version-1.1.16-green)](#changelog)
 
 **Enter an email. See what the internet knows. Fix it.**
 
@@ -53,7 +53,7 @@ Dashboard: graph, timeline, accounts,
 
 | Layer | What | How |
 |:-----:|------|-----|
-| **L1** | Passive Recon | 124 scrapers: account enumeration, breach history, social profiles, username expansion, phone/crypto enrichment |
+| **L1** | Passive Recon | 127 scrapers: account enumeration, breach history, social profiles, username expansion, phone/crypto enrichment, legal records (US/FR/UK) |
 | **L2** | Public Databases | DNS deep (SPF/DMARC/DKIM/subdomains), WHOIS, GeoIP, certificate transparency, SaaS detection |
 | **L3** | Self-Audit | Google/Microsoft OAuth app permissions, Drive public files, Gmail forwarding rules |
 | **L4** | Intelligence | Identity graph, PageRank confidence, dual scoring, persona clustering, behavioral profiling, risk assessment |
@@ -120,7 +120,7 @@ graph LR
     A --> C[Celery Workers<br/>Two-phase orchestration]
     A --> PG[(PostgreSQL 16)]
     A --> RD[(Redis 7<br/>Broker + Cache)]
-    C --> P1[Phase A — Gather<br/>124 scrapers + Pass 1.5 + Pass 2]
+    C --> P1[Phase A — Gather<br/>127 scrapers + Pass 1.5 + Pass 2]
     C --> P2[Phase B — Compute<br/>Graph → PageRank → Score<br/>→ Profile → Personas<br/>→ Intelligence → Fingerprint]
     P2 --> PG
     C --> DS[Deep Scan<br/>Per-indicator + Cascade]
@@ -175,6 +175,11 @@ Custom identity intelligence reports (due diligence, compliance, threat attribut
 
 | Version | Highlights |
 |---------|-----------|
+| v1.1.16 | **Findings tab preset filter chips** — closes S119 navigation loop: deep-link from Risk Signals "View all" to a filtered Findings tab. New shared lib/findingFilters.js classifier |
+| v1.1.15 | **Risk Signals UI block** on Overview tab — surface phone/crypto/legal findings in a 3-column self-hiding block (deferred S108 plan) |
+| v1.1.14 | **EU legal scrapers** — BODACC (FR procédures collectives) + UK Gazette (London/Edinburgh/Belfast). Both no-auth, person-centric |
+| v1.1.13 | **Courtlistener** US federal court scraper (MVP, collection only) — RECAP archive via REST API v4, token auth, legal_record indicator_type |
+| v1.1.12 | **4-tier SaaS alignment** — consultant→starter plan rename, new Team tier, alembic migration 012 (workspaces.plan), frontend planColors shared module |
 | v1.1.11 | **OSS readiness** — LICENSE flip to AGPL-3.0, CLA infra, CONTRIBUTING/SECURITY/CODE_OF_CONDUCT, gitleaks audit clean |
 | v1.1.10 | **Phone + crypto scrapers** — 6 new sources seeded disabled, key-based JSONB extraction, profile aggregator preserves secondary identifiers |
 | v1.1.9 | **Secondary identifier pipeline** — phone + crypto infra, finalize_scan A1.5/A1.6 steps |

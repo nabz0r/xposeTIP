@@ -122,6 +122,16 @@
 - [x] S113 — Public positioning refresh (Sprint B): pricing 4-tier locked on landing (Free/Starter/Team/Enterprise), manifesto BFP-silent, Nexus 2026 references removed, contact@redbird.co.com surface
 - [x] S114 — OSS readiness (Sprint A): LICENSE flip MIT→AGPL-3.0, CLA infra (cla-assistant.yml + .github/CLA.md), CONTRIBUTING.md, CODE_OF_CONDUCT.md, SECURITY.md, NOTICE.md, .gitleaks.toml audit clean (0 history leaks)
 
+### Post-trilogy expansion — Identity layer + UI (May 2026)
+
+- [x] S115 — Doc drift closure post-trilogy: CLAUDE.md, README changelog backfill v1.1.1–v1.1.11, SPRINT_LOG sync, CONTRIBUTING duplication resolved (docs/CONTRIBUTING.md → docs/ADDING_A_SCANNER.md), PRD status bump
+- [x] S116a — Backend plan config 4-tier alignment: free/consultant/enterprise → free/starter/team/enterprise. Scan limits 25/250/2000/unlimited. New max_seats + feature flags (custom_scrapers, sso, audit_log, multi_tenant). Alembic 012 data migration consultant→starter on workspaces.plan. pdf_generator tier gate updated. Role 'consultant' UNTOUCHED (memberships.role) (v1.1.12)
+- [x] S116b — Frontend plan rename + Team tier UI: new dashboard/src/lib/planColors.js (single source of truth), 4 inline duplicate maps removed, Layout/Organization/SystemUsersTab/SystemWorkspacesTab synced, UserPreview upgrade copy "Consultant"→"Starter", new team color #aa66ff (purple), plan cards grid md:grid-cols-3 → lg:grid-cols-4
+- [x] S117 — Courtlistener legal scraper (MVP, collection only): US federal court records via Courtlistener REST API v4 (RECAP archive). Token auth, 401 Redis disable flag, 429 retry, conservative name confidence (0.70). PASS2 dispatch block 5b after Interpol. indicator_type=legal_record (does NOT match _PE_EDGE_TYPES — axis math untouched). courtlistener_api_key registered. Source scoring 0.85 (v1.1.13)
+- [x] S118 — EU legal scrapers BODACC (FR) + UK Gazette: BODACC via Opendatasoft public dataset (procédures collectives, ventes/cessions, radiations), no auth. UK Gazette via official JSON feed (personal insolvency, bankruptcy, probate, deceased estates), no auth, 10s crawl delay per robots.txt, requires ≥2 name tokens. Pivot from Judilibre (pseudonymized at publication) and UK Insolvency Register (no public API) documented in commit (v1.1.14)
+- [x] S119 — Risk Signals UI block on Overview tab: dashboard/src/components/RiskSignalsBlock.jsx, three-column grid (phone #3388ff / crypto #aa66ff / legal #ff8800), self-hides when all empty. Per-column accents match plan colors. Filter logic: data.scraper IN PHONE_SCRAPERS/CRYPTO_SCRAPERS, indicator_type='legal_record'. Closes deferred S108 plan (v1.1.15)
+- [x] S120 — Findings tab preset filter chips: dashboard/src/lib/findingFilters.js (shared classifier, single source of truth), RiskSignalsBlock refactored to import from shared lib (no inline arrays). presetFilter state in TargetDetail, handleRiskSignalViewAll resets sev/mod/status + switches tab. FindingsTab renders self-hiding chip row (All / Phone / Crypto / Legal) above existing filter bar. Closes S119 navigation loop (v1.1.16)
+
 ### v1.1 — Post-Nexus (July-August)
 - [x] Phase C Web Discovery (fingerprint-driven Google dorking)
 - [x] 6 content extractors (rel=me, JSON-LD, social links, email, meta, username)
