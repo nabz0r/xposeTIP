@@ -683,13 +683,13 @@ def _flag_emoji(code: str) -> str:
 # Main entry point
 # ---------------------------------------------------------------------------
 
-def generate_identity_report(target, profile: dict, tier: str = "pro") -> bytes:
+def generate_identity_report(target, profile: dict, tier: str = "free") -> bytes:
     """Generate a branded PDF identity report.
 
     Args:
         target: Target SQLAlchemy model instance
         profile: target.profile_data dict
-        tier: 'free', 'pro', or 'enterprise' (from workspace plan)
+        tier: 'free', 'starter', 'team', or 'enterprise' (from workspace plan)
 
     Returns:
         PDF bytes
@@ -710,7 +710,7 @@ def generate_identity_report(target, profile: dict, tier: str = "pro") -> bytes:
     # Page 1 — Executive Summary (all tiers)
     story += _build_executive_summary(target, profile, tier, styles)
 
-    if tier in ("pro", "enterprise", "consultant"):
+    if tier in ("starter", "team", "enterprise"):
         story.append(PageBreak())
         # Page 2 — Behavioral Fingerprint
         story += _build_fingerprint_table(profile, styles)

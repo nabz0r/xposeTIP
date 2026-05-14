@@ -28,7 +28,7 @@ async def generate_pdf_report(
 
     Tier auto-detected from workspace plan:
     - free: Executive 1-pager (teaser)
-    - pro/consultant/enterprise: Full 5-page report
+    - starter/team/enterprise: Full 5-page report
     """
     # Fetch target scoped to workspace
     result = await db.execute(

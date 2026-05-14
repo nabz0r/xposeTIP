@@ -1,6 +1,6 @@
 """Plan definitions and enforcement for xpose.
 
-Three tiers: free, consultant, enterprise.
+Four SaaS tiers: free, starter, team, enterprise. Pricing locked May 2026.
 Rule: superadmin role bypasses ALL plan limits. Always. Everywhere.
 Plan lives on Workspace, not on User.
 """
@@ -10,8 +10,9 @@ PLANS = {
         "label": "Free",
         "price": 0,
         "max_targets": 1,
-        "max_scans_per_month": 5,
+        "max_scans_per_month": 25,
         "max_modules_per_scan": 7,
+        "max_seats": 1,
         "allowed_layers": [1],
         "features": {
             "intelligence_pipeline": False,
@@ -21,16 +22,44 @@ PLANS = {
             "api_access": False,
             "shared_targets": False,
             "export_pdf": False,
+            "custom_scrapers": False,
+            "sso": False,
+            "audit_log": False,
+            "multi_tenant": False,
         },
-        "description": "Get started with basic exposure scanning",
+        "description": "Check your own exposure.",
     },
-    "consultant": {
-        "label": "Consultant",
+    "starter": {
+        "label": "Starter",
         "price": 49,
         "max_targets": 25,
-        "max_scans_per_month": 100,
-        "max_modules_per_scan": 25,
+        "max_scans_per_month": 250,
+        "max_modules_per_scan": -1,
+        "max_seats": 1,
         "allowed_layers": [1, 2],
+        "features": {
+            "intelligence_pipeline": True,
+            "persona_clustering": True,
+            "fingerprint_history": True,
+            "bulk_import": True,
+            "api_access": False,
+            "shared_targets": False,
+            "export_pdf": True,
+            "custom_scrapers": False,
+            "sso": False,
+            "audit_log": False,
+            "multi_tenant": False,
+        },
+        "description": "For individual professionals.",
+    },
+    "team": {
+        "label": "Team",
+        "price": 299,
+        "max_targets": 200,
+        "max_scans_per_month": 2000,
+        "max_modules_per_scan": -1,
+        "max_seats": 5,
+        "allowed_layers": [1, 2, 3],
         "features": {
             "intelligence_pipeline": True,
             "persona_clustering": True,
@@ -38,16 +67,21 @@ PLANS = {
             "bulk_import": True,
             "api_access": True,
             "shared_targets": True,
-            "export_pdf": False,
+            "export_pdf": True,
+            "custom_scrapers": False,
+            "sso": False,
+            "audit_log": False,
+            "multi_tenant": False,
         },
-        "description": "For security consultants and small teams",
+        "description": "For security teams.",
     },
     "enterprise": {
         "label": "Enterprise",
-        "price": 199,
+        "price": 2500,
         "max_targets": -1,  # unlimited
-        "max_scans_per_month": -1,  # unlimited
-        "max_modules_per_scan": -1,  # unlimited
+        "max_scans_per_month": -1,
+        "max_modules_per_scan": -1,
+        "max_seats": -1,
         "allowed_layers": [1, 2, 3, 4],
         "features": {
             "intelligence_pipeline": True,
@@ -57,8 +91,12 @@ PLANS = {
             "api_access": True,
             "shared_targets": True,
             "export_pdf": True,
+            "custom_scrapers": True,
+            "sso": True,
+            "audit_log": True,
+            "multi_tenant": True,
         },
-        "description": "Full platform access for organizations",
+        "description": "For organizations.",
     },
 }
 
