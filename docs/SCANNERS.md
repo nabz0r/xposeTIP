@@ -77,7 +77,7 @@ across 12 categories, and **9 intelligence analyzers** that run post-scan.
 | Timezone Analyzer | `timezone_analyzer.py` | Timezone inference from activity timestamps |
 | Username Correlator | `username_correlator.py` | Cross-platform username reuse detection |
 
-## Scraper Engine (124 scrapers across 12 categories)
+## Scraper Engine (127 scrapers across 12 categories)
 
 | Category | Count | Examples |
 |----------|-------|---------|

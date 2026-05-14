@@ -73,9 +73,10 @@ Walk through:
 
 | Plan | Price | Key Features |
 |------|-------|-------------|
-| Free | €0 | 5 scans/month, 30 sources, basic exposure |
-| Pro | €49/month | Unlimited, 124 sources, 3-pass pipeline, identity graph, personas, PDF |
-| Enterprise | €299/month | Multi-workspace, API, sanctions/PEP, custom scrapers, SLA |
+| Free | €0 | 25 scans/month, 9-axis fingerprint preview, single identifier |
+| Starter | €49/month | 250 full scans/month, 127-source pipeline, identity graph + personas, PDF reports |
+| Team | €299/month | 2 000 scans/month, 5 seats, API access (SIEM/SOAR), multi-workspace + shared targets |
+| Enterprise | From €2 500/month | Multi-tenant + SSO, audit log + SLA, custom scrapers on demand, managed third-party APIs |
 
 ## Demo Checklist
 

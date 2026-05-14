@@ -149,7 +149,7 @@ First registered user = **superadmin** with **Enterprise** plan.
 | Plan | Price | Scans/mo | Seats | Key Features |
 |------|-------|----------|-------|--------------|
 | Free | €0 | 25 | 1 | Basic exposure scan, single identifier, fingerprint preview |
-| Starter | €49/mo | 250 | 1 | Full 124-source pipeline, identity graph + personas, PDF reports |
+| Starter | €49/mo | 250 | 1 | Full 127-source pipeline, identity graph + personas, PDF reports |
 | Team | €299/mo | 2 000 | 5 | API access (SIEM/SOAR), multi-workspace, shared targets |
 | Enterprise | From €2 500/mo | Custom | Unlimited | Multi-tenant + SSO, audit log + SLA, custom scrapers, managed APIs |
 

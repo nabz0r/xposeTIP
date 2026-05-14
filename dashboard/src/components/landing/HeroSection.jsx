@@ -56,7 +56,7 @@ export default function HeroSection({ email, setEmail, loading, error, onSubmit,
             <div className="flex flex-wrap gap-3 text-[11px] font-mono text-gray-500 mb-8">
               <span className="bg-[#1e1e2e] px-2.5 py-1 rounded-full">Identity layer · alpha</span>
               <span className="bg-[#1e1e2e] px-2.5 py-1 rounded-full">9-axis behavioral fingerprint</span>
-              <span className="bg-[#1e1e2e] px-2.5 py-1 rounded-full">124 OSINT sources</span>
+              <span className="bg-[#1e1e2e] px-2.5 py-1 rounded-full">127 OSINT sources</span>
             </div>
 
             <div className="mb-8">

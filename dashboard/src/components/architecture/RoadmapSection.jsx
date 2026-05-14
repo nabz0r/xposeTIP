@@ -15,7 +15,7 @@ export default function RoadmapSection() {
               version: 'v1', date: 'Now — Investigation & Awareness', color: '#00ff88',
               items: [
                 { done: true, text: 'Email → complete identity report with behavioral fingerprint' },
-                { done: true, text: '124 OSINT sources across 12 categories' },
+                { done: true, text: '127 OSINT sources across 12 categories' },
                 { done: true, text: 'Personalized PageRank confidence propagation' },
                 { done: true, text: '9-axis behavioral radar — the identity\'s digital DNA' },
                 { done: true, text: 'Digital persona clustering with name resolution' },
@@ -25,7 +25,7 @@ export default function RoadmapSection() {
                 { done: true, text: 'Operator identity assertions (ground truth override)' },
                 { done: true, text: 'Geographic exposure map (self-reported + server locations)' },
                 { done: true, text: 'Freemium quick scan with zero-friction onboarding' },
-                { done: true, text: 'Plans: Free / Pro €49 / Enterprise €299' },
+                { done: true, text: 'Plans: Free / Starter €49 / Team €299 / Enterprise from €2 500' },
                 { done: true, text: 'PDF identity report export (ReportLab, dark theme, plan-tiered)' },
                 { done: true, text: 'Deep username scan — operator-triggered investigation' },
                 { done: true, text: 'Code leak monitoring — GitHub Code Search + paste dumps' },

@@ -63,7 +63,7 @@ export const AUDIENCES = [
     price: '€49/month',
     href: '/setup?plan=starter',
     cta: 'Join waitlist',
-    features: ['250 full scans / month', 'Full 124-source pipeline', 'Identity graph + personas', 'PDF identity reports'],
+    features: ['250 full scans / month', 'Full 127-source pipeline', 'Identity graph + personas', 'PDF identity reports'],
   },
   {
     label: 'Team',
