@@ -105,7 +105,13 @@ class ScraperScanner(BaseScanner):
 
                 if not result.get("found"):
                     sc = result.get("status_code")
-                    if isinstance(sc, int) and sc >= 400:
+                    reason = result.get("not_found_reason")
+                    # S128: explicit miss signals (the service told us the entity
+                    # doesn't exist, or we hit a known block surface) are NOT errors —
+                    # they're legitimate "no data we can pull" outcomes.
+                    if reason in ("explicit_not_found", "blocked_403", "implicit_not_found"):
+                        attempt_log[scraper.name] = "no_data"
+                    elif isinstance(sc, int) and sc >= 400:
                         attempt_log[scraper.name] = f"error_{sc}"
                     else:
                         attempt_log[scraper.name] = "no_data"

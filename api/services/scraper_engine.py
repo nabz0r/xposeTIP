@@ -107,17 +107,23 @@ class ScraperEngine:
                 _h.record(scraper.get("name", "unknown"), response.status_code, _elapsed_ms)
 
             content = response.text
-            found = self._check_found(content, response.status_code, scraper)
+            found, found_reason = self._check_found(content, response.status_code, scraper)
 
             if logger.isEnabledFor(logging.DEBUG):
                 logger.debug(
-                    "SCRAPER_DEBUG %s: status=%d, found=%s, content_len=%d, preview=%s",
-                    scraper.get("name"), response.status_code, found,
+                    "SCRAPER_DEBUG %s: status=%d, found=%s, reason=%s, content_len=%d, preview=%s",
+                    scraper.get("name"), response.status_code, found, found_reason,
                     len(content), content[:300].replace('\n', ' '),
                 )
 
             if not found:
-                return {"found": False, "url": url, "status_code": response.status_code, "error": None}
+                return {
+                    "found": False,
+                    "url": url,
+                    "status_code": response.status_code,
+                    "error": None,
+                    "not_found_reason": found_reason,
+                }
 
             extracted = {}
             for rule in scraper.get("extraction_rules") or []:
@@ -178,9 +184,18 @@ class ScraperEngine:
 
         return input_value
 
-    def _check_found(self, content: str, status_code: int, scraper: dict) -> bool:
+    def _check_found(self, content: str, status_code: int, scraper: dict) -> tuple[bool, str]:
+        """Return (found, reason). Reasons:
+          success            — found=True, response matched success_indicator
+          explicit_not_found — found=False, a not_found_indicator matched the body
+                               (clean miss, even if status >= 400 — many APIs return
+                               400/422 for "user not found")
+          blocked_403        — found=False, status 403 without success match (bot block)
+          implicit_not_found — found=False, status in (404, 410, 429)
+          not_2xx            — found=False, status not 2xx and no other classification applied
+        """
         if status_code in (404, 410, 429):
-            return False
+            return (False, "implicit_not_found")
 
         success = scraper.get("success_indicator")
         not_found = scraper.get("not_found_indicators") or []
@@ -192,20 +207,22 @@ class ScraperEngine:
             # Short/broad terms like "Snapchat", "404" can appear on valid pages
             for indicator in not_found:
                 if len(indicator) >= 10 and indicator.lower() in content_lower:
-                    return False
-            return True
+                    return (False, "explicit_not_found")
+            return (True, "success")
 
         # 403 without success match = blocked
         if status_code == 403:
-            return False
+            return (False, "blocked_403")
 
         # No success match — check all not_found indicators
         for indicator in not_found:
             if indicator.lower() in content_lower:
-                return False
+                return (False, "explicit_not_found")
 
-        # Fallback: 200 = found
-        return status_code == 200
+        # Fallback: 200 = found, otherwise not_2xx
+        if status_code == 200:
+            return (True, "success")
+        return (False, "not_2xx")
 
     def _extract(self, content: str, rule: dict):
         rule_type = rule.get("type", "regex")
