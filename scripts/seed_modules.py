@@ -206,6 +206,18 @@ MODULES = [
         "supported_regions": ["*"],
         "version": "1.0.0",
     },
+    {
+        "id": "name_scraper_engine",
+        "display_name": "Name Scraper Engine",
+        "description": "Dispatches name-input scrapers (sanctions, PEP, legal records, corporate registries) using resolved or operator-asserted person name",
+        "layer": 1,
+        "category": "identity",
+        "enabled": True,
+        "requires_auth": False,
+        "rate_limit": {"rpm": 20, "cooldown_sec": 3},
+        "supported_regions": ["*"],
+        "version": "1.0.0",
+    },
     # Layer 2 — Public databases (disabled by default)
     {
         "id": "maxmind_geo",

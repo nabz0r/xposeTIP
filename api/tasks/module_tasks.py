@@ -32,6 +32,7 @@ SCANNER_REGISTRY = {
     "dns_deep": "api.services.layer2.dns_scanner:DNSDeepScanner",
     # Layer 1 — Scraper engine (DB-defined scrapers)
     "scraper_engine": "api.services.layer1.scraper_scanner:ScraperScanner",
+    "name_scraper_engine": "api.services.layer1.name_scraper_scanner:NameScraperScanner",
     # Layer 2 — Premium (requires API keys)
     "virustotal": "api.services.layer2.virustotal_scanner:VirusTotalScanner",
     "shodan": "api.services.layer2.shodan_scanner:ShodanScanner",
@@ -149,7 +150,7 @@ def run_module(self, scan_id: str, module_id: str, email: str):
                 scanner_kwargs["api_key"] = key
 
         # Pass scan_id to scraper_engine for progress tracking
-        if module_id == "scraper_engine":
+        if module_id in ("scraper_engine", "name_scraper_engine"):
             scanner_kwargs["scan_id"] = scan_id
 
         # Run async scanner in sync context
