@@ -2,6 +2,7 @@ import React, { Fragment, useState } from 'react'
 import { ChevronDown, ChevronRight, ExternalLink, Shield, Globe, Search, Loader2, Phone, Wallet, Scale } from 'lucide-react'
 import { scanIndicator } from '../../lib/api'
 import { isPhoneSignal, isCryptoSignal, isLegalSignal } from '../../lib/findingFilters'
+import ProvenanceCard from '../../components/ProvenanceCard'
 
 const severityColors = {
   critical: '#ff2244', high: '#ff8800', medium: '#ffcc00', low: '#3388ff', info: '#666688',
@@ -414,32 +415,35 @@ export default function FindingsTab({ target, findings, filteredFindings, expand
                     <td colSpan={8} className="px-6 py-4">
                       <div className="space-y-3">
                         <p className="text-sm text-gray-300">{f.description}</p>
-                        <div className="flex items-center gap-4 text-xs text-gray-400">
-                          {f.indicator_value && <span><span className="text-gray-500">Indicator:</span> <span className="font-mono">{f.indicator_value}</span></span>}
-                          {f.indicator_value && f.indicator_type && SCANNABLE_TYPES.has(f.indicator_type) && (
-                            <button
-                              onClick={(e) => handleDeepScan(e, f)}
-                              disabled={!!scanningIndicator}
-                              className={`inline-flex items-center gap-1 text-[10px] font-mono px-2 py-1 rounded transition-colors ${
-                                scanningIndicator === f.indicator_value
-                                  ? 'bg-[#00ff88]/20 text-[#00ff88] animate-pulse'
-                                  : scanningIndicator
-                                    ? 'text-gray-600 cursor-not-allowed'
-                                    : 'text-gray-400 hover:text-[#00ff88] hover:bg-[#00ff88]/10 border border-[#1e1e2e]'
-                              }`}
-                              title={`Deep scan this ${f.indicator_type} across all matching scrapers`}
-                            >
-                              {scanningIndicator === f.indicator_value ? (
-                                <><Loader2 className="w-3 h-3 animate-spin" /> Scanning...</>
-                              ) : (
-                                <><Search className="w-3 h-3" /> Deep Scan</>
-                              )}
-                            </button>
-                          )}
-                          {f.url && <a href={f.url} target="_blank" rel="noreferrer" className="text-[#3388ff] hover:underline inline-flex items-center gap-1">
-                            Open link <ExternalLink className="w-3 h-3" />
-                          </a>}
-                        </div>
+
+                        {/* S124 — Provenance card (source link is rendered inside) */}
+                        <ProvenanceCard finding={f} />
+
+                        {(f.indicator_value || (f.indicator_type && SCANNABLE_TYPES.has(f.indicator_type))) && (
+                          <div className="flex items-center gap-4 text-xs text-gray-400">
+                            {f.indicator_value && <span><span className="text-gray-500">Indicator:</span> <span className="font-mono">{f.indicator_value}</span></span>}
+                            {f.indicator_value && f.indicator_type && SCANNABLE_TYPES.has(f.indicator_type) && (
+                              <button
+                                onClick={(e) => handleDeepScan(e, f)}
+                                disabled={!!scanningIndicator}
+                                className={`inline-flex items-center gap-1 text-[10px] font-mono px-2 py-1 rounded transition-colors ${
+                                  scanningIndicator === f.indicator_value
+                                    ? 'bg-[#00ff88]/20 text-[#00ff88] animate-pulse'
+                                    : scanningIndicator
+                                      ? 'text-gray-600 cursor-not-allowed'
+                                      : 'text-gray-400 hover:text-[#00ff88] hover:bg-[#00ff88]/10 border border-[#1e1e2e]'
+                                }`}
+                                title={`Deep scan this ${f.indicator_type} across all matching scrapers`}
+                              >
+                                {scanningIndicator === f.indicator_value ? (
+                                  <><Loader2 className="w-3 h-3 animate-spin" /> Scanning...</>
+                                ) : (
+                                  <><Search className="w-3 h-3" /> Deep Scan</>
+                                )}
+                              </button>
+                            )}
+                          </div>
+                        )}
                         {/* Enriched data cards per scanner */}
                         {f.data && <FindingDataCard finding={f} />}
                         {f.data && (

@@ -94,12 +94,18 @@ SCRAPER_RELIABILITY_OVERRIDES = {
 def get_source_reliability(module_id: str, scraper_name: str | None = None) -> float:
     """Get the reliability weight for a scanner module.
 
-    For scraper_engine findings, pass scraper_name to get per-scraper overrides.
+    Post-Sprint 89, finding.module IS the scraper name for scraper_engine-dispatched
+    findings, and PASS2 (public_exposure_enricher) writes module = scraper name directly.
+    So we check SCRAPER_RELIABILITY_OVERRIDES against either the explicit scraper_name
+    argument or the module_id itself.
     """
     if module_id == "scraper_engine" and scraper_name:
         override = SCRAPER_RELIABILITY_OVERRIDES.get(scraper_name)
         if override:
             return override
+    override = SCRAPER_RELIABILITY_OVERRIDES.get(module_id)
+    if override:
+        return override
     return SOURCE_RELIABILITY.get(module_id, DEFAULT_RELIABILITY)
 
 
@@ -281,3 +287,28 @@ def compute_source_scores(target_id, session: Session) -> dict:
         "overall_confidence": overall,
         "cross_verified_count": cross_verified,
     }
+
+
+# S124 — Reliability tier thresholds (aligned with FindingsTab confidence color thresholds)
+RELIABILITY_TIER_HIGH = 0.80
+RELIABILITY_TIER_MEDIUM = 0.60
+
+TIER_LABEL = {
+    "HIGH": "Official API or structured authoritative source",
+    "MEDIUM": "Heuristic-based, verification recommended",
+    "LOW": "Inference-based, manual confirmation required",
+}
+
+
+def reliability_tier(reliability: float) -> str:
+    """Bucket a reliability score into HIGH / MEDIUM / LOW."""
+    if reliability >= RELIABILITY_TIER_HIGH:
+        return "HIGH"
+    if reliability >= RELIABILITY_TIER_MEDIUM:
+        return "MEDIUM"
+    return "LOW"
+
+
+def reliability_explanation(tier: str) -> str:
+    """Human-readable explanation of a tier."""
+    return TIER_LABEL.get(tier, "Unknown reliability tier")

@@ -1,4 +1,5 @@
 import uuid
+from collections import defaultdict
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from pydantic import BaseModel
@@ -9,6 +10,11 @@ from api.auth.dependencies import get_current_user, get_current_workspace
 from api.database import get_db
 from api.models.finding import Finding
 from api.models.user import User
+from api.services.layer4.source_scoring import (
+    get_source_reliability,
+    reliability_tier,
+    reliability_explanation,
+)
 
 router = APIRouter()
 
@@ -45,6 +51,22 @@ async def list_findings(
     user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
+    # S124 — compute cross-verification map BEFORE module/severity/etc filters so
+    # filtering by one module still surfaces peers from other modules.
+    # Target-scoped only; workspace-wide cross-verif would be too noisy.
+    cross_verif_meta: dict[str, set[str]] = {}
+    if target_id:
+        cv_q = select(Finding).where(
+            Finding.workspace_id == workspace_id,
+            Finding.target_id == target_id,
+        )
+        cv_result = await db.execute(cv_q)
+        indicator_modules: dict[str, set[str]] = defaultdict(set)
+        for f in cv_result.scalars().all():
+            if f.indicator_value:
+                indicator_modules[f.indicator_value].add(f.module)
+        cross_verif_meta = dict(indicator_modules)
+
     q = select(Finding).where(Finding.workspace_id == workspace_id)
     if target_id:
         q = q.where(Finding.target_id == target_id)
@@ -70,7 +92,12 @@ async def list_findings(
     start = (page - 1) * per_page
     findings = all_findings[start:start + per_page]
 
-    return {"items": [_finding_dict(f, include_data=True) for f in findings], "total": total, "page": page, "per_page": per_page}
+    return {
+        "items": [_finding_dict(f, include_data=True, cross_verif_meta=cross_verif_meta) for f in findings],
+        "total": total,
+        "page": page,
+        "per_page": per_page,
+    }
 
 
 @router.get("/stats")
@@ -123,7 +150,22 @@ async def get_finding(
     finding = result.scalar_one_or_none()
     if not finding:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Finding not found")
-    return _finding_dict(finding, include_data=True)
+
+    # S124 — peer findings for cross-verification context
+    peers_result = await db.execute(
+        select(Finding).where(
+            Finding.target_id == finding.target_id,
+            Finding.workspace_id == workspace_id,
+            Finding.status == "active",
+        )
+    )
+    peers = peers_result.scalars().all()
+    indicator_modules: dict[str, set[str]] = defaultdict(set)
+    for f in peers:
+        if f.indicator_value:
+            indicator_modules[f.indicator_value].add(f.module)
+
+    return _finding_dict(finding, include_data=True, cross_verif_meta=dict(indicator_modules))
 
 
 @router.patch("/{finding_id}")
@@ -151,7 +193,9 @@ async def update_finding(
     return _finding_dict(finding)
 
 
-def _finding_dict(f: Finding, include_data: bool = False) -> dict:
+def _finding_dict(f: Finding, include_data: bool = False, cross_verif_meta: dict | None = None) -> dict:
+    reliability = get_source_reliability(f.module)
+    tier = reliability_tier(reliability)
     d = {
         "id": str(f.id),
         "scan_id": str(f.scan_id),
@@ -171,7 +215,18 @@ def _finding_dict(f: Finding, include_data: bool = False) -> dict:
         "first_seen": f.first_seen.isoformat() if f.first_seen else None,
         "last_seen": f.last_seen.isoformat() if f.last_seen else None,
         "created_at": f.created_at.isoformat() if f.created_at else None,
+        # S124 — provenance metadata
+        "source_reliability": round(reliability, 2),
+        "reliability_tier": tier,
+        "reliability_label": reliability_explanation(tier),
+        "cross_verified_count": 0,
+        "cross_verified_by": [],
     }
+    if cross_verif_meta and f.indicator_value:
+        peers = cross_verif_meta.get(f.indicator_value, set()) - {f.module}
+        if peers:
+            d["cross_verified_count"] = len(peers)
+            d["cross_verified_by"] = sorted(peers)[:5]
     if include_data:
         d["data"] = f.data
     return d
