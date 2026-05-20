@@ -13,6 +13,7 @@ from api.models.audit_log import AuditLog
 from api.models.workspace_target import WorkspaceTarget
 from api.models.name_blacklist import NameBlacklist
 from api.models.discovery import DiscoverySession, DiscoveryLead, TargetLink, DiscoveryEvent
+from api.models.target_similarity import TargetSimilarity
 
 __all__ = [
     "Base",
@@ -35,4 +36,5 @@ __all__ = [
     "DiscoveryLead",
     "TargetLink",
     "DiscoveryEvent",
+    "TargetSimilarity",
 ]

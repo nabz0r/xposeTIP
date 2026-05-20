@@ -7,6 +7,7 @@ import PersonaCard from '../../components/PersonaCard'
 import GenerativeAvatar from '../../components/GenerativeAvatar'
 import LifeTimeline from '../../components/LifeTimeline'
 import RiskSignalsBlock from '../../components/RiskSignalsBlock'
+import SimilarityBlock from '../../components/SimilarityBlock'
 
 const severityColors = {
   critical: '#ff2244', high: '#ff8800', medium: '#ffcc00', low: '#3388ff', info: '#666688',
@@ -270,6 +271,9 @@ export default function OverviewTab({ target, findings, profile, fingerprint, fp
           <FingerprintTimeline snapshots={fpHistory} />
         </div>
       )}
+
+      {/* Similar Identities (self-hides when empty or unsupported) */}
+      <SimilarityBlock targetId={target?.id} />
 
       {/* Remediation Actions */}
       {remediations.length > 0 && (

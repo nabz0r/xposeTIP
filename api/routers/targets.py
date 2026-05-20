@@ -617,6 +617,79 @@ async def compare_fingerprints(
     }
 
 
+@router.get("/{target_id}/similar")
+async def get_similar_targets(
+    target_id: uuid.UUID,
+    limit: int = Query(5, ge=1, le=20),
+    min_similarity: float = Query(0.7, ge=0.0, le=1.0),
+    workspace_id: uuid.UUID = Depends(get_current_workspace),
+    user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """Return workspace targets with similar fingerprints to this one.
+
+    Reads from the precomputed target_similarities table (populated async by
+    api.tasks.similarity.recompute_similarities_for_target after each scan).
+    Lookup is O(log N) via indexed (workspace_id, target_a_id, similarity DESC).
+
+    Cached for 5 minutes (cache key: similarity:v1:{ws}:{target}:{limit}:{min_sim}).
+    Cache is pattern-invalidated by the Celery recompute task when the underlying
+    pairs change.
+    """
+    from api.services.cache import cache, TTL_MEDIUM
+    from api.models.target_similarity import TargetSimilarity
+
+    cache_key = f"similarity:v1:{workspace_id}:{target_id}:{limit}:{min_similarity}"
+    cached = cache.get(cache_key)
+    if cached is not None:
+        return {"items": cached, "cached": True}
+
+    # Read precomputed rows: target_a_id = current target, similarity >= min
+    rows = (await db.execute(
+        select(TargetSimilarity)
+        .where(
+            TargetSimilarity.workspace_id == workspace_id,
+            TargetSimilarity.target_a_id == target_id,
+            TargetSimilarity.similarity >= min_similarity,
+        )
+        .order_by(TargetSimilarity.similarity.desc())
+        .limit(limit)
+    )).scalars().all()
+
+    # Batch-fetch the matched peer targets for display data
+    if rows:
+        peer_ids = [r.target_b_id for r in rows]
+        peer_rows = (await db.execute(
+            select(Target).where(Target.id.in_(peer_ids))
+        )).scalars().all()
+        peer_map = {p.id: p for p in peer_rows}
+    else:
+        peer_map = {}
+
+    items = []
+    for row in rows:
+        peer = peer_map.get(row.target_b_id)
+        if peer is None:
+            # FK cascade should prevent this, but defend against race conditions
+            continue
+        items.append({
+            "target_id": str(peer.id),
+            "email": peer.email,
+            "display_name": peer.display_name,
+            "avatar_url": peer.avatar_url,
+            "exposure_score": peer.exposure_score,
+            "threat_score": peer.threat_score,
+            "similarity": row.similarity,
+            "axis_diffs": row.axis_diffs,
+            "first_detected": row.first_detected.isoformat() if row.first_detected else None,
+            "last_computed": row.last_computed.isoformat() if row.last_computed else None,
+            "last_scanned": peer.last_scanned.isoformat() if peer.last_scanned else None,
+        })
+
+    cache.set(cache_key, items, ttl=TTL_MEDIUM)
+    return {"items": items, "cached": False}
+
+
 _QUICK_REJECT_NAMES = {
     "lastpass", "office365", "eventbrite", "spotify", "firefox", "chrome",
     "safari", "office", "1password", "bitwarden", "dashlane", "nordpass",

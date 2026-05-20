@@ -703,6 +703,16 @@ def finalize_scan(scan_id: str):
         except Exception:
             pass
 
+        # S131 — enqueue similarity recompute (async, non-blocking)
+        try:
+            from api.tasks.similarity import recompute_similarities_for_target
+            recompute_similarities_for_target.apply_async(
+                args=[str(scan.target_id), str(scan.workspace_id)],
+                queue="scans",
+            )
+        except Exception:
+            logger.warning("Failed to enqueue similarity recompute for %s (non-fatal)", scan.target_id)
+
         # No-cascade guard: Phase A.5 rescans do NOT trigger follow-up discovery
         if getattr(scan, "scan_type", None) == "discovery_rescan":
             logger.info("Skipping discovery trigger for Phase A.5 rescan %s", scan_id)

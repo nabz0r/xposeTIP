@@ -72,6 +72,8 @@ export const bulkImportTargets = (data) => request('/targets/bulk', { method: 'P
 export const getFingerprint = (id) => request(`/targets/${id}/fingerprint`)
 export const getFingerprintHistory = (id) => request(`/targets/${id}/fingerprint/history`)
 export const compareFingerprints = (id, withId) => request(`/targets/${id}/fingerprint/compare?with=${withId}`)
+export const getSimilarTargets = (id, { limit = 5, minSimilarity = 0.7 } = {}) =>
+  request(`/targets/${id}/similar?limit=${limit}&min_similarity=${minSimilarity}`)
 export const updateTargetCountry = (targetId, countryCode) => request(`/targets/${targetId}/country`, { method: 'PATCH', body: JSON.stringify({ country_code: countryCode }) })
 export const updateTargetIdentity = (targetId, firstName, lastName) => request(`/targets/${targetId}/identity`, { method: 'PATCH', body: JSON.stringify({ first_name: firstName, last_name: lastName }) })
 export const moveTarget = (targetId, workspaceId) => request(`/targets/${targetId}/move`, { method: 'PATCH', body: JSON.stringify({ workspace_id: workspaceId }) })

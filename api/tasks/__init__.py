@@ -17,6 +17,7 @@ celery_app.conf.update(
     task_routes={
         "api.tasks.scan_orchestrator.*": {"queue": "scans"},
         "api.tasks.module_tasks.*": {"queue": "modules"},
+        "api.tasks.similarity.*": {"queue": "scans"},
     },
 )
 
@@ -25,6 +26,7 @@ celery_app.conf.update(
 import api.tasks.scan_orchestrator  # noqa: E402, F401
 import api.tasks.module_tasks  # noqa: E402, F401
 import api.tasks.web_discovery  # noqa: E402, F401
+import api.tasks.similarity  # noqa: E402, F401
 
 
 @celery_app.on_after_configure.connect
