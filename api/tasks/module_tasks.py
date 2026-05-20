@@ -71,6 +71,93 @@ def _update_progress(session, scan_id: str, module_id: str, status: str):
         session.commit()
 
 
+def persist_scanner_results(scan, results, session) -> int:
+    """Persist a list of ScanResult objects to findings + identities tables.
+
+    Shared by run_module (Celery-dispatched) and orchestrator sequential steps
+    (e.g. name_scraper_engine post-name-resolution dispatch in S127).
+
+    Returns the number of new findings created.
+    """
+    from api.models.finding import Finding
+    from api.models.identity import Identity
+    from api.services.layer4.source_scoring import compute_finding_confidence
+
+    created = 0
+    for result in results:
+        # Pre-truncate so the same trimmed values flow into the SELECT below,
+        # the Finding row, AND the Identity row (which also reads result.indicator_value).
+        if result.indicator_value and len(result.indicator_value) > 500:
+            result.indicator_value = result.indicator_value[:497] + "..."
+        if result.title and len(result.title) > 255:
+            result.title = result.title[:252] + "..."
+        if result.url and len(result.url) > 1024:
+            result.url = result.url[:1021] + "..."
+        if result.module and len(result.module) > 50:
+            result.module = result.module[:50]
+
+        # Check for duplicate
+        existing = session.execute(
+            select(Finding).where(
+                Finding.target_id == scan.target_id,
+                Finding.module == result.module,
+                Finding.title == result.title,
+                Finding.indicator_value == result.indicator_value,
+            )
+        ).scalar_one_or_none()
+
+        if existing:
+            existing.last_seen = datetime.now(timezone.utc)
+        else:
+            finding = Finding(
+                workspace_id=scan.workspace_id,
+                scan_id=scan.id,
+                target_id=scan.target_id,
+                module=result.module,
+                layer=result.layer,
+                category=result.category,
+                severity=result.severity,
+                title=result.title,
+                description=result.description,
+                data=result.data,
+                url=result.url,
+                indicator_value=result.indicator_value,
+                indicator_type=result.indicator_type,
+                verified=result.verified,
+            )
+
+            # Compute confidence based on source reliability
+            finding.confidence = compute_finding_confidence(finding)
+            session.add(finding)
+            session.flush()
+            created += 1
+
+            # Create identity node if indicator exists
+            if result.indicator_value and result.indicator_type:
+                existing_identity = session.execute(
+                    select(Identity).where(
+                        Identity.workspace_id == scan.workspace_id,
+                        Identity.target_id == scan.target_id,
+                        Identity.type == result.indicator_type,
+                        Identity.value == result.indicator_value,
+                    )
+                ).scalar_one_or_none()
+
+                if not existing_identity:
+                    identity = Identity(
+                        workspace_id=scan.workspace_id,
+                        target_id=scan.target_id,
+                        type=result.indicator_type,
+                        value=result.indicator_value,
+                        platform=result.title.split(" on ")[-1] if " on " in result.title else None,
+                        source_module=result.module,
+                        source_finding=finding.id,
+                    )
+                    session.add(identity)
+
+    return created
+
+
 @celery_app.task(name="api.tasks.module_tasks.run_module", bind=True)
 def run_module(self, scan_id: str, module_id: str, email: str):
     from api.models.scan import Scan
@@ -80,6 +167,14 @@ def run_module(self, scan_id: str, module_id: str, email: str):
     session = get_sync_session()
     try:
         _update_progress(session, scan_id, module_id, "running")
+
+        # S127: name_scraper_engine must run AFTER profile aggregation has resolved
+        # _auto_resolved_name. The orchestrator dispatches it as a sequential step
+        # post-A3 (early_profile). Defensive skip here if anything dispatched it
+        # via the parallel module list.
+        if module_id == "name_scraper_engine":
+            _update_progress(session, scan_id, module_id, "deferred_to_orchestrator")
+            return {"module": module_id, "skipped": True, "reason": "deferred to orchestrator post-A3"}
 
         scanner = _get_scanner(module_id)
         if not scanner:
@@ -160,78 +255,7 @@ def run_module(self, scan_id: str, module_id: str, email: str):
         finally:
             loop.close()
 
-        created = 0
-        for result in results:
-            # Pre-truncate so the same trimmed values flow into the SELECT below,
-            # the Finding row, AND the Identity row (which also reads result.indicator_value).
-            if result.indicator_value and len(result.indicator_value) > 500:
-                result.indicator_value = result.indicator_value[:497] + "..."
-            if result.title and len(result.title) > 255:
-                result.title = result.title[:252] + "..."
-            if result.url and len(result.url) > 1024:
-                result.url = result.url[:1021] + "..."
-            if result.module and len(result.module) > 50:
-                result.module = result.module[:50]
-
-            # Check for duplicate
-            existing = session.execute(
-                select(Finding).where(
-                    Finding.target_id == scan.target_id,
-                    Finding.module == result.module,
-                    Finding.title == result.title,
-                    Finding.indicator_value == result.indicator_value,
-                )
-            ).scalar_one_or_none()
-
-            if existing:
-                existing.last_seen = datetime.now(timezone.utc)
-            else:
-                finding = Finding(
-                    workspace_id=scan.workspace_id,
-                    scan_id=scan.id,
-                    target_id=scan.target_id,
-                    module=result.module,
-                    layer=result.layer,
-                    category=result.category,
-                    severity=result.severity,
-                    title=result.title,
-                    description=result.description,
-                    data=result.data,
-                    url=result.url,
-                    indicator_value=result.indicator_value,
-                    indicator_type=result.indicator_type,
-                    verified=result.verified,
-                )
-
-                # Compute confidence based on source reliability
-                from api.services.layer4.source_scoring import compute_finding_confidence
-                finding.confidence = compute_finding_confidence(finding)
-                session.add(finding)
-                session.flush()
-                created += 1
-
-                # Create identity node if indicator exists
-                if result.indicator_value and result.indicator_type:
-                    existing_identity = session.execute(
-                        select(Identity).where(
-                            Identity.workspace_id == scan.workspace_id,
-                            Identity.target_id == scan.target_id,
-                            Identity.type == result.indicator_type,
-                            Identity.value == result.indicator_value,
-                        )
-                    ).scalar_one_or_none()
-
-                    if not existing_identity:
-                        identity = Identity(
-                            workspace_id=scan.workspace_id,
-                            target_id=scan.target_id,
-                            type=result.indicator_type,
-                            value=result.indicator_value,
-                            platform=result.title.split(" on ")[-1] if " on " in result.title else None,
-                            source_module=result.module,
-                            source_finding=finding.id,
-                        )
-                        session.add(identity)
+        created = persist_scanner_results(scan, results, session)
 
         session.commit()
         _update_progress(session, scan_id, module_id, "completed")

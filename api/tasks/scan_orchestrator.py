@@ -310,6 +310,35 @@ def finalize_scan(scan_id: str):
             logger.exception("PIPELINE[%s]: early profile aggregation failed", scan.target_id)
         logger.info("PIPELINE[%s]: early_profile done (bootstrap for Pass 2)", scan.target_id)
 
+        # A3.5 — Name-input scrapers (S127). Must run AFTER A3 so
+        # profile_data._auto_resolved_name exists, BEFORE A4 (pass2) so resulting
+        # findings flow into the same identity graph.
+        try:
+            import asyncio as _asyncio
+            from api.services.layer1.name_scraper_scanner import NameScraperScanner
+            from api.tasks.module_tasks import persist_scanner_results
+
+            ns_target = session.execute(select(Target).where(Target.id == scan.target_id)).scalar_one_or_none()
+            if ns_target:
+                ns_scanner = NameScraperScanner()
+                ns_loop = _asyncio.new_event_loop()
+                try:
+                    ns_results = ns_loop.run_until_complete(
+                        ns_scanner.scan(ns_target.email, scan_id=str(scan.id))
+                    )
+                finally:
+                    ns_loop.close()
+                ns_created = persist_scanner_results(scan, ns_results, session)
+                if ns_created > 0:
+                    session.commit()
+                    logger.info(
+                        "A3.5 name_scraper_engine created %d findings for target %s",
+                        ns_created, scan.target_id,
+                    )
+        except Exception:
+            logger.exception("PIPELINE[%s]: A3.5 name_scraper_engine sequential dispatch failed", scan.target_id)
+        logger.info("PIPELINE[%s]: name_scrapers done", scan.target_id)
+
         # A4. Pass 2 — Public exposure enrichment (name-based scrapers)
         try:
             from api.services.layer4.public_exposure_enricher import enrich_public_exposure
@@ -916,6 +945,35 @@ def _full_refinalize(target_id_str: str, workspace_id_str: str, session):
     except Exception:
         logger.exception("REFINALIZE[%s]: profile aggregation failed", target_id)
     logger.info("REFINALIZE[%s]: profile_aggregator done", target_id)
+
+    # S127 — Re-dispatch name_scraper_engine post-refinalize aggregation
+    # (in case Deep Scan cascade discovered new identifiers that changed the resolved name).
+    try:
+        import asyncio as _asyncio
+        from api.services.layer1.name_scraper_scanner import NameScraperScanner
+        from api.tasks.module_tasks import persist_scanner_results
+        from api.models.scan import Scan as _Scan
+
+        ns_target = session.execute(select(Target).where(Target.id == target_id)).scalar_one_or_none()
+        anchor_scan = session.execute(
+            select(_Scan).where(_Scan.target_id == target_id).order_by(_Scan.created_at.desc())
+        ).scalars().first()
+        if ns_target and anchor_scan:
+            ns_scanner = NameScraperScanner()
+            ns_loop = _asyncio.new_event_loop()
+            try:
+                ns_results = ns_loop.run_until_complete(
+                    ns_scanner.scan(ns_target.email, scan_id=str(anchor_scan.id))
+                )
+            finally:
+                ns_loop.close()
+            ns_created = persist_scanner_results(anchor_scan, ns_results, session)
+            if ns_created > 0:
+                session.commit()
+                logger.info("REFINALIZE[%s] name_scraper_engine created %d findings", target_id, ns_created)
+    except Exception:
+        logger.exception("REFINALIZE[%s]: A3.5-equivalent name_scraper_engine dispatch failed", target_id)
+    logger.info("REFINALIZE[%s]: name_scrapers done", target_id)
 
     # 7. Bio cleanup
     try:
