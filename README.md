@@ -11,9 +11,9 @@
 [![React 18](https://img.shields.io/badge/React-18-61DAFB?logo=react)](https://react.dev)
 [![Docker](https://img.shields.io/badge/Docker-Compose-2496ED?logo=docker)](https://docker.com)
 [![License: AGPL v3](https://img.shields.io/badge/License-AGPL_v3-blue.svg)](LICENSE)
-[![Scrapers](https://img.shields.io/badge/scrapers-124-3388ff)](#scraper-engine)
-[![Sprints](https://img.shields.io/badge/sprints-114+-00ff88)](#changelog)
-[![Version](https://img.shields.io/badge/version-1.1.16-green)](#changelog)
+[![Scrapers](https://img.shields.io/badge/scrapers-127-3388ff)](#scraper-engine)
+[![Sprints](https://img.shields.io/badge/sprints-129+-00ff88)](#changelog)
+[![Version](https://img.shields.io/badge/version-1.2.0-green)](#changelog)
 
 **Enter an email. See what the internet knows. Fix it.**
 
@@ -68,26 +68,27 @@ Dashboard: graph, timeline, accounts,
 - **9-axis digital fingerprint** — accounts, platforms, username_reuse, breaches, geo_spread, data_leaked, email_age, security, public_exposure
 - **Generative pixel art** — deterministic 32x32 CryptoPunk-style avatar from graph eigenvalues (5.4B unique combinations, zero GPU)
 - **Deep Scan** — operator-triggered per-indicator scan across all matching scrapers, with cascade (discovered cross-type indicators are chain-scanned)
-- **Web Discovery (Phase C)** — fingerprint-driven Google dorking + 6 content extractors — explores the open web beyond the 124 fixed scrapers
+- **Web Discovery (Phase C)** — fingerprint-driven Google dorking + 6 content extractors — explores the open web beyond the 127 fixed scrapers
 - **Phone Intelligence** — automatic phone number extraction from breach data + carrier/line type enrichment
 - **Crypto Wallet Tracking** — BTC/ETH wallet identification with balance, transaction history, and scam flag detection via ChainAbuse
 
 ### Scraper Engine
 
-124 data-driven scrapers, all configurable via UI (URL template, extraction rules, rate limits):
+127 data-driven scrapers (110 active by default, 17 disabled placeholders) — all configurable via UI (URL template, extraction rules, rate limits):
 
 | Category | Count | Examples |
 |----------|-------|---------|
-| Social profiles | 35 | Reddit, GitHub, Steam, Medium, Mastodon, Twitch, Telegram, Bluesky, Threads, TikTok |
-| Social search | 18 | StackOverflow, LinkedIn, Pinterest, Behance, Dribbble, ProductHunt, Kaggle |
-| People search | 4 | Google People, Snapchat, Crunchbase, WebMii |
-| Breach / leak | 5 | HIBP, LeakCheck, XposedOrNot, IntelX, LeakLookup |
-| Identity estimation | 3 | Genderize, Agify, Nationalize |
-| Metadata | 12 | DNS DMARC, crt.sh, Disposable Email, Mailcheck, Disify, HackerTarget |
-| Code leak | 3 | GitHub Code Search, GitHub Gists, GitHub Scraper |
-| Archive | 6 | Wayback Machine (domain, profile, LinkedIn, Twitter, Instagram, Facebook) |
-| Gaming | 9 | Steam, Roblox, Chess.com, Lichess, RuneScape, MyAnimeList, Anilist, Speedrun, CodeWars |
-| Music / media | 5 | SoundCloud, Mixcloud, Last.fm, Bandcamp, Discogs |
+| Social | 50 | Reddit, GitHub, Steam, Medium, Mastodon, Twitch, Telegram, Bluesky, Threads, TikTok, SoundCloud, Last.fm, Bandcamp |
+| Metadata | 15 | DNS DMARC, crt.sh, Gravatar, Disposable Email, Mailcheck, Disify, HackerTarget, GCal, github_timezone, google_phone_dork |
+| People Search | 11 | WebMii, Google Scholar, Google Groups, npm, PyPI, Snapchat, Crunchbase |
+| Gaming | 10 | Steam, Roblox, Chess.com, Lichess, RuneScape, MyAnimeList, Anilist, Xbox, Speedrun, CodeWars |
+| Public Exposure | 10 | GDELT, GNews, Google News RSS, OpenSanctions, Interpol Red Notices, OpenCorporates, LBR Luxembourg, Courtlistener (US), BODACC (FR), UK Gazette |
+| Breach / leak | 9 | HIBP, LeakCheck, IntelX, EmailRep, XposedOrNot, LeakLookup, HackerTarget |
+| Archive | 9 | Wayback Machine (domain, count, profile, LinkedIn, Twitter, Instagram, Facebook, GitHub) |
+| Identity | 5 | Genderize, Agify, Nationalize, NumVerify (phone), Veriphone (phone) |
+| Code leak | 3 | GitHub Code Search (email), GitHub Code Search (username), GitHub Gists |
+| Financial | 3 | Blockchain.info (BTC), Blockchair (multi-chain), ChainAbuse (scam flags) |
+| Social Account | 2 | LinkedIn Profile, Proxycurl LinkedIn |
 
 Every scraper has:
 - **429 retry** — exponential backoff (3 attempts, max 10s)
@@ -171,10 +172,11 @@ Custom identity intelligence reports (due diligence, compliance, threat attribut
 
 ## Changelog
 
-114 sprints delivered. Key milestones:
+129 sprints delivered. Key milestones:
 
 | Version | Highlights |
 |---------|-----------|
+| v1.2.0 | **Major stability milestone — S121 → S129 chain.** Doc drift closure (S121), QA chain S122a→S122e (per-scraper attempt logging, name_scraper_engine module, aggregator tie-break, Gravatar dedup, pastebin extraction fix, low-confidence severity for placeholder name-scrapers), holdover rollback + courtlistener defensive (S123), **verified provenance UI per finding** (S124: tier badges + cross-verif + timeline), Recalculate Profiles retro-rebuilds finding confidence (S125), match_confidence surfaced separately in ProvenanceCard (S126), name_scraper_engine sequential dispatch post-A3 fixes no_name_input regression (S127), **telemetry rectification — scraper_engine returns (found, reason)** with proper no_data classification for explicit_not_found/blocked_403 (S128), **Pass 1 username dispatch gated by is_valid_username** matching Pass 1.5 validation symmetry (S129 — eliminates HN-style 400 false errors). Net: pipeline now knows what it can't do instead of generating false-positive noise; provenance is auditable per-finding |
 | v1.1.16 | **Findings tab preset filter chips** — closes S119 navigation loop: deep-link from Risk Signals "View all" to a filtered Findings tab. New shared lib/findingFilters.js classifier |
 | v1.1.15 | **Risk Signals UI block** on Overview tab — surface phone/crypto/legal findings in a 3-column self-hiding block (deferred S108 plan) |
 | v1.1.14 | **EU legal scrapers** — BODACC (FR procédures collectives) + UK Gazette (London/Edinburgh/Belfast). Both no-auth, person-centric |

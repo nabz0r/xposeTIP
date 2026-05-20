@@ -1,4 +1,4 @@
-# Sprint Log — xposeTIP v1.1.0
+# Sprint Log — xposeTIP v1.2.0
 
 ## Sprint history
 
@@ -131,6 +131,30 @@
 - [x] S118 — EU legal scrapers BODACC (FR) + UK Gazette: BODACC via Opendatasoft public dataset (procédures collectives, ventes/cessions, radiations), no auth. UK Gazette via official JSON feed (personal insolvency, bankruptcy, probate, deceased estates), no auth, 10s crawl delay per robots.txt, requires ≥2 name tokens. Pivot from Judilibre (pseudonymized at publication) and UK Insolvency Register (no public API) documented in commit (v1.1.14)
 - [x] S119 — Risk Signals UI block on Overview tab: dashboard/src/components/RiskSignalsBlock.jsx, three-column grid (phone #3388ff / crypto #aa66ff / legal #ff8800), self-hides when all empty. Per-column accents match plan colors. Filter logic: data.scraper IN PHONE_SCRAPERS/CRYPTO_SCRAPERS, indicator_type='legal_record'. Closes deferred S108 plan (v1.1.15)
 - [x] S120 — Findings tab preset filter chips: dashboard/src/lib/findingFilters.js (shared classifier, single source of truth), RiskSignalsBlock refactored to import from shared lib (no inline arrays). presetFilter state in TargetDetail, handleRiskSignalViewAll resets sev/mod/status + switches tab. FindingsTab renders self-hiding chip row (All / Phone / Crypto / Legal) above existing filter bar. Closes S119 navigation loop (v1.1.16)
+
+### v1.2 stability chain — Doc closure + S122 chain + provenance + telemetry (May 2026)
+
+- [x] S121 — Doc drift closure post-S116→S120: README badges, CLAUDE.md sprint list, SCANNERS.md count reconciliation, landing components stale refs swept (commit 64b57aa)
+- [x] S121b — Sweep of remaining drift: DEMO_SCRIPT.md pricing table aligned with S113 4-tier, stale JSX landing references, follow-up to S121 (commit 984c129)
+- [x] S122a — QA quick-fixes: sync_avatars script idempotent guard, /targets paginated cap tightened, error renderer fallback, version bump (commit e994b2f)
+- [x] S122b — Pre-truncate `result.indicator_value` before SELECT/Identity insert: prevents PostgreSQL VARCHAR overflow on long extraction output (commit 514e4d4)
+- [x] S122c — Diagnostic logging + UI banner for failed name resolution: `name_resolution_debug` JSONB on scan, surfaced in TargetDetail banner when aggregator produces no primary_name (commit 1758466)
+- [x] S122-clean — Disable 2 Gravatar duplicates (`gravatar_scraper` + `gravatar_json` shadow `gravatar_profile_v2`), fix `pastebin_user` HTML extraction regex (commit 350f173)
+- [x] S122-obs — Per-scraper `attempt_log` JSONB on Scan: every scraper dispatch logged with (started_at, ended_at, status, reason), name-resolution diag enrichment (commit 0c8c2d9)
+- [x] S122-hk — Move QA reports to `docs/qa/`, add `.gitignore` entries for transient scan artifacts (commit 2cd5f44)
+- [x] S122-name — Aggregator tie-break: when 2 sources propose competing names with equal weight, Gravatar email-verified beats heuristic. Emoji regex extends to U+2600 block (misc symbols) for cleanup (commit 0893acc)
+- [x] S122e — `name_scraper_engine` module factored out: name-input scrapers (OpenSanctions, Interpol, OpenCorporates, Courtlistener, BODACC, UK Gazette) dispatched via dedicated path with per-scraper timeout + dedup (commit 6544804)
+- [x] S122e-holdover — Low-confidence severity + manual-check title for 5 placeholder name-scrapers (preserved as scaffolding pending future activation) (commit 4fb647f)
+- [x] Forensic round 2 — Pipeline health validation + scraper inventory snapshot post-S122 chain (commit d2bb4ee, `docs/qa/forensic_round_2_*.md`)
+- [x] S123 — Holdover rollback + R1 + R2: R1 = PASS2 finding creation `int → str` coerce for `indicator_value` (NumVerify/Veriphone numeric IDs broke FK), R2 = `courtlistener_search` defensive parse on RECAP shape variants, rollback of 4 placeholder name-scrapers from S122e-holdover (low-signal verdict) (commit 51c5663)
+- [x] S124 — Verified provenance UI per finding: `ProvenanceCard.jsx` displays tier badge (verified / cross-verified / unverified), cross-verif source list, first_seen/last_seen timeline. Closes provenance audit gap (commit 705eb3f)
+- [x] S125 — Recalculate Profiles retro-rebuilds confidence: System Settings → Recalculate Profiles button now reruns `recalc_finding_confidence` + cross-verif boost over all existing findings, not just future scans (commit 0f30272)
+- [x] S126 — `data.match_confidence` as separate ProvenanceCard row: distinct from finding-level confidence — exposes per-source name match score (e.g., OpenSanctions partial vs exact) (commit d7894df)
+- [x] S127 — `name_scraper_engine` sequential dispatch post-A3: name-input scrapers fire AFTER A3 name resolution completes (not parallel with Pass 1.5). Fixes no_name_input regression on first scan of unknown identities (commit 9226a37)
+- [x] Forensic round 3 — Full S122 → S127 chain validation: 3 Friends targets scanned (Ksontinisarah/abed.belaid/booking.lxb), 7 health checks PASS, all 12 sprints' fixes hold (commit fb394be, `docs/qa/forensic_round_3_*.md`)
+- [x] S128 — Telemetry rectification: `scraper_engine._check_found()` returns `tuple[bool, str]` with reasons (`success | explicit_not_found | blocked_403 | implicit_not_found | not_2xx`). `scraper_scanner` classifier reclassifies `explicit_not_found | blocked_403 | implicit_not_found` as `no_data` instead of `error_4xx`. 4 scrapers flipped from error to no_data per scan (bluesky/crunchbase/discogs/wayback). Honest classification surfaced real HN bug → fixed in S129 (commit 77b08f5)
+- [x] S129 — Pass 1 dispatch validation symmetry: `is_valid_username()` now gates Pass 1 username dispatch in `scraper_scanner.scan()` (matching Pass 1.5 validation in `username_expander._select_usernames`). Eliminates HN-style 400 errors on multi-dot emails. Broken bucket 12→2 on T2 control (83% reduction). Accepted gap: 1-dot emails still pass through (observe round 4 before tightening) (commit 3c383da)
+- [x] S130 — Documentation closure + v1.2.0 stamp: all scraper counts reconciled to authoritative 127 (110 active / 17 disabled), sprint count 114+ → 129+, version v1.1.16 → v1.2.0 across README/CLAUDE/SCANNERS/PRD/footers, DEMO_SCRIPT.md archived (Nexus narrative dead) and rewritten for Play 1 + Play 2 framing, ScraperBreakdown.jsx category table reconciled with new Financial row + Public Exposure recount, SPRINT_LOG backfill S121-S129
 
 ### v1.1 — Post-Nexus (July-August)
 - [x] Phase C Web Discovery (fingerprint-driven Google dorking)

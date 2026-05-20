@@ -5,9 +5,9 @@
 Identity Threat Intelligence platform. Scans email → builds identity graph →
 PageRank/Markov confidence → clusters personas → pixel art avatar → remediation plan.
 
-## Current version: v1.1.16
+## Current version: v1.2.0
 
-120 sprints. 127 scrapers, 26 scanners, 9 intelligence analyzers, 9-axis fingerprint.
+129 sprints. 127 scrapers (110 active, 17 disabled placeholders), 26 scanners, 9 intelligence analyzers, 9-axis fingerprint.
 Scanners: 26 registered (SCANNER_REGISTRY) + 9 analyzers. 5 disabled placeholders (maigret, h8mail, ghunt, paste_monitor, databroker_check).
 Two-phase pipeline: Phase A (gather: cross-verify → A1.5 phone/crypto extraction → A1.6 secondary enrichment → Pass 1.5 → early profile → Pass 2)
 → Phase B (compute: graph → PageRank → score → profile → personas → intelligence → fingerprint).
@@ -20,11 +20,15 @@ page fetch → 6 extractors (rel_me/jsonld/social_link/email/meta_tag/username) 
 
 ## Recent sprints
 
-- **S120** — Findings tab preset filter chips: shared lib/findingFilters.js classifier (single source of truth), "View all N →" from Risk Signals deep-links to filtered Findings tab, RiskSignalsBlock refactored to import from shared lib
-- **S119** — Risk Signals UI block on Overview tab: phone/crypto/legal findings surfaced in 3-column self-hiding block, accent colors match plan colors
-- **S118** — EU legal scrapers: BODACC (FR Bulletin officiel des annonces civiles et commerciales) + UK Gazette (London/Edinburgh/Belfast). Both no-auth, person-centric. Judilibre rejected (pseudonymized), UK Insolvency Register rejected (no API)
-- **S117** — Courtlistener legal scraper (MVP, collection only): US federal courts via RECAP archive, token-based auth, indicator_type=legal_record, no axis math change
-- **S116** — 4-tier SaaS plan alignment (a backend + b frontend): consultant→starter rename, new Team tier, alembic migration 012, frontend planColors shared module, pricing aligned with S113 landing
+- **S129** — Upstream dispatch validation symmetry: `is_valid_username()` now gates Pass 1 username dispatch in `scraper_scanner.scan()` (matching Pass 1.5 in `username_expander._select_usernames`). Eliminates HN-style 400 errors on emails like `firstname.middle.lastname@gmail.com`. Broken bucket 12→2 on T2 (83% reduction). Accepted gap: 1-dot emails still pass (observe round 4 before tightening)
+- **S128** — Telemetry rectification: `scraper_engine._check_found()` returns `tuple[bool, str]` with reasons (`success | explicit_not_found | blocked_403 | implicit_not_found | not_2xx`). `scraper_scanner` classifier now reclassifies `explicit_not_found | blocked_403 | implicit_not_found` as `no_data` instead of `error_4xx`. Honest classification — 4 scrapers flipped from error to no_data per scan (bluesky/crunchbase/discogs/wayback). Surfaced real HN bug → fixed in S129
+- **S127** — `name_scraper_engine` dispatched sequentially post-A3: name-input scrapers (OpenSanctions, Interpol, OpenCorporates, Courtlistener, BODACC, UK Gazette) now fire AFTER name resolution completes, not in parallel with Pass 1.5. Fixes no_name_input regression on first scan of unknown identities
+- **S126** — `data.match_confidence` surfaced as separate row in `ProvenanceCard.jsx`. Distinct from finding-level confidence — exposes per-source name match score (e.g., OpenSanctions partial vs exact)
+- **S125** — Recalculate Profiles retroactively rebuilds finding confidence + cross-verif: System Settings → Recalculate Profiles button now reruns `recalc_finding_confidence` + cross-verif boost over all existing findings, not just future scans
+- **S124** — Verified provenance UI per finding: tier badges (verified / cross-verified / unverified) + cross-verif source list + first_seen/last_seen timeline in Finding detail panel. Closes provenance audit gap
+- **S123** — Holdover rollback + courtlistener defensive: R1 = PASS2 finding creation coerces `int → str` for `indicator_value` (NumVerify/Veriphone numeric IDs broke FK). R2 = courtlistener_search defensive parse on RECAP shape variants. **Holdover rollback**: 4 placeholder name-scrapers (S122e-holdover artifacts) disabled after low-signal verdict
+- **S122 chain** (S122a → S122e-holdover, 10 micro-sprints): per-scraper attempt logging in `attempt_log` JSONB, `name_scraper_engine` module factored out, aggregator tie-break (Gravatar email-verified beats heuristic), emoji regex extended to U+2600 block, 2 Gravatar duplicates disabled, pastebin_user HTML extraction fixed, low-confidence severity for 5 placeholder name-scrapers
+- **S121** + **S121b** — Doc drift closure post-S116→S120: stale landing JSX refs, DEMO_SCRIPT pricing table aligned with S113 4-tier
 
 ## Developer
 
@@ -124,7 +128,7 @@ After deploy: System → Recalculate Fingerprints → Recalculate Profiles
 - `api/discovery/quality_gate.py` — dedup discovery leads vs existing findings
 - `api/discovery/query_generator.py` — fingerprint-driven search query composition
 - `api/tasks/web_discovery.py` — Celery task for Phase C
-- `scripts/seed_scrapers.py` — 124 scraper definitions
+- `scripts/seed_scrapers.py` — 127 scraper definitions (110 default-enabled, 17 disabled)
 - `scripts/seed_modules.py` — 32 scanner modules (26 active + 5 disabled + 1 virtual)
 
 ### Frontend

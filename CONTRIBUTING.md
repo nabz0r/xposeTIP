@@ -38,7 +38,7 @@ Format: `<type>: <Sprint NNN> — <Short description> (<version>)`
 
 Types: `feat`, `fix`, `docs`, `refactor`, `test`, `chore`.
 
-Example: `feat: Sprint 115 — Add LinkedIn scraper (v1.1.12)`
+Example: `feat: Sprint 130 — Doc closure + v1.2.0 stamp (v1.2.0)`
 
 ## Pull request checklist
 

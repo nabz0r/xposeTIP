@@ -1,9 +1,9 @@
-# Intelligence Modules — xposeTIP v1.1.10
+# Intelligence Modules — xposeTIP v1.2.0
 
 ## Overview
 
-xposeTIP has **26 active scanner modules** across 4 layers, **124 data-driven scrapers**
-across 12 categories, and **9 intelligence analyzers** that run post-scan.
+xposeTIP has **26 active scanner modules** across 4 layers, **127 data-driven scrapers** (110 active by default)
+across 11 categories, and **9 intelligence analyzers** that run post-scan.
 5 scanner modules are disabled placeholders (maigret, h8mail, ghunt, paste_monitor, databroker_check).
 
 ## Scanner Modules (35)
@@ -13,7 +13,7 @@ across 12 categories, and **9 intelligence analyzers** that run post-scan.
 | Scanner | ID | Description |
 |---------|----|-------------|
 | Email Validator | `email_validator` | MX records, disposable provider detection, format validation |
-| Holehe | `holehe` | Email-to-account enumeration across 120+ services |
+| Holehe | `holehe` | Email-to-account enumeration across 120+ services (vendored library) |
 | Have I Been Pwned | `hibp` | Breach history lookup — names, dates, data types exposed |
 | Sherlock | `sherlock` | Username search across 400+ social networks |
 | Maigret | `maigret` | Username enumeration across 2500+ sites |
@@ -27,7 +27,7 @@ across 12 categories, and **9 intelligence analyzers** that run post-scan.
 | GitHub Deep | `github_deep` | Full profile, events, gists, alternate emails from commits |
 | Google Profile | `google_profile` | Gmail/Workspace detection, YouTube presence |
 | Username Hunter | `username_hunter` | Username permutations across Reddit, Steam, Keybase, GitLab |
-| Scraper Engine | `scraper_engine` | Runs all 120 data-driven scrapers (see below) |
+| Scraper Engine | `scraper_engine` | Runs all 110 active data-driven scrapers (127 defined, 17 disabled — see below) |
 
 ### Layer 2 — Public Databases (12)
 
@@ -77,22 +77,23 @@ across 12 categories, and **9 intelligence analyzers** that run post-scan.
 | Timezone Analyzer | `timezone_analyzer.py` | Timezone inference from activity timestamps |
 | Username Correlator | `username_correlator.py` | Cross-platform username reuse detection |
 
-## Scraper Engine (127 scrapers across 12 categories)
+## Scraper Engine (127 scrapers across 11 categories)
 
 | Category | Count | Examples |
 |----------|-------|---------|
-| Social | 51 | Reddit, Steam, Telegram, Twitch, Pinterest, Strava, Snapchat, Threads, Bluesky... |
-| Metadata | 14 | DNS, WHOIS, Gravatar, crt.sh, disposable check, mailcheck, disify... |
-| People Search | 11 | WebMii, Google Scholar, Google Groups, npm, PyPI... |
-| Gaming | 10 | Steam, Chess.com, Roblox, Lichess, Xbox, RuneScape, MyAnimeList... |
-| Breach | 9 | LeakCheck, IntelX, EmailRep, HackerTarget, XposedOrNot... |
-| Archive | 9 | Wayback Domain, Wayback Count, Wayback LinkedIn/Twitter/Instagram... |
-| Public Exposure | 7 | GDELT, GNews, Google News RSS, OpenSanctions, Interpol, OpenCorporates, LBR |
-| Phone | 4 | NumVerify, Veriphone, Carrier Lookup, Google Phone Dork |
-| Financial | 3 | Blockchain.info (BTC), Blockchair (multi-chain), ChainAbuse (scam flags) |
-| Identity Estimation | 3 | Agify (age), Genderize (gender), Nationalize (nationality) |
+| Social | 50 | Reddit, Steam, Telegram, Twitch, Pinterest, Strava, Snapchat, Threads, Bluesky, SoundCloud, Last.fm... |
+| Metadata | 15 | DNS DMARC, crt.sh, Gravatar (x3), disposable check, mailcheck, disify, github_timezone, gcal_public, google_phone_dork... |
+| People Search | 11 | WebMii, Google Scholar, Google Groups, npm, PyPI, Snapchat, Crunchbase... |
+| Gaming | 10 | Steam, Chess.com, Roblox, Lichess, Xbox, RuneScape, MyAnimeList, Anilist, Speedrun, CodeWars |
+| Public Exposure | 10 | GDELT, GNews, Google News RSS, OpenSanctions, Interpol Red Notices, OpenCorporates, LBR Luxembourg, Courtlistener (US federal courts), BODACC (FR), UK Gazette |
+| Breach | 9 | LeakCheck, IntelX, EmailRep, HackerTarget, XposedOrNot, LeakLookup... |
+| Archive | 9 | Wayback Domain/Count/Profile + Wayback LinkedIn/Twitter/Instagram/Facebook/GitHub |
+| Identity | 5 | Agify (age), Genderize (gender), Nationalize (nationality), NumVerify (phone), Veriphone (phone) |
 | Code Leak | 3 | GitHub Code Search (email), GitHub Code Search (username), GitHub Gists |
-| Social Account | 2 | Misc profile scrapers |
+| Financial | 3 | Blockchain.info (BTC), Blockchair (multi-chain), ChainAbuse (scam flags) |
+| Social Account | 2 | LinkedIn Profile, Proxycurl LinkedIn |
+
+> **Note** : `google_phone_dork` est catégorisé `metadata` (pas `phone`) car c'est une requête Google dorking, pas une API phone — d'où l'absence de catégorie `Phone` séparée. Les 2 vrais scrapers phone (NumVerify, Veriphone) sont sous `identity` aux côtés des estimateurs.
 
 Scrapers are data-driven JSON configs stored in the database. Editable via Scrapers UI —
 no code deploy needed. Each scraper has: URL template, extraction rules (regex/JSONPath),
