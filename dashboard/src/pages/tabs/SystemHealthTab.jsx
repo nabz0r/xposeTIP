@@ -132,7 +132,7 @@ export default function SystemHealthTab() {
           className="flex items-center gap-2 text-sm text-gray-400 hover:text-[#00ff88] disabled:opacity-50 border border-[#1e1e2e] rounded-lg px-3 py-1.5">
           {recalculating ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Database className="w-4 h-4" />} Recalculate Scores
         </button>
-        <button onClick={async () => { setRecalcProfiles(true); try { const r = await recalculateProfiles(); alert(`Profiles: ${r.recalculated}/${r.total} updated, ${r.enriched} enriched`) } catch (e) { alert(e.message) } finally { setRecalcProfiles(false) } }}
+        <button onClick={async () => { setRecalcProfiles(true); try { const r = await recalculateProfiles(); alert(`Profiles: ${r.recalculated}/${r.total} updated, ${r.enriched} enriched, ${r.confidence_recomputed} finding confidence values rebuilt, ${r.cross_verified_boosted} cross-verif boosts re-applied`) } catch (e) { alert(e.message) } finally { setRecalcProfiles(false) } }}
           disabled={recalcProfiles}
           className="flex items-center gap-2 text-sm text-gray-400 hover:text-[#00ff88] disabled:opacity-50 border border-[#1e1e2e] rounded-lg px-3 py-1.5">
           {recalcProfiles ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Users className="w-4 h-4" />} Recalculate Profiles

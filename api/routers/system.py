@@ -208,10 +208,20 @@ async def recalculate_profiles(
     workspace_id=Depends(get_current_workspace),
     db: AsyncSession = Depends(get_db),
 ):
-    """Re-run profile aggregation + identity enrichment for all targets."""
+    """Re-run finding confidence + cross-verification + profile aggregation + identity enrichment
+    for all targets in this workspace.
+
+    S125: also rebuilds finding confidence retroactively. Necessary because per-scraper
+    reliability overrides were silently skipped pre-S124 for any module whose name was
+    NOT 'scraper_engine'. Re-running compute_finding_confidence here applies the corrected
+    reliability values to all existing findings, and cross_verify_findings re-applies the
+    cross-verification boost on top.
+    """
     from api.tasks.utils import get_sync_session
     from api.services.layer4.profile_aggregator import aggregate_profile
     from api.services.layer4.identity_enricher import enrich_identity
+    from api.services.layer4.source_scoring import compute_finding_confidence, cross_verify_findings
+    from api.models.finding import Finding
 
     targets_result = await db.execute(
         select(Target).where(Target.workspace_id == workspace_id)
@@ -221,9 +231,31 @@ async def recalculate_profiles(
     sync_session = get_sync_session()
     updated = 0
     enriched = 0
+    confidence_recomputed = 0
+    cross_verified_boosted = 0
     try:
         for t in targets:
             try:
+                # S125 — Step 1: rebuild base confidence for all active findings
+                target_findings = sync_session.execute(
+                    select(Finding).where(
+                        Finding.target_id == t.id,
+                        Finding.status == "active",
+                    )
+                ).scalars().all()
+                for f in target_findings:
+                    new_conf = compute_finding_confidence(f)
+                    if f.confidence != new_conf:
+                        f.confidence = new_conf
+                        confidence_recomputed += 1
+                if target_findings:
+                    sync_session.flush()
+
+                # S125 — Step 2: re-apply cross-verification boost
+                cv = cross_verify_findings(t.id, sync_session)
+                cross_verified_boosted += cv
+
+                # Existing: profile aggregation (now sees corrected confidence values)
                 aggregate_profile(t.id, workspace_id, sync_session)
                 updated += 1
 
@@ -246,7 +278,13 @@ async def recalculate_profiles(
     finally:
         sync_session.close()
 
-    return {"recalculated": updated, "enriched": enriched, "total": len(targets)}
+    return {
+        "recalculated": updated,
+        "enriched": enriched,
+        "confidence_recomputed": confidence_recomputed,
+        "cross_verified_boosted": cross_verified_boosted,
+        "total": len(targets),
+    }
 
 
 @router.post("/recalculate-fingerprints")
