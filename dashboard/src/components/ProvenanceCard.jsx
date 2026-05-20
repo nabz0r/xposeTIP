@@ -87,6 +87,27 @@ export default function ProvenanceCard({ finding: f }) {
           )}
         </span>
 
+        {/* Match score — separate from source-reliability confidence, surfaces PASS2 name-match probability */}
+        {f.data && f.data.match_confidence != null && (
+          <>
+            <span className="text-gray-500">Name match</span>
+            <span>
+              <span
+                className="font-mono font-medium"
+                style={{
+                  color: f.data.match_confidence >= 0.80 ? '#00ff88' : f.data.match_confidence >= 0.60 ? '#ffcc00' : '#ff8800',
+                  fontSize: '13px',
+                }}
+              >
+                {Math.round(f.data.match_confidence * 100)}%
+              </span>
+              <span className="text-gray-500 text-[11px] ml-2.5">
+                name similarity vs search query
+              </span>
+            </span>
+          </>
+        )}
+
         {/* Confidence */}
         <span className="text-gray-500">Confidence</span>
         <span>
