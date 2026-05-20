@@ -4,6 +4,7 @@ import re
 
 from api.services.base import BaseScanner, ScanResult
 from api.services.scraper_engine import ScraperEngine
+from api.services.layer4.username_validator import is_valid_username
 
 logger = logging.getLogger(__name__)
 
@@ -39,11 +40,15 @@ class ScraperScanner(BaseScanner):
                 return results
 
             engine = ScraperEngine()
-            username = email.split("@")[0]
+            _email_lhs = email.split("@")[0]
+            # S129: gate username dispatch with is_valid_username to match Pass 1.5's
+            # validation — don't waste requests on strict-schema platforms (HN, Reddit,
+            # GitHub, etc.) for email LHSs that aren't plausibly a single handle.
+            username = _email_lhs if is_valid_username(_email_lhs) else None
             domain = email.split("@")[-1] if "@" in email else email
-            cleaned_prefix = re.sub(r"\d+", "", username)
+            cleaned_prefix = re.sub(r"\d+", "", _email_lhs)
             name_parts = re.split(r"[._]", cleaned_prefix)
-            first_name = name_parts[0].lower() if name_parts else username
+            first_name = name_parts[0].lower() if name_parts else _email_lhs
             # Get secondary identifiers from profile_data (populated by A1.5)
             _phones = []
             _wallets = []
