@@ -77,6 +77,7 @@ export default function Manifesto() {
           <div className="flex items-center gap-4 text-xs text-gray-500">
             <Link to="/welcome" className="hover:text-white transition-colors">Product</Link>
             <Link to="/architecture" className="hover:text-white transition-colors">Architecture</Link>
+            <Link to="/compare" className="hover:text-white transition-colors">Compare</Link>
             <Link to="/login" className="hover:text-white transition-colors">Sign in</Link>
           </div>
         </div>

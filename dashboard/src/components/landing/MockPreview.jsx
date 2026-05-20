@@ -47,6 +47,31 @@ export default function MockPreview() {
             </div>
           </div>
 
+          {/* Risk Signals teaser — mirrors the in-app S119 block */}
+          <div className="grid grid-cols-3 gap-2 mb-5">
+            <div className="bg-[#0a0a0f] border border-[#1e1e2e] rounded-lg p-2.5">
+              <div className="flex items-center justify-between mb-1">
+                <span className="text-[9px] uppercase tracking-wider text-gray-500">Phone</span>
+                <span className="text-[10px] font-mono font-bold px-1.5 rounded" style={{ backgroundColor: '#3388ff26', color: '#3388ff' }}>2</span>
+              </div>
+              <div className="text-[10px] text-gray-400 font-mono truncate">+33 6 ●● ●● ●● 47</div>
+            </div>
+            <div className="bg-[#0a0a0f] border border-[#1e1e2e] rounded-lg p-2.5">
+              <div className="flex items-center justify-between mb-1">
+                <span className="text-[9px] uppercase tracking-wider text-gray-500">Crypto</span>
+                <span className="text-[10px] font-mono font-bold px-1.5 rounded" style={{ backgroundColor: '#ffaa0026', color: '#ffaa00' }}>1</span>
+              </div>
+              <div className="text-[10px] text-gray-400 font-mono truncate">bc1q●●●scam</div>
+            </div>
+            <div className="bg-[#0a0a0f] border border-[#1e1e2e] rounded-lg p-2.5">
+              <div className="flex items-center justify-between mb-1">
+                <span className="text-[9px] uppercase tracking-wider text-gray-500">Legal</span>
+                <span className="text-[10px] font-mono font-bold px-1.5 rounded" style={{ backgroundColor: '#aa66ff26', color: '#aa66ff' }}>4</span>
+              </div>
+              <div className="text-[10px] text-gray-400 truncate">BODACC · Gazette</div>
+            </div>
+          </div>
+
           {/* Persona + location + photos */}
           <div className="flex flex-wrap items-center gap-3 mb-4 text-xs text-gray-400">
             <span className="bg-[#1e1e2e] rounded-full px-2.5 py-1 text-[#3388ff]">@jsmith · Primary persona · 12 platforms</span>

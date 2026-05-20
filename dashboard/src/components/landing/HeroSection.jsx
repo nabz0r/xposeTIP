@@ -14,6 +14,8 @@ export default function HeroSection({ email, setEmail, loading, error, onSubmit,
           <span className="text-[10px] font-mono text-gray-600 ml-1">TIP</span>
         </div>
         <div className="flex items-center gap-3">
+          <a href="/architecture" className="text-sm text-gray-400 hover:text-white px-3 py-1.5 transition-colors">Architecture</a>
+          <a href="/compare" className="text-sm text-gray-400 hover:text-white px-3 py-1.5 transition-colors">Compare</a>
           <a href="/manifesto" className="text-sm text-gray-400 hover:text-white px-3 py-1.5 transition-colors">Manifesto</a>
           <a href="/login" className="text-sm text-gray-400 hover:text-white px-3 py-1.5 transition-colors">Sign in</a>
           <a href="/setup" className="text-sm bg-[#00ff88] text-black font-semibold rounded-lg px-4 py-1.5 hover:bg-[#00ff88]/90 transition-colors">

@@ -8,6 +8,7 @@ import FeaturesSection from '../components/landing/FeaturesSection'
 import PipelineSection from '../components/landing/PipelineSection'
 import MockPreview from '../components/landing/MockPreview'
 import PricingSection from '../components/landing/PricingSection'
+import TwoWaysSection from '../components/landing/TwoWaysSection'
 import TrustBar from '../components/landing/TrustBar'
 import TechStack from '../components/landing/TechStack'
 import FinalCTA from '../components/landing/FinalCTA'
@@ -129,6 +130,7 @@ export default function Landing() {
       <FeaturesSection />
       <PipelineSection />
       <MockPreview />
+      <TwoWaysSection />
       <PricingSection />
       <TrustBar />
       <TechStack />

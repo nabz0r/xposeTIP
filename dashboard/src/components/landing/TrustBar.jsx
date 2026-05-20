@@ -10,8 +10,8 @@ export default function TrustBar() {
             { value: '127', label: 'OSINT sources' },
             { value: '9-axis', label: 'Behavioral radar' },
             { value: '40+', label: 'Sanctions lists' },
-            { value: 'GDPR', label: 'Aware architecture' },
-            { value: 'AES-256', label: 'Encrypted at rest' },
+            { value: 'US·FR·UK', label: 'Legal records' },
+            { value: 'Verified', label: 'Provenance per finding' },
             { value: '\ud83c\uddf1\ud83c\uddfa', label: 'Made in Luxembourg' },
           ].map(t => (
             <div key={t.label} className="bg-[#12121a] border border-[#1e1e2e] rounded-lg py-3 px-2">

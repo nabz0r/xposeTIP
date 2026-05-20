@@ -16,6 +16,7 @@ import Landing from './pages/Landing'
 import Architecture from './pages/Architecture'
 import UserPreview from './pages/UserPreview'
 import Manifesto from './pages/Manifesto'
+import Compare from './pages/Compare'
 import Consulting from './pages/Consulting'
 import { AuthProvider, useAuth } from './lib/auth'
 import { ToastProvider } from './components/Toast'
@@ -35,6 +36,7 @@ function App() {
           <Route path="/welcome" element={<Landing />} />
           <Route path="/architecture" element={<Architecture />} />
           <Route path="/manifesto" element={<Manifesto />} />
+          <Route path="/compare" element={<Compare />} />
           <Route path="/login" element={<Login />} />
           <Route path="/setup" element={<Setup />} />
           <Route path="/" element={<ProtectedRoute><Layout /></ProtectedRoute>}>

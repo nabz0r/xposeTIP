@@ -29,10 +29,10 @@ export default function PipelineSection() {
             <div className="text-5xl font-mono font-bold text-[#ff8800]/15 mb-4">02</div>
             <h3 className="text-lg font-semibold mb-3 text-[#ff8800]">Enrich</h3>
             <p className="text-sm text-gray-400 leading-relaxed mb-3">
-              Once a name is resolved with high confidence, search global news archives, sanctions lists, and corporate registries.
+              Once a name is resolved with high confidence, search global news archives, 40+ sanctions lists, corporate registries, and court records in the US, France, and the UK.
             </p>
             <p className="text-xs text-gray-600">
-              Three independent layers — media, compliance, corporate — so errors never cascade.
+              Five independent layers — media, sanctions, corporate, legal, geographic — so errors never cascade.
             </p>
             <div className="hidden md:block absolute top-8 -right-4 text-gray-700 text-2xl">→</div>
           </div>
@@ -41,10 +41,10 @@ export default function PipelineSection() {
             <div className="text-5xl font-mono font-bold text-[#ff2244]/15 mb-4">03</div>
             <h3 className="text-lg font-semibold mb-3 text-[#ff2244]">Identify</h3>
             <p className="text-sm text-gray-400 leading-relaxed mb-3">
-              Build a 9-axis behavioral fingerprint, cluster digital personas, and generate a concrete remediation plan.
+              Build a 9-axis behavioral fingerprint, cluster digital personas, and generate a concrete remediation plan. Every finding is sourced and timestamped — provenance is auditable per-indicator.
             </p>
             <p className="text-xs text-gray-600">
-              Not a dump of raw data. A multi-dimensional portrait with actionable next steps.
+              And when a second identity in your workspace matches the same fingerprint pattern, the system flags it — automatically.
             </p>
           </div>
         </div>
