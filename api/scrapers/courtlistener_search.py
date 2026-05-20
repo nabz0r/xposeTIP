@@ -159,7 +159,7 @@ def search_courtlistener(primary_name: str, api_key: str | None = None) -> list[
                 "description": f"{court} — {docket_number}" if docket_number else court,
                 "severity": "medium",
                 "indicator_type": "legal_record",
-                "indicator_value": docket_number or r.get("docket_id") or "",
+                "indicator_value": str(docket_number or r.get("docket_id") or ""),
                 "confidence": round(confidence, 3),
                 "data": {
                     "scraper": "courtlistener_search",
@@ -190,6 +190,9 @@ def search_courtlistener(primary_name: str, api_key: str | None = None) -> list[
     except requests.exceptions.RequestException as e:
         logger.warning("Courtlistener: request error for '%s': %s", primary_name, e)
         return []
-    except Exception:
-        logger.exception("Courtlistener: unexpected error for '%s'", primary_name)
+    except Exception as e:
+        logger.exception(
+            "Courtlistener: unexpected error for '%s' (%s: %s)",
+            primary_name, type(e).__name__, str(e)[:200],
+        )
         return []

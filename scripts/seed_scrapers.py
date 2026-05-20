@@ -2699,7 +2699,7 @@ DEFAULT_SCRAPERS = [
         "rate_limit_requests": 1,
         "rate_limit_window": 2,
         "enabled": False,
-        "notes": "S122e-holdover: hits /search endpoint without name param. Verify manually until S122f wires ?q={name}&type=p + JSON extraction + free API token.",
+        "notes": "S123: disabled — real dispatch via api/scrapers/courtlistener_search.py through PASS2 (public_exposure_enricher). URL-template path was producing low-quality placeholders.",
     },
     {
         "name": "bodacc_search",
@@ -2718,8 +2718,8 @@ DEFAULT_SCRAPERS = [
         "finding_severity": "low",
         "rate_limit_requests": 1,
         "rate_limit_window": 2,
-        "enabled": True,
-        "notes": "S122e-holdover: hits /search endpoint without name param. Verify manually until S122f wires ?q={name} + opendatasoft JSON extraction.",
+        "enabled": False,
+        "notes": "S123: disabled — real dispatch via api/scrapers/bodacc_search.py through PASS2 (public_exposure_enricher). URL-template path was producing low-quality placeholders.",
     },
     {
         "name": "uk_gazette_search",
@@ -2738,8 +2738,8 @@ DEFAULT_SCRAPERS = [
         "finding_severity": "low",
         "rate_limit_requests": 1,
         "rate_limit_window": 11,
-        "enabled": True,
-        "notes": "S122e-holdover: hits /data.json firehose without a search param. Verify manually until S122f wires ?text={name} + JSON extraction.",
+        "enabled": False,
+        "notes": "S123: disabled — real dispatch via api/scrapers/uk_gazette_search.py through PASS2 (public_exposure_enricher). URL-template path was producing low-quality placeholders.",
     },
     {
         "name": "interpol_red_notices",
@@ -2777,8 +2777,8 @@ DEFAULT_SCRAPERS = [
         "finding_severity": "low",
         "rate_limit_requests": 1,
         "rate_limit_window": 2,
-        "enabled": True,
-        "notes": "S122e-holdover: URL is correct but extraction_rules=[]. Reference S122f-OC spec for proper wiring (free API, JSON extraction documented).",
+        "enabled": False,
+        "notes": "S123: disabled — real dispatch via api/scrapers/opencorporates_officers.py through PASS2 (public_exposure_enricher). URL-template path was producing low-quality placeholders.",
     },
     {
         "name": "lbr_luxembourg",
@@ -2797,8 +2797,8 @@ DEFAULT_SCRAPERS = [
         "finding_severity": "low",
         "rate_limit_requests": 1,
         "rate_limit_window": 3,
-        "enabled": True,
-        "notes": "S122e-holdover: search URL only, no real extraction. Verify manually until S122f wires the actual POST search + result parsing.",
+        "enabled": False,
+        "notes": "S123: disabled — real dispatch via api/scrapers/lbr_luxembourg.py through PASS2 (public_exposure_enricher). URL-template path was producing low-quality placeholders.",
     },
     # === PHONE SCRAPERS ===
     {
