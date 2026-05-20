@@ -1467,15 +1467,21 @@ def aggregate_profile(target_id, workspace_id, session: Session, graph_context=N
         "candidates_verified": len(verified_names),
         "candidates_guessed": len(guessed_names),
         "email_pattern_available": bool(email_name_guess.get("full")),
+        "accepted_candidates": [],
         "rejected_by_clean": [],
     }
     for n in profile.get("names", []):
-        if not _is_valid_name(n["value"]):
-            name_diag["rejected_by_clean"].append({
-                "value": n["value"][:80],
-                "source": n.get("source", "?"),
-                "module": n.get("module", "?"),
-            })
+        entry = {
+            "value": n["value"][:80],
+            "source": n.get("source", "?"),
+            "module": n.get("module", "?"),
+            "email_verified": n.get("email_verified", False),
+            "composite_score": n.get("composite_score"),
+        }
+        if _is_valid_name(n["value"]):
+            name_diag["accepted_candidates"].append(entry)
+        else:
+            name_diag["rejected_by_clean"].append(entry)
     profile["name_resolution_debug"] = name_diag
 
     if not primary_name:

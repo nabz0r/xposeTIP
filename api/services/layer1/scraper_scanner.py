@@ -78,9 +78,11 @@ class ScraperScanner(BaseScanner):
                     pass
 
             total_scrapers = len(scrapers)
+            attempt_log = {}  # scraper_name -> status (S122-obs)
             for idx, scraper in enumerate(scrapers):
                 input_value = inputs.get(scraper.input_type)
                 if input_value is None:
+                    attempt_log[scraper.name] = "no_input"
                     continue  # Skip scrapers whose input isn't available
 
                 # Update Redis progress
@@ -96,13 +98,20 @@ class ScraperScanner(BaseScanner):
 
                 try:
                     result = await engine.execute(scraper.to_dict(), input_value)
-                except Exception:
-                    logger.debug("Scraper %s failed", scraper.name)
+                except Exception as e:
+                    logger.debug("Scraper %s failed: %s", scraper.name, e)
+                    attempt_log[scraper.name] = "exception"
                     continue
 
                 if not result.get("found"):
+                    sc = result.get("status_code")
+                    if isinstance(sc, int) and sc >= 400:
+                        attempt_log[scraper.name] = f"error_{sc}"
+                    else:
+                        attempt_log[scraper.name] = "no_data"
                     continue
 
+                attempt_log[scraper.name] = "success"
                 extracted = result.get("extracted", {})
 
                 # Build finding title from template
@@ -138,6 +147,27 @@ class ScraperScanner(BaseScanner):
 
                 # Wait between scrapers to respect rate limits
                 await asyncio.sleep(scraper.rate_limit_window / max(scraper.rate_limit_requests, 1))
+
+            # Persist per-scraper attempt log to scan.module_progress (S122-obs)
+            if scan_id:
+                try:
+                    from api.models.scan import Scan
+                    from sqlalchemy.orm.attributes import flag_modified
+                    persist_sess = get_sync_session()
+                    try:
+                        sc_row = persist_sess.execute(
+                            select(Scan).where(Scan.id == scan_id)
+                        ).scalar_one_or_none()
+                        if sc_row is not None:
+                            mp = dict(sc_row.module_progress or {})
+                            mp["scraper_engine_attempts"] = attempt_log
+                            sc_row.module_progress = mp
+                            flag_modified(sc_row, "module_progress")
+                            persist_sess.commit()
+                    finally:
+                        persist_sess.close()
+                except Exception:
+                    logger.exception("Failed to persist scraper_engine_attempts")
 
             await engine.close()
 
