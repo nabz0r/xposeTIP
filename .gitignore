@@ -23,3 +23,9 @@ var/consulting/*
 
 # Secrets scan reports — generated during S114 secrets audit
 .gitleaks-report-*.json
+
+# QA & runtime artifacts (S122-hk)
+.playwright-mcp/
+celerybeat-schedule
+toto.txt
+*.tmp
