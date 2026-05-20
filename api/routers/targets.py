@@ -138,7 +138,7 @@ async def list_targets(
     target_status: str | None = Query(None, alias="status"),
     min_score: int | None = None,
     page: int = Query(1, ge=1),
-    per_page: int = Query(20, ge=1, le=100),
+    per_page: int = Query(20, ge=1, le=500),
     workspace_id: uuid.UUID = Depends(get_current_workspace),
     user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),

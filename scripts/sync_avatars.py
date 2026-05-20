@@ -4,11 +4,11 @@ Usage:
     docker compose exec api python scripts/sync_avatars.py
 """
 from sqlalchemy import text
-from api.database import SessionLocal
+from api.tasks.utils import get_sync_session
 
 
 def main():
-    db = SessionLocal()
+    db = get_sync_session()
     try:
         result = db.execute(text("""
             UPDATE targets

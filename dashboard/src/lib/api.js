@@ -36,7 +36,17 @@ async function request(path, options = {}) {
 
   if (!res.ok) {
     const err = await res.json().catch(() => ({}))
-    throw new Error(err.detail || `Request failed: ${res.status}`)
+    let msg
+    if (Array.isArray(err.detail)) {
+      msg = err.detail.map(d => d?.msg || JSON.stringify(d)).join('; ')
+    } else if (typeof err.detail === 'string') {
+      msg = err.detail
+    } else if (err.detail) {
+      msg = JSON.stringify(err.detail)
+    } else {
+      msg = `Request failed: ${res.status}`
+    }
+    throw new Error(msg)
   }
 
   return res.status === 204 ? null : res.json()
