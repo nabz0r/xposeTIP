@@ -623,8 +623,16 @@ def _clean_name_value(raw_name):
 
     name = raw_name.strip()
 
-    # Strip emojis
-    name = re.sub(r'[\U0001F000-\U0001FFFF\u200D\uFE0F]', '', name).strip()
+    # Strip emojis and decorative symbols
+    name = re.sub(
+        r'[\u2190-\u21FF'         # Arrows
+        r'\u2300-\u23FF'          # Misc Technical
+        r'\u2600-\u26FF'          # Misc Symbols (\u2603 \u2605 \u2600 \u2665 etc.)
+        r'\u2700-\u27BF'          # Dingbats (\u2702 \u2708 \u2709 etc.)
+        r'\U0001F000-\U0001FFFF'  # Modern emoji blocks
+        r'\u200D\uFE0F]',         # ZWJ + variation selector
+        '', name
+    ).strip()
 
     # Remove "on about.me", "on Snapchat", etc.
     name = re.sub(r'\s+on\s+\w+\.?\w*$', '', name, flags=re.IGNORECASE).strip()
@@ -1441,7 +1449,13 @@ def aggregate_profile(target_id, workspace_id, session: Session, graph_context=N
                 family_groups.setdefault(family, []).append(n)
 
         if family_groups:
-            best_family = max(family_groups, key=lambda fam: len(family_groups[fam]))
+            best_family = max(
+                family_groups,
+                key=lambda fam: (
+                    len(family_groups[fam]),
+                    max(n.get("composite_score", 0) for n in family_groups[fam]),
+                ),
+            )
             candidates = family_groups[best_family]
             best = max(candidates, key=lambda n: n.get("composite_score", 0))
             primary_name = best["value"].strip()
