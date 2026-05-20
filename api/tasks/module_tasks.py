@@ -161,6 +161,17 @@ def run_module(self, scan_id: str, module_id: str, email: str):
 
         created = 0
         for result in results:
+            # Pre-truncate so the same trimmed values flow into the SELECT below,
+            # the Finding row, AND the Identity row (which also reads result.indicator_value).
+            if result.indicator_value and len(result.indicator_value) > 500:
+                result.indicator_value = result.indicator_value[:497] + "..."
+            if result.title and len(result.title) > 255:
+                result.title = result.title[:252] + "..."
+            if result.url and len(result.url) > 1024:
+                result.url = result.url[:1021] + "..."
+            if result.module and len(result.module) > 50:
+                result.module = result.module[:50]
+
             # Check for duplicate
             existing = session.execute(
                 select(Finding).where(
@@ -190,15 +201,6 @@ def run_module(self, scan_id: str, module_id: str, email: str):
                     indicator_type=result.indicator_type,
                     verified=result.verified,
                 )
-                # Truncate string fields to avoid StringDataRightTruncation
-                if finding.title and len(finding.title) > 255:
-                    finding.title = finding.title[:252] + "..."
-                if finding.url and len(finding.url) > 1024:
-                    finding.url = finding.url[:1021] + "..."
-                if finding.indicator_value and len(finding.indicator_value) > 500:
-                    finding.indicator_value = finding.indicator_value[:497] + "..."
-                if finding.module and len(finding.module) > 50:
-                    finding.module = finding.module[:50]
 
                 # Compute confidence based on source reliability
                 from api.services.layer4.source_scoring import compute_finding_confidence
