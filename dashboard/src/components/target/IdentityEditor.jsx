@@ -123,6 +123,7 @@ export default function IdentityEditor({ targetId, userFirstName, userLastName, 
         <h2 className="text-xl text-gray-500 italic">Unknown identity</h2>
       )}
       <button onClick={() => setEditing(true)}
+        data-name-editor-trigger
         className="text-gray-500 hover:text-[#3388ff] transition-colors text-sm" title="Edit identity">
         ✏️
       </button>

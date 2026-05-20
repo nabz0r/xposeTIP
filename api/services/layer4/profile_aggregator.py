@@ -1459,6 +1459,41 @@ def aggregate_profile(target_id, workspace_id, session: Session, graph_context=N
     # Save auto-resolved name BEFORE potential operator override
     profile["_auto_resolved_name"] = primary_name
 
+    # === NAME RESOLUTION DIAGNOSTICS (S122c) ===
+    name_diag = {
+        "result": primary_name or None,
+        "candidates_total": len(profile.get("names", [])),
+        "candidates_valid": len(valid_names),
+        "candidates_verified": len(verified_names),
+        "candidates_guessed": len(guessed_names),
+        "email_pattern_available": bool(email_name_guess.get("full")),
+        "rejected_by_clean": [],
+    }
+    for n in profile.get("names", []):
+        if not _is_valid_name(n["value"]):
+            name_diag["rejected_by_clean"].append({
+                "value": n["value"][:80],
+                "source": n.get("source", "?"),
+                "module": n.get("module", "?"),
+            })
+    profile["name_resolution_debug"] = name_diag
+
+    if not primary_name:
+        logger.warning(
+            "NAME_RESOLUTION_FAILED target=%s candidates_total=%d valid=%d verified=%d guessed=%d email_pattern=%s",
+            target_id,
+            name_diag["candidates_total"],
+            name_diag["candidates_valid"],
+            name_diag["candidates_verified"],
+            name_diag["candidates_guessed"],
+            name_diag["email_pattern_available"],
+        )
+    else:
+        logger.info(
+            "NAME_RESOLUTION_OK target=%s name=%r valid_candidates=%d",
+            target_id, primary_name, name_diag["candidates_valid"],
+        )
+
     # === OPERATOR ASSERTION CHECK ===
     # If operator has asserted a name, it becomes primary with confidence=1.0
     target = session.execute(

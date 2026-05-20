@@ -37,6 +37,8 @@ export default function ProfileHeader({ target, findings, animScore, profileData
   // Operator assertion ALWAYS wins — check user_first_name/user_last_name first
   const operatorName = [target.user_first_name, target.user_last_name].filter(Boolean).join(' ')
   const rawName = operatorName || p.primary_name || target.display_name || ''
+  const nameResolutionFailed = !operatorName && !p.primary_name && !target.display_name
+  const nameDiag = p.name_resolution_debug || null
   const PLATFORM_REJECT = /^(spotify|amazon|reddit|steam|keybase|github|twitter|facebook|instagram|freelancer|replit|medium|gitlab|eventbrite|lastpass|1password|bitwarden|dashlane|office365|office|unknown|admin|test|null|none|default|anonymous|noreply|support|contact)$/i
   const displayName = rawName && !PLATFORM_REJECT.test(rawName.trim()) ? rawName : ''
   const avatarUrl = p.primary_avatar || target.avatar_url || null
@@ -169,6 +171,29 @@ export default function ProfileHeader({ target, findings, animScore, profileData
                     <span>{'\uD83E\uDD16'}</span>
                     <span>{p._auto_resolved_name}</span>
                     <span className="text-gray-600">(auto-resolved)</span>
+                  </div>
+                )}
+                {nameResolutionFailed && (
+                  <div className="mt-2 flex items-start gap-2 px-3 py-2 rounded-lg bg-amber-500/10 border border-amber-500/30">
+                    <span className="text-amber-400 text-base leading-none mt-0.5">{'\u26A0'}</span>
+                    <div className="flex-1 text-xs">
+                      <div className="text-amber-300 font-medium">Name not auto-resolved</div>
+                      <div className="text-amber-200/70 mt-0.5">
+                        {nameDiag
+                          ? `${nameDiag.candidates_total} candidate(s) found, ${nameDiag.candidates_valid} passed validation. Sanctions / PEP / legal-record scanners cannot run without a name.`
+                          : 'No name candidates extracted from scanner data. Sanctions / PEP / legal-record scanners cannot run.'}
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const editor = document.querySelector('[data-name-editor-trigger]')
+                          if (editor) editor.click()
+                        }}
+                        className="mt-1.5 text-amber-300 hover:text-amber-200 underline underline-offset-2 font-medium"
+                      >
+                        Set name manually {'\u2192'}
+                      </button>
+                    </div>
                   </div>
                 )}
                 {/* Per-field confidence pills */}
