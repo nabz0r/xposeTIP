@@ -890,10 +890,10 @@ DEFAULT_SCRAPERS = [
         "url_template": "https://pastebin.com/u/{username}",
         "input_type": "username",
         "method": "GET",
-        "success_indicator": "<title>.*?'s Pastebin",
+        "success_indicator": "<title>[^<]+ Pastebin",
         "not_found_indicators": ["Not Found", "404", "User does not exist"],
         "extraction_rules": [
-            {"field": "display_name", "type": "regex", "pattern": "<title>([^']+)'s Pastebin"},
+            {"field": "display_name", "type": "regex", "pattern": "<title>([^<]+?)(?:&#0*39;|&apos;|')s Pastebin"},
             {"field": "avatar", "type": "regex", "pattern": "\"user-icon\".*?src=\"([^\"]+)\""},
         ],
         "finding_title_template": "Pastebin: {display_name}",
@@ -2136,6 +2136,7 @@ DEFAULT_SCRAPERS = [
         "url_template": "https://gravatar.com/{email_md5}.json",
         "input_type": "email",
         "method": "GET",
+        "enabled": False,  # S122-clean: duplicate of gravatar_email_lookup
         "headers": {},
         "success_indicator": "\"displayName\"",
         "not_found_indicators": ["User not found", "404"],
@@ -2317,6 +2318,7 @@ DEFAULT_SCRAPERS = [
         "url_template": "https://gravatar.com/{email_md5}.json",
         "input_type": "email",
         "method": "GET",
+        "enabled": False,  # S122-clean: duplicate of gravatar_email_lookup
         "success_indicator": "\"profileUrl\"",
         "not_found_indicators": ["User not found", "404"],
         "extraction_rules": [
