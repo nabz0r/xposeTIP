@@ -1,0 +1,832 @@
+{
+  "version": "S143-v1",
+  "workspace": {
+    "slug": "bgl-bnp-paribas",
+    "name": "BGL BNP Paribas",
+    "id": "fbef7faa-f844-415b-9af8-6a1ea9912447"
+  },
+  "summary": {
+    "n_total": 47,
+    "n_with_fingerprint": 47,
+    "n_extractable": 47
+  },
+  "axes_normalized": {
+    "accounts": {
+      "n": 47,
+      "mean": 0.4818723404255319,
+      "stdev": 0.05963316010018054,
+      "min": 0.333,
+      "max": 0.583,
+      "p10": 0.383,
+      "p50": 0.5,
+      "p90": 0.5364000000000001,
+      "hist": [
+        0,
+        0,
+        0,
+        7,
+        14,
+        26,
+        0,
+        0,
+        0,
+        0
+      ],
+      "pct_zero": 0.0,
+      "pct_saturated": 0.0
+    },
+    "platforms": {
+      "n": 47,
+      "mean": 0.3148936170212766,
+      "stdev": 0.01976737985161324,
+      "min": 0.26,
+      "max": 0.34,
+      "p10": 0.28,
+      "p50": 0.32,
+      "p90": 0.34,
+      "hist": [
+        0,
+        0,
+        17,
+        30,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "pct_zero": 0.0,
+      "pct_saturated": 0.0
+    },
+    "username_reuse": {
+      "n": 47,
+      "mean": 0.5,
+      "stdev": 0.17569736827110216,
+      "min": 0.1,
+      "max": 0.6,
+      "p10": 0.1,
+      "p50": 0.6,
+      "p90": 0.6,
+      "hist": [
+        0,
+        5,
+        6,
+        0,
+        0,
+        36,
+        0,
+        0,
+        0,
+        0
+      ],
+      "pct_zero": 0.0,
+      "pct_saturated": 0.0
+    },
+    "breaches": {
+      "n": 47,
+      "mean": 0.6085106382978723,
+      "stdev": 0.040805941777715765,
+      "min": 0.6,
+      "max": 0.8,
+      "p10": 0.6,
+      "p50": 0.6,
+      "p90": 0.6,
+      "hist": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        45,
+        0,
+        0,
+        2,
+        0
+      ],
+      "pct_zero": 0.0,
+      "pct_saturated": 0.0
+    },
+    "geo_spread": {
+      "n": 47,
+      "mean": 0.30872340425531913,
+      "stdev": 0.008751899489873673,
+      "min": 0.25,
+      "max": 0.31,
+      "p10": 0.31,
+      "p50": 0.31,
+      "p90": 0.31,
+      "hist": [
+        0,
+        0,
+        1,
+        46,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "pct_zero": 0.0,
+      "pct_saturated": 0.0
+    },
+    "data_leaked": {
+      "n": 47,
+      "mean": 0.009361702127659575,
+      "stdev": 0.025315767154186646,
+      "min": 0.0,
+      "max": 0.12,
+      "p10": 0.0,
+      "p50": 0.0,
+      "p90": 0.04,
+      "hist": [
+        46,
+        1,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "pct_zero": 85.1063829787234,
+      "pct_saturated": 0.0
+    },
+    "email_age": {
+      "n": 47,
+      "mean": 0.05497872340425532,
+      "stdev": 0.09455559426618039,
+      "min": 0.0,
+      "max": 0.31,
+      "p10": 0.0,
+      "p50": 0.0,
+      "p90": 0.24059999999999998,
+      "hist": [
+        37,
+        5,
+        3,
+        2,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "pct_zero": 55.319148936170215,
+      "pct_saturated": 0.0
+    },
+    "security": {
+      "n": 47,
+      "mean": 0.25,
+      "stdev": 0.0,
+      "min": 0.25,
+      "max": 0.25,
+      "p10": 0.25,
+      "p50": 0.25,
+      "p90": 0.25,
+      "hist": [
+        0,
+        0,
+        47,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "pct_zero": 0.0,
+      "pct_saturated": 0.0
+    },
+    "public_exposure": {
+      "n": 47,
+      "mean": 0.0884468085106383,
+      "stdev": 0.1250596046605531,
+      "min": 0.0,
+      "max": 0.35,
+      "p10": 0.0,
+      "p50": 0.0,
+      "p90": 0.29179999999999995,
+      "hist": [
+        28,
+        8,
+        7,
+        4,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "pct_zero": 59.57446808510638,
+      "pct_saturated": 0.0
+    }
+  },
+  "axes_raw": {
+    "accounts": {
+      "n": 47,
+      "mean": 28.914893617021278,
+      "stdev": 3.5742423169967847,
+      "min": 20.0,
+      "max": 35.0,
+      "p10": 23.0,
+      "p50": 30.0,
+      "p90": 32.2,
+      "hist": [
+        0,
+        0,
+        0,
+        7,
+        14,
+        26,
+        0,
+        0,
+        0,
+        0
+      ],
+      "pct_at_max": 0.0
+    },
+    "platforms": {
+      "n": 47,
+      "mean": 15.74468085106383,
+      "stdev": 0.9883689925806617,
+      "min": 13.0,
+      "max": 17.0,
+      "p10": 14.0,
+      "p50": 16.0,
+      "p90": 17.0,
+      "hist": [
+        0,
+        0,
+        5,
+        42,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "pct_at_max": 0.0
+    },
+    "username_reuse": {
+      "n": 47,
+      "mean": 5.0,
+      "stdev": 1.7569736827110218,
+      "min": 1.0,
+      "max": 6.0,
+      "p10": 1.0,
+      "p50": 6.0,
+      "p90": 6.0,
+      "hist": [
+        0,
+        5,
+        1,
+        5,
+        0,
+        3,
+        33,
+        0,
+        0,
+        0
+      ],
+      "pct_at_max": 0.0
+    },
+    "breaches": {
+      "n": 47,
+      "mean": 3.0425531914893615,
+      "stdev": 0.20402970888857874,
+      "min": 3.0,
+      "max": 4.0,
+      "p10": 3.0,
+      "p50": 3.0,
+      "p90": 3.0,
+      "hist": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        45,
+        0,
+        2,
+        0
+      ],
+      "pct_at_max": 0.0
+    },
+    "geo_spread": {
+      "n": 47,
+      "mean": 1.5436170212765958,
+      "stdev": 0.04375949744936837,
+      "min": 1.25,
+      "max": 1.55,
+      "p10": 1.55,
+      "p50": 1.55,
+      "p90": 1.55,
+      "hist": [
+        0,
+        0,
+        1,
+        46,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "pct_at_max": 0.0
+    },
+    "data_leaked": {
+      "n": 47,
+      "mean": 0.23404255319148937,
+      "stdev": 0.6328941788546661,
+      "min": 0.0,
+      "max": 3.0,
+      "p10": 0.0,
+      "p50": 0.0,
+      "p90": 1.0,
+      "hist": [
+        46,
+        1,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "pct_at_max": 0.0
+    },
+    "email_age": {
+      "n": 47,
+      "mean": 2.2,
+      "stdev": 3.7832008531998635,
+      "min": 0.0,
+      "max": 12.4,
+      "p10": 0.0,
+      "p50": 0.0,
+      "p90": 9.620000000000001,
+      "hist": [
+        37,
+        5,
+        3,
+        2,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "pct_at_max": 0.0
+    },
+    "security": {
+      "n": 47,
+      "mean": 1.0,
+      "stdev": 0.0,
+      "min": 1.0,
+      "max": 1.0,
+      "p10": 1.0,
+      "p50": 1.0,
+      "p90": 1.0,
+      "hist": [
+        0,
+        0,
+        47,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "pct_at_max": 0.0
+    },
+    "public_exposure": {
+      "n": 47,
+      "mean": 0.0884468085106383,
+      "stdev": 0.1250596046605531,
+      "min": 0.0,
+      "max": 0.35,
+      "p10": 0.0,
+      "p50": 0.0,
+      "p90": 0.29179999999999995,
+      "hist": [
+        28,
+        8,
+        7,
+        4,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "pct_at_max": 0.0
+    }
+  },
+  "rich_targets": {
+    "3": 47,
+    "5": 47,
+    "7": 15,
+    "9": 0
+  },
+  "similarity": {
+    "total_pairs": 1081,
+    "mean": 0.9523460684551341,
+    "stdev": 0.04720908247705032,
+    "above": {
+      "0.5": {
+        "count": 1081,
+        "pct": 100.0
+      },
+      "0.6": {
+        "count": 1081,
+        "pct": 100.0
+      },
+      "0.7": {
+        "count": 1081,
+        "pct": 100.0
+      },
+      "0.8": {
+        "count": 1081,
+        "pct": 100.0
+      },
+      "0.9": {
+        "count": 885,
+        "pct": 81.8686401480111
+      }
+    },
+    "hist": [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      196,
+      885
+    ]
+  },
+  "top_pairs": [
+    {
+      "rank": 1,
+      "sim": 1.0,
+      "a": {
+        "id": "a7b5ac4d-26c3-4909-a084-1611d5075398",
+        "email": "marc.lennert@bgl.lu"
+      },
+      "b": {
+        "id": "d941c25b-bb01-49fd-b5f8-2960c1158141",
+        "email": "alain.nyckees@bgl.lu"
+      },
+      "top_axes": [
+        "username_reuse",
+        "breaches",
+        "accounts"
+      ]
+    },
+    {
+      "rank": 2,
+      "sim": 1.0,
+      "a": {
+        "id": "3fce3232-e7a3-48fc-870e-836196bcd549",
+        "email": "patrice.maraschi@bgl.lu"
+      },
+      "b": {
+        "id": "62737c1b-f6ef-4bbe-970a-da85a0c5387b",
+        "email": "sandrine.devuyst@bgl.lu"
+      },
+      "top_axes": [
+        "username_reuse",
+        "breaches",
+        "accounts"
+      ]
+    },
+    {
+      "rank": 3,
+      "sim": 1.0,
+      "a": {
+        "id": "3fce3232-e7a3-48fc-870e-836196bcd549",
+        "email": "patrice.maraschi@bgl.lu"
+      },
+      "b": {
+        "id": "2e553553-24a6-49c1-953a-e7eb5148fda8",
+        "email": "valerie.sini@bgl.lu"
+      },
+      "top_axes": [
+        "username_reuse",
+        "breaches",
+        "accounts"
+      ]
+    },
+    {
+      "rank": 4,
+      "sim": 1.0,
+      "a": {
+        "id": "0813b29f-4eae-4a13-b8b6-2e8cf43605ae",
+        "email": "francoise.thoma@bgl.lu"
+      },
+      "b": {
+        "id": "41cbb7b2-1950-4e78-9891-9461589e293a",
+        "email": "gregory.gillet@bgl.lu"
+      },
+      "top_axes": [
+        "username_reuse",
+        "breaches",
+        "accounts"
+      ]
+    },
+    {
+      "rank": 5,
+      "sim": 1.0,
+      "a": {
+        "id": "74b496d0-2de3-4895-83d7-c10e4a562f62",
+        "email": "sebastien.labbe@bgl.lu"
+      },
+      "b": {
+        "id": "12f72bea-48f2-4eeb-888c-648dac6452b3",
+        "email": "vincent.delfosse@bgl.lu"
+      },
+      "top_axes": [
+        "username_reuse",
+        "breaches",
+        "accounts"
+      ]
+    },
+    {
+      "rank": 6,
+      "sim": 1.0,
+      "a": {
+        "id": "74b496d0-2de3-4895-83d7-c10e4a562f62",
+        "email": "sebastien.labbe@bgl.lu"
+      },
+      "b": {
+        "id": "34d1b53b-da22-4fce-a7ab-641508ecd3e0",
+        "email": "frederic.kieffer@bgl.lu"
+      },
+      "top_axes": [
+        "username_reuse",
+        "breaches",
+        "accounts"
+      ]
+    },
+    {
+      "rank": 7,
+      "sim": 1.0,
+      "a": {
+        "id": "1d9360bd-8ffb-409c-872a-b042ce24c2e6",
+        "email": "cedric.bossaert@bgl.lu"
+      },
+      "b": {
+        "id": "de43b416-2dc5-4d47-976b-f73475b89d4e",
+        "email": "pauline.monginot@bgl.lu"
+      },
+      "top_axes": [
+        "username_reuse",
+        "breaches",
+        "accounts"
+      ]
+    },
+    {
+      "rank": 8,
+      "sim": 1.0,
+      "a": {
+        "id": "c5ca2fa2-a925-4946-9f79-5920bb828a69",
+        "email": "gilles.scholtus@bgl.lu"
+      },
+      "b": {
+        "id": "8c8bc83a-7056-4233-b961-a937c503b151",
+        "email": "hichem.safar@bgl.lu"
+      },
+      "top_axes": [
+        "username_reuse",
+        "breaches",
+        "accounts"
+      ]
+    },
+    {
+      "rank": 9,
+      "sim": 1.0,
+      "a": {
+        "id": "12f72bea-48f2-4eeb-888c-648dac6452b3",
+        "email": "vincent.delfosse@bgl.lu"
+      },
+      "b": {
+        "id": "34d1b53b-da22-4fce-a7ab-641508ecd3e0",
+        "email": "frederic.kieffer@bgl.lu"
+      },
+      "top_axes": [
+        "username_reuse",
+        "breaches",
+        "accounts"
+      ]
+    },
+    {
+      "rank": 10,
+      "sim": 1.0,
+      "a": {
+        "id": "62737c1b-f6ef-4bbe-970a-da85a0c5387b",
+        "email": "sandrine.devuyst@bgl.lu"
+      },
+      "b": {
+        "id": "2e553553-24a6-49c1-953a-e7eb5148fda8",
+        "email": "valerie.sini@bgl.lu"
+      },
+      "top_axes": [
+        "username_reuse",
+        "breaches",
+        "accounts"
+      ]
+    },
+    {
+      "rank": 11,
+      "sim": 0.9999,
+      "a": {
+        "id": "a7b5ac4d-26c3-4909-a084-1611d5075398",
+        "email": "marc.lennert@bgl.lu"
+      },
+      "b": {
+        "id": "0813b29f-4eae-4a13-b8b6-2e8cf43605ae",
+        "email": "francoise.thoma@bgl.lu"
+      },
+      "top_axes": [
+        "username_reuse",
+        "breaches",
+        "accounts"
+      ]
+    },
+    {
+      "rank": 12,
+      "sim": 0.9999,
+      "a": {
+        "id": "a7b5ac4d-26c3-4909-a084-1611d5075398",
+        "email": "marc.lennert@bgl.lu"
+      },
+      "b": {
+        "id": "74b496d0-2de3-4895-83d7-c10e4a562f62",
+        "email": "sebastien.labbe@bgl.lu"
+      },
+      "top_axes": [
+        "username_reuse",
+        "breaches",
+        "accounts"
+      ]
+    },
+    {
+      "rank": 13,
+      "sim": 0.9999,
+      "a": {
+        "id": "a7b5ac4d-26c3-4909-a084-1611d5075398",
+        "email": "marc.lennert@bgl.lu"
+      },
+      "b": {
+        "id": "1d9360bd-8ffb-409c-872a-b042ce24c2e6",
+        "email": "cedric.bossaert@bgl.lu"
+      },
+      "top_axes": [
+        "username_reuse",
+        "breaches",
+        "accounts"
+      ]
+    },
+    {
+      "rank": 14,
+      "sim": 0.9999,
+      "a": {
+        "id": "a7b5ac4d-26c3-4909-a084-1611d5075398",
+        "email": "marc.lennert@bgl.lu"
+      },
+      "b": {
+        "id": "12f72bea-48f2-4eeb-888c-648dac6452b3",
+        "email": "vincent.delfosse@bgl.lu"
+      },
+      "top_axes": [
+        "username_reuse",
+        "breaches",
+        "accounts"
+      ]
+    },
+    {
+      "rank": 15,
+      "sim": 0.9999,
+      "a": {
+        "id": "a7b5ac4d-26c3-4909-a084-1611d5075398",
+        "email": "marc.lennert@bgl.lu"
+      },
+      "b": {
+        "id": "41cbb7b2-1950-4e78-9891-9461589e293a",
+        "email": "gregory.gillet@bgl.lu"
+      },
+      "top_axes": [
+        "username_reuse",
+        "breaches",
+        "accounts"
+      ]
+    },
+    {
+      "rank": 16,
+      "sim": 0.9999,
+      "a": {
+        "id": "a7b5ac4d-26c3-4909-a084-1611d5075398",
+        "email": "marc.lennert@bgl.lu"
+      },
+      "b": {
+        "id": "34d1b53b-da22-4fce-a7ab-641508ecd3e0",
+        "email": "frederic.kieffer@bgl.lu"
+      },
+      "top_axes": [
+        "username_reuse",
+        "breaches",
+        "accounts"
+      ]
+    },
+    {
+      "rank": 17,
+      "sim": 0.9999,
+      "a": {
+        "id": "a7b5ac4d-26c3-4909-a084-1611d5075398",
+        "email": "marc.lennert@bgl.lu"
+      },
+      "b": {
+        "id": "de43b416-2dc5-4d47-976b-f73475b89d4e",
+        "email": "pauline.monginot@bgl.lu"
+      },
+      "top_axes": [
+        "username_reuse",
+        "breaches",
+        "accounts"
+      ]
+    },
+    {
+      "rank": 18,
+      "sim": 0.9999,
+      "a": {
+        "id": "3fce3232-e7a3-48fc-870e-836196bcd549",
+        "email": "patrice.maraschi@bgl.lu"
+      },
+      "b": {
+        "id": "c7632026-0cea-4839-9de3-279e72ca7b68",
+        "email": "mariam.bouras@bgl.lu"
+      },
+      "top_axes": [
+        "username_reuse",
+        "breaches",
+        "accounts"
+      ]
+    },
+    {
+      "rank": 19,
+      "sim": 0.9999,
+      "a": {
+        "id": "3fce3232-e7a3-48fc-870e-836196bcd549",
+        "email": "patrice.maraschi@bgl.lu"
+      },
+      "b": {
+        "id": "c5ca2fa2-a925-4946-9f79-5920bb828a69",
+        "email": "gilles.scholtus@bgl.lu"
+      },
+      "top_axes": [
+        "username_reuse",
+        "breaches",
+        "accounts"
+      ]
+    },
+    {
+      "rank": 20,
+      "sim": 0.9999,
+      "a": {
+        "id": "3fce3232-e7a3-48fc-870e-836196bcd549",
+        "email": "patrice.maraschi@bgl.lu"
+      },
+      "b": {
+        "id": "8c8bc83a-7056-4233-b961-a937c503b151",
+        "email": "hichem.safar@bgl.lu"
+      },
+      "top_axes": [
+        "username_reuse",
+        "breaches",
+        "accounts"
+      ]
+    }
+  ],
+  "observations": [
+    "starved: `data_leaked` is zero for 85.1% of fingerprints \u2014 data plumbing or AXIS_MAX too high",
+    "similarity threshold sanity: 100.00% of pairs \u2265 0.7 \u2192 threshold likely too low"
+  ],
+  "generated_at_utc": "2026-05-21 14:22 UTC"
+}

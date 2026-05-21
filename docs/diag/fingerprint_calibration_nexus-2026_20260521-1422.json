@@ -1,0 +1,832 @@
+{
+  "version": "S143-v1",
+  "workspace": {
+    "slug": "nexus-2026",
+    "name": "Nexus 2026",
+    "id": "6e74ecc2-1081-4486-9b45-431fa5d68071"
+  },
+  "summary": {
+    "n_total": 21,
+    "n_with_fingerprint": 19,
+    "n_extractable": 19
+  },
+  "axes_normalized": {
+    "accounts": {
+      "n": 19,
+      "mean": 0.5140526315789474,
+      "stdev": 0.1300390854423779,
+      "min": 0.083,
+      "max": 0.633,
+      "p10": 0.367,
+      "p50": 0.55,
+      "p90": 0.633,
+      "hist": [
+        1,
+        0,
+        0,
+        1,
+        3,
+        9,
+        5,
+        0,
+        0,
+        0
+      ],
+      "pct_zero": 0.0,
+      "pct_saturated": 0.0
+    },
+    "platforms": {
+      "n": 19,
+      "mean": 0.3157894736842105,
+      "stdev": 0.05600751829230749,
+      "min": 0.1,
+      "max": 0.38,
+      "p10": 0.28,
+      "p50": 0.32,
+      "p90": 0.36,
+      "hist": [
+        0,
+        1,
+        1,
+        17,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "pct_zero": 0.0,
+      "pct_saturated": 0.0
+    },
+    "username_reuse": {
+      "n": 19,
+      "mean": 0.531578947368421,
+      "stdev": 0.1857496271237393,
+      "min": 0.1,
+      "max": 0.7,
+      "p10": 0.2,
+      "p50": 0.6,
+      "p90": 0.7,
+      "hist": [
+        0,
+        1,
+        3,
+        0,
+        0,
+        11,
+        4,
+        0,
+        0,
+        0
+      ],
+      "pct_zero": 0.0,
+      "pct_saturated": 0.0
+    },
+    "breaches": {
+      "n": 19,
+      "mean": 0.6421052631578947,
+      "stdev": 0.18353258709644943,
+      "min": 0.0,
+      "max": 0.8,
+      "p10": 0.6,
+      "p50": 0.6,
+      "p90": 0.8,
+      "hist": [
+        1,
+        0,
+        0,
+        0,
+        0,
+        11,
+        0,
+        0,
+        7,
+        0
+      ],
+      "pct_zero": 5.2631578947368425,
+      "pct_saturated": 0.0
+    },
+    "geo_spread": {
+      "n": 19,
+      "mean": 0.3126315789473684,
+      "stdev": 0.02940939102908719,
+      "min": 0.25,
+      "max": 0.42,
+      "p10": 0.31,
+      "p50": 0.31,
+      "p90": 0.31,
+      "hist": [
+        0,
+        0,
+        1,
+        17,
+        1,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "pct_zero": 0.0,
+      "pct_saturated": 0.0
+    },
+    "data_leaked": {
+      "n": 19,
+      "mean": 0.0736842105263158,
+      "stdev": 0.09358362429849629,
+      "min": 0.0,
+      "max": 0.36,
+      "p10": 0.0,
+      "p50": 0.04,
+      "p90": 0.28,
+      "hist": [
+        16,
+        1,
+        1,
+        1,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "pct_zero": 21.05263157894737,
+      "pct_saturated": 0.0
+    },
+    "email_age": {
+      "n": 19,
+      "mean": 0.05505263157894737,
+      "stdev": 0.1122202564821177,
+      "min": 0.0,
+      "max": 0.352,
+      "p10": 0.0,
+      "p50": 0.0,
+      "p90": 0.323,
+      "hist": [
+        15,
+        2,
+        0,
+        2,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "pct_zero": 68.42105263157895,
+      "pct_saturated": 0.0
+    },
+    "security": {
+      "n": 19,
+      "mean": 0.18421052631578946,
+      "stdev": 0.27439460209854477,
+      "min": 0.0,
+      "max": 0.75,
+      "p10": 0.0,
+      "p50": 0.0,
+      "p90": 0.75,
+      "hist": [
+        11,
+        0,
+        5,
+        0,
+        0,
+        0,
+        0,
+        3,
+        0,
+        0
+      ],
+      "pct_zero": 57.89473684210526,
+      "pct_saturated": 0.0
+    },
+    "public_exposure": {
+      "n": 19,
+      "mean": 0.060526315789473685,
+      "stdev": 0.11969747440993464,
+      "min": 0.0,
+      "max": 0.35,
+      "p10": 0.0,
+      "p50": 0.0,
+      "p90": 0.35,
+      "hist": [
+        14,
+        2,
+        1,
+        2,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "pct_zero": 73.6842105263158,
+      "pct_saturated": 0.0
+    }
+  },
+  "axes_raw": {
+    "accounts": {
+      "n": 19,
+      "mean": 30.842105263157894,
+      "stdev": 7.805006640289985,
+      "min": 5.0,
+      "max": 38.0,
+      "p10": 22.0,
+      "p50": 33.0,
+      "p90": 38.0,
+      "hist": [
+        1,
+        0,
+        0,
+        1,
+        3,
+        9,
+        5,
+        0,
+        0,
+        0
+      ],
+      "pct_at_max": 0.0
+    },
+    "platforms": {
+      "n": 19,
+      "mean": 15.789473684210526,
+      "stdev": 2.8003759146153744,
+      "min": 5.0,
+      "max": 19.0,
+      "p10": 14.0,
+      "p50": 16.0,
+      "p90": 18.0,
+      "hist": [
+        0,
+        1,
+        1,
+        17,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "pct_at_max": 0.0
+    },
+    "username_reuse": {
+      "n": 19,
+      "mean": 5.315789473684211,
+      "stdev": 1.857496271237393,
+      "min": 1.0,
+      "max": 7.0,
+      "p10": 2.0,
+      "p50": 6.0,
+      "p90": 7.0,
+      "hist": [
+        0,
+        1,
+        2,
+        1,
+        0,
+        1,
+        10,
+        4,
+        0,
+        0
+      ],
+      "pct_at_max": 0.0
+    },
+    "breaches": {
+      "n": 19,
+      "mean": 3.210526315789474,
+      "stdev": 0.9176629354822471,
+      "min": 0.0,
+      "max": 4.0,
+      "p10": 3.0,
+      "p50": 3.0,
+      "p90": 4.0,
+      "hist": [
+        1,
+        0,
+        0,
+        0,
+        0,
+        0,
+        11,
+        0,
+        7,
+        0
+      ],
+      "pct_at_max": 0.0
+    },
+    "geo_spread": {
+      "n": 19,
+      "mean": 1.563157894736842,
+      "stdev": 0.14704695514543598,
+      "min": 1.25,
+      "max": 2.1,
+      "p10": 1.55,
+      "p50": 1.55,
+      "p90": 1.55,
+      "hist": [
+        0,
+        0,
+        1,
+        17,
+        1,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "pct_at_max": 0.0
+    },
+    "data_leaked": {
+      "n": 19,
+      "mean": 1.8421052631578947,
+      "stdev": 2.3395906074624073,
+      "min": 0.0,
+      "max": 9.0,
+      "p10": 0.0,
+      "p50": 1.0,
+      "p90": 7.0,
+      "hist": [
+        16,
+        1,
+        1,
+        1,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "pct_at_max": 0.0
+    },
+    "email_age": {
+      "n": 19,
+      "mean": 2.2,
+      "stdev": 4.48701831212369,
+      "min": 0.0,
+      "max": 14.1,
+      "p10": 0.0,
+      "p50": 0.0,
+      "p90": 12.9,
+      "hist": [
+        15,
+        2,
+        0,
+        2,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "pct_at_max": 0.0
+    },
+    "security": {
+      "n": 19,
+      "mean": 0.7368421052631579,
+      "stdev": 1.097578408394179,
+      "min": 0.0,
+      "max": 3.0,
+      "p10": 0.0,
+      "p50": 0.0,
+      "p90": 3.0,
+      "hist": [
+        11,
+        0,
+        5,
+        0,
+        0,
+        0,
+        0,
+        3,
+        0,
+        0
+      ],
+      "pct_at_max": 0.0
+    },
+    "public_exposure": {
+      "n": 19,
+      "mean": 0.060526315789473685,
+      "stdev": 0.11969747440993464,
+      "min": 0.0,
+      "max": 0.35,
+      "p10": 0.0,
+      "p50": 0.0,
+      "p90": 0.35,
+      "hist": [
+        14,
+        2,
+        1,
+        2,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "pct_at_max": 0.0
+    }
+  },
+  "rich_targets": {
+    "3": 18,
+    "5": 18,
+    "7": 5,
+    "9": 0
+  },
+  "similarity": {
+    "total_pairs": 171,
+    "mean": 0.8752421052631579,
+    "stdev": 0.12389083422494805,
+    "above": {
+      "0.5": {
+        "count": 170,
+        "pct": 99.41520467836257
+      },
+      "0.6": {
+        "count": 160,
+        "pct": 93.5672514619883
+      },
+      "0.7": {
+        "count": 148,
+        "pct": 86.54970760233918
+      },
+      "0.8": {
+        "count": 137,
+        "pct": 80.11695906432749
+      },
+      "0.9": {
+        "count": 94,
+        "pct": 54.97076023391813
+      }
+    },
+    "hist": [
+      0,
+      0,
+      0,
+      0,
+      1,
+      10,
+      12,
+      11,
+      43,
+      94
+    ]
+  },
+  "top_pairs": [
+    {
+      "rank": 1,
+      "sim": 0.9997,
+      "a": {
+        "id": "ad36680c-2947-4f9b-b4ee-d0e14e0faeaf",
+        "email": "pascal.steichen@lhc.lu"
+      },
+      "b": {
+        "id": "51a3d66a-6f7d-4a02-ad0f-2591a215c1d1",
+        "email": "angelique.joyeux@lhc.lu"
+      },
+      "top_axes": [
+        "security",
+        "username_reuse",
+        "breaches"
+      ]
+    },
+    {
+      "rank": 2,
+      "sim": 0.9997,
+      "a": {
+        "id": "f3566660-4372-4f04-8457-466769fe0da9",
+        "email": "michael.renotte@thedots.lu"
+      },
+      "b": {
+        "id": "9818e360-c0cd-4a6d-afd1-58531d13106e",
+        "email": "aurelie.paini@thedots.lu"
+      },
+      "top_axes": [
+        "username_reuse",
+        "breaches",
+        "accounts"
+      ]
+    },
+    {
+      "rank": 3,
+      "sim": 0.9995,
+      "a": {
+        "id": "fdefbcdf-0039-4a85-bd2c-c72f1d3f66d3",
+        "email": "alexander.link@luxinnovation.lu"
+      },
+      "b": {
+        "id": "b57f7fe1-fff0-46c7-a710-581f9d716c21",
+        "email": "jonas.mercier@luxinnovation.lu"
+      },
+      "top_axes": [
+        "breaches",
+        "accounts",
+        "username_reuse"
+      ]
+    },
+    {
+      "rank": 4,
+      "sim": 0.9994,
+      "a": {
+        "id": "fdefbcdf-0039-4a85-bd2c-c72f1d3f66d3",
+        "email": "alexander.link@luxinnovation.lu"
+      },
+      "b": {
+        "id": "3fa52a1e-a9b9-4df4-8583-05052acc9249",
+        "email": "david.foy@luxinnovation.lu"
+      },
+      "top_axes": [
+        "breaches",
+        "accounts",
+        "username_reuse"
+      ]
+    },
+    {
+      "rank": 5,
+      "sim": 0.9994,
+      "a": {
+        "id": "3fa52a1e-a9b9-4df4-8583-05052acc9249",
+        "email": "david.foy@luxinnovation.lu"
+      },
+      "b": {
+        "id": "b57f7fe1-fff0-46c7-a710-581f9d716c21",
+        "email": "jonas.mercier@luxinnovation.lu"
+      },
+      "top_axes": [
+        "breaches",
+        "accounts",
+        "username_reuse"
+      ]
+    },
+    {
+      "rank": 6,
+      "sim": 0.9984,
+      "a": {
+        "id": "9818e360-c0cd-4a6d-afd1-58531d13106e",
+        "email": "aurelie.paini@thedots.lu"
+      },
+      "b": {
+        "id": "aae38828-8a7d-4679-82ad-3e89c417f5b6",
+        "email": "virginie.huvelle@thedots.lu"
+      },
+      "top_axes": [
+        "username_reuse",
+        "breaches",
+        "accounts"
+      ]
+    },
+    {
+      "rank": 7,
+      "sim": 0.9975,
+      "a": {
+        "id": "f3566660-4372-4f04-8457-466769fe0da9",
+        "email": "michael.renotte@thedots.lu"
+      },
+      "b": {
+        "id": "aae38828-8a7d-4679-82ad-3e89c417f5b6",
+        "email": "virginie.huvelle@thedots.lu"
+      },
+      "top_axes": [
+        "username_reuse",
+        "breaches",
+        "accounts"
+      ]
+    },
+    {
+      "rank": 8,
+      "sim": 0.9956,
+      "a": {
+        "id": "d393a5a4-035e-4909-b48a-d004f5b2e643",
+        "email": "sidonie.stire@thedots.lu"
+      },
+      "b": {
+        "id": "9818e360-c0cd-4a6d-afd1-58531d13106e",
+        "email": "aurelie.paini@thedots.lu"
+      },
+      "top_axes": [
+        "username_reuse",
+        "breaches",
+        "accounts"
+      ]
+    },
+    {
+      "rank": 9,
+      "sim": 0.9952,
+      "a": {
+        "id": "d393a5a4-035e-4909-b48a-d004f5b2e643",
+        "email": "sidonie.stire@thedots.lu"
+      },
+      "b": {
+        "id": "f3566660-4372-4f04-8457-466769fe0da9",
+        "email": "michael.renotte@thedots.lu"
+      },
+      "top_axes": [
+        "username_reuse",
+        "breaches",
+        "accounts"
+      ]
+    },
+    {
+      "rank": 10,
+      "sim": 0.9949,
+      "a": {
+        "id": "d393a5a4-035e-4909-b48a-d004f5b2e643",
+        "email": "sidonie.stire@thedots.lu"
+      },
+      "b": {
+        "id": "3261b854-4534-47eb-ba29-c369c6ad627a",
+        "email": "cindy.tereba@cc.lu"
+      },
+      "top_axes": [
+        "username_reuse",
+        "breaches",
+        "accounts"
+      ]
+    },
+    {
+      "rank": 11,
+      "sim": 0.9935,
+      "a": {
+        "id": "6fc9e9df-71c4-4c49-ac0f-ac2e221c13f3",
+        "email": "mike.koedinger@paperjam.lu"
+      },
+      "b": {
+        "id": "e41e5098-e8d7-4bff-b889-babb929a3b37",
+        "email": "thierry.labro@paperjam.lu"
+      },
+      "top_axes": [
+        "username_reuse",
+        "breaches",
+        "accounts"
+      ]
+    },
+    {
+      "rank": 12,
+      "sim": 0.9934,
+      "a": {
+        "id": "f3566660-4372-4f04-8457-466769fe0da9",
+        "email": "michael.renotte@thedots.lu"
+      },
+      "b": {
+        "id": "3261b854-4534-47eb-ba29-c369c6ad627a",
+        "email": "cindy.tereba@cc.lu"
+      },
+      "top_axes": [
+        "username_reuse",
+        "breaches",
+        "accounts"
+      ]
+    },
+    {
+      "rank": 13,
+      "sim": 0.9932,
+      "a": {
+        "id": "3261b854-4534-47eb-ba29-c369c6ad627a",
+        "email": "cindy.tereba@cc.lu"
+      },
+      "b": {
+        "id": "9818e360-c0cd-4a6d-afd1-58531d13106e",
+        "email": "aurelie.paini@thedots.lu"
+      },
+      "top_axes": [
+        "username_reuse",
+        "breaches",
+        "accounts"
+      ]
+    },
+    {
+      "rank": 14,
+      "sim": 0.9928,
+      "a": {
+        "id": "f3566660-4372-4f04-8457-466769fe0da9",
+        "email": "michael.renotte@thedots.lu"
+      },
+      "b": {
+        "id": "3fa52a1e-a9b9-4df4-8583-05052acc9249",
+        "email": "david.foy@luxinnovation.lu"
+      },
+      "top_axes": [
+        "username_reuse",
+        "breaches",
+        "accounts"
+      ]
+    },
+    {
+      "rank": 15,
+      "sim": 0.9928,
+      "a": {
+        "id": "f3566660-4372-4f04-8457-466769fe0da9",
+        "email": "michael.renotte@thedots.lu"
+      },
+      "b": {
+        "id": "b57f7fe1-fff0-46c7-a710-581f9d716c21",
+        "email": "jonas.mercier@luxinnovation.lu"
+      },
+      "top_axes": [
+        "username_reuse",
+        "breaches",
+        "accounts"
+      ]
+    },
+    {
+      "rank": 16,
+      "sim": 0.9924,
+      "a": {
+        "id": "9818e360-c0cd-4a6d-afd1-58531d13106e",
+        "email": "aurelie.paini@thedots.lu"
+      },
+      "b": {
+        "id": "b57f7fe1-fff0-46c7-a710-581f9d716c21",
+        "email": "jonas.mercier@luxinnovation.lu"
+      },
+      "top_axes": [
+        "username_reuse",
+        "breaches",
+        "accounts"
+      ]
+    },
+    {
+      "rank": 17,
+      "sim": 0.9923,
+      "a": {
+        "id": "d393a5a4-035e-4909-b48a-d004f5b2e643",
+        "email": "sidonie.stire@thedots.lu"
+      },
+      "b": {
+        "id": "aae38828-8a7d-4679-82ad-3e89c417f5b6",
+        "email": "virginie.huvelle@thedots.lu"
+      },
+      "top_axes": [
+        "username_reuse",
+        "breaches",
+        "accounts"
+      ]
+    },
+    {
+      "rank": 18,
+      "sim": 0.9923,
+      "a": {
+        "id": "3fa52a1e-a9b9-4df4-8583-05052acc9249",
+        "email": "david.foy@luxinnovation.lu"
+      },
+      "b": {
+        "id": "9818e360-c0cd-4a6d-afd1-58531d13106e",
+        "email": "aurelie.paini@thedots.lu"
+      },
+      "top_axes": [
+        "username_reuse",
+        "breaches",
+        "accounts"
+      ]
+    },
+    {
+      "rank": 19,
+      "sim": 0.992,
+      "a": {
+        "id": "fdefbcdf-0039-4a85-bd2c-c72f1d3f66d3",
+        "email": "alexander.link@luxinnovation.lu"
+      },
+      "b": {
+        "id": "f3566660-4372-4f04-8457-466769fe0da9",
+        "email": "michael.renotte@thedots.lu"
+      },
+      "top_axes": [
+        "username_reuse",
+        "breaches",
+        "accounts"
+      ]
+    },
+    {
+      "rank": 20,
+      "sim": 0.9915,
+      "a": {
+        "id": "fdefbcdf-0039-4a85-bd2c-c72f1d3f66d3",
+        "email": "alexander.link@luxinnovation.lu"
+      },
+      "b": {
+        "id": "9818e360-c0cd-4a6d-afd1-58531d13106e",
+        "email": "aurelie.paini@thedots.lu"
+      },
+      "top_axes": [
+        "username_reuse",
+        "breaches",
+        "accounts"
+      ]
+    }
+  ],
+  "observations": [
+    "similarity threshold sanity: 86.55% of pairs \u2265 0.7 \u2192 threshold likely too low",
+    "calibration thin: only 5 targets have \u22657/9 axes populated (>0.1) \u2014 consider growing the corpus before tuning weights"
+  ],
+  "generated_at_utc": "2026-05-21 14:22 UTC"
+}

@@ -156,16 +156,21 @@ class FingerprintEngine:
         "public_exposure",
     ]
 
+    # AXIS_MAX divisors — data-driven from the 12-workspace S143 audit (2026-05-21).
+    # Principle: only raise divisors for axes empirically saturating (>10% of fingerprints
+    # at the current ceiling in any workspace). Axes that never saturate are left unchanged
+    # to avoid introducing saturation where there was none.
+    # Headroom (+5–30%) added above the observed global max to absorb extreme cases.
     AXIS_MAX = {
-        "accounts": 15,
-        "platforms": 10,
-        "username_reuse": 5,
-        "breaches": 5,
-        "geo_spread": 5,
-        "data_leaked": 8,
-        "email_age_years": 15,
-        "security_weak": 4,
-        "public_exposure_raw": 1.0,  # Already 0-1 from compute_public_exposure_score
+        "accounts": 60,             # was 15. Observed global max=56 (threatconnect-cs n=12), p90≈37. Saturated 100% in 6/12 workspaces.
+        "platforms": 50,            # was 10. Observed global max=45, p90≈23. Saturated 100% in 6/12 workspaces.
+        "username_reuse": 10,       # was 5.  Observed global max=7 across multiple workspaces, p90≈5.6. Saturated 22–100% in 9/12 workspaces. Bumped to 10 for headroom.
+        "breaches": 5,              # unchanged. Observed global max=4, never saturated. Leaving.
+        "geo_spread": 5,            # unchanged. Observed global max=6.25 (threatconnect 8.3% at max), p90≈2.5. Marginal — leaving.
+        "data_leaked": 25,          # was 8.  Observed global max=22 (friends), p90≈5.7. Saturated 100% in Ferrero, 12.5% in Friends.
+        "email_age_years": 40,      # was 15. Observed global max=30 (quentin), p90≈24. Saturated 25–100% in 7/12 workspaces. Bumped to 40 for headroom on very old accounts.
+        "security_weak": 4,         # unchanged. Observed global max=3, never saturated. Leaving.
+        "public_exposure_raw": 1.0, # unchanged — already 0-1 from compute_public_exposure_score.
     }
 
     SCORE_WEIGHTS = {
