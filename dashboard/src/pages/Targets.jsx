@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Plus, Trash2, Search, Eye, Upload, Play, FileDown } from 'lucide-react'
 import { getTargets, createTarget, deleteTarget, bulkImportTargets, createScan } from '../lib/api'
+import { fallbackSeed } from '../lib/avatar'
 import TargetQuickView from '../components/TargetQuickView'
 import GenerativeAvatar from '../components/GenerativeAvatar'
 import useSSE from '../hooks/useSSE'
@@ -18,23 +19,6 @@ const scoreColor = (score) => {
   if (score >= 40) return '#ffcc00'
   if (score >= 20) return '#3388ff'
   return '#00ff88'
-}
-
-// Aligned with backend _email_only_avatar_seed (api/routers/targets.py).
-// Defense in depth — post-S135 backend always populates fingerprint_avatar_seed.
-const fallbackSeed = (email) => {
-  let hash = 0
-  for (let i = 0; i < (email || '').length; i++) {
-    hash = ((hash << 5) - hash) + email.charCodeAt(i)
-    hash |= 0
-  }
-  const eh = Math.abs(hash)
-  return {
-    email_hash: eh % 10000,
-    hue: (eh % 60) + 120,
-    num_points: 3,
-    rotation: eh % 360,
-  }
 }
 
 const threatColor = (score) => {

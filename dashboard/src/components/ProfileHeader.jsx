@@ -1,28 +1,11 @@
 import { useEffect, useState } from 'react'
 import { Globe, MapPin, Building2, Github, ExternalLink, Shield, AlertTriangle, Link2 } from 'lucide-react'
 import { getTargetProfile, getFingerprint } from '../lib/api'
+import { fallbackSeed } from '../lib/avatar'
 import FingerprintRadar from './FingerprintRadar'
 import GenerativeAvatar from './GenerativeAvatar'
 import CountrySelector from './target/CountrySelector'
 import IdentityEditor from './target/IdentityEditor'
-
-// Aligned with Dashboard/Targets/UserPreview fallbackSeed (post-S135).
-// Mirrors backend _email_only_avatar_seed shape — produces a deterministic
-// seed even when target.fingerprint_avatar_seed is missing.
-const fallbackSeed = (email) => {
-  let hash = 0
-  for (let i = 0; i < (email || '').length; i++) {
-    hash = ((hash << 5) - hash) + email.charCodeAt(i)
-    hash |= 0
-  }
-  const eh = Math.abs(hash)
-  return {
-    email_hash: eh % 10000,
-    hue: (eh % 60) + 120,
-    num_points: 3,
-    rotation: eh % 360,
-  }
-}
 const scoreColor = (score) => {
   if (score == null) return '#666688'
   if (score >= 61) return '#ff2244'

@@ -3,30 +3,12 @@ import { useNavigate, useOutletContext } from 'react-router-dom'
 import { Crosshair, Radar, AlertTriangle, ShieldAlert } from 'lucide-react'
 import { useAuth } from '../lib/auth'
 import { getTargets, getScans, getFindingsStats, getFingerprint, cancelScan } from '../lib/api'
+import { fallbackSeed } from '../lib/avatar'
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, AreaChart, Area } from 'recharts'
 import WorkspaceGeoMap from '../components/WorkspaceGeoMap'
 import FingerprintRadar from '../components/FingerprintRadar'
 import GenerativeAvatar from '../components/GenerativeAvatar'
 import useSSE from '../hooks/useSSE'
-
-// Aligned with backend _email_only_avatar_seed (api/routers/targets.py).
-// Returned shape must match for visual consistency if the backend value is missing.
-// Defense in depth — post-S135 the backend always populates fingerprint_avatar_seed,
-// but this fallback keeps avatars deterministic on legacy clients / stale caches.
-const fallbackSeed = (email) => {
-  let hash = 0
-  for (let i = 0; i < (email || '').length; i++) {
-    hash = ((hash << 5) - hash) + email.charCodeAt(i)
-    hash |= 0
-  }
-  const eh = Math.abs(hash)
-  return {
-    email_hash: eh % 10000,
-    hue: (eh % 60) + 120,
-    num_points: 3,
-    rotation: eh % 360,
-  }
-}
 
 const severityColors = {
   critical: '#ff2244', high: '#ff8800', medium: '#ffcc00', low: '#3388ff', info: '#666688',
