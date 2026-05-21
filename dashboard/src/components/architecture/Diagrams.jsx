@@ -1,14 +1,14 @@
 export function CollectDiagram() {
   const categories = [
-    { label: 'Social', angle: 0, color: '#3388ff', count: 35 },
-    { label: 'Breach', angle: 40, color: '#ff2244', count: 9 },
-    { label: 'Dev', angle: 80, color: '#cc88ff', count: 12 },
-    { label: 'Metadata', angle: 120, color: '#aa55ff', count: 12 },
-    { label: 'Archive', angle: 160, color: '#ffcc00', count: 10 },
-    { label: 'Gaming', angle: 200, color: '#ff8800', count: 8 },
-    { label: 'People', angle: 240, color: '#00ddcc', count: 7 },
-    { label: 'Exposure', angle: 280, color: '#ff5588', count: 7 },
-    { label: 'LinkedIn', angle: 320, color: '#0077b5', count: 6 },
+    { label: 'Social', angle: 0, color: '#3388ff', count: 50 },
+    { label: 'Metadata', angle: 40, color: '#aa55ff', count: 15 },
+    { label: 'People', angle: 80, color: '#00ddcc', count: 11 },
+    { label: 'Gaming', angle: 120, color: '#ff8800', count: 10 },
+    { label: 'Exposure', angle: 160, color: '#ff5588', count: 10 },
+    { label: 'Breach', angle: 200, color: '#ff2244', count: 9 },
+    { label: 'Archive', angle: 240, color: '#ffcc00', count: 9 },
+    { label: 'Identity', angle: 280, color: '#cc88ff', count: 5 },
+    { label: 'Other', angle: 320, color: '#888888', count: 8 },
   ]
   const cx = 200, cy = 160, r = 110
   return (
@@ -172,6 +172,117 @@ export function GeoMapDiagram() {
       <text x="30" y="233" fill="#888" fontSize="8">Self-reported</text>
       <circle cx="120" cy="230" r="4" fill="#3388ff" opacity="0.3" />
       <text x="130" y="233" fill="#666" fontSize="8">Mail server</text>
+    </svg>
+  )
+}
+
+export function CascadeDiagram() {
+  const states = [
+    { x: 30, y: 90, label: 'gathering', color: '#88aaff' },
+    { x: 130, y: 90, label: 'computing', color: '#ff8800' },
+    { x: 230, y: 90, label: 'similarity', color: '#cc88ff' },
+    { x: 330, y: 90, label: 'done', color: '#00ff88' },
+  ]
+  return (
+    <svg viewBox="0 0 400 220" className="w-full max-w-md mx-auto">
+      {states.map((s, i) => (
+        <g key={s.label}>
+          <rect x={s.x} y={s.y} width="60" height="40" rx="6"
+            fill={s.color + '22'} stroke={s.color} strokeWidth="1.5" />
+          <text x={s.x + 30} y={s.y + 18} textAnchor="middle" fill={s.color}
+            fontSize="9" fontFamily="monospace" fontWeight="bold">{s.label}</text>
+          <text x={s.x + 30} y={s.y + 30} textAnchor="middle" fill="#666"
+            fontSize="7" fontFamily="monospace">{i === 0 ? 'enter' : `T+${i * 30}s`}</text>
+          {i < states.length - 1 && (
+            <g>
+              <line x1={s.x + 60} y1={s.y + 20} x2={states[i + 1].x} y2={s.y + 20}
+                stroke={s.color} strokeWidth="1.5" markerEnd="url(#arrow)" />
+            </g>
+          )}
+        </g>
+      ))}
+      <defs>
+        <marker id="arrow" markerWidth="10" markerHeight="10" refX="6" refY="3" orient="auto">
+          <path d="M0,0 L0,6 L6,3 z" fill="#88aaff" />
+        </marker>
+      </defs>
+      <line x1="160" y1="130" x2="160" y2="170" stroke="#ff2244" strokeWidth="1.5"
+        strokeDasharray="4,3" />
+      <rect x="130" y="170" width="60" height="32" rx="6"
+        fill="#ff224422" stroke="#ff2244" strokeWidth="1.5" />
+      <text x="160" y="186" textAnchor="middle" fill="#ff2244"
+        fontSize="9" fontFamily="monospace" fontWeight="bold">failed</text>
+      <text x="160" y="197" textAnchor="middle" fill="#666"
+        fontSize="7" fontFamily="monospace">terminal</text>
+      <text x="200" y="20" textAnchor="middle" fill="#888"
+        fontSize="10" fontFamily="monospace">scans.cascade_state · alembic 014</text>
+    </svg>
+  )
+}
+
+export function SimilarityDiagram() {
+  const cx = 200, cy = 140
+  const satellites = [
+    { angle: -90, score: 95, color: '#ff2244' },
+    { angle: -25, score: 94, color: '#ff8800' },
+    { angle: 35, score: 93, color: '#ffcc00' },
+    { angle: 105, score: 93, color: '#00ddcc' },
+    { angle: 175, score: 70, color: '#3388ff' },
+  ]
+  return (
+    <svg viewBox="0 0 400 280" className="w-full max-w-md mx-auto">
+      {satellites.map((s, i) => {
+        const rad = (s.angle * Math.PI) / 180
+        const r = 95
+        const x = cx + r * Math.cos(rad)
+        const y = cy + r * Math.sin(rad)
+        const opacity = s.score / 100
+        return (
+          <g key={i}>
+            <line x1={cx} y1={cy} x2={x} y2={y}
+              stroke={s.color} strokeWidth={s.score >= 90 ? 1.5 : 1}
+              opacity={opacity} strokeDasharray={s.score >= 90 ? '0' : '3,3'} />
+            <circle cx={x} cy={y} r="14" fill={s.color + '22'} stroke={s.color} strokeWidth="1.5" />
+            <text x={x} y={y + 1} textAnchor="middle" dominantBaseline="middle"
+              fill={s.color} fontSize="9" fontFamily="monospace" fontWeight="bold">{s.score}%</text>
+          </g>
+        )
+      })}
+      <circle cx={cx} cy={cy} r="22" fill="#cc88ff33" stroke="#cc88ff" strokeWidth="2" />
+      <text x={cx} y={cy + 1} textAnchor="middle" dominantBaseline="middle"
+        fill="#cc88ff" fontSize="14" fontFamily="monospace" fontWeight="bold">id</text>
+      <text x="200" y="255" textAnchor="middle" fill="#888"
+        fontSize="10" fontFamily="monospace">cosine 9-axis · threshold 0.70 · first_detected preserved</text>
+    </svg>
+  )
+}
+
+export function DiscoveryDiagram() {
+  const steps = [
+    { y: 30, w: 280, label: 'Fingerprint → dork queries', color: '#ffaa55', val: '20' },
+    { y: 70, w: 240, label: 'Trafilatura fetch', color: '#ff8800', val: '50 pages' },
+    { y: 110, w: 200, label: '6 extractors', color: '#ff5588', val: 'rel-me · jsonld · …' },
+    { y: 150, w: 160, label: 'Quality gate', color: '#cc88ff', val: 'dedup vs findings' },
+    { y: 190, w: 120, label: 'discovery_leads', color: '#00ff88', val: 'operator review' },
+  ]
+  return (
+    <svg viewBox="0 0 400 240" className="w-full max-w-md mx-auto">
+      {steps.map((s, i) => (
+        <g key={i}>
+          <rect x={(400 - s.w) / 2} y={s.y} width={s.w} height="28" rx="4"
+            fill={s.color + '22'} stroke={s.color} strokeWidth="1.5" />
+          <text x="200" y={s.y + 13} textAnchor="middle" fill={s.color}
+            fontSize="10" fontFamily="monospace" fontWeight="bold">{s.label}</text>
+          <text x="200" y={s.y + 23} textAnchor="middle" fill="#888"
+            fontSize="8" fontFamily="monospace">{s.val}</text>
+          {i < steps.length - 1 && (
+            <path d={`M 200 ${s.y + 28} L 200 ${steps[i + 1].y - 1}`}
+              stroke="#444" strokeWidth="1" />
+          )}
+        </g>
+      ))}
+      <text x="200" y="225" textAnchor="middle" fill="#666"
+        fontSize="8" fontFamily="monospace">budget · 20 q / 50 p / 60 s</text>
     </svg>
   )
 }

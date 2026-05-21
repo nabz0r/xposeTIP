@@ -32,6 +32,12 @@ export default function ScraperBreakdown() {
             <span className="text-sm font-mono font-bold w-8 text-center text-[#00ff88]">127</span>
             <span className="text-xs text-gray-400">Across 11 categories</span>
           </div>
+          <div className="flex items-center gap-4 px-5 py-2 bg-[#1e1e2e]/10 border-t border-[#1e1e2e]">
+            <span className="w-2 h-2 rounded-full shrink-0 bg-[#00ff88]" />
+            <span className="text-xs font-mono w-28 shrink-0 text-gray-400">Active / Disabled</span>
+            <span className="text-xs font-mono w-16 text-center"><span className="text-[#00ff88]">110</span><span className="text-gray-600"> / </span><span className="text-gray-500">17</span></span>
+            <span className="text-[10px] text-gray-600">87% activation rate · disabled = pending API key or pending validation</span>
+          </div>
         </div>
       </div>
     </Section>
