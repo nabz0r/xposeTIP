@@ -1,7 +1,15 @@
-"""TargetSimilarity model — pairwise fingerprint similarity between workspace targets.
+"""TargetSimilarity model — pairwise behavioral + name similarity between workspace targets.
 
 Both directions (A->B and B->A) stored as separate rows. axis_diffs is from
 target_a_id perspective (axes_a - axes_b), so the B->A row stores reversed signs.
+
+Columns post-S146:
+- similarity: combined score = cosine_similarity × name_similarity (when name_similarity
+  is not NULL), else equal to cosine_similarity. This is the canonical "are these the
+  same person?" score, gated by STORAGE_THRESHOLD.
+- cosine_similarity: raw fingerprint cosine (NULL for legacy rows pre-S146 recompute).
+- name_similarity: name-string Jaccard match (NULL when either target has no
+  resolvable name, or for legacy rows).
 """
 import uuid
 from datetime import datetime
@@ -20,6 +28,8 @@ class TargetSimilarity(UUIDMixin, Base):
     target_a_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("targets.id", ondelete="CASCADE"))
     target_b_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("targets.id", ondelete="CASCADE"))
     similarity: Mapped[float] = mapped_column(Float)
+    cosine_similarity: Mapped[float | None] = mapped_column(Float, nullable=True)
+    name_similarity: Mapped[float | None] = mapped_column(Float, nullable=True)
     axis_diffs: Mapped[dict] = mapped_column(JSONB)
     first_detected: Mapped[datetime] = mapped_column(TIMESTAMP(timezone=True), default=func.now())
     last_computed: Mapped[datetime] = mapped_column(TIMESTAMP(timezone=True), default=func.now())

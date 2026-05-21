@@ -1,5 +1,9 @@
-"""Similarity engine — compute and persist pairwise fingerprint cosine
-similarity (>= 0.7) between workspace targets.
+"""Similarity engine — compute and persist pairwise behavioral + name similarity
+between workspace targets.
+
+Post-S146: the stored `similarity` column is the COMBINED score
+(cosine × name_similarity when names are available, else raw cosine). The
+0.70 storage threshold gates on this combined score.
 
 Both directions (A->B and B->A) stored as separate rows in target_similarities.
 axis_diffs is computed from target_a perspective (axes_a - axes_b); signs are
@@ -12,6 +16,7 @@ from __future__ import annotations
 
 import logging
 import math
+import unicodedata
 import uuid
 from datetime import datetime, timezone
 from typing import Any
@@ -21,6 +26,76 @@ from sqlalchemy.orm import Session
 
 from api.models.target import Target
 from api.models.target_similarity import TargetSimilarity
+
+# Common particles / connectors filtered out of name token sets to avoid them
+# dominating Jaccard scores. Lowercase, post-normalization.
+_NAME_PARTICLES: set[str] = {
+    "de", "la", "le", "du", "des", "del", "della", "der", "den", "van",
+    "von", "el", "al", "bin", "ben", "ibn", "and", "et", "of", "the",
+}
+
+
+def _build_name_string(target: Target) -> str:
+    """Return the best available name string for `target`. Priority:
+    1. user_first_name + user_last_name (most reliable when set by the pipeline)
+    2. display_name (auto-extracted by scrapers; may be a username, accept anyway)
+    3. email local-part with `. _ -` tokenized (catches firstname.lastname
+       corporate convention even when name resolution didn't run).
+    Returns "" when nothing usable is available.
+    """
+    fn = (target.user_first_name or "").strip()
+    ln = (target.user_last_name or "").strip()
+    if fn or ln:
+        combined = f"{fn} {ln}".strip()
+        if len(combined) >= 2:
+            return combined
+    if target.display_name and len(target.display_name.strip()) >= 2:
+        return target.display_name.strip()
+    if target.email:
+        local = target.email.split("@", 1)[0]
+        local = local.replace(".", " ").replace("_", " ").replace("-", " ")
+        if len(local.strip()) >= 2:
+            return local
+    return ""
+
+
+def _normalize_name_tokens(s: str) -> set[str]:
+    """Normalize a name string and return the set of meaningful tokens.
+
+    NFD strips accents (Sébastien → Sebastien), lowercases, removes
+    non-alphanumeric, drops single letters (initials) and common particles.
+    """
+    if not s:
+        return set()
+    s = unicodedata.normalize("NFD", s)
+    s = "".join(c for c in s if not unicodedata.combining(c))
+    s = s.lower()
+    s = "".join(c if c.isalnum() else " " for c in s)
+    return {
+        t for t in s.split()
+        if len(t) >= 2 and t not in _NAME_PARTICLES
+    }
+
+
+def _name_similarity(target_a: Target, target_b: Target) -> float | None:
+    """Compute name match score in [0.0, 1.0] via token-set Jaccard.
+
+    Returns None when comparison is not meaningful — at least one target has
+    no resolvable name string, or normalization yields zero tokens on either
+    side. Callers SHOULD treat None as "do not multiply" (use raw cosine).
+    """
+    name_a = _build_name_string(target_a)
+    name_b = _build_name_string(target_b)
+    if not name_a or not name_b:
+        return None
+    tokens_a = _normalize_name_tokens(name_a)
+    tokens_b = _normalize_name_tokens(name_b)
+    if not tokens_a or not tokens_b:
+        return None
+    union = tokens_a | tokens_b
+    if not union:
+        return None
+    return round(len(tokens_a & tokens_b) / len(union), 4)
 
 logger = logging.getLogger(__name__)
 
@@ -158,8 +233,14 @@ def recompute_for_target(
         cand_vec = _extract_axes(cand)
         if cand_vec is None:
             continue
-        sim = _cosine(source_vec, cand_vec)
-        if sim < STORAGE_THRESHOLD:
+        cosine_sim = _cosine(source_vec, cand_vec)
+        name_sim = _name_similarity(source, cand)        # may be None
+        if name_sim is not None:
+            combined = round(cosine_sim * name_sim, 4)
+        else:
+            combined = cosine_sim                         # no name signal — defer to cosine
+
+        if combined < STORAGE_THRESHOLD:
             continue
 
         diffs_a = _axis_diffs(source_vec, cand_vec)
@@ -172,7 +253,9 @@ def recompute_for_target(
             workspace_id=workspace_id,
             target_a_id=target_id,
             target_b_id=cand.id,
-            similarity=sim,
+            similarity=combined,
+            cosine_similarity=cosine_sim,
+            name_similarity=name_sim,
             axis_diffs=diffs_a,
             first_detected=fd,
             last_computed=now,
@@ -182,7 +265,9 @@ def recompute_for_target(
             workspace_id=workspace_id,
             target_a_id=cand.id,
             target_b_id=target_id,
-            similarity=sim,
+            similarity=combined,
+            cosine_similarity=cosine_sim,
+            name_similarity=name_sim,
             axis_diffs=diffs_b,
             first_detected=fd,
             last_computed=now,
