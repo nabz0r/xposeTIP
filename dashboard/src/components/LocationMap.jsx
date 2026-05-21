@@ -1,78 +1,65 @@
-import { useMemo } from 'react'
+import { useMemo, useRef } from 'react'
 import { Globe } from 'lucide-react'
-
-// Simple Mercator projection: lat/lng → x/y on a 960×480 SVG
-function project(lat, lng) {
-  const x = (lng + 180) * (960 / 360)
-  const latRad = (lat * Math.PI) / 180
-  const mercN = Math.log(Math.tan(Math.PI / 4 + latRad / 2))
-  const y = 240 - (960 * mercN) / (2 * Math.PI)
-  return [Math.max(0, Math.min(960, x)), Math.max(0, Math.min(480, y))]
-}
-
-// Simplified world map outline (low-poly, covers major landmasses)
-const WORLD_PATH =
-  'M131,97L137,95L141,97L141,101L137,103L131,101Z ' + // North America west
-  'M150,85L175,75L195,78L210,90L205,105L195,110L180,115L165,120L155,118L145,110L140,100Z ' + // North America
-  'M170,125L178,130L185,145L190,160L185,170L175,175L165,165L160,150L162,135Z ' + // Central America / South America north
-  'M180,175L195,180L200,200L195,220L185,235L175,230L170,215L172,195Z ' + // South America
-  'M430,65L445,55L470,50L500,55L520,60L540,65L545,80L540,95L520,105L500,110L480,115L460,110L445,100L435,85Z ' + // Europe
-  'M450,120L475,110L510,115L540,120L555,130L560,150L550,170L530,180L500,185L480,175L465,155L455,135Z ' + // Africa north
-  'M475,185L500,190L520,200L525,220L515,240L500,245L485,235L475,215L472,195Z ' + // Africa south
-  'M560,65L590,55L630,50L670,60L700,70L720,80L730,95L720,110L700,115L680,110L660,100L640,95L620,90L600,85L575,80Z ' + // Russia/Asia north
-  'M620,100L650,105L680,115L700,120L710,130L700,145L680,155L660,160L640,155L625,140L615,120Z ' + // China/Central Asia
-  'M600,130L615,135L620,150L615,165L600,175L585,170L580,155L585,140Z ' + // India
-  'M700,155L720,150L740,160L750,180L745,200L730,210L715,205L705,190L700,170Z ' + // Southeast Asia
-  'M740,220L770,215L800,225L810,250L800,270L780,280L760,275L745,260L740,240Z ' + // Australia
-  'M630,170L645,175L655,185L650,200L635,195L625,185Z' // Indonesia
-
-// Approximate country centroids for ground truth pin (ISO alpha-2 → [lat, lng])
-const COUNTRY_CENTROIDS = {
-  US: [39.8, -98.5], GB: [54.0, -2.0], FR: [46.6, 2.2], DE: [51.2, 10.4], CA: [56.1, -106.3],
-  AU: [-25.3, 133.8], JP: [36.2, 138.3], CN: [35.9, 104.2], IN: [20.6, 79.0], BR: [-14.2, -51.9],
-  RU: [61.5, 105.3], KR: [35.9, 127.8], IT: [41.9, 12.5], ES: [40.5, -3.7], MX: [23.6, -102.6],
-  NL: [52.1, 5.3], SE: [60.1, 18.6], NO: [60.5, 8.5], DK: [56.3, 9.5], FI: [61.9, 25.7],
-  PL: [51.9, 19.1], CH: [46.8, 8.2], AT: [47.5, 14.6], BE: [50.5, 4.5], PT: [39.4, -8.2],
-  IE: [53.4, -8.2], IL: [31.0, 34.9], AE: [23.4, 53.8], SA: [23.9, 45.1], EG: [26.8, 30.8],
-  ZA: [-30.6, 22.9], NG: [9.1, 8.7], KE: [-0.02, 37.9], TR: [39.0, 35.2], UA: [48.4, 31.2],
-  AR: [-38.4, -63.6], CL: [-35.7, -71.5], CO: [4.6, -74.3], PH: [12.9, 121.8], TH: [15.9, 100.9],
-  MY: [4.2, 101.9], SG: [1.4, 103.8], ID: [-0.8, 113.9], VN: [14.1, 108.3], PK: [30.4, 69.3],
-  LU: [49.8, 6.1], HK: [22.4, 114.1], TW: [23.7, 121.0], NZ: [-40.9, 174.9], GR: [39.1, 21.8],
-  CZ: [49.8, 15.5], RO: [45.9, 25.0], HU: [47.2, 19.5], BG: [42.7, 25.5],
-}
+import {
+  useWorldData,
+  useZoom,
+  createProjection,
+  createPathGenerator,
+  projectPoint,
+  ISO_ALPHA2_TO_NUMERIC,
+  COUNTRY_CENTROIDS,
+  MAP_WIDTH,
+  MAP_HEIGHT,
+} from '../lib/geo'
 
 export default function LocationMap({ findings, userLocations, countryCode }) {
+  const svgRef = useRef(null)
+  const gRef = useRef(null)
+  const { data: world, loading: worldLoading } = useWorldData()
+  useZoom(svgRef, gRef)
+
+  const projection = useMemo(() => createProjection(), [])
+  const pathGen = useMemo(() => createPathGenerator(projection), [projection])
+
   const geoFindings = useMemo(
-    () => findings.filter(f => f.category === 'geolocation' && f.data?.latitude && f.data?.longitude),
+    () => findings.filter((f) => f.category === 'geolocation' && f.data?.latitude && f.data?.longitude),
     [findings]
   )
 
-  // User-reported locations from profile_data.user_locations (self-reported, high value)
   const userPoints = useMemo(() => {
     if (!userLocations?.length) return []
     return userLocations
-      .filter(u => u.lat && u.lon)
+      .filter((u) => u.lat && u.lon)
       .map((u, i) => {
-        const [x, y] = project(u.lat, u.lon)
-        return { x, y, label: u.city || u.location || u.country || '?', source: u.source, type: 'self_reported', index: i }
+        const p = projectPoint(projection, u.lat, u.lon)
+        if (!p) return null
+        return { x: p[0], y: p[1], label: u.city || u.location || u.country || '?', source: u.source, type: 'self_reported', index: i }
       })
-  }, [userLocations])
+      .filter(Boolean)
+  }, [userLocations, projection])
 
-  // Server locations from GeoIP findings (low value)
   const serverPoints = useMemo(() => {
-    return geoFindings.map((f, i) => {
-      const [x, y] = project(f.data.latitude, f.data.longitude)
-      return { x, y, label: `${f.data.city || '?'}, ${f.data.country || '?'}`, source: f.data.isp || 'GeoIP', type: 'server', finding: f, index: i }
-    })
-  }, [geoFindings])
+    return geoFindings
+      .map((f, i) => {
+        const p = projectPoint(projection, f.data.latitude, f.data.longitude)
+        if (!p) return null
+        return { x: p[0], y: p[1], label: `${f.data.city || '?'}, ${f.data.country || '?'}`, source: f.data.isp || 'GeoIP', type: 'server', finding: f, index: i }
+      })
+      .filter(Boolean)
+  }, [geoFindings, projection])
 
-  // Ground truth pin: operator-confirmed country
   const groundTruthPoint = useMemo(() => {
     if (!countryCode) return null
     const coords = COUNTRY_CENTROIDS[countryCode.toUpperCase()]
     if (!coords) return null
-    const [x, y] = project(coords[0], coords[1])
-    return { x, y, code: countryCode.toUpperCase() }
+    const p = projectPoint(projection, coords[0], coords[1])
+    if (!p) return null
+    return { x: p[0], y: p[1], code: countryCode.toUpperCase() }
+  }, [countryCode, projection])
+
+  const groundTruthIso = useMemo(() => {
+    if (!countryCode) return null
+    return ISO_ALPHA2_TO_NUMERIC[countryCode.toUpperCase()] || null
   }, [countryCode])
 
   const hasData = userPoints.length > 0 || serverPoints.length > 0 || groundTruthPoint
@@ -93,103 +80,116 @@ export default function LocationMap({ findings, userLocations, countryCode }) {
         {userPoints.length > 0 && <span className="text-[10px] text-[#00ff88] ml-2">{userPoints.length} self-reported</span>}
         {serverPoints.length > 0 && <span className="text-[10px] text-gray-600 ml-2">{serverPoints.length} mail server{serverPoints.length > 1 ? 's' : ''}</span>}
       </div>
-      <div className="p-4">
-        <svg viewBox="0 0 960 480" className="w-full" style={{ maxHeight: '400px' }}>
-          {/* Ocean background */}
-          <rect width="960" height="480" fill="#0a0a0f" rx="8" />
 
-          {/* Grid lines */}
-          {[...Array(7)].map((_, i) => (
-            <line key={`h${i}`} x1="0" y1={i * 80} x2="960" y2={i * 80} stroke="#1e1e2e" strokeWidth="0.5" />
-          ))}
-          {[...Array(13)].map((_, i) => (
-            <line key={`v${i}`} x1={i * 80} y1="0" x2={i * 80} y2="480" stroke="#1e1e2e" strokeWidth="0.5" />
-          ))}
+      <div className="relative p-4">
+        {worldLoading && (
+          <div className="absolute inset-0 flex items-center justify-center text-xs text-gray-500 z-10">
+            Loading world data…
+          </div>
+        )}
 
-          {/* World outline */}
-          <path d={WORLD_PATH} fill="#1a1a2e" stroke="#2a2a3e" strokeWidth="1" opacity="0.8" />
+        <svg
+          ref={svgRef}
+          viewBox={`0 0 ${MAP_WIDTH} ${MAP_HEIGHT}`}
+          className="w-full cursor-grab active:cursor-grabbing"
+          style={{ maxHeight: 440, background: '#0a0a0f' }}
+        >
+          <g ref={gRef}>
+            <rect x="0" y="0" width={MAP_WIDTH} height={MAP_HEIGHT} fill="#0a0a0f" />
 
-          {/* Server location pulse rings (dim) */}
-          {serverPoints.map((p, i) => (
-            <g key={`srv-pulse-${i}`} opacity="0.3">
-              <circle cx={p.x} cy={p.y} r="20" fill="none" stroke="#3388ff" strokeWidth="1" opacity="0.3">
-                <animate attributeName="r" from="8" to="30" dur="2s" repeatCount="indefinite" />
-                <animate attributeName="opacity" from="0.3" to="0" dur="2s" repeatCount="indefinite" />
-              </circle>
-            </g>
-          ))}
+            {/* Country polygons */}
+            {world?.features.map((f) => {
+              const isoNum = String(f.id || '')
+              const isGroundTruth = groundTruthIso && isoNum === groundTruthIso
+              return (
+                <path
+                  key={isoNum || f.properties?.name}
+                  d={pathGen(f) || ''}
+                  fill={isGroundTruth ? '#ffd70022' : '#13131f'}
+                  stroke={isGroundTruth ? '#ffd700' : '#2a2a3e'}
+                  strokeWidth={isGroundTruth ? 1.2 : 0.4}
+                />
+              )
+            })}
 
-          {/* User location pulse rings (bright) */}
-          {userPoints.map((p, i) => (
-            <g key={`usr-pulse-${i}`}>
-              <circle cx={p.x} cy={p.y} r="20" fill="none" stroke="#00ff88" strokeWidth="1.5" opacity="0.5">
-                <animate attributeName="r" from="8" to="30" dur="2s" repeatCount="indefinite" />
-                <animate attributeName="opacity" from="0.6" to="0" dur="2s" repeatCount="indefinite" />
-              </circle>
-              <circle cx={p.x} cy={p.y} r="12" fill="none" stroke="#00ff88" strokeWidth="0.5" opacity="0.3">
-                <animate attributeName="r" from="6" to="20" dur="2s" begin="0.5s" repeatCount="indefinite" />
-                <animate attributeName="opacity" from="0.4" to="0" dur="2s" begin="0.5s" repeatCount="indefinite" />
-              </circle>
-            </g>
-          ))}
+            {/* Server location pulses (dim) */}
+            {serverPoints.map((p, i) => (
+              <g key={`srv-pulse-${i}`} opacity="0.3">
+                <circle cx={p.x} cy={p.y} r="20" fill="none" stroke="#3388ff" strokeWidth="1" opacity="0.3">
+                  <animate attributeName="r" from="8" to="30" dur="2s" repeatCount="indefinite" />
+                  <animate attributeName="opacity" from="0.3" to="0" dur="2s" repeatCount="indefinite" />
+                </circle>
+              </g>
+            ))}
 
-          {/* Server location dots (dim blue) */}
-          {serverPoints.map((p, i) => (
-            <g key={`srv-dot-${i}`} opacity="0.4">
-              <circle cx={p.x} cy={p.y} r="5" fill="#3388ff" opacity="0.3" />
-              <circle cx={p.x} cy={p.y} r="3" fill="#3388ff" />
-              <circle cx={p.x} cy={p.y} r="1" fill="#ffffff" />
-            </g>
-          ))}
+            {/* User location pulses (bright) */}
+            {userPoints.map((p, i) => (
+              <g key={`usr-pulse-${i}`}>
+                <circle cx={p.x} cy={p.y} r="20" fill="none" stroke="#00ff88" strokeWidth="1.5" opacity="0.5">
+                  <animate attributeName="r" from="8" to="30" dur="2s" repeatCount="indefinite" />
+                  <animate attributeName="opacity" from="0.6" to="0" dur="2s" repeatCount="indefinite" />
+                </circle>
+                <circle cx={p.x} cy={p.y} r="12" fill="none" stroke="#00ff88" strokeWidth="0.5" opacity="0.3">
+                  <animate attributeName="r" from="6" to="20" dur="2s" begin="0.5s" repeatCount="indefinite" />
+                  <animate attributeName="opacity" from="0.4" to="0" dur="2s" begin="0.5s" repeatCount="indefinite" />
+                </circle>
+              </g>
+            ))}
 
-          {/* User location dots (bright green) */}
-          {userPoints.map((p, i) => (
-            <g key={`usr-dot-${i}`}>
-              <circle cx={p.x} cy={p.y} r="7" fill="#00ff88" opacity="0.3" />
-              <circle cx={p.x} cy={p.y} r="5" fill="#00ff88" />
-              <circle cx={p.x} cy={p.y} r="2" fill="#ffffff" />
-            </g>
-          ))}
+            {/* Server location dots */}
+            {serverPoints.map((p, i) => (
+              <g key={`srv-dot-${i}`} opacity="0.4">
+                <circle cx={p.x} cy={p.y} r="5" fill="#3388ff" opacity="0.3" />
+                <circle cx={p.x} cy={p.y} r="3" fill="#3388ff" />
+                <circle cx={p.x} cy={p.y} r="1" fill="#ffffff" />
+              </g>
+            ))}
 
-          {/* Ground truth pin (gold, operator-confirmed) */}
-          {groundTruthPoint && (
-            <g>
-              <circle cx={groundTruthPoint.x} cy={groundTruthPoint.y} r="24" fill="none" stroke="#ffd700" strokeWidth="1.5" opacity="0.4">
-                <animate attributeName="r" from="10" to="35" dur="2.5s" repeatCount="indefinite" />
-                <animate attributeName="opacity" from="0.5" to="0" dur="2.5s" repeatCount="indefinite" />
-              </circle>
-              <circle cx={groundTruthPoint.x} cy={groundTruthPoint.y} r="9" fill="#ffd700" opacity="0.25" />
-              <circle cx={groundTruthPoint.x} cy={groundTruthPoint.y} r="6" fill="#ffd700" opacity="0.6" />
-              <circle cx={groundTruthPoint.x} cy={groundTruthPoint.y} r="3" fill="#ffffff" />
-              {/* Pin label */}
-              <rect x={groundTruthPoint.x + 14} y={groundTruthPoint.y - 14} width="80" height="20" rx="4" fill="#12121a" stroke="#ffd700" strokeWidth="1" opacity="0.9" />
-              <text x={groundTruthPoint.x + 20} y={groundTruthPoint.y} fill="#ffd700" fontSize="10" fontFamily="monospace" fontWeight="bold">
-                {groundTruthPoint.code} (confirmed)
-              </text>
-            </g>
-          )}
+            {/* User location dots */}
+            {userPoints.map((p, i) => (
+              <g key={`usr-dot-${i}`}>
+                <circle cx={p.x} cy={p.y} r="7" fill="#00ff88" opacity="0.3" />
+                <circle cx={p.x} cy={p.y} r="5" fill="#00ff88" />
+                <circle cx={p.x} cy={p.y} r="2" fill="#ffffff" />
+              </g>
+            ))}
 
-          {/* User location labels */}
-          {userPoints.map((p, i) => (
-            <g key={`usr-label-${i}`}>
-              <rect x={p.x + 12} y={p.y - 14} width={Math.max(80, (p.label?.length || 0) * 7 + 20)} height="20" rx="4" fill="#12121a" stroke="#00ff88" strokeWidth="1" opacity="0.9" />
-              <text x={p.x + 18} y={p.y} fill="#00ff88" fontSize="10" fontFamily="monospace">
-                {p.label}
-              </text>
-            </g>
-          ))}
+            {/* Ground truth pin */}
+            {groundTruthPoint && (
+              <g>
+                <circle cx={groundTruthPoint.x} cy={groundTruthPoint.y} r="24" fill="none" stroke="#ffd700" strokeWidth="1.5" opacity="0.4">
+                  <animate attributeName="r" from="10" to="35" dur="2.5s" repeatCount="indefinite" />
+                  <animate attributeName="opacity" from="0.5" to="0" dur="2.5s" repeatCount="indefinite" />
+                </circle>
+                <circle cx={groundTruthPoint.x} cy={groundTruthPoint.y} r="9" fill="#ffd700" opacity="0.25" />
+                <circle cx={groundTruthPoint.x} cy={groundTruthPoint.y} r="6" fill="#ffd700" opacity="0.6" />
+                <circle cx={groundTruthPoint.x} cy={groundTruthPoint.y} r="3" fill="#ffffff" />
+                <rect x={groundTruthPoint.x + 14} y={groundTruthPoint.y - 14} width="92" height="20" rx="4" fill="#12121a" stroke="#ffd700" strokeWidth="1" opacity="0.95" />
+                <text x={groundTruthPoint.x + 20} y={groundTruthPoint.y} fill="#ffd700" fontSize="10" fontFamily="monospace" fontWeight="bold">
+                  {groundTruthPoint.code} (confirmed)
+                </text>
+              </g>
+            )}
 
-          {/* Server location labels */}
-          {serverPoints.map((p, i) => (
-            <g key={`srv-label-${i}`} opacity="0.5">
-              <rect x={p.x + 10} y={p.y - 14} width={Math.max(80, (p.label?.length || 0) * 7 + 20)} height="20" rx="4" fill="#12121a" stroke="#1e1e2e" strokeWidth="1" />
-              <text x={p.x + 16} y={p.y} fill="#666688" fontSize="10" fontFamily="monospace">
-                {p.label} (server)
-              </text>
-            </g>
-          ))}
+            {/* User location labels */}
+            {userPoints.map((p, i) => (
+              <g key={`usr-label-${i}`}>
+                <rect x={p.x + 12} y={p.y - 14} width={Math.max(80, (p.label?.length || 0) * 7 + 20)} height="20" rx="4" fill="#12121a" stroke="#00ff88" strokeWidth="1" opacity="0.9" />
+                <text x={p.x + 18} y={p.y} fill="#00ff88" fontSize="10" fontFamily="monospace">{p.label}</text>
+              </g>
+            ))}
+
+            {/* Server location labels */}
+            {serverPoints.map((p, i) => (
+              <g key={`srv-label-${i}`} opacity="0.5">
+                <rect x={p.x + 10} y={p.y - 14} width={Math.max(80, (p.label?.length || 0) * 7 + 20)} height="20" rx="4" fill="#12121a" stroke="#1e1e2e" strokeWidth="1" />
+                <text x={p.x + 16} y={p.y} fill="#666688" fontSize="10" fontFamily="monospace">{p.label} (server)</text>
+              </g>
+            ))}
+          </g>
         </svg>
       </div>
+
       {/* Legend */}
       <div className="px-4 py-3 border-t border-[#1e1e2e]">
         <div className="flex flex-wrap gap-4 text-xs text-gray-400">
@@ -211,6 +211,7 @@ export default function LocationMap({ findings, userLocations, countryCode }) {
               Mail server locations (GeoIP)
             </span>
           )}
+          <span className="ml-auto text-[10px] text-gray-600">scroll to zoom · drag to pan</span>
         </div>
         <div className="flex flex-wrap gap-4 text-xs text-gray-400 mt-2">
           {userPoints.map((p, i) => (

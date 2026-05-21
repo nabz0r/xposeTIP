@@ -1,30 +1,16 @@
-import { useMemo, useState } from 'react'
+import { useMemo, useRef, useState } from 'react'
 import { Globe } from 'lucide-react'
-
-// Simple Mercator projection: lat/lng → x/y on a 960×480 SVG
-function project(lat, lng) {
-  const x = (lng + 180) * (960 / 360)
-  const latRad = (lat * Math.PI) / 180
-  const mercN = Math.log(Math.tan(Math.PI / 4 + latRad / 2))
-  const y = 240 - (960 * mercN) / (2 * Math.PI)
-  return [Math.max(0, Math.min(960, x)), Math.max(0, Math.min(480, y))]
-}
-
-// Simplified world map outline (same as LocationMap)
-const WORLD_PATH =
-  'M131,97L137,95L141,97L141,101L137,103L131,101Z ' +
-  'M150,85L175,75L195,78L210,90L205,105L195,110L180,115L165,120L155,118L145,110L140,100Z ' +
-  'M170,125L178,130L185,145L190,160L185,170L175,175L165,165L160,150L162,135Z ' +
-  'M180,175L195,180L200,200L195,220L185,235L175,230L170,215L172,195Z ' +
-  'M430,65L445,55L470,50L500,55L520,60L540,65L545,80L540,95L520,105L500,110L480,115L460,110L445,100L435,85Z ' +
-  'M450,120L475,110L510,115L540,120L555,130L560,150L550,170L530,180L500,185L480,175L465,155L455,135Z ' +
-  'M475,185L500,190L520,200L525,220L515,240L500,245L485,235L475,215L472,195Z ' +
-  'M560,65L590,55L630,50L670,60L700,70L720,80L730,95L720,110L700,115L680,110L660,100L640,95L620,90L600,85L575,80Z ' +
-  'M620,100L650,105L680,115L700,120L710,130L700,145L680,155L660,160L640,155L625,140L615,120Z ' +
-  'M600,130L615,135L620,150L615,165L600,175L585,170L580,155L585,140Z ' +
-  'M700,155L720,150L740,160L750,180L745,200L730,210L715,205L705,190L700,170Z ' +
-  'M740,220L770,215L800,225L810,250L800,270L780,280L760,275L745,260L740,240Z ' +
-  'M630,170L645,175L655,185L650,200L635,195L625,185Z'
+import * as d3 from 'd3'
+import {
+  useWorldData,
+  useZoom,
+  createProjection,
+  createPathGenerator,
+  projectPoint,
+  ISO_ALPHA2_TO_NUMERIC,
+  MAP_WIDTH,
+  MAP_HEIGHT,
+} from '../lib/geo'
 
 const riskColor = (score) => {
   if (score >= 60) return '#ff2244'
@@ -36,8 +22,48 @@ const riskColor = (score) => {
 const pinSize = (score) => Math.max(8, Math.min(24, 6 + (score || 0) * 0.3))
 
 export default function WorkspaceGeoMap({ targets = [], onTargetClick }) {
+  const svgRef = useRef(null)
+  const gRef = useRef(null)
   const [tooltip, setTooltip] = useState(null)
   const [expandedCluster, setExpandedCluster] = useState(null)
+  const [selectedCountry, setSelectedCountry] = useState(null) // ISO numeric
+
+  const { data: world, loading: worldLoading } = useWorldData()
+  useZoom(svgRef, gRef)
+
+  const projection = useMemo(() => createProjection(), [])
+  const pathGen = useMemo(() => createPathGenerator(projection), [projection])
+
+  const countryDensity = useMemo(() => {
+    const counts = {}
+    for (const t of targets) {
+      const cc = (t.country_code || '').toUpperCase()
+      if (!cc) continue
+      const iso = ISO_ALPHA2_TO_NUMERIC[cc]
+      if (!iso) continue
+      counts[iso] = (counts[iso] || 0) + 1
+    }
+    return counts
+  }, [targets])
+
+  const maxCountryCount = useMemo(
+    () => Math.max(1, ...Object.values(countryDensity)),
+    [countryDensity]
+  )
+
+  const densityScale = useMemo(
+    () => d3.scaleSequential(d3.interpolateRgb('#1a1a2e', '#00ff88'))
+      .domain([0, maxCountryCount]),
+    [maxCountryCount]
+  )
+
+  const selectedCountryTargets = useMemo(() => {
+    if (!selectedCountry) return []
+    const alpha2 = Object.entries(ISO_ALPHA2_TO_NUMERIC)
+      .find(([, num]) => num === selectedCountry)?.[0]
+    if (!alpha2) return []
+    return targets.filter((t) => (t.country_code || '').toUpperCase() === alpha2)
+  }, [selectedCountry, targets])
 
   const { pins, locatedCount, unlocatedCount, countryCount } = useMemo(() => {
     const located = []
@@ -51,72 +77,44 @@ export default function WorkspaceGeoMap({ targets = [], onTargetClick }) {
         threat: t.threat_score || 0,
         color: riskColor(t.exposure_score || 0),
         size: pinSize(t.exposure_score || 0),
-        avatar_seed: t.fingerprint_avatar_seed,
       }
 
-      // Priority 1: location_data (pre-computed best location)
       if (t.location_data?.lat && t.location_data?.lon) {
         located.push({ ...base, lat: t.location_data.lat, lon: t.location_data.lon, label: t.location_data.label, type: t.location_data.type })
+      } else if (t.user_locations?.length) {
+        const ul = t.user_locations.find((u) => u.lat && u.lon)
+        if (ul) located.push({ ...base, lat: ul.lat, lon: ul.lon, label: ul.city || ul.location || ul.country || '', type: 'self_reported' })
       }
-      // Priority 2: user_locations from profile_data
-      else if (t.user_locations?.length) {
-        const ul = t.user_locations.find(u => u.lat && u.lon)
-        if (ul) {
-          located.push({ ...base, lat: ul.lat, lon: ul.lon, label: ul.city || ul.location || ul.country || '', type: 'self_reported' })
-        }
-      }
-      // Priority 3: geo_locations from profile_data
-      if (!located.find(p => p.id === t.id) && t.geo_locations?.length) {
-        const gl = t.geo_locations.find(g => g.lat && g.lon)
-        if (gl) {
-          located.push({ ...base, lat: gl.lat, lon: gl.lon, label: [gl.city, gl.country].filter(Boolean).join(', '), type: 'server' })
-        }
+      if (!located.find((p) => p.id === t.id) && t.geo_locations?.length) {
+        const gl = t.geo_locations.find((g) => g.lat && g.lon)
+        if (gl) located.push({ ...base, lat: gl.lat, lon: gl.lon, label: [gl.city, gl.country].filter(Boolean).join(', '), type: 'server' })
       }
     }
 
-    // Cluster nearby pins (within ~3 degrees)
     const clusters = []
     const assigned = new Set()
-
     for (let i = 0; i < located.length; i++) {
       if (assigned.has(i)) continue
       const cluster = [located[i]]
       assigned.add(i)
-
       for (let j = i + 1; j < located.length; j++) {
         if (assigned.has(j)) continue
         const dist = Math.abs(located[i].lat - located[j].lat) + Math.abs(located[i].lon - located[j].lon)
-        if (dist < 3) {
-          cluster.push(located[j])
-          assigned.add(j)
-        }
+        if (dist < 3) { cluster.push(located[j]); assigned.add(j) }
       }
-
       const avgLat = cluster.reduce((s, p) => s + p.lat, 0) / cluster.length
       const avgLon = cluster.reduce((s, p) => s + p.lon, 0) / cluster.length
-      const maxScore = Math.max(...cluster.map(p => p.score))
-
+      const maxScore = Math.max(...cluster.map((p) => p.score))
       clusters.push({
-        targets: cluster,
-        lat: avgLat,
-        lon: avgLon,
-        label: cluster[0].label,
-        count: cluster.length,
-        maxScore,
-        color: riskColor(maxScore),
+        targets: cluster, lat: avgLat, lon: avgLon, label: cluster[0].label,
+        count: cluster.length, maxScore, color: riskColor(maxScore),
         size: cluster.length > 1 ? 28 : pinSize(maxScore),
       })
     }
 
     const lc = located.length
-    const countries = new Set(located.map(p => p.label).filter(Boolean))
-
-    return {
-      pins: clusters,
-      locatedCount: lc,
-      unlocatedCount: targets.length - lc,
-      countryCount: countries.size,
-    }
+    const countries = new Set(located.map((p) => p.label).filter(Boolean))
+    return { pins: clusters, locatedCount: lc, unlocatedCount: targets.length - lc, countryCount: countries.size }
   }, [targets])
 
   if (!targets.length) return null
@@ -130,95 +128,131 @@ export default function WorkspaceGeoMap({ targets = [], onTargetClick }) {
         </div>
         <span className="text-xs text-gray-500">
           {locatedCount} target{locatedCount !== 1 ? 's' : ''} in {countryCount} location{countryCount !== 1 ? 's' : ''}
-          {unlocatedCount > 0 && ` \u00b7 ${unlocatedCount} without location`}
+          {unlocatedCount > 0 && ` · ${unlocatedCount} without location`}
         </span>
       </div>
 
       <div className="relative p-4">
-        <svg viewBox="0 0 960 480" className="w-full" style={{ maxHeight: 360 }}>
-          {/* World outline */}
-          <path d={WORLD_PATH} fill="#1a1a2e" stroke="#2a2a3e" strokeWidth="1" />
+        {worldLoading && (
+          <div className="absolute inset-0 flex items-center justify-center text-xs text-gray-500 z-10">
+            Loading world data…
+          </div>
+        )}
 
-          {/* Grid lines */}
-          {[-60, -30, 0, 30, 60].map(lat => {
-            const [, y] = project(lat, 0)
-            return <line key={`lat${lat}`} x1="0" y1={y} x2="960" y2={y} stroke="#1a1a2e" strokeWidth="0.5" />
-          })}
-          {[-120, -60, 0, 60, 120].map(lng => {
-            const [x] = project(0, lng)
-            return <line key={`lng${lng}`} x1={x} y1="0" x2={x} y2="480" stroke="#1a1a2e" strokeWidth="0.5" />
-          })}
+        <svg
+          ref={svgRef}
+          viewBox={`0 0 ${MAP_WIDTH} ${MAP_HEIGHT}`}
+          className="w-full cursor-grab active:cursor-grabbing"
+          style={{ maxHeight: 420, background: '#0a0a0f' }}
+        >
+          <g ref={gRef}>
+            <rect x="0" y="0" width={MAP_WIDTH} height={MAP_HEIGHT} fill="#0a0a0f" />
 
-          {/* Target pins */}
-          {pins.map((pin, i) => {
-            const [x, y] = project(pin.lat, pin.lon)
-            const r = pin.size / 2
-            const isCluster = pin.count > 1
-            const isSelfReported = pin.targets[0]?.type === 'self_reported'
-
-            return (
-              <g
-                key={i}
-                transform={`translate(${x},${y})`}
-                className="cursor-pointer"
-                onMouseEnter={(e) => {
-                  const rect = e.currentTarget.closest('svg').getBoundingClientRect()
-                  setTooltip({
-                    x: e.clientX - rect.left,
-                    y: e.clientY - rect.top,
-                    pin,
-                  })
-                }}
-                onMouseLeave={() => setTooltip(null)}
-                onClick={() => {
-                  if (isCluster) {
-                    setExpandedCluster(expandedCluster === i ? null : i)
-                  } else {
-                    onTargetClick?.(pin.targets[0].id)
-                  }
-                }}
-              >
-                {/* Glow effect */}
-                <circle r={r + 4} fill={pin.color} opacity="0.15" />
-
-                {/* Pin circle */}
-                <circle
-                  r={r}
-                  fill="#0a0a12"
-                  stroke={pin.color}
-                  strokeWidth={isSelfReported ? 2 : 1.5}
-                  strokeDasharray={isSelfReported ? 'none' : '3,2'}
+            {/* Country polygons (density heatmap) */}
+            {world?.features.map((f) => {
+              const isoNum = String(f.id || '')
+              const count = countryDensity[isoNum] || 0
+              const isSelected = selectedCountry === isoNum
+              const fillColor = count > 0 ? densityScale(count) : '#13131f'
+              return (
+                <path
+                  key={isoNum || f.properties?.name}
+                  d={pathGen(f) || ''}
+                  fill={fillColor}
+                  stroke={isSelected ? '#00ff88' : '#2a2a3e'}
+                  strokeWidth={isSelected ? 1.5 : 0.4}
+                  className="cursor-pointer transition-colors"
+                  onMouseEnter={(e) => {
+                    if (count === 0) return
+                    const rect = svgRef.current?.getBoundingClientRect()
+                    if (!rect) return
+                    setTooltip({
+                      x: e.clientX - rect.left,
+                      y: e.clientY - rect.top,
+                      country: { name: f.properties?.name || 'Unknown', count },
+                    })
+                  }}
+                  onMouseLeave={() => setTooltip(null)}
+                  onClick={() => {
+                    if (count === 0) { setSelectedCountry(null); return }
+                    setSelectedCountry(selectedCountry === isoNum ? null : isoNum)
+                    setExpandedCluster(null)
+                  }}
                 />
+              )
+            })}
 
-                {/* Content: count for clusters, dot for single */}
-                {isCluster ? (
-                  <text
-                    textAnchor="middle"
-                    dominantBaseline="central"
-                    fill={pin.color}
-                    fontSize={r * 0.9}
-                    fontWeight="bold"
-                    fontFamily="monospace"
-                  >
-                    {pin.count}
-                  </text>
-                ) : (
-                  <circle r={r * 0.35} fill={pin.color} />
-                )}
-              </g>
-            )
-          })}
+            {/* Target pins */}
+            {pins.map((pin, i) => {
+              const projected = projectPoint(projection, pin.lat, pin.lon)
+              if (!projected) return null
+              const [x, y] = projected
+              const r = pin.size / 2
+              const isCluster = pin.count > 1
+              const isSelfReported = pin.targets[0]?.type === 'self_reported'
+
+              return (
+                <g
+                  key={i}
+                  transform={`translate(${x},${y})`}
+                  className="cursor-pointer"
+                  onMouseEnter={(e) => {
+                    const rect = svgRef.current?.getBoundingClientRect()
+                    if (!rect) return
+                    setTooltip({
+                      x: e.clientX - rect.left,
+                      y: e.clientY - rect.top,
+                      pin,
+                    })
+                  }}
+                  onMouseLeave={() => setTooltip(null)}
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    if (isCluster) {
+                      setExpandedCluster(expandedCluster === i ? null : i)
+                      setSelectedCountry(null)
+                    } else {
+                      onTargetClick?.(pin.targets[0].id)
+                    }
+                  }}
+                >
+                  <circle r={r + 4} fill={pin.color} opacity="0.15" />
+                  <circle
+                    r={r}
+                    fill="#0a0a12"
+                    stroke={pin.color}
+                    strokeWidth={isSelfReported ? 2 : 1.5}
+                    strokeDasharray={isSelfReported ? 'none' : '3,2'}
+                  />
+                  {isCluster ? (
+                    <text textAnchor="middle" dominantBaseline="central" fill={pin.color} fontSize={r * 0.9} fontWeight="bold" fontFamily="monospace">
+                      {pin.count}
+                    </text>
+                  ) : (
+                    <circle r={r * 0.35} fill={pin.color} />
+                  )}
+                </g>
+              )
+            })}
+          </g>
         </svg>
 
-        {/* Tooltip */}
-        {tooltip && (
+        {/* Country tooltip */}
+        {tooltip?.country && (
+          <div
+            className="absolute z-10 pointer-events-none bg-[#0a0a12] border border-[#00ff88]/40 rounded-lg px-3 py-1.5 text-xs shadow-lg"
+            style={{ left: Math.min(tooltip.x + 12, 700), top: tooltip.y - 8 }}
+          >
+            <div className="font-semibold text-white">{tooltip.country.name}</div>
+            <div className="text-[#00ff88] font-mono">{tooltip.country.count} target{tooltip.country.count !== 1 ? 's' : ''}</div>
+          </div>
+        )}
+
+        {/* Pin tooltip */}
+        {tooltip?.pin && (
           <div
             className="absolute z-10 pointer-events-none bg-[#0a0a12] border border-[#2a2a3e] rounded-lg px-3 py-2 text-xs shadow-lg"
-            style={{
-              left: Math.min(tooltip.x + 12, 600),
-              top: tooltip.y - 8,
-              maxWidth: 260,
-            }}
+            style={{ left: Math.min(tooltip.x + 12, 600), top: tooltip.y - 8, maxWidth: 260 }}
           >
             {tooltip.pin.targets.slice(0, 5).map((t, i) => (
               <div key={i} className={i > 0 ? 'mt-1 pt-1 border-t border-[#1e1e2e]' : ''}>
@@ -230,9 +264,7 @@ export default function WorkspaceGeoMap({ targets = [], onTargetClick }) {
                 </div>
               </div>
             ))}
-            {tooltip.pin.count > 5 && (
-              <div className="text-gray-500 mt-1">+{tooltip.pin.count - 5} more</div>
-            )}
+            {tooltip.pin.count > 5 && <div className="text-gray-500 mt-1">+{tooltip.pin.count - 5} more</div>}
             <div className="text-gray-600 mt-1">{tooltip.pin.label}</div>
           </div>
         )}
@@ -240,15 +272,9 @@ export default function WorkspaceGeoMap({ targets = [], onTargetClick }) {
         {/* Expanded cluster list */}
         {expandedCluster !== null && pins[expandedCluster] && (
           <div className="absolute bottom-4 right-4 bg-[#0a0a12] border border-[#2a2a3e] rounded-lg p-3 text-xs shadow-lg max-h-48 overflow-y-auto" style={{ maxWidth: 240 }}>
-            <div className="text-gray-400 mb-2 font-semibold">
-              {pins[expandedCluster].label} ({pins[expandedCluster].count})
-            </div>
+            <div className="text-gray-400 mb-2 font-semibold">{pins[expandedCluster].label} ({pins[expandedCluster].count})</div>
             {pins[expandedCluster].targets.map((t, i) => (
-              <div
-                key={i}
-                className="py-1 px-1 rounded cursor-pointer hover:bg-[#1a1a2e] flex items-center justify-between"
-                onClick={() => onTargetClick?.(t.id)}
-              >
+              <div key={i} className="py-1 px-1 rounded cursor-pointer hover:bg-[#1a1a2e] flex items-center justify-between" onClick={() => onTargetClick?.(t.id)}>
                 <span className="text-white truncate">{t.name}</span>
                 <span className="ml-2 font-mono" style={{ color: t.color }}>{t.score}</span>
               </div>
@@ -256,8 +282,30 @@ export default function WorkspaceGeoMap({ targets = [], onTargetClick }) {
           </div>
         )}
 
+        {/* Country-selected side panel */}
+        {selectedCountry && selectedCountryTargets.length > 0 && (
+          <div className="absolute top-4 right-4 bg-[#0a0a12] border border-[#00ff88]/40 rounded-lg p-3 text-xs shadow-lg max-h-64 overflow-y-auto" style={{ maxWidth: 280 }}>
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-[#00ff88] font-semibold">
+                {selectedCountryTargets.length} target{selectedCountryTargets.length !== 1 ? 's' : ''} in country
+              </span>
+              <button onClick={() => setSelectedCountry(null)} className="text-gray-500 hover:text-white">×</button>
+            </div>
+            {selectedCountryTargets.map((t) => (
+              <div
+                key={t.id}
+                className="py-1 px-1 rounded cursor-pointer hover:bg-[#1a1a2e] flex items-center justify-between gap-2"
+                onClick={() => onTargetClick?.(t.id)}
+              >
+                <span className="text-white truncate">{t.primary_name || t.display_name || t.email}</span>
+                <span className="ml-2 font-mono shrink-0" style={{ color: riskColor(t.exposure_score || 0) }}>{t.exposure_score || 0}</span>
+              </div>
+            ))}
+          </div>
+        )}
+
         {/* Legend */}
-        <div className="flex items-center gap-4 mt-3 text-xs text-gray-500">
+        <div className="flex flex-wrap items-center gap-4 mt-3 text-xs text-gray-500">
           <span className="flex items-center gap-1">
             <span className="inline-block w-2 h-2 rounded-full bg-[#00ff88]" /> Low (0-14)
           </span>
@@ -270,10 +318,7 @@ export default function WorkspaceGeoMap({ targets = [], onTargetClick }) {
           <span className="flex items-center gap-1">
             <span className="inline-block w-2 h-2 rounded-full bg-[#ff2244]" /> Critical (60+)
           </span>
-          <span className="ml-auto flex items-center gap-2">
-            <span className="inline-block w-4 border-t-2 border-[#666]" /> Server
-            <span className="inline-block w-4 border-t-2 border-[#666] border-solid" style={{ borderStyle: 'solid' }} /> Self-reported
-          </span>
+          <span className="ml-auto text-[10px] text-gray-600">scroll to zoom · drag to pan · click country for breakdown</span>
         </div>
       </div>
     </div>
