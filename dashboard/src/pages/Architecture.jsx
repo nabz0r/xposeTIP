@@ -1,11 +1,11 @@
-import { Link } from 'react-router-dom'
-import { Shield, ArrowLeft } from 'lucide-react'
 import Section from '../components/shared/Section'
 import { StageCollect, StageGraph, StagePropagate, StageScore, StageIdentify, StageExpose, StageMeasure, StageLocate } from '../components/architecture/Stages'
 import ScraperBreakdown from '../components/architecture/ScraperBreakdown'
 import DesignPrinciples from '../components/architecture/DesignPrinciples'
 import RoadmapSection from '../components/architecture/RoadmapSection'
-import { ArchCTA, ArchFooter } from '../components/architecture/ArchFooter'
+import ArchCTA from '../components/architecture/ArchCTA'
+import PublicNav from '../components/landing/PublicNav'
+import PublicFooter from '../components/landing/PublicFooter'
 
 export default function Architecture() {
   const demoSeed = {
@@ -16,17 +16,7 @@ export default function Architecture() {
 
   return (
     <div className="min-h-screen bg-[#0a0a0f] text-white">
-      {/* Nav */}
-      <nav className="fixed top-0 left-0 right-0 z-50 bg-[#0a0a0f]/90 backdrop-blur border-b border-[#1e1e2e]">
-        <div className="max-w-5xl mx-auto px-6 py-4 flex items-center justify-between">
-          <Link to="/welcome" className="flex items-center gap-2 text-gray-400 hover:text-white transition-colors">
-            <ArrowLeft className="w-4 h-4" />
-            <Shield className="w-5 h-5 text-[#00ff88]" />
-            <span className="font-bold font-['Instrument_Sans',sans-serif]">xpose</span>
-          </Link>
-          <span className="text-xs text-gray-600 font-mono">Architecture</span>
-        </div>
-      </nav>
+      <PublicNav />
 
       <div className="pt-24 pb-20">
         {/* Hero */}
@@ -67,7 +57,7 @@ export default function Architecture() {
         <ArchCTA />
       </div>
 
-      <ArchFooter />
+      <PublicFooter />
     </div>
   )
 }

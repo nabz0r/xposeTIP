@@ -12,7 +12,8 @@ import TwoWaysSection from '../components/landing/TwoWaysSection'
 import TrustBar from '../components/landing/TrustBar'
 import TechStack from '../components/landing/TechStack'
 import FinalCTA from '../components/landing/FinalCTA'
-import LandingFooter from '../components/landing/LandingFooter'
+import PublicNav from '../components/landing/PublicNav'
+import PublicFooter from '../components/landing/PublicFooter'
 
 export default function Landing() {
   const [email, setEmail] = useState('')
@@ -121,6 +122,7 @@ export default function Landing() {
         }
       `}</style>
 
+      <PublicNav />
       <HeroSection
         email={email} setEmail={setEmail} loading={loading} error={error}
         onSubmit={handleQuickScan} quickResult={quickResult}
@@ -135,7 +137,7 @@ export default function Landing() {
       <TrustBar />
       <TechStack />
       <FinalCTA email={email} setEmail={setEmail} loading={loading} error={error} onSubmit={handleQuickScan} />
-      <LandingFooter />
+      <PublicFooter />
     </div>
   )
 }

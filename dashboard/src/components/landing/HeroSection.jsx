@@ -1,4 +1,4 @@
-import { Radar, Shield } from 'lucide-react'
+import { Radar } from 'lucide-react'
 import GenerativeAvatar from '../GenerativeAvatar'
 import ScanForm from './ScanForm'
 import { DEMO_AVATARS, DEFAULT_SEED_PROPS, scoreColor, sevColor, hashEmail } from './constants'
@@ -6,24 +6,6 @@ import { DEMO_AVATARS, DEFAULT_SEED_PROPS, scoreColor, sevColor, hashEmail } fro
 export default function HeroSection({ email, setEmail, loading, error, onSubmit, quickResult, pollCount, phaseMsg }) {
   return (
     <>
-      {/* ─── Nav ─── */}
-      <nav className="fixed top-0 w-full z-50 border-b border-[#1e1e2e]/50 bg-[#0a0a0f]/80 backdrop-blur-xl px-6 py-4 flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <Shield className="w-6 h-6 text-[#00ff88]" />
-          <span className="text-xl font-bold tracking-tight font-['Instrument_Sans',sans-serif]">xpose</span>
-          <span className="text-[10px] font-mono text-gray-600 ml-1">TIP</span>
-        </div>
-        <div className="flex items-center gap-3">
-          <a href="/architecture" className="text-sm text-gray-400 hover:text-white px-3 py-1.5 transition-colors">Architecture</a>
-          <a href="/compare" className="text-sm text-gray-400 hover:text-white px-3 py-1.5 transition-colors">Compare</a>
-          <a href="/manifesto" className="text-sm text-gray-400 hover:text-white px-3 py-1.5 transition-colors">Manifesto</a>
-          <a href="/login" className="text-sm text-gray-400 hover:text-white px-3 py-1.5 transition-colors">Sign in</a>
-          <a href="/setup" className="text-sm bg-[#00ff88] text-black font-semibold rounded-lg px-4 py-1.5 hover:bg-[#00ff88]/90 transition-colors">
-            Create account
-          </a>
-        </div>
-      </nav>
-
       {/* ═══════════════════ Section 1: Hero — THE HOOK ═══════════════════ */}
       <section className="min-h-screen flex items-center justify-center relative pt-16">
         {/* Background grid */}

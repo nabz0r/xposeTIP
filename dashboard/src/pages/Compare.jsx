@@ -1,5 +1,7 @@
 import { Link } from 'react-router-dom'
 import { Shield, Check, X, Minus, ArrowRight } from 'lucide-react'
+import PublicNav from '../components/landing/PublicNav'
+import PublicFooter from '../components/landing/PublicFooter'
 
 // ─── Comparison data ─────────────────────────────────────────────────
 
@@ -88,22 +90,7 @@ function Cell({ value, isUs }) {
 export default function Compare() {
   return (
     <div className="min-h-screen bg-[#0a0a0f] text-white">
-      {/* Nav */}
-      <nav className="fixed top-0 left-0 right-0 z-50 bg-[#0a0a0f]/90 backdrop-blur-sm border-b border-[#1e1e2e]">
-        <div className="max-w-5xl mx-auto px-6 h-14 flex items-center justify-between">
-          <Link to="/welcome" className="flex items-center gap-2">
-            <Shield className="w-4 h-4 text-[#00ff88]" />
-            <span className="font-bold text-sm">xpose</span>
-            <span className="text-[10px] font-mono text-gray-600">TIP</span>
-          </Link>
-          <div className="flex items-center gap-4 text-xs text-gray-500">
-            <Link to="/welcome" className="hover:text-white transition-colors">Product</Link>
-            <Link to="/architecture" className="hover:text-white transition-colors">Architecture</Link>
-            <Link to="/manifesto" className="hover:text-white transition-colors">Manifesto</Link>
-            <Link to="/login" className="hover:text-white transition-colors">Sign in</Link>
-          </div>
-        </div>
-      </nav>
+      <PublicNav />
 
       <div className="max-w-5xl mx-auto px-6 pt-28 pb-20">
         {/* Hero */}
@@ -272,6 +259,7 @@ export default function Compare() {
           Categorizations are positional — competitor products evolve.
         </p>
       </div>
+      <PublicFooter />
     </div>
   )
 }

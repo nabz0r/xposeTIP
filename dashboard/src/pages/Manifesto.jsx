@@ -1,6 +1,8 @@
 import { useEffect, useRef } from 'react'
 import { Link } from 'react-router-dom'
 import { Shield, Zap, BookOpen, Lock, ArrowRight, ChevronRight, X, Layers } from 'lucide-react'
+import PublicNav from '../components/landing/PublicNav'
+import PublicFooter from '../components/landing/PublicFooter'
 
 function useScrollReveal() {
   const ref = useRef(null)
@@ -66,22 +68,7 @@ export default function Manifesto() {
 
   return (
     <div ref={containerRef} className="min-h-screen bg-[#0a0a0f] text-white">
-      {/* Nav */}
-      <nav className="fixed top-0 left-0 right-0 z-50 bg-[#0a0a0f]/90 backdrop-blur-sm border-b border-[#1e1e2e]">
-        <div className="max-w-4xl mx-auto px-6 h-14 flex items-center justify-between">
-          <Link to="/welcome" className="flex items-center gap-2">
-            <Shield className="w-4 h-4 text-[#00ff88]" />
-            <span className="font-bold text-sm">xpose</span>
-            <span className="text-[10px] font-mono text-gray-600">TIP</span>
-          </Link>
-          <div className="flex items-center gap-4 text-xs text-gray-500">
-            <Link to="/welcome" className="hover:text-white transition-colors">Product</Link>
-            <Link to="/architecture" className="hover:text-white transition-colors">Architecture</Link>
-            <Link to="/compare" className="hover:text-white transition-colors">Compare</Link>
-            <Link to="/login" className="hover:text-white transition-colors">Sign in</Link>
-          </div>
-        </div>
-      </nav>
+      <PublicNav />
 
       <div className="max-w-3xl mx-auto px-6 pt-32 pb-20">
 
@@ -452,28 +439,19 @@ export default function Manifesto() {
           </Pillar>
         </section>
 
-        {/* Footer */}
-        <footer className="reveal opacity-0 translate-y-8 transition-all duration-700 border-t border-[#1e1e2e] pt-16 text-center">
+        {/* Closing editorial */}
+        <section className="reveal opacity-0 translate-y-8 transition-all duration-700 border-t border-[#1e1e2e] pt-16 text-center pb-8">
           <p className="text-gray-500 text-sm mb-2">
             Built in Luxembourg — Ethical by constitution, not by marketing.
           </p>
           <p className="text-gray-600 text-xs mb-6">
             Open source (AGPL-3.0) so you can verify every claim on this page.
           </p>
-          <div className="flex items-center justify-center gap-6 mb-8">
-            <Link to="/welcome"
-              className="flex items-center gap-2 text-sm text-[#00ff88] hover:underline">
-              Back to product <ArrowRight className="w-4 h-4" />
-            </Link>
-            <Link to="/architecture"
-              className="flex items-center gap-2 text-sm text-gray-400 hover:text-white transition-colors">
-              Read the architecture <ArrowRight className="w-4 h-4" />
-            </Link>
-          </div>
           <p className="text-[10px] text-gray-700 font-mono">Manifesto v3 — May 2026</p>
-        </footer>
+        </section>
 
       </div>
+      <PublicFooter />
     </div>
   )
 }
