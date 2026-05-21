@@ -60,7 +60,6 @@ export const AUDIENCES = [
   {
     label: 'Starter',
     desc: 'For individual professionals.',
-    price: '€49/month',
     href: '/setup?plan=starter',
     cta: 'Join waitlist',
     features: ['250 full scans / month', 'Full 127-source pipeline', 'Identity graph + personas', 'PDF identity reports'],
@@ -68,7 +67,6 @@ export const AUDIENCES = [
   {
     label: 'Team',
     desc: 'For security teams.',
-    price: '€299/month',
     href: '/setup?plan=team',
     cta: 'Join waitlist',
     features: ['2 000 scans / month', '5 seats included', 'API access (SIEM/SOAR)', 'Multi-workspace + shared targets'],
@@ -76,7 +74,6 @@ export const AUDIENCES = [
   {
     label: 'Enterprise',
     desc: 'For organizations.',
-    price: 'From €2 500/month',
     href: 'mailto:contact@redbird.co.com?subject=xposeTIP%20Enterprise%20inquiry',
     cta: 'Contact sales',
     features: ['Multi-tenant + SSO', 'Audit log + SLA', 'Custom scrapers on demand', 'Managed third-party API integrations'],

@@ -20,7 +20,7 @@ export default function PricingSection() {
             <div key={a.label} className="bg-[#12121a] border border-[#1e1e2e] rounded-xl p-6 text-center hover:border-[#1e1e2e] transition-all">
               <h3 className="text-lg font-semibold mb-2">{a.label}</h3>
               <p className="text-sm text-gray-400 mb-1">{a.desc}</p>
-              <p className="text-sm text-[#00ff88] font-mono mb-4">{a.price}</p>
+              {a.price && <p className="text-sm text-[#00ff88] font-mono mb-4">{a.price}</p>}
               {a.features && (
                 <ul className="text-left text-xs text-gray-500 space-y-1.5 mb-5">
                   {a.features.map((f, i) => (
