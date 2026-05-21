@@ -1,5 +1,109 @@
 [
   {
+    "sha": "1a57162",
+    "date": "2026-05-21T16:24:43+02:00",
+    "type": "feat",
+    "scope": "S144",
+    "sprint": "S144",
+    "subject": "data-driven AXIS_MAX recalibration + fingerprint recompute"
+  },
+  {
+    "sha": "87b1ce5",
+    "date": "2026-05-21T16:07:27+02:00",
+    "type": "chore",
+    "scope": "qa",
+    "sprint": "S143",
+    "subject": "S143 diag — final 3 workspaces (default, public, quentin)"
+  },
+  {
+    "sha": "e86e012",
+    "date": "2026-05-21T16:00:43+02:00",
+    "type": "chore",
+    "scope": "qa",
+    "sprint": "S143",
+    "subject": "S143 diag snapshot — threatconnect-cs workspace"
+  },
+  {
+    "sha": "0e19882",
+    "date": "2026-05-21T15:59:15+02:00",
+    "type": "chore",
+    "scope": "qa",
+    "sprint": "S143",
+    "subject": "S143 diag snapshot — threatconnect workspace"
+  },
+  {
+    "sha": "e801746",
+    "date": "2026-05-21T15:56:16+02:00",
+    "type": "chore",
+    "scope": "qa",
+    "sprint": "S143",
+    "subject": "S143 diag snapshot — ing-luxembourg workspace"
+  },
+  {
+    "sha": "1e00e99",
+    "date": "2026-05-21T15:54:57+02:00",
+    "type": "chore",
+    "scope": "qa",
+    "sprint": "S143",
+    "subject": "S143 diag snapshot — bgl-bnp-paribas workspace"
+  },
+  {
+    "sha": "16849c3",
+    "date": "2026-05-21T15:53:33+02:00",
+    "type": "chore",
+    "scope": "qa",
+    "sprint": "S143",
+    "subject": "S143 diag snapshot — ferrero workspace"
+  },
+  {
+    "sha": "e086174",
+    "date": "2026-05-21T15:52:27+02:00",
+    "type": "chore",
+    "scope": "qa",
+    "sprint": "S143",
+    "subject": "S143 diag snapshot — dataminr workspace"
+  },
+  {
+    "sha": "2cbcf34",
+    "date": "2026-05-21T15:51:16+02:00",
+    "type": "chore",
+    "scope": "qa",
+    "sprint": "S143",
+    "subject": "S143 diag snapshot — kpmg workspace"
+  },
+  {
+    "sha": "33dff01",
+    "date": "2026-05-21T15:50:23+02:00",
+    "type": "chore",
+    "scope": "qa",
+    "sprint": "S143",
+    "subject": "S143 diag snapshot — nexus-2026 workspace"
+  },
+  {
+    "sha": "858c386",
+    "date": "2026-05-21T15:46:20+02:00",
+    "type": "feat",
+    "scope": "S143",
+    "sprint": "S143",
+    "subject": "fingerprint calibration diagnostic — pre-BFP audit"
+  },
+  {
+    "sha": "035192b",
+    "date": "2026-05-21T14:05:14+02:00",
+    "type": "docs",
+    "scope": "S142",
+    "sprint": "S142",
+    "subject": "closure post-S141 — markdown reflects reality"
+  },
+  {
+    "sha": "e718ef3",
+    "date": "2026-05-21T13:47:29+02:00",
+    "type": "feat",
+    "scope": "S141",
+    "sprint": "S141",
+    "subject": "/changelog page parsed from git log"
+  },
+  {
     "sha": "d935fb3",
     "date": "2026-05-21T13:31:22+02:00",
     "type": "feat",

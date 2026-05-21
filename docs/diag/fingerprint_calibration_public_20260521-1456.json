@@ -1,0 +1,590 @@
+{
+  "version": "S143-v1",
+  "workspace": {
+    "slug": "public",
+    "name": "Quick Scans",
+    "id": "db21eec7-8125-4599-8a2f-ab52ab75d982"
+  },
+  "summary": {
+    "n_total": 3,
+    "n_with_fingerprint": 3,
+    "n_extractable": 3
+  },
+  "axes_normalized": {
+    "accounts": {
+      "n": 3,
+      "mean": 0.04466666666666667,
+      "stdev": 0.04792007234273894,
+      "min": 0.017,
+      "max": 0.1,
+      "p10": 0.017,
+      "p50": 0.017,
+      "p90": 0.1498,
+      "hist": [
+        2,
+        1,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "pct_zero": 0.0,
+      "pct_saturated": 0.0
+    },
+    "platforms": {
+      "n": 3,
+      "mean": 0.0,
+      "stdev": 0.0,
+      "min": 0.0,
+      "max": 0.0,
+      "p10": 0.0,
+      "p50": 0.0,
+      "p90": 0.0,
+      "hist": [
+        3,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "pct_zero": 100.0,
+      "pct_saturated": 0.0
+    },
+    "username_reuse": {
+      "n": 3,
+      "mean": 0.0,
+      "stdev": 0.0,
+      "min": 0.0,
+      "max": 0.0,
+      "p10": 0.0,
+      "p50": 0.0,
+      "p90": 0.0,
+      "hist": [
+        3,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "pct_zero": 100.0,
+      "pct_saturated": 0.0
+    },
+    "breaches": {
+      "n": 3,
+      "mean": 0.0,
+      "stdev": 0.0,
+      "min": 0.0,
+      "max": 0.0,
+      "p10": 0.0,
+      "p50": 0.0,
+      "p90": 0.0,
+      "hist": [
+        3,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "pct_zero": 100.0,
+      "pct_saturated": 0.0
+    },
+    "geo_spread": {
+      "n": 3,
+      "mean": 0.05,
+      "stdev": 0.0,
+      "min": 0.05,
+      "max": 0.05,
+      "p10": 0.05,
+      "p50": 0.05,
+      "p90": 0.05,
+      "hist": [
+        3,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "pct_zero": 0.0,
+      "pct_saturated": 0.0
+    },
+    "data_leaked": {
+      "n": 3,
+      "mean": 0.10666666666666666,
+      "stdev": 0.11547005383792515,
+      "min": 0.04,
+      "max": 0.24,
+      "p10": 0.04,
+      "p50": 0.04,
+      "p90": 0.36,
+      "hist": [
+        2,
+        0,
+        1,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "pct_zero": 0.0,
+      "pct_saturated": 0.0
+    },
+    "email_age": {
+      "n": 3,
+      "mean": 0.0,
+      "stdev": 0.0,
+      "min": 0.0,
+      "max": 0.0,
+      "p10": 0.0,
+      "p50": 0.0,
+      "p90": 0.0,
+      "hist": [
+        3,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "pct_zero": 100.0,
+      "pct_saturated": 0.0
+    },
+    "security": {
+      "n": 3,
+      "mean": 0.6666666666666666,
+      "stdev": 0.14433756729740643,
+      "min": 0.5,
+      "max": 0.75,
+      "p10": 0.35,
+      "p50": 0.75,
+      "p90": 0.75,
+      "hist": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        1,
+        0,
+        2,
+        0,
+        0
+      ],
+      "pct_zero": 0.0,
+      "pct_saturated": 0.0
+    },
+    "public_exposure": {
+      "n": 3,
+      "mean": 0.0,
+      "stdev": 0.0,
+      "min": 0.0,
+      "max": 0.0,
+      "p10": 0.0,
+      "p50": 0.0,
+      "p90": 0.0,
+      "hist": [
+        3,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "pct_zero": 100.0,
+      "pct_saturated": 0.0
+    },
+    "formal_records": {
+      "n": 3,
+      "mean": 0.0,
+      "stdev": 0.0,
+      "min": 0.0,
+      "max": 0.0,
+      "p10": 0.0,
+      "p50": 0.0,
+      "p90": 0.0,
+      "hist": [
+        3,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "pct_zero": 100.0,
+      "pct_saturated": 0.0
+    }
+  },
+  "axes_raw": {
+    "accounts": {
+      "n": 3,
+      "mean": 2.6666666666666665,
+      "stdev": 2.8867513459481287,
+      "min": 1.0,
+      "max": 6.0,
+      "p10": 1.0,
+      "p50": 1.0,
+      "p90": 9.0,
+      "hist": [
+        2,
+        1,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "pct_at_max": 0.0
+    },
+    "platforms": {
+      "n": 3,
+      "mean": 0.0,
+      "stdev": 0.0,
+      "min": 0.0,
+      "max": 0.0,
+      "p10": 0.0,
+      "p50": 0.0,
+      "p90": 0.0,
+      "hist": [
+        3,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "pct_at_max": 0.0
+    },
+    "username_reuse": {
+      "n": 3,
+      "mean": 0.0,
+      "stdev": 0.0,
+      "min": 0.0,
+      "max": 0.0,
+      "p10": 0.0,
+      "p50": 0.0,
+      "p90": 0.0,
+      "hist": [
+        3,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "pct_at_max": 0.0
+    },
+    "breaches": {
+      "n": 3,
+      "mean": 0.0,
+      "stdev": 0.0,
+      "min": 0.0,
+      "max": 0.0,
+      "p10": 0.0,
+      "p50": 0.0,
+      "p90": 0.0,
+      "hist": [
+        3,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "pct_at_max": 0.0
+    },
+    "geo_spread": {
+      "n": 3,
+      "mean": 0.25,
+      "stdev": 0.0,
+      "min": 0.25,
+      "max": 0.25,
+      "p10": 0.25,
+      "p50": 0.25,
+      "p90": 0.25,
+      "hist": [
+        3,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "pct_at_max": 0.0
+    },
+    "data_leaked": {
+      "n": 3,
+      "mean": 2.6666666666666665,
+      "stdev": 2.8867513459481287,
+      "min": 1.0,
+      "max": 6.0,
+      "p10": 1.0,
+      "p50": 1.0,
+      "p90": 9.0,
+      "hist": [
+        2,
+        0,
+        1,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "pct_at_max": 0.0
+    },
+    "email_age": {
+      "n": 3,
+      "mean": 0.0,
+      "stdev": 0.0,
+      "min": 0.0,
+      "max": 0.0,
+      "p10": 0.0,
+      "p50": 0.0,
+      "p90": 0.0,
+      "hist": [
+        3,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "pct_at_max": 0.0
+    },
+    "security": {
+      "n": 3,
+      "mean": 2.6666666666666665,
+      "stdev": 0.5773502691896257,
+      "min": 2.0,
+      "max": 3.0,
+      "p10": 1.4,
+      "p50": 3.0,
+      "p90": 3.0,
+      "hist": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        1,
+        0,
+        2,
+        0,
+        0
+      ],
+      "pct_at_max": 0.0
+    },
+    "public_exposure": {
+      "n": 3,
+      "mean": 0.0,
+      "stdev": 0.0,
+      "min": 0.0,
+      "max": 0.0,
+      "p10": 0.0,
+      "p50": 0.0,
+      "p90": 0.0,
+      "hist": [
+        3,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "pct_at_max": 0.0
+    },
+    "formal_records": {
+      "n": 3,
+      "mean": 0.0,
+      "stdev": 0.0,
+      "min": 0.0,
+      "max": 0.0,
+      "p10": 0.0,
+      "p50": 0.0,
+      "p90": 0.0,
+      "hist": [
+        3,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "pct_at_max": 0.0
+    }
+  },
+  "rich_targets": {
+    "3": 0,
+    "5": 0,
+    "7": 0,
+    "9": 0
+  },
+  "similarity": {
+    "total_pairs": 3,
+    "mean": 0.9768666666666667,
+    "stdev": 0.01946723743455484,
+    "above": {
+      "0.5": {
+        "count": 3,
+        "pct": 100.0
+      },
+      "0.6": {
+        "count": 3,
+        "pct": 100.0
+      },
+      "0.7": {
+        "count": 3,
+        "pct": 100.0
+      },
+      "0.8": {
+        "count": 3,
+        "pct": 100.0
+      },
+      "0.9": {
+        "count": 3,
+        "pct": 100.0
+      }
+    },
+    "hist": [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      3
+    ]
+  },
+  "top_pairs": [
+    {
+      "rank": 1,
+      "sim": 0.999,
+      "a": {
+        "id": "af4e6677-2f61-4452-8827-b167acc7a71e",
+        "email": "bobyblues@gmail.com"
+      },
+      "b": {
+        "id": "46ee201a-230c-4ea3-a97a-272c7bc41be4",
+        "email": "loupn24@msn.com"
+      },
+      "top_axes": [
+        "security",
+        "geo_spread",
+        "data_leaked"
+      ]
+    },
+    {
+      "rank": 2,
+      "sim": 0.9692,
+      "a": {
+        "id": "55c1b044-74a3-4d42-8b00-81c7b9448a21",
+        "email": "jon.doe@gmail.com"
+      },
+      "b": {
+        "id": "46ee201a-230c-4ea3-a97a-272c7bc41be4",
+        "email": "loupn24@msn.com"
+      },
+      "top_axes": [
+        "security",
+        "geo_spread",
+        "data_leaked"
+      ]
+    },
+    {
+      "rank": 3,
+      "sim": 0.9624,
+      "a": {
+        "id": "af4e6677-2f61-4452-8827-b167acc7a71e",
+        "email": "bobyblues@gmail.com"
+      },
+      "b": {
+        "id": "55c1b044-74a3-4d42-8b00-81c7b9448a21",
+        "email": "jon.doe@gmail.com"
+      },
+      "top_axes": [
+        "security",
+        "geo_spread",
+        "data_leaked"
+      ]
+    }
+  ],
+  "observations": [
+    "similarity threshold sanity: 100.00% of pairs \u2265 0.7 \u2192 threshold likely too low",
+    "calibration thin: only 0 targets have \u22657/9 axes populated (>0.1) \u2014 consider growing the corpus before tuning weights"
+  ],
+  "generated_at_utc": "2026-05-21 14:56 UTC"
+}

@@ -1,17 +1,6 @@
 import React, { useMemo, useState, useRef, useEffect } from 'react'
 
-const AXIS_LABELS_8 = [
-  { key: 'accounts', label: 'accounts' },
-  { key: 'platforms', label: 'platforms' },
-  { key: 'username_reuse', label: 'username reuse' },
-  { key: 'breaches', label: 'breaches' },
-  { key: 'geo_spread', label: 'geo spread' },
-  { key: 'data_leaked', label: 'data leaked' },
-  { key: 'email_age', label: 'email age' },
-  { key: 'security', label: 'security' },
-]
-
-const AXIS_LABELS_9 = [
+const ALL_AXIS_LABELS = [
   { key: 'accounts', label: 'accounts' },
   { key: 'platforms', label: 'platforms' },
   { key: 'username_reuse', label: 'username reuse' },
@@ -21,11 +10,15 @@ const AXIS_LABELS_9 = [
   { key: 'email_age', label: 'email age' },
   { key: 'security', label: 'security' },
   { key: 'public_exposure', label: 'public exposure' },
+  { key: 'formal_records', label: 'formal records' },
 ]
 
-// Dynamic: use 9-axis if fingerprint has public_exposure, else 8
+// Dynamic: return only the axes actually present in the fingerprint.
+// Handles 8-axis (pre-S110 hypothetical), 9-axis (pre-S145), 10-axis (post-S145)
+// transparently — no future-axis edits to this file needed.
 function getAxisLabels(axes) {
-  return axes && axes.public_exposure !== undefined ? AXIS_LABELS_9 : AXIS_LABELS_8
+  if (!axes) return ALL_AXIS_LABELS.slice(0, 8)
+  return ALL_AXIS_LABELS.filter(a => Object.prototype.hasOwnProperty.call(axes, a.key))
 }
 
 const RAW_LABELS = {
@@ -38,6 +31,7 @@ const RAW_LABELS = {
   email_age: (v) => `${v} years online`,
   security: (v) => `${v} security weaknesses`,
   public_exposure: (v) => `${(v * 100).toFixed(0)}% public exposure`,
+  formal_records: (v) => `${v} formal records (courts + commercial register + gazette)`,
 }
 
 function polarToCartesian(cx, cy, r, i, total = 9) {

@@ -1,0 +1,882 @@
+{
+  "version": "S143-v1",
+  "workspace": {
+    "slug": "threatconnect-cs",
+    "name": "Threatconnect CS",
+    "id": "bde2184b-7ab7-4a29-83b3-958033ad809d"
+  },
+  "summary": {
+    "n_total": 12,
+    "n_with_fingerprint": 12,
+    "n_extractable": 12
+  },
+  "axes_normalized": {
+    "accounts": {
+      "n": 12,
+      "mean": 0.38183333333333336,
+      "stdev": 0.2658655960283601,
+      "min": 0.067,
+      "max": 0.933,
+      "p10": 0.0718,
+      "p50": 0.383,
+      "p90": 0.8280000000000001,
+      "hist": [
+        2,
+        3,
+        1,
+        0,
+        1,
+        4,
+        0,
+        0,
+        0,
+        1
+      ],
+      "pct_zero": 0.0,
+      "pct_saturated": 0.0
+    },
+    "platforms": {
+      "n": 12,
+      "mean": 0.375,
+      "stdev": 0.2584041936051489,
+      "min": 0.08,
+      "max": 0.9,
+      "p10": 0.08,
+      "p50": 0.39,
+      "p90": 0.8039999999999999,
+      "hist": [
+        2,
+        3,
+        1,
+        0,
+        0,
+        5,
+        0,
+        0,
+        0,
+        1
+      ],
+      "pct_zero": 0.0,
+      "pct_saturated": 0.0
+    },
+    "username_reuse": {
+      "n": 12,
+      "mean": 0.125,
+      "stdev": 0.0621581560508061,
+      "min": 0.1,
+      "max": 0.3,
+      "p10": 0.1,
+      "p50": 0.1,
+      "p90": 0.27,
+      "hist": [
+        0,
+        10,
+        2,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "pct_zero": 0.0,
+      "pct_saturated": 0.0
+    },
+    "breaches": {
+      "n": 12,
+      "mean": 0.4166666666666667,
+      "stdev": 0.21672493389016634,
+      "min": 0.0,
+      "max": 0.6,
+      "p10": 0.0,
+      "p50": 0.4,
+      "p90": 0.6,
+      "hist": [
+        2,
+        0,
+        0,
+        0,
+        5,
+        5,
+        0,
+        0,
+        0,
+        0
+      ],
+      "pct_zero": 16.666666666666668,
+      "pct_saturated": 0.0
+    },
+    "geo_spread": {
+      "n": 12,
+      "mean": 0.47250000000000003,
+      "stdev": 0.21054582744510864,
+      "min": 0.25,
+      "max": 1.0,
+      "p10": 0.26799999999999996,
+      "p50": 0.45,
+      "p90": 0.8949999999999999,
+      "hist": [
+        0,
+        0,
+        1,
+        4,
+        2,
+        2,
+        2,
+        0,
+        0,
+        1
+      ],
+      "pct_zero": 0.0,
+      "pct_saturated": 8.333333333333334
+    },
+    "data_leaked": {
+      "n": 12,
+      "mean": 0.043333333333333335,
+      "stdev": 0.052454886822060266,
+      "min": 0.0,
+      "max": 0.16,
+      "p10": 0.0,
+      "p50": 0.04,
+      "p90": 0.148,
+      "hist": [
+        10,
+        2,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "pct_zero": 41.666666666666664,
+      "pct_saturated": 0.0
+    },
+    "email_age": {
+      "n": 12,
+      "mean": 0.14975,
+      "stdev": 0.17554285930947308,
+      "min": 0.0,
+      "max": 0.46,
+      "p10": 0.0,
+      "p50": 0.05,
+      "p90": 0.42400000000000004,
+      "hist": [
+        6,
+        1,
+        2,
+        2,
+        1,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "pct_zero": 50.0,
+      "pct_saturated": 0.0
+    },
+    "security": {
+      "n": 12,
+      "mean": 0.0625,
+      "stdev": 0.21650635094610965,
+      "min": 0.0,
+      "max": 0.75,
+      "p10": 0.0,
+      "p50": 0.0,
+      "p90": 0.525,
+      "hist": [
+        11,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        1,
+        0,
+        0
+      ],
+      "pct_zero": 91.66666666666667,
+      "pct_saturated": 0.0
+    },
+    "public_exposure": {
+      "n": 12,
+      "mean": 0.04016666666666667,
+      "stdev": 0.09388758590931384,
+      "min": 0.0,
+      "max": 0.25,
+      "p10": 0.0,
+      "p50": 0.0,
+      "p90": 0.2446,
+      "hist": [
+        10,
+        0,
+        2,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "pct_zero": 83.33333333333333,
+      "pct_saturated": 0.0
+    },
+    "formal_records": {
+      "n": 12,
+      "mean": 0.0,
+      "stdev": 0.0,
+      "min": 0.0,
+      "max": 0.0,
+      "p10": 0.0,
+      "p50": 0.0,
+      "p90": 0.0,
+      "hist": [
+        12,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "pct_zero": 100.0,
+      "pct_saturated": 0.0
+    }
+  },
+  "axes_raw": {
+    "accounts": {
+      "n": 12,
+      "mean": 22.916666666666668,
+      "stdev": 15.95709208718142,
+      "min": 4.0,
+      "max": 56.0,
+      "p10": 4.3,
+      "p50": 23.0,
+      "p90": 49.7,
+      "hist": [
+        2,
+        3,
+        1,
+        0,
+        1,
+        4,
+        0,
+        0,
+        0,
+        1
+      ],
+      "pct_at_max": 0.0
+    },
+    "platforms": {
+      "n": 12,
+      "mean": 18.75,
+      "stdev": 12.920209680257445,
+      "min": 4.0,
+      "max": 45.0,
+      "p10": 4.0,
+      "p50": 19.5,
+      "p90": 40.2,
+      "hist": [
+        2,
+        3,
+        1,
+        0,
+        0,
+        5,
+        0,
+        0,
+        0,
+        1
+      ],
+      "pct_at_max": 0.0
+    },
+    "username_reuse": {
+      "n": 12,
+      "mean": 1.25,
+      "stdev": 0.621581560508061,
+      "min": 1.0,
+      "max": 3.0,
+      "p10": 1.0,
+      "p50": 1.0,
+      "p90": 2.7,
+      "hist": [
+        0,
+        10,
+        1,
+        1,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "pct_at_max": 0.0
+    },
+    "breaches": {
+      "n": 12,
+      "mean": 2.0833333333333335,
+      "stdev": 1.0836246694508316,
+      "min": 0.0,
+      "max": 3.0,
+      "p10": 0.0,
+      "p50": 2.0,
+      "p90": 3.0,
+      "hist": [
+        2,
+        0,
+        0,
+        0,
+        5,
+        0,
+        5,
+        0,
+        0,
+        0
+      ],
+      "pct_at_max": 0.0
+    },
+    "geo_spread": {
+      "n": 12,
+      "mean": 2.3833333333333333,
+      "stdev": 1.1105554165971787,
+      "min": 1.25,
+      "max": 5.25,
+      "p10": 1.34,
+      "p50": 2.25,
+      "p90": 4.65,
+      "hist": [
+        0,
+        0,
+        1,
+        4,
+        2,
+        2,
+        2,
+        0,
+        0,
+        1
+      ],
+      "pct_at_max": 8.333333333333334
+    },
+    "data_leaked": {
+      "n": 12,
+      "mean": 1.0833333333333333,
+      "stdev": 1.3113721705515067,
+      "min": 0.0,
+      "max": 4.0,
+      "p10": 0.0,
+      "p50": 1.0,
+      "p90": 3.7,
+      "hist": [
+        10,
+        2,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "pct_at_max": 0.0
+    },
+    "email_age": {
+      "n": 12,
+      "mean": 5.991666666666666,
+      "stdev": 7.023138165874974,
+      "min": 0.0,
+      "max": 18.4,
+      "p10": 0.0,
+      "p50": 2.0,
+      "p90": 16.959999999999997,
+      "hist": [
+        6,
+        1,
+        2,
+        2,
+        1,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "pct_at_max": 0.0
+    },
+    "security": {
+      "n": 12,
+      "mean": 0.25,
+      "stdev": 0.8660254037844386,
+      "min": 0.0,
+      "max": 3.0,
+      "p10": 0.0,
+      "p50": 0.0,
+      "p90": 2.1,
+      "hist": [
+        11,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        1,
+        0,
+        0
+      ],
+      "pct_at_max": 0.0
+    },
+    "public_exposure": {
+      "n": 12,
+      "mean": 0.04016666666666667,
+      "stdev": 0.09388758590931384,
+      "min": 0.0,
+      "max": 0.25,
+      "p10": 0.0,
+      "p50": 0.0,
+      "p90": 0.2446,
+      "hist": [
+        10,
+        0,
+        2,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "pct_at_max": 0.0
+    },
+    "formal_records": {
+      "n": 12,
+      "mean": 0.0,
+      "stdev": 0.0,
+      "min": 0.0,
+      "max": 0.0,
+      "p10": 0.0,
+      "p50": 0.0,
+      "p90": 0.0,
+      "hist": [
+        12,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "pct_at_max": 0.0
+    }
+  },
+  "rich_targets": {
+    "3": 10,
+    "5": 6,
+    "7": 1,
+    "9": 0
+  },
+  "similarity": {
+    "total_pairs": 66,
+    "mean": 0.8361242424242424,
+    "stdev": 0.12443379958912482,
+    "above": {
+      "0.5": {
+        "count": 66,
+        "pct": 100.0
+      },
+      "0.6": {
+        "count": 66,
+        "pct": 100.0
+      },
+      "0.7": {
+        "count": 51,
+        "pct": 77.27272727272727
+      },
+      "0.8": {
+        "count": 41,
+        "pct": 62.121212121212125
+      },
+      "0.9": {
+        "count": 28,
+        "pct": 42.42424242424242
+      }
+    },
+    "hist": [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      15,
+      10,
+      13,
+      28
+    ]
+  },
+  "top_pairs": [
+    {
+      "rank": 1,
+      "sim": 0.9964,
+      "a": {
+        "id": "e83be128-853d-4e0c-94b9-c12c28a820fc",
+        "email": "mbivolaru@threatconnect.com"
+      },
+      "b": {
+        "id": "aabc7c06-87b1-46d8-b6c7-3a7fa542d602",
+        "email": "rczintos@threatconnect.com"
+      },
+      "top_axes": [
+        "breaches",
+        "geo_spread",
+        "accounts"
+      ]
+    },
+    {
+      "rank": 2,
+      "sim": 0.9939,
+      "a": {
+        "id": "295cb5c3-3602-46dc-84fe-a83618a46da0",
+        "email": "cpugalis@threatconnect.com"
+      },
+      "b": {
+        "id": "77b699d8-fc3a-4696-adcf-f0809262f0cc",
+        "email": "ckeppie@threatconnect.com"
+      },
+      "top_axes": [
+        "breaches",
+        "geo_spread",
+        "accounts"
+      ]
+    },
+    {
+      "rank": 3,
+      "sim": 0.9938,
+      "a": {
+        "id": "295cb5c3-3602-46dc-84fe-a83618a46da0",
+        "email": "cpugalis@threatconnect.com"
+      },
+      "b": {
+        "id": "aabc7c06-87b1-46d8-b6c7-3a7fa542d602",
+        "email": "rczintos@threatconnect.com"
+      },
+      "top_axes": [
+        "breaches",
+        "geo_spread",
+        "accounts"
+      ]
+    },
+    {
+      "rank": 4,
+      "sim": 0.9937,
+      "a": {
+        "id": "295cb5c3-3602-46dc-84fe-a83618a46da0",
+        "email": "cpugalis@threatconnect.com"
+      },
+      "b": {
+        "id": "e83be128-853d-4e0c-94b9-c12c28a820fc",
+        "email": "mbivolaru@threatconnect.com"
+      },
+      "top_axes": [
+        "breaches",
+        "geo_spread",
+        "platforms"
+      ]
+    },
+    {
+      "rank": 5,
+      "sim": 0.9923,
+      "a": {
+        "id": "c86f634f-3018-414d-bdb6-c2bbc17e8e11",
+        "email": "tmeyers@threatconnect.com"
+      },
+      "b": {
+        "id": "5e5e9eee-4dcc-425a-9028-3f81987c037f",
+        "email": "phoot@threatconnect.com"
+      },
+      "top_axes": [
+        "geo_spread",
+        "username_reuse",
+        "platforms"
+      ]
+    },
+    {
+      "rank": 6,
+      "sim": 0.992,
+      "a": {
+        "id": "77b699d8-fc3a-4696-adcf-f0809262f0cc",
+        "email": "ckeppie@threatconnect.com"
+      },
+      "b": {
+        "id": "e83be128-853d-4e0c-94b9-c12c28a820fc",
+        "email": "mbivolaru@threatconnect.com"
+      },
+      "top_axes": [
+        "breaches",
+        "geo_spread",
+        "platforms"
+      ]
+    },
+    {
+      "rank": 7,
+      "sim": 0.9889,
+      "a": {
+        "id": "77b699d8-fc3a-4696-adcf-f0809262f0cc",
+        "email": "ckeppie@threatconnect.com"
+      },
+      "b": {
+        "id": "aabc7c06-87b1-46d8-b6c7-3a7fa542d602",
+        "email": "rczintos@threatconnect.com"
+      },
+      "top_axes": [
+        "breaches",
+        "geo_spread",
+        "accounts"
+      ]
+    },
+    {
+      "rank": 8,
+      "sim": 0.9852,
+      "a": {
+        "id": "a9e30a8c-03e0-4566-8545-e2e3d9abe7d1",
+        "email": "wmoore@threatconnect.com"
+      },
+      "b": {
+        "id": "277ef2c9-e8a7-4b9b-bc0e-b550c8ba044d",
+        "email": "mbrash@threatconnect.com"
+      },
+      "top_axes": [
+        "geo_spread",
+        "accounts",
+        "platforms"
+      ]
+    },
+    {
+      "rank": 9,
+      "sim": 0.9717,
+      "a": {
+        "id": "0eb98c7e-c491-4ffd-8177-a1c91d2319ab",
+        "email": "pbetancourt@threatconnect.com"
+      },
+      "b": {
+        "id": "277ef2c9-e8a7-4b9b-bc0e-b550c8ba044d",
+        "email": "mbrash@threatconnect.com"
+      },
+      "top_axes": [
+        "breaches",
+        "geo_spread",
+        "platforms"
+      ]
+    },
+    {
+      "rank": 10,
+      "sim": 0.9709,
+      "a": {
+        "id": "277ef2c9-e8a7-4b9b-bc0e-b550c8ba044d",
+        "email": "mbrash@threatconnect.com"
+      },
+      "b": {
+        "id": "bc3ebc3c-2c45-4818-8113-85ed01dc9de4",
+        "email": "ewray@threatconnect.com"
+      },
+      "top_axes": [
+        "breaches",
+        "accounts",
+        "platforms"
+      ]
+    },
+    {
+      "rank": 11,
+      "sim": 0.9666,
+      "a": {
+        "id": "a9e30a8c-03e0-4566-8545-e2e3d9abe7d1",
+        "email": "wmoore@threatconnect.com"
+      },
+      "b": {
+        "id": "bc3ebc3c-2c45-4818-8113-85ed01dc9de4",
+        "email": "ewray@threatconnect.com"
+      },
+      "top_axes": [
+        "accounts",
+        "geo_spread",
+        "platforms"
+      ]
+    },
+    {
+      "rank": 12,
+      "sim": 0.9629,
+      "a": {
+        "id": "ae5f28f8-4529-4bb0-a224-14f47bb2f6d7",
+        "email": "adelacruz@threatconnect.com"
+      },
+      "b": {
+        "id": "a9e30a8c-03e0-4566-8545-e2e3d9abe7d1",
+        "email": "wmoore@threatconnect.com"
+      },
+      "top_axes": [
+        "accounts",
+        "platforms",
+        "geo_spread"
+      ]
+    },
+    {
+      "rank": 13,
+      "sim": 0.9621,
+      "a": {
+        "id": "ae5f28f8-4529-4bb0-a224-14f47bb2f6d7",
+        "email": "adelacruz@threatconnect.com"
+      },
+      "b": {
+        "id": "277ef2c9-e8a7-4b9b-bc0e-b550c8ba044d",
+        "email": "mbrash@threatconnect.com"
+      },
+      "top_axes": [
+        "accounts",
+        "platforms",
+        "geo_spread"
+      ]
+    },
+    {
+      "rank": 14,
+      "sim": 0.9541,
+      "a": {
+        "id": "0eb98c7e-c491-4ffd-8177-a1c91d2319ab",
+        "email": "pbetancourt@threatconnect.com"
+      },
+      "b": {
+        "id": "bc3ebc3c-2c45-4818-8113-85ed01dc9de4",
+        "email": "ewray@threatconnect.com"
+      },
+      "top_axes": [
+        "breaches",
+        "geo_spread",
+        "platforms"
+      ]
+    },
+    {
+      "rank": 15,
+      "sim": 0.9453,
+      "a": {
+        "id": "a9e30a8c-03e0-4566-8545-e2e3d9abe7d1",
+        "email": "wmoore@threatconnect.com"
+      },
+      "b": {
+        "id": "0eb98c7e-c491-4ffd-8177-a1c91d2319ab",
+        "email": "pbetancourt@threatconnect.com"
+      },
+      "top_axes": [
+        "geo_spread",
+        "platforms",
+        "accounts"
+      ]
+    },
+    {
+      "rank": 16,
+      "sim": 0.9436,
+      "a": {
+        "id": "295cb5c3-3602-46dc-84fe-a83618a46da0",
+        "email": "cpugalis@threatconnect.com"
+      },
+      "b": {
+        "id": "bc3ebc3c-2c45-4818-8113-85ed01dc9de4",
+        "email": "ewray@threatconnect.com"
+      },
+      "top_axes": [
+        "breaches",
+        "geo_spread",
+        "accounts"
+      ]
+    },
+    {
+      "rank": 17,
+      "sim": 0.9396,
+      "a": {
+        "id": "ae5f28f8-4529-4bb0-a224-14f47bb2f6d7",
+        "email": "adelacruz@threatconnect.com"
+      },
+      "b": {
+        "id": "0eb98c7e-c491-4ffd-8177-a1c91d2319ab",
+        "email": "pbetancourt@threatconnect.com"
+      },
+      "top_axes": [
+        "platforms",
+        "accounts",
+        "geo_spread"
+      ]
+    },
+    {
+      "rank": 18,
+      "sim": 0.934,
+      "a": {
+        "id": "bc3ebc3c-2c45-4818-8113-85ed01dc9de4",
+        "email": "ewray@threatconnect.com"
+      },
+      "b": {
+        "id": "77b699d8-fc3a-4696-adcf-f0809262f0cc",
+        "email": "ckeppie@threatconnect.com"
+      },
+      "top_axes": [
+        "breaches",
+        "geo_spread",
+        "accounts"
+      ]
+    },
+    {
+      "rank": 19,
+      "sim": 0.9275,
+      "a": {
+        "id": "277ef2c9-e8a7-4b9b-bc0e-b550c8ba044d",
+        "email": "mbrash@threatconnect.com"
+      },
+      "b": {
+        "id": "295cb5c3-3602-46dc-84fe-a83618a46da0",
+        "email": "cpugalis@threatconnect.com"
+      },
+      "top_axes": [
+        "breaches",
+        "geo_spread",
+        "accounts"
+      ]
+    },
+    {
+      "rank": 20,
+      "sim": 0.9273,
+      "a": {
+        "id": "ae5f28f8-4529-4bb0-a224-14f47bb2f6d7",
+        "email": "adelacruz@threatconnect.com"
+      },
+      "b": {
+        "id": "bc3ebc3c-2c45-4818-8113-85ed01dc9de4",
+        "email": "ewray@threatconnect.com"
+      },
+      "top_axes": [
+        "platforms",
+        "accounts",
+        "geo_spread"
+      ]
+    }
+  ],
+  "observations": [
+    "starved: `security` is zero for 91.7% of fingerprints \u2014 data plumbing or AXIS_MAX too high",
+    "starved: `public_exposure` is zero for 83.3% of fingerprints \u2014 data plumbing or AXIS_MAX too high",
+    "starved: `formal_records` is zero for 100.0% of fingerprints \u2014 data plumbing or AXIS_MAX too high",
+    "similarity threshold sanity: 77.27% of pairs \u2265 0.7 \u2192 threshold likely too low",
+    "calibration thin: only 1 targets have \u22657/9 axes populated (>0.1) \u2014 consider growing the corpus before tuning weights"
+  ],
+  "generated_at_utc": "2026-05-21 14:56 UTC"
+}

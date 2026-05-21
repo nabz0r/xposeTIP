@@ -59,8 +59,13 @@ def _axes_changed_count(old_axes, new_axes, threshold=0.05):
 
 
 def _all_axes_unchanged(old_axes, new_axes):
-    """Idempotency check — true if every axis is within 0.001 of the old value."""
+    """Idempotency check — true if old and new have the SAME keys and every
+    axis is within 0.001 of the old value. Returns False when a new axis was
+    added even if its value is 0 (dimension change still requires a write so
+    the persisted fingerprint reflects the current schema)."""
     if not old_axes or not new_axes:
+        return False
+    if set(old_axes.keys()) != set(new_axes.keys()):
         return False
     for k, new_v in new_axes.items():
         old_v = old_axes.get(k, 0.0) or 0.0

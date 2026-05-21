@@ -1,0 +1,880 @@
+{
+  "version": "S143-v1",
+  "workspace": {
+    "slug": "friends",
+    "name": "Friends",
+    "id": "4b0f2983-dd94-4bcf-b7a2-7f4fd144420f"
+  },
+  "summary": {
+    "n_total": 34,
+    "n_with_fingerprint": 8,
+    "n_extractable": 8
+  },
+  "axes_normalized": {
+    "accounts": {
+      "n": 8,
+      "mean": 0.5125,
+      "stdev": 0.15162359409311693,
+      "min": 0.3,
+      "max": 0.75,
+      "p10": 0.295,
+      "p50": 0.55,
+      "p90": 0.765,
+      "hist": [
+        0,
+        0,
+        1,
+        1,
+        1,
+        4,
+        0,
+        1,
+        0,
+        0
+      ],
+      "pct_zero": 0.0,
+      "pct_saturated": 0.0
+    },
+    "platforms": {
+      "n": 8,
+      "mean": 0.38,
+      "stdev": 0.165615734242165,
+      "min": 0.26,
+      "max": 0.76,
+      "p10": 0.258,
+      "p50": 0.33,
+      "p90": 0.7899999999999999,
+      "hist": [
+        0,
+        0,
+        3,
+        3,
+        1,
+        0,
+        0,
+        1,
+        0,
+        0
+      ],
+      "pct_zero": 0.0,
+      "pct_saturated": 0.0
+    },
+    "username_reuse": {
+      "n": 8,
+      "mean": 0.375,
+      "stdev": 0.27645717829090893,
+      "min": 0.1,
+      "max": 0.7,
+      "p10": 0.1,
+      "p50": 0.25,
+      "p90": 0.7,
+      "hist": [
+        0,
+        2,
+        3,
+        0,
+        0,
+        0,
+        3,
+        0,
+        0,
+        0
+      ],
+      "pct_zero": 0.0,
+      "pct_saturated": 0.0
+    },
+    "breaches": {
+      "n": 8,
+      "mean": 0.775,
+      "stdev": 0.07071067811865478,
+      "min": 0.6,
+      "max": 0.8,
+      "p10": 0.58,
+      "p50": 0.8,
+      "p90": 0.8,
+      "hist": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        1,
+        0,
+        0,
+        7,
+        0
+      ],
+      "pct_zero": 0.0,
+      "pct_saturated": 0.0
+    },
+    "geo_spread": {
+      "n": 8,
+      "mean": 0.42375,
+      "stdev": 0.15296474850668793,
+      "min": 0.3,
+      "max": 0.74,
+      "p10": 0.299,
+      "p50": 0.365,
+      "p90": 0.764,
+      "hist": [
+        0,
+        0,
+        1,
+        3,
+        1,
+        2,
+        0,
+        1,
+        0,
+        0
+      ],
+      "pct_zero": 0.0,
+      "pct_saturated": 0.0
+    },
+    "data_leaked": {
+      "n": 8,
+      "mean": 0.24,
+      "stdev": 0.2670473473268097,
+      "min": 0.04,
+      "max": 0.88,
+      "p10": 0.032,
+      "p50": 0.13999999999999999,
+      "p90": 0.944,
+      "hist": [
+        1,
+        4,
+        2,
+        0,
+        0,
+        0,
+        0,
+        0,
+        1,
+        0
+      ],
+      "pct_zero": 0.0,
+      "pct_saturated": 0.0
+    },
+    "email_age": {
+      "n": 8,
+      "mean": 0.197375,
+      "stdev": 0.1853089601565065,
+      "min": 0.0,
+      "max": 0.453,
+      "p10": 0.0,
+      "p50": 0.2085,
+      "p90": 0.45360000000000006,
+      "hist": [
+        3,
+        1,
+        2,
+        0,
+        2,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "pct_zero": 25.0,
+      "pct_saturated": 0.0
+    },
+    "security": {
+      "n": 8,
+      "mean": 0.71875,
+      "stdev": 0.08838834764831845,
+      "min": 0.5,
+      "max": 0.75,
+      "p10": 0.475,
+      "p50": 0.75,
+      "p90": 0.75,
+      "hist": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        1,
+        0,
+        7,
+        0,
+        0
+      ],
+      "pct_zero": 0.0,
+      "pct_saturated": 0.0
+    },
+    "public_exposure": {
+      "n": 8,
+      "mean": 0.03125,
+      "stdev": 0.08838834764831845,
+      "min": 0.0,
+      "max": 0.25,
+      "p10": 0.0,
+      "p50": 0.0,
+      "p90": 0.275,
+      "hist": [
+        7,
+        0,
+        1,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "pct_zero": 87.5,
+      "pct_saturated": 0.0
+    },
+    "formal_records": {
+      "n": 8,
+      "mean": 0.25,
+      "stdev": 0.38172540616821105,
+      "min": 0.0,
+      "max": 1.0,
+      "p10": 0.0,
+      "p50": 0.0,
+      "p90": 1.04,
+      "hist": [
+        5,
+        0,
+        0,
+        0,
+        1,
+        1,
+        0,
+        0,
+        0,
+        1
+      ],
+      "pct_zero": 62.5,
+      "pct_saturated": 12.5
+    }
+  },
+  "axes_raw": {
+    "accounts": {
+      "n": 8,
+      "mean": 30.75,
+      "stdev": 9.09866552224634,
+      "min": 18.0,
+      "max": 45.0,
+      "p10": 17.7,
+      "p50": 33.0,
+      "p90": 45.9,
+      "hist": [
+        0,
+        0,
+        0,
+        2,
+        1,
+        2,
+        2,
+        1,
+        0,
+        0
+      ],
+      "pct_at_max": 0.0
+    },
+    "platforms": {
+      "n": 8,
+      "mean": 19.0,
+      "stdev": 8.28078671210825,
+      "min": 13.0,
+      "max": 38.0,
+      "p10": 12.9,
+      "p50": 16.5,
+      "p90": 39.5,
+      "hist": [
+        0,
+        0,
+        3,
+        3,
+        1,
+        0,
+        0,
+        1,
+        0,
+        0
+      ],
+      "pct_at_max": 0.0
+    },
+    "username_reuse": {
+      "n": 8,
+      "mean": 3.75,
+      "stdev": 2.7645717829090897,
+      "min": 1.0,
+      "max": 7.0,
+      "p10": 1.0,
+      "p50": 2.5,
+      "p90": 7.0,
+      "hist": [
+        0,
+        2,
+        2,
+        1,
+        0,
+        0,
+        0,
+        3,
+        0,
+        0
+      ],
+      "pct_at_max": 0.0
+    },
+    "breaches": {
+      "n": 8,
+      "mean": 3.875,
+      "stdev": 0.3535533905932738,
+      "min": 3.0,
+      "max": 4.0,
+      "p10": 2.9,
+      "p50": 4.0,
+      "p90": 4.0,
+      "hist": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        1,
+        0,
+        7,
+        0
+      ],
+      "pct_at_max": 0.0
+    },
+    "geo_spread": {
+      "n": 8,
+      "mean": 2.11875,
+      "stdev": 0.7648237425334395,
+      "min": 1.5,
+      "max": 3.6999999999999997,
+      "p10": 1.4949999999999999,
+      "p50": 1.825,
+      "p90": 3.8199999999999994,
+      "hist": [
+        0,
+        0,
+        0,
+        4,
+        1,
+        2,
+        0,
+        1,
+        0,
+        0
+      ],
+      "pct_at_max": 0.0
+    },
+    "data_leaked": {
+      "n": 8,
+      "mean": 6.0,
+      "stdev": 6.676183683170241,
+      "min": 1.0,
+      "max": 22.0,
+      "p10": 0.8,
+      "p50": 3.5,
+      "p90": 23.6,
+      "hist": [
+        1,
+        4,
+        2,
+        0,
+        0,
+        0,
+        0,
+        0,
+        1,
+        0
+      ],
+      "pct_at_max": 0.0
+    },
+    "email_age": {
+      "n": 8,
+      "mean": 7.8999999999999995,
+      "stdev": 7.40926061474037,
+      "min": 0.0,
+      "max": 18.1,
+      "p10": 0.0,
+      "p50": 8.35,
+      "p90": 18.12,
+      "hist": [
+        3,
+        1,
+        2,
+        0,
+        2,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "pct_at_max": 0.0
+    },
+    "security": {
+      "n": 8,
+      "mean": 2.875,
+      "stdev": 0.3535533905932738,
+      "min": 2.0,
+      "max": 3.0,
+      "p10": 1.9,
+      "p50": 3.0,
+      "p90": 3.0,
+      "hist": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        1,
+        0,
+        7,
+        0,
+        0
+      ],
+      "pct_at_max": 0.0
+    },
+    "public_exposure": {
+      "n": 8,
+      "mean": 0.03125,
+      "stdev": 0.08838834764831845,
+      "min": 0.0,
+      "max": 0.25,
+      "p10": 0.0,
+      "p50": 0.0,
+      "p90": 0.275,
+      "hist": [
+        7,
+        0,
+        1,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "pct_at_max": 0.0
+    },
+    "formal_records": {
+      "n": 8,
+      "mean": 2.625,
+      "stdev": 5.527528509973642,
+      "min": 0.0,
+      "max": 16.0,
+      "p10": 0.0,
+      "p50": 0.0,
+      "p90": 17.3,
+      "hist": [
+        5,
+        0,
+        0,
+        0,
+        1,
+        0,
+        1,
+        0,
+        0,
+        1
+      ],
+      "pct_at_max": 12.5
+    }
+  },
+  "rich_targets": {
+    "3": 8,
+    "5": 8,
+    "7": 8,
+    "9": 1
+  },
+  "similarity": {
+    "total_pairs": 28,
+    "mean": 0.8383142857142857,
+    "stdev": 0.0862153836676053,
+    "above": {
+      "0.5": {
+        "count": 28,
+        "pct": 100.0
+      },
+      "0.6": {
+        "count": 28,
+        "pct": 100.0
+      },
+      "0.7": {
+        "count": 27,
+        "pct": 96.42857142857143
+      },
+      "0.8": {
+        "count": 19,
+        "pct": 67.85714285714286
+      },
+      "0.9": {
+        "count": 7,
+        "pct": 25.0
+      }
+    },
+    "hist": [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      1,
+      8,
+      12,
+      7
+    ]
+  },
+  "top_pairs": [
+    {
+      "rank": 1,
+      "sim": 0.9919,
+      "a": {
+        "id": "bbd28a36-99f1-4cb5-a838-4617633057a0",
+        "email": "booking.lxb@gmail.com"
+      },
+      "b": {
+        "id": "6214e28c-2202-448a-bf18-c8e1b5575bd6",
+        "email": "abed.belaid@gmail.com"
+      },
+      "top_axes": [
+        "security",
+        "username_reuse",
+        "breaches"
+      ]
+    },
+    {
+      "rank": 2,
+      "sim": 0.9779,
+      "a": {
+        "id": "53c3d05d-7950-4d64-bf56-ee2cad5aa8a6",
+        "email": "camelia.belab@gmail.com"
+      },
+      "b": {
+        "id": "6214e28c-2202-448a-bf18-c8e1b5575bd6",
+        "email": "abed.belaid@gmail.com"
+      },
+      "top_axes": [
+        "breaches",
+        "security",
+        "username_reuse"
+      ]
+    },
+    {
+      "rank": 3,
+      "sim": 0.9766,
+      "a": {
+        "id": "bbd28a36-99f1-4cb5-a838-4617633057a0",
+        "email": "booking.lxb@gmail.com"
+      },
+      "b": {
+        "id": "53c3d05d-7950-4d64-bf56-ee2cad5aa8a6",
+        "email": "camelia.belab@gmail.com"
+      },
+      "top_axes": [
+        "security",
+        "username_reuse",
+        "breaches"
+      ]
+    },
+    {
+      "rank": 4,
+      "sim": 0.9583,
+      "a": {
+        "id": "92326c6e-5ec5-4a56-9761-7afce9eaa618",
+        "email": "Ksontinisarah@gmail.com"
+      },
+      "b": {
+        "id": "712f356e-9b76-477d-a858-0d932e15c02c",
+        "email": "loupn24@msn.com"
+      },
+      "top_axes": [
+        "breaches",
+        "security",
+        "formal_records"
+      ]
+    },
+    {
+      "rank": 5,
+      "sim": 0.9428,
+      "a": {
+        "id": "712f356e-9b76-477d-a858-0d932e15c02c",
+        "email": "loupn24@msn.com"
+      },
+      "b": {
+        "id": "a5bfd465-5f30-47bd-aba0-89119bc93685",
+        "email": "guillaume.a.perrin@gmail.com"
+      },
+      "top_axes": [
+        "breaches",
+        "formal_records",
+        "security"
+      ]
+    },
+    {
+      "rank": 6,
+      "sim": 0.9027,
+      "a": {
+        "id": "53c3d05d-7950-4d64-bf56-ee2cad5aa8a6",
+        "email": "camelia.belab@gmail.com"
+      },
+      "b": {
+        "id": "e17fde1d-2c9a-49fa-97d0-08acbb3c8414",
+        "email": "info@florencehoffmann.net"
+      },
+      "top_axes": [
+        "breaches",
+        "security",
+        "accounts"
+      ]
+    },
+    {
+      "rank": 7,
+      "sim": 0.902,
+      "a": {
+        "id": "92326c6e-5ec5-4a56-9761-7afce9eaa618",
+        "email": "Ksontinisarah@gmail.com"
+      },
+      "b": {
+        "id": "a5bfd465-5f30-47bd-aba0-89119bc93685",
+        "email": "guillaume.a.perrin@gmail.com"
+      },
+      "top_axes": [
+        "breaches",
+        "security",
+        "formal_records"
+      ]
+    },
+    {
+      "rank": 8,
+      "sim": 0.876,
+      "a": {
+        "id": "c282f186-b15f-44bc-a8b3-f1f0d0867f37",
+        "email": "nabz0r@gmail.com"
+      },
+      "b": {
+        "id": "e17fde1d-2c9a-49fa-97d0-08acbb3c8414",
+        "email": "info@florencehoffmann.net"
+      },
+      "top_axes": [
+        "breaches",
+        "security",
+        "accounts"
+      ]
+    },
+    {
+      "rank": 9,
+      "sim": 0.8624,
+      "a": {
+        "id": "92326c6e-5ec5-4a56-9761-7afce9eaa618",
+        "email": "Ksontinisarah@gmail.com"
+      },
+      "b": {
+        "id": "c282f186-b15f-44bc-a8b3-f1f0d0867f37",
+        "email": "nabz0r@gmail.com"
+      },
+      "top_axes": [
+        "breaches",
+        "security",
+        "geo_spread"
+      ]
+    },
+    {
+      "rank": 10,
+      "sim": 0.8614,
+      "a": {
+        "id": "92326c6e-5ec5-4a56-9761-7afce9eaa618",
+        "email": "Ksontinisarah@gmail.com"
+      },
+      "b": {
+        "id": "53c3d05d-7950-4d64-bf56-ee2cad5aa8a6",
+        "email": "camelia.belab@gmail.com"
+      },
+      "top_axes": [
+        "breaches",
+        "security",
+        "geo_spread"
+      ]
+    },
+    {
+      "rank": 11,
+      "sim": 0.8549,
+      "a": {
+        "id": "6214e28c-2202-448a-bf18-c8e1b5575bd6",
+        "email": "abed.belaid@gmail.com"
+      },
+      "b": {
+        "id": "e17fde1d-2c9a-49fa-97d0-08acbb3c8414",
+        "email": "info@florencehoffmann.net"
+      },
+      "top_axes": [
+        "breaches",
+        "security",
+        "accounts"
+      ]
+    },
+    {
+      "rank": 12,
+      "sim": 0.8534,
+      "a": {
+        "id": "92326c6e-5ec5-4a56-9761-7afce9eaa618",
+        "email": "Ksontinisarah@gmail.com"
+      },
+      "b": {
+        "id": "e17fde1d-2c9a-49fa-97d0-08acbb3c8414",
+        "email": "info@florencehoffmann.net"
+      },
+      "top_axes": [
+        "breaches",
+        "security",
+        "geo_spread"
+      ]
+    },
+    {
+      "rank": 13,
+      "sim": 0.852,
+      "a": {
+        "id": "53c3d05d-7950-4d64-bf56-ee2cad5aa8a6",
+        "email": "camelia.belab@gmail.com"
+      },
+      "b": {
+        "id": "c282f186-b15f-44bc-a8b3-f1f0d0867f37",
+        "email": "nabz0r@gmail.com"
+      },
+      "top_axes": [
+        "breaches",
+        "security",
+        "accounts"
+      ]
+    },
+    {
+      "rank": 14,
+      "sim": 0.8422,
+      "a": {
+        "id": "92326c6e-5ec5-4a56-9761-7afce9eaa618",
+        "email": "Ksontinisarah@gmail.com"
+      },
+      "b": {
+        "id": "6214e28c-2202-448a-bf18-c8e1b5575bd6",
+        "email": "abed.belaid@gmail.com"
+      },
+      "top_axes": [
+        "breaches",
+        "security",
+        "accounts"
+      ]
+    },
+    {
+      "rank": 15,
+      "sim": 0.838,
+      "a": {
+        "id": "712f356e-9b76-477d-a858-0d932e15c02c",
+        "email": "loupn24@msn.com"
+      },
+      "b": {
+        "id": "e17fde1d-2c9a-49fa-97d0-08acbb3c8414",
+        "email": "info@florencehoffmann.net"
+      },
+      "top_axes": [
+        "breaches",
+        "security",
+        "geo_spread"
+      ]
+    },
+    {
+      "rank": 16,
+      "sim": 0.836,
+      "a": {
+        "id": "53c3d05d-7950-4d64-bf56-ee2cad5aa8a6",
+        "email": "camelia.belab@gmail.com"
+      },
+      "b": {
+        "id": "712f356e-9b76-477d-a858-0d932e15c02c",
+        "email": "loupn24@msn.com"
+      },
+      "top_axes": [
+        "breaches",
+        "security",
+        "geo_spread"
+      ]
+    },
+    {
+      "rank": 17,
+      "sim": 0.8349,
+      "a": {
+        "id": "bbd28a36-99f1-4cb5-a838-4617633057a0",
+        "email": "booking.lxb@gmail.com"
+      },
+      "b": {
+        "id": "e17fde1d-2c9a-49fa-97d0-08acbb3c8414",
+        "email": "info@florencehoffmann.net"
+      },
+      "top_axes": [
+        "security",
+        "breaches",
+        "accounts"
+      ]
+    },
+    {
+      "rank": 18,
+      "sim": 0.8214,
+      "a": {
+        "id": "92326c6e-5ec5-4a56-9761-7afce9eaa618",
+        "email": "Ksontinisarah@gmail.com"
+      },
+      "b": {
+        "id": "bbd28a36-99f1-4cb5-a838-4617633057a0",
+        "email": "booking.lxb@gmail.com"
+      },
+      "top_axes": [
+        "security",
+        "breaches",
+        "geo_spread"
+      ]
+    },
+    {
+      "rank": 19,
+      "sim": 0.8055,
+      "a": {
+        "id": "712f356e-9b76-477d-a858-0d932e15c02c",
+        "email": "loupn24@msn.com"
+      },
+      "b": {
+        "id": "6214e28c-2202-448a-bf18-c8e1b5575bd6",
+        "email": "abed.belaid@gmail.com"
+      },
+      "top_axes": [
+        "breaches",
+        "security",
+        "accounts"
+      ]
+    },
+    {
+      "rank": 20,
+      "sim": 0.7852,
+      "a": {
+        "id": "c282f186-b15f-44bc-a8b3-f1f0d0867f37",
+        "email": "nabz0r@gmail.com"
+      },
+      "b": {
+        "id": "712f356e-9b76-477d-a858-0d932e15c02c",
+        "email": "loupn24@msn.com"
+      },
+      "top_axes": [
+        "breaches",
+        "security",
+        "geo_spread"
+      ]
+    }
+  ],
+  "observations": [
+    "starved: `public_exposure` is zero for 87.5% of fingerprints \u2014 data plumbing or AXIS_MAX too high",
+    "similarity threshold sanity: 96.43% of pairs \u2265 0.7 \u2192 threshold likely too low",
+    "calibration thin: only 8 targets have \u22657/9 axes populated (>0.1) \u2014 consider growing the corpus before tuning weights"
+  ],
+  "generated_at_utc": "2026-05-21 14:56 UTC"
+}

@@ -153,7 +153,7 @@ class FingerprintEngine:
     AXIS_ORDER = [
         "accounts", "platforms", "username_reuse", "breaches",
         "geo_spread", "data_leaked", "email_age", "security",
-        "public_exposure",
+        "public_exposure", "formal_records",
     ]
 
     # AXIS_MAX divisors — data-driven from the 12-workspace S143 audit (2026-05-21).
@@ -171,6 +171,7 @@ class FingerprintEngine:
         "email_age_years": 40,      # was 15. Observed global max=30 (quentin), p90≈24. Saturated 25–100% in 7/12 workspaces. Bumped to 40 for headroom on very old accounts.
         "security_weak": 4,         # unchanged. Observed global max=3, never saturated. Leaving.
         "public_exposure_raw": 1.0, # unchanged — already 0-1 from compute_public_exposure_score.
+        "formal_records_raw": 5,    # NEW (S145). Count of legal_record findings (Courtlistener + BODACC + UK Gazette). Linear normalization. Most targets at 0; AXIS_MAX=5 means 1 record=0.2, 5+ saturates to 1.0. Recalibrate after running S143 diag post-S145.
     }
 
     SCORE_WEIGHTS = {
@@ -182,7 +183,8 @@ class FingerprintEngine:
         "data_leaked": 0.18,
         "email_age": 0.04,
         "security": 0.10,
-        "public_exposure": 0.12,
+        "public_exposure": 0.07,    # was 0.12. Reduced because legal_record findings no longer flow into PE (moved to formal_records axis).
+        "formal_records": 0.05,     # NEW (S145). Conservative weight, refine after observing distribution post-recompute.
     }
 
     SEMANTIC_LABELS = {
@@ -213,6 +215,9 @@ class FingerprintEngine:
         for f in findings:
             cat = getattr(f, "category", "") or ""
             ind = getattr(f, "indicator_type", "") or ""
+            if ind == "legal_record":
+                # S145: legal records get their own axis (formal_records). Exclude from PE bucket.
+                continue
             if cat == "public_exposure" or ind == "media_mention":
                 media_findings.append(f)
             elif cat == "compliance" or ind in ("sanctions_match", "pep_match"):
@@ -295,12 +300,51 @@ class FingerprintEngine:
         }
         return total, breakdown
 
+    @staticmethod
+    def compute_formal_records_raw(findings: list) -> tuple[int, dict]:
+        """Count legal/formal records per-source. Returns (total_count, breakdown).
+
+        Detects legal records via indicator_type == 'legal_record'. Works on both
+        pre-S145 findings (stored with category='public_exposure') and post-S145
+        findings (stored with category='formal_records') — the indicator_type is
+        set by the scrapers (api/scrapers/{courtlistener,bodacc,uk_gazette}_search.py)
+        independently of category.
+
+        Per-source breakdown drives the breakdown dict in the fingerprint result; the
+        total count drives the formal_records axis value (normalized via AXIS_MAX=5).
+        """
+        courts = 0
+        commercial_register = 0  # BODACC
+        gazette = 0
+        for f in findings:
+            ind = getattr(f, "indicator_type", "") or ""
+            if ind != "legal_record":
+                continue
+            data = f.data if isinstance(f.data, dict) else {}
+            scraper = (data.get("scraper") or "").lower()
+            if scraper == "courtlistener_search":
+                courts += 1
+            elif scraper == "bodacc_search":
+                commercial_register += 1
+            elif scraper == "uk_gazette_search":
+                gazette += 1
+        total = courts + commercial_register + gazette
+        return total, {
+            "courts": courts,
+            "commercial_register": commercial_register,
+            "gazette": gazette,
+        }
+
     def compute(self, findings: list, identities: list, profile_data: dict = None, email: str = "", links=None, graph_context=None, country_code: str = None) -> dict:
         raw = self._extract_raw_values(findings, identities, profile_data, email=email, country_code=country_code)
 
         # Compute 9th axis: public_exposure
         pe_score, pe_breakdown = self.compute_public_exposure_score(findings)
         raw["public_exposure_raw"] = pe_score
+
+        # Compute 10th axis: formal_records (S145)
+        fr_count, fr_breakdown = self.compute_formal_records_raw(findings)
+        raw["formal_records_raw"] = fr_count
 
         axes = self._normalize(raw)
         score = self._compute_score(axes)
@@ -334,6 +378,7 @@ class FingerprintEngine:
             "avatar_seed": avatar_seed,
             "timeline_events": raw.pop("timeline_events", []),
             "public_exposure_breakdown": pe_breakdown,
+            "formal_records_breakdown": fr_breakdown,
             "computed_at": datetime.now(timezone.utc).isoformat(),
         }
 
@@ -715,6 +760,7 @@ class FingerprintEngine:
             "email_age_years": "email_age",
             "security_weak": "security",
             "public_exposure_raw": "public_exposure",
+            "formal_records_raw": "formal_records",
         }
         axes = {}
         for raw_key, axis_name in mapping.items():

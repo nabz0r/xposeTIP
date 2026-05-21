@@ -40,6 +40,7 @@ AXIS_RAW_KEYS = {
     "email_age": "email_age_years",
     "security": "security_weak",
     "public_exposure": "public_exposure_raw",
+    "formal_records": "formal_records_raw",
 }
 
 POPULATED_THRESHOLD = 0.1  # Axes with normalized value > 0.1 count as "meaningfully populated"

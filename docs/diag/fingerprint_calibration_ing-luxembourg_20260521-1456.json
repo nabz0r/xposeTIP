@@ -1,0 +1,590 @@
+{
+  "version": "S143-v1",
+  "workspace": {
+    "slug": "ing-luxembourg",
+    "name": "ING Luxembourg",
+    "id": "b019afad-27d9-41cb-9bd5-1a25127e8429"
+  },
+  "summary": {
+    "n_total": 3,
+    "n_with_fingerprint": 3,
+    "n_extractable": 3
+  },
+  "axes_normalized": {
+    "accounts": {
+      "n": 3,
+      "mean": 0.5276666666666667,
+      "stdev": 0.02542308662089115,
+      "min": 0.5,
+      "max": 0.55,
+      "p10": 0.48019999999999996,
+      "p50": 0.533,
+      "p90": 0.5602,
+      "hist": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        3,
+        0,
+        0,
+        0,
+        0
+      ],
+      "pct_zero": 0.0,
+      "pct_saturated": 0.0
+    },
+    "platforms": {
+      "n": 3,
+      "mean": 0.32666666666666666,
+      "stdev": 0.011547005383792526,
+      "min": 0.32,
+      "max": 0.34,
+      "p10": 0.32,
+      "p50": 0.32,
+      "p90": 0.35200000000000004,
+      "hist": [
+        0,
+        0,
+        0,
+        3,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "pct_zero": 0.0,
+      "pct_saturated": 0.0
+    },
+    "username_reuse": {
+      "n": 3,
+      "mean": 0.7,
+      "stdev": 0.0,
+      "min": 0.7,
+      "max": 0.7,
+      "p10": 0.7,
+      "p50": 0.7,
+      "p90": 0.7,
+      "hist": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        3,
+        0,
+        0,
+        0
+      ],
+      "pct_zero": 0.0,
+      "pct_saturated": 0.0
+    },
+    "breaches": {
+      "n": 3,
+      "mean": 0.6,
+      "stdev": 0.0,
+      "min": 0.6,
+      "max": 0.6,
+      "p10": 0.6,
+      "p50": 0.6,
+      "p90": 0.6,
+      "hist": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        3,
+        0,
+        0,
+        0,
+        0
+      ],
+      "pct_zero": 0.0,
+      "pct_saturated": 0.0
+    },
+    "geo_spread": {
+      "n": 3,
+      "mean": 0.27,
+      "stdev": 0.034641016151377546,
+      "min": 0.25,
+      "max": 0.31,
+      "p10": 0.25,
+      "p50": 0.25,
+      "p90": 0.346,
+      "hist": [
+        0,
+        0,
+        2,
+        1,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "pct_zero": 0.0,
+      "pct_saturated": 0.0
+    },
+    "data_leaked": {
+      "n": 3,
+      "mean": 0.013333333333333334,
+      "stdev": 0.023094010767585032,
+      "min": 0.0,
+      "max": 0.04,
+      "p10": 0.0,
+      "p50": 0.0,
+      "p90": 0.064,
+      "hist": [
+        3,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "pct_zero": 66.66666666666667,
+      "pct_saturated": 0.0
+    },
+    "email_age": {
+      "n": 3,
+      "mean": 0.03333333333333333,
+      "stdev": 0.05773502691896258,
+      "min": 0.0,
+      "max": 0.1,
+      "p10": 0.0,
+      "p50": 0.0,
+      "p90": 0.16,
+      "hist": [
+        2,
+        1,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "pct_zero": 66.66666666666667,
+      "pct_saturated": 0.0
+    },
+    "security": {
+      "n": 3,
+      "mean": 0.0,
+      "stdev": 0.0,
+      "min": 0.0,
+      "max": 0.0,
+      "p10": 0.0,
+      "p50": 0.0,
+      "p90": 0.0,
+      "hist": [
+        3,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "pct_zero": 100.0,
+      "pct_saturated": 0.0
+    },
+    "public_exposure": {
+      "n": 3,
+      "mean": 0.03333333333333333,
+      "stdev": 0.05773502691896258,
+      "min": 0.0,
+      "max": 0.1,
+      "p10": 0.0,
+      "p50": 0.0,
+      "p90": 0.16,
+      "hist": [
+        2,
+        1,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "pct_zero": 66.66666666666667,
+      "pct_saturated": 0.0
+    },
+    "formal_records": {
+      "n": 3,
+      "mean": 0.0,
+      "stdev": 0.0,
+      "min": 0.0,
+      "max": 0.0,
+      "p10": 0.0,
+      "p50": 0.0,
+      "p90": 0.0,
+      "hist": [
+        3,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "pct_zero": 100.0,
+      "pct_saturated": 0.0
+    }
+  },
+  "axes_raw": {
+    "accounts": {
+      "n": 3,
+      "mean": 31.666666666666668,
+      "stdev": 1.5275252316519468,
+      "min": 30.0,
+      "max": 33.0,
+      "p10": 28.8,
+      "p50": 32.0,
+      "p90": 33.6,
+      "hist": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        3,
+        0,
+        0,
+        0,
+        0
+      ],
+      "pct_at_max": 0.0
+    },
+    "platforms": {
+      "n": 3,
+      "mean": 16.333333333333332,
+      "stdev": 0.5773502691896257,
+      "min": 16.0,
+      "max": 17.0,
+      "p10": 16.0,
+      "p50": 16.0,
+      "p90": 17.6,
+      "hist": [
+        0,
+        0,
+        0,
+        3,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "pct_at_max": 0.0
+    },
+    "username_reuse": {
+      "n": 3,
+      "mean": 7.0,
+      "stdev": 0.0,
+      "min": 7.0,
+      "max": 7.0,
+      "p10": 7.0,
+      "p50": 7.0,
+      "p90": 7.0,
+      "hist": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        3,
+        0,
+        0
+      ],
+      "pct_at_max": 0.0
+    },
+    "breaches": {
+      "n": 3,
+      "mean": 3.0,
+      "stdev": 0.0,
+      "min": 3.0,
+      "max": 3.0,
+      "p10": 3.0,
+      "p50": 3.0,
+      "p90": 3.0,
+      "hist": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        3,
+        0,
+        0,
+        0
+      ],
+      "pct_at_max": 0.0
+    },
+    "geo_spread": {
+      "n": 3,
+      "mean": 1.35,
+      "stdev": 0.17320508075688776,
+      "min": 1.25,
+      "max": 1.55,
+      "p10": 1.25,
+      "p50": 1.25,
+      "p90": 1.73,
+      "hist": [
+        0,
+        0,
+        2,
+        1,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "pct_at_max": 0.0
+    },
+    "data_leaked": {
+      "n": 3,
+      "mean": 0.3333333333333333,
+      "stdev": 0.5773502691896257,
+      "min": 0.0,
+      "max": 1.0,
+      "p10": 0.0,
+      "p50": 0.0,
+      "p90": 1.6,
+      "hist": [
+        3,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "pct_at_max": 0.0
+    },
+    "email_age": {
+      "n": 3,
+      "mean": 1.3333333333333333,
+      "stdev": 2.309401076758503,
+      "min": 0.0,
+      "max": 4.0,
+      "p10": 0.0,
+      "p50": 0.0,
+      "p90": 6.4,
+      "hist": [
+        2,
+        1,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "pct_at_max": 0.0
+    },
+    "security": {
+      "n": 3,
+      "mean": 0.0,
+      "stdev": 0.0,
+      "min": 0.0,
+      "max": 0.0,
+      "p10": 0.0,
+      "p50": 0.0,
+      "p90": 0.0,
+      "hist": [
+        3,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "pct_at_max": 0.0
+    },
+    "public_exposure": {
+      "n": 3,
+      "mean": 0.03333333333333333,
+      "stdev": 0.05773502691896258,
+      "min": 0.0,
+      "max": 0.1,
+      "p10": 0.0,
+      "p50": 0.0,
+      "p90": 0.16,
+      "hist": [
+        2,
+        1,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "pct_at_max": 0.0
+    },
+    "formal_records": {
+      "n": 3,
+      "mean": 0.0,
+      "stdev": 0.0,
+      "min": 0.0,
+      "max": 0.0,
+      "p10": 0.0,
+      "p50": 0.0,
+      "p90": 0.0,
+      "hist": [
+        3,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "pct_at_max": 0.0
+    }
+  },
+  "rich_targets": {
+    "3": 3,
+    "5": 3,
+    "7": 0,
+    "9": 0
+  },
+  "similarity": {
+    "total_pairs": 3,
+    "mean": 0.9934000000000001,
+    "stdev": 0.004186884283091623,
+    "above": {
+      "0.5": {
+        "count": 3,
+        "pct": 100.0
+      },
+      "0.6": {
+        "count": 3,
+        "pct": 100.0
+      },
+      "0.7": {
+        "count": 3,
+        "pct": 100.0
+      },
+      "0.8": {
+        "count": 3,
+        "pct": 100.0
+      },
+      "0.9": {
+        "count": 3,
+        "pct": 100.0
+      }
+    },
+    "hist": [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      3
+    ]
+  },
+  "top_pairs": [
+    {
+      "rank": 1,
+      "sim": 0.9982,
+      "a": {
+        "id": "a6a982ce-144e-4bf7-9eaa-4a2c5c82fb77",
+        "email": "laura.morgana@ing.lu"
+      },
+      "b": {
+        "id": "554464e5-8a8f-47b6-9374-8db486a23417",
+        "email": "marceau.muller@ing.lu"
+      },
+      "top_axes": [
+        "username_reuse",
+        "breaches",
+        "accounts"
+      ]
+    },
+    {
+      "rank": 2,
+      "sim": 0.9915,
+      "a": {
+        "id": "554464e5-8a8f-47b6-9374-8db486a23417",
+        "email": "marceau.muller@ing.lu"
+      },
+      "b": {
+        "id": "d22c45e3-aecd-492f-9ddd-e3958e525a11",
+        "email": "laura.morgano@ing.lu"
+      },
+      "top_axes": [
+        "username_reuse",
+        "breaches",
+        "accounts"
+      ]
+    },
+    {
+      "rank": 3,
+      "sim": 0.9905,
+      "a": {
+        "id": "a6a982ce-144e-4bf7-9eaa-4a2c5c82fb77",
+        "email": "laura.morgana@ing.lu"
+      },
+      "b": {
+        "id": "d22c45e3-aecd-492f-9ddd-e3958e525a11",
+        "email": "laura.morgano@ing.lu"
+      },
+      "top_axes": [
+        "username_reuse",
+        "breaches",
+        "accounts"
+      ]
+    }
+  ],
+  "observations": [
+    "similarity threshold sanity: 100.00% of pairs \u2265 0.7 \u2192 threshold likely too low",
+    "calibration thin: only 0 targets have \u22657/9 axes populated (>0.1) \u2014 consider growing the corpus before tuning weights"
+  ],
+  "generated_at_utc": "2026-05-21 14:56 UTC"
+}

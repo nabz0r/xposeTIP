@@ -709,6 +709,8 @@ def enrich_public_exposure(target_id, session: Session, scan_id=None) -> dict:
                     category = "compliance"
                 elif ind_type == "corporate_officer":
                     category = "corporate"
+                elif ind_type == "legal_record":
+                    category = "formal_records"   # S145: dedicated category. Pre-S145 findings keep public_exposure category but are still recognized via indicator_type in compute_formal_records_raw.
 
                 # Use actual scraper name from data, not generic "scraper_engine"
                 scraper_name = (fd.get("data") or {}).get("scraper", "scraper_engine")
