@@ -153,7 +153,7 @@ class FingerprintEngine:
     AXIS_ORDER = [
         "accounts", "platforms", "username_reuse", "breaches",
         "geo_spread", "data_leaked", "email_age", "security",
-        "public_exposure", "formal_records",
+        "public_exposure", "formal_records", "network_signature",
     ]
 
     # AXIS_MAX divisors — data-driven from the 12-workspace S143 audit (2026-05-21).
@@ -172,6 +172,7 @@ class FingerprintEngine:
         "security_weak": 4,         # unchanged. Observed global max=3, never saturated. Leaving.
         "public_exposure_raw": 1.0, # unchanged — already 0-1 from compute_public_exposure_score.
         "formal_records_raw": 5,    # NEW (S145). Count of legal_record findings (Courtlistener + BODACC + UK Gazette). Linear normalization. Most targets at 0; AXIS_MAX=5 means 1 record=0.2, 5+ saturates to 1.0. Recalibrate after running S143 diag post-S145.
+        "network_signature_raw": 1.0,  # NEW (S147). Spectral entropy of identity-graph eigenvalues, already in [0,1] — no scaling needed.
     }
 
     SCORE_WEIGHTS = {
@@ -180,11 +181,12 @@ class FingerprintEngine:
         "username_reuse": 0.13,
         "breaches": 0.22,
         "geo_spread": 0.05,
-        "data_leaked": 0.18,
+        "data_leaked": 0.13,        # was 0.18 (S147). Reduced because semantically redundant with breaches (0.22) — both capture credential exposure.
         "email_age": 0.04,
         "security": 0.10,
         "public_exposure": 0.07,    # was 0.12. Reduced because legal_record findings no longer flow into PE (moved to formal_records axis).
         "formal_records": 0.05,     # NEW (S145). Conservative weight, refine after observing distribution post-recompute.
+        "network_signature": 0.05,  # NEW (S147). Conservative weight — structural signal, not a direct risk metric. Refine post-recompute distribution.
     }
 
     SEMANTIC_LABELS = {
@@ -335,6 +337,51 @@ class FingerprintEngine:
             "gazette": gazette,
         }
 
+    @staticmethod
+    def compute_network_signature_raw(eigenvalues: list[float]) -> float:
+        """Compute spectral entropy of the identity-graph eigenvalues. Returns
+        a value in [0, 1] capturing the SHAPE of the graph topology
+        (scale-invariant — magnitude is already covered by accounts/platforms).
+
+        Semantics:
+          - 0.0: empty graph (n<2 or n>200, eigenvalues=[]), OR one eigenvalue
+                 dominates entirely (degenerate star/hub topology).
+          - ~0.3-0.6: typical realistic identity graphs with one main hub
+                       (email node) and several smaller clusters.
+          - ~0.8-1.0: balanced multi-cluster topology — eigenvalues distributed
+                      uniformly across the top-k.
+
+        Two targets with identical behavioral counts but different graph
+        topologies (e.g., star vs multi-cluster) will have measurably
+        different network_signature values, providing the homonym
+        discrimination that name + cosine cannot.
+        """
+        if not eigenvalues:
+            return 0.0
+
+        # Filter to strictly positive eigenvalues — negatives are numerical
+        # noise from power iteration deflation; zeros contribute nothing.
+        pos = [v for v in eigenvalues if v > 1e-9]
+        if len(pos) < 2:
+            # Single dominant eigenvalue → entropy is 0 (no spread).
+            return 0.0
+
+        total = sum(pos)
+        if total <= 0:
+            return 0.0
+
+        # Shannon entropy of normalized eigenvalue distribution
+        entropy = 0.0
+        for v in pos:
+            p = v / total
+            entropy -= p * math.log(p)
+
+        # Normalize by max entropy (uniform distribution over N positive eigvals)
+        max_entropy = math.log(len(pos))
+        if max_entropy <= 0:
+            return 0.0
+        return round(entropy / max_entropy, 4)
+
     def compute(self, findings: list, identities: list, profile_data: dict = None, email: str = "", links=None, graph_context=None, country_code: str = None) -> dict:
         raw = self._extract_raw_values(findings, identities, profile_data, email=email, country_code=country_code)
 
@@ -346,6 +393,13 @@ class FingerprintEngine:
         fr_count, fr_breakdown = self.compute_formal_records_raw(findings)
         raw["formal_records_raw"] = fr_count
 
+        # Compute 11th axis: network_signature (S147)
+        # Eigenvalues are computed here (was later) so they feed both the
+        # network_signature axis AND the downstream avatar_seed / enhanced_hash.
+        eigen = self._compute_graph_signature(identities, links or [])
+        ns_raw = self.compute_network_signature_raw(eigen)
+        raw["network_signature_raw"] = ns_raw
+
         axes = self._normalize(raw)
         score = self._compute_score(axes)
         color, fill, risk = self._color_from_score(score)
@@ -353,10 +407,8 @@ class FingerprintEngine:
         points = self._axes_to_polygon(axes, center=(340, 320), radius=180)
         scars = self._detect_scars(axes, raw)
 
-        # Graph eigenvalues for topology signature
-        eigen = self._compute_graph_signature(identities, links or [])
-
         # Enhanced hash: includes both axes AND graph topology
+        # (eigen already computed above for the network_signature axis)
         fp_hash = self._compute_enhanced_hash(axes, raw, email, eigen)
         label = self._semantic_label(axes)
 
@@ -761,6 +813,7 @@ class FingerprintEngine:
             "security_weak": "security",
             "public_exposure_raw": "public_exposure",
             "formal_records_raw": "formal_records",
+            "network_signature_raw": "network_signature",
         }
         axes = {}
         for raw_key, axis_name in mapping.items():

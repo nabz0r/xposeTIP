@@ -16,7 +16,7 @@ router = APIRouter()
 
 
 # ─── Fingerprint defaults — used when a target has no computed fingerprint yet ──
-# 10-axis schema mirror of api/services/layer4/fingerprint_engine.py FINGERPRINT_AXES
+# 11-axis schema mirror of api/services/layer4/fingerprint_engine.py FINGERPRINT_AXES
 DEFAULT_FP_AXES = {
     "accounts": 0,
     "platforms": 0,
@@ -28,6 +28,7 @@ DEFAULT_FP_AXES = {
     "security": 0,
     "public_exposure": 0,
     "formal_records": 0,
+    "network_signature": 0,
 }
 
 

@@ -1,0 +1,928 @@
+{
+  "version": "S143-v1",
+  "workspace": {
+    "slug": "default",
+    "name": "Default",
+    "id": "32f8ec0e-d03e-4f79-9daa-4e2815fa0cbb"
+  },
+  "summary": {
+    "n_total": 13,
+    "n_with_fingerprint": 13,
+    "n_extractable": 13
+  },
+  "axes_normalized": {
+    "accounts": {
+      "n": 13,
+      "mean": 0.48584615384615387,
+      "stdev": 0.11699419227312535,
+      "min": 0.25,
+      "max": 0.7,
+      "p10": 0.27,
+      "p50": 0.5,
+      "p90": 0.6531999999999999,
+      "hist": [
+        0,
+        0,
+        2,
+        0,
+        3,
+        7,
+        1,
+        0,
+        0,
+        0
+      ],
+      "pct_zero": 0.0,
+      "pct_saturated": 0.0
+    },
+    "platforms": {
+      "n": 13,
+      "mean": 0.29846153846153844,
+      "stdev": 0.06555483122879577,
+      "min": 0.18,
+      "max": 0.42,
+      "p10": 0.188,
+      "p50": 0.3,
+      "p90": 0.396,
+      "hist": [
+        0,
+        1,
+        6,
+        5,
+        1,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "pct_zero": 0.0,
+      "pct_saturated": 0.0
+    },
+    "username_reuse": {
+      "n": 13,
+      "mean": 0.5153846153846153,
+      "stdev": 0.18187062180825983,
+      "min": 0.0,
+      "max": 0.7,
+      "p10": 0.12,
+      "p50": 0.6,
+      "p90": 0.6599999999999999,
+      "hist": [
+        1,
+        0,
+        1,
+        0,
+        0,
+        10,
+        1,
+        0,
+        0,
+        0
+      ],
+      "pct_zero": 7.6923076923076925,
+      "pct_saturated": 0.0
+    },
+    "breaches": {
+      "n": 13,
+      "mean": 0.5846153846153846,
+      "stdev": 0.1908147174886057,
+      "min": 0.2,
+      "max": 0.8,
+      "p10": 0.2,
+      "p50": 0.6,
+      "p90": 0.8,
+      "hist": [
+        0,
+        0,
+        2,
+        0,
+        0,
+        8,
+        0,
+        0,
+        3,
+        0
+      ],
+      "pct_zero": 0.0,
+      "pct_saturated": 0.0
+    },
+    "geo_spread": {
+      "n": 13,
+      "mean": 0.3353846153846154,
+      "stdev": 0.06279800748104787,
+      "min": 0.31,
+      "max": 0.5,
+      "p10": 0.30999999999999994,
+      "p50": 0.31,
+      "p90": 0.48,
+      "hist": [
+        0,
+        0,
+        0,
+        11,
+        1,
+        1,
+        0,
+        0,
+        0,
+        0
+      ],
+      "pct_zero": 0.0,
+      "pct_saturated": 0.0
+    },
+    "data_leaked": {
+      "n": 13,
+      "mean": 0.06153846153846154,
+      "stdev": 0.07414469567970387,
+      "min": 0.0,
+      "max": 0.2,
+      "p10": 0.0,
+      "p50": 0.04,
+      "p90": 0.2,
+      "hist": [
+        10,
+        1,
+        2,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "pct_zero": 46.15384615384615,
+      "pct_saturated": 0.0
+    },
+    "email_age": {
+      "n": 13,
+      "mean": 0.05592307692307692,
+      "stdev": 0.11320369659634319,
+      "min": 0.0,
+      "max": 0.352,
+      "p10": 0.0,
+      "p50": 0.0,
+      "p90": 0.2904,
+      "hist": [
+        10,
+        2,
+        0,
+        1,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "pct_zero": 76.92307692307692,
+      "pct_saturated": 0.0
+    },
+    "security": {
+      "n": 13,
+      "mean": 0.23076923076923078,
+      "stdev": 0.36028834606144605,
+      "min": 0.0,
+      "max": 0.75,
+      "p10": 0.0,
+      "p50": 0.0,
+      "p90": 0.75,
+      "hist": [
+        9,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        4,
+        0,
+        0
+      ],
+      "pct_zero": 69.23076923076923,
+      "pct_saturated": 0.0
+    },
+    "public_exposure": {
+      "n": 13,
+      "mean": 0.019230769230769232,
+      "stdev": 0.06933752452815364,
+      "min": 0.0,
+      "max": 0.25,
+      "p10": 0.0,
+      "p50": 0.0,
+      "p90": 0.15,
+      "hist": [
+        12,
+        0,
+        1,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "pct_zero": 92.3076923076923,
+      "pct_saturated": 0.0
+    },
+    "formal_records": {
+      "n": 13,
+      "mean": 0.0,
+      "stdev": 0.0,
+      "min": 0.0,
+      "max": 0.0,
+      "p10": 0.0,
+      "p50": 0.0,
+      "p90": 0.0,
+      "hist": [
+        13,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "pct_zero": 100.0,
+      "pct_saturated": 0.0
+    },
+    "network_signature": {
+      "n": 13,
+      "mean": 0.8259230769230769,
+      "stdev": 0.005073814121899795,
+      "min": 0.813,
+      "max": 0.831,
+      "p10": 0.8161999999999999,
+      "p50": 0.827,
+      "p90": 0.8309999999999998,
+      "hist": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        13,
+        0
+      ],
+      "pct_zero": 0.0,
+      "pct_saturated": 0.0
+    }
+  },
+  "axes_raw": {
+    "accounts": {
+      "n": 13,
+      "mean": 29.153846153846153,
+      "stdev": 7.021943627493196,
+      "min": 15.0,
+      "max": 42.0,
+      "p10": 16.2,
+      "p50": 30.0,
+      "p90": 39.2,
+      "hist": [
+        0,
+        0,
+        1,
+        1,
+        3,
+        7,
+        0,
+        1,
+        0,
+        0
+      ],
+      "pct_at_max": 0.0
+    },
+    "platforms": {
+      "n": 13,
+      "mean": 14.923076923076923,
+      "stdev": 3.2777415614397887,
+      "min": 9.0,
+      "max": 21.0,
+      "p10": 9.4,
+      "p50": 15.0,
+      "p90": 19.8,
+      "hist": [
+        0,
+        1,
+        3,
+        8,
+        1,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "pct_at_max": 0.0
+    },
+    "username_reuse": {
+      "n": 13,
+      "mean": 5.153846153846154,
+      "stdev": 1.8187062180825984,
+      "min": 0.0,
+      "max": 7.0,
+      "p10": 1.2,
+      "p50": 6.0,
+      "p90": 6.6,
+      "hist": [
+        1,
+        0,
+        0,
+        1,
+        0,
+        3,
+        7,
+        1,
+        0,
+        0
+      ],
+      "pct_at_max": 0.0
+    },
+    "breaches": {
+      "n": 13,
+      "mean": 2.923076923076923,
+      "stdev": 0.9540735874430285,
+      "min": 1.0,
+      "max": 4.0,
+      "p10": 1.0,
+      "p50": 3.0,
+      "p90": 4.0,
+      "hist": [
+        0,
+        0,
+        2,
+        0,
+        0,
+        0,
+        8,
+        0,
+        3,
+        0
+      ],
+      "pct_at_max": 0.0
+    },
+    "geo_spread": {
+      "n": 13,
+      "mean": 1.676923076923077,
+      "stdev": 0.3139900374052393,
+      "min": 1.55,
+      "max": 2.5,
+      "p10": 1.55,
+      "p50": 1.55,
+      "p90": 2.4,
+      "hist": [
+        0,
+        0,
+        0,
+        11,
+        1,
+        1,
+        0,
+        0,
+        0,
+        0
+      ],
+      "pct_at_max": 0.0
+    },
+    "data_leaked": {
+      "n": 13,
+      "mean": 1.5384615384615385,
+      "stdev": 1.8536173919925967,
+      "min": 0.0,
+      "max": 5.0,
+      "p10": 0.0,
+      "p50": 1.0,
+      "p90": 5.0,
+      "hist": [
+        10,
+        1,
+        2,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "pct_at_max": 0.0
+    },
+    "email_age": {
+      "n": 13,
+      "mean": 2.2384615384615385,
+      "stdev": 4.532206685037371,
+      "min": 0.0,
+      "max": 14.1,
+      "p10": 0.0,
+      "p50": 0.0,
+      "p90": 11.62,
+      "hist": [
+        10,
+        2,
+        0,
+        1,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "pct_at_max": 0.0
+    },
+    "security": {
+      "n": 13,
+      "mean": 0.9230769230769231,
+      "stdev": 1.4411533842457842,
+      "min": 0.0,
+      "max": 3.0,
+      "p10": 0.0,
+      "p50": 0.0,
+      "p90": 3.0,
+      "hist": [
+        9,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        4,
+        0,
+        0
+      ],
+      "pct_at_max": 0.0
+    },
+    "public_exposure": {
+      "n": 13,
+      "mean": 0.019230769230769232,
+      "stdev": 0.06933752452815364,
+      "min": 0.0,
+      "max": 0.25,
+      "p10": 0.0,
+      "p50": 0.0,
+      "p90": 0.15,
+      "hist": [
+        12,
+        0,
+        1,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "pct_at_max": 0.0
+    },
+    "formal_records": {
+      "n": 13,
+      "mean": 0.0,
+      "stdev": 0.0,
+      "min": 0.0,
+      "max": 0.0,
+      "p10": 0.0,
+      "p50": 0.0,
+      "p90": 0.0,
+      "hist": [
+        13,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "pct_at_max": 0.0
+    },
+    "network_signature": {
+      "n": 13,
+      "mean": 0.8258307692307693,
+      "stdev": 0.005180634551768194,
+      "min": 0.8126,
+      "max": 0.8308,
+      "p10": 0.8158000000000001,
+      "p50": 0.8271,
+      "p90": 0.83072,
+      "hist": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        13,
+        0
+      ],
+      "pct_at_max": 0.0
+    }
+  },
+  "rich_targets": {
+    "3": 13,
+    "5": 13,
+    "7": 6,
+    "9": 1
+  },
+  "similarity": {
+    "total_pairs": 78,
+    "mean": 0.8856474358974359,
+    "stdev": 0.10171190882063612,
+    "above": {
+      "0.5": {
+        "count": 78,
+        "pct": 100.0
+      },
+      "0.6": {
+        "count": 78,
+        "pct": 100.0
+      },
+      "0.7": {
+        "count": 78,
+        "pct": 100.0
+      },
+      "0.8": {
+        "count": 54,
+        "pct": 69.23076923076923
+      },
+      "0.9": {
+        "count": 39,
+        "pct": 50.0
+      }
+    },
+    "hist": [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      24,
+      15,
+      39
+    ]
+  },
+  "top_pairs": [
+    {
+      "rank": 1,
+      "sim": 1.0,
+      "a": {
+        "id": "890b8adb-fabd-4d4a-85d3-9e593b8e8e77",
+        "email": "celines.hess@lessentiel.lu"
+      },
+      "b": {
+        "id": "92162d9b-f960-4deb-8037-fb5877ed1056",
+        "email": "antony.franz@lessentiel.lu"
+      },
+      "top_axes": [
+        "network_signature",
+        "username_reuse",
+        "breaches"
+      ]
+    },
+    {
+      "rank": 2,
+      "sim": 0.9989,
+      "a": {
+        "id": "f6262610-4cb3-442d-9ebe-c67aad8740a6",
+        "email": "thierry.bollekens@lessentiel.lu"
+      },
+      "b": {
+        "id": "aae82f93-c58b-4af5-9457-91b688eb26ab",
+        "email": "sebastien.bonoris@lessentiel.lu"
+      },
+      "top_axes": [
+        "network_signature",
+        "breaches",
+        "accounts"
+      ]
+    },
+    {
+      "rank": 3,
+      "sim": 0.9975,
+      "a": {
+        "id": "890b8adb-fabd-4d4a-85d3-9e593b8e8e77",
+        "email": "celines.hess@lessentiel.lu"
+      },
+      "b": {
+        "id": "aae82f93-c58b-4af5-9457-91b688eb26ab",
+        "email": "sebastien.bonoris@lessentiel.lu"
+      },
+      "top_axes": [
+        "network_signature",
+        "breaches",
+        "accounts"
+      ]
+    },
+    {
+      "rank": 4,
+      "sim": 0.9975,
+      "a": {
+        "id": "aae82f93-c58b-4af5-9457-91b688eb26ab",
+        "email": "sebastien.bonoris@lessentiel.lu"
+      },
+      "b": {
+        "id": "92162d9b-f960-4deb-8037-fb5877ed1056",
+        "email": "antony.franz@lessentiel.lu"
+      },
+      "top_axes": [
+        "network_signature",
+        "breaches",
+        "accounts"
+      ]
+    },
+    {
+      "rank": 5,
+      "sim": 0.9973,
+      "a": {
+        "id": "890b8adb-fabd-4d4a-85d3-9e593b8e8e77",
+        "email": "celines.hess@lessentiel.lu"
+      },
+      "b": {
+        "id": "aa840caf-5d0e-46f0-b3fc-a9cf7af40041",
+        "email": "annick.charlier@lessentiel.lu"
+      },
+      "top_axes": [
+        "network_signature",
+        "username_reuse",
+        "breaches"
+      ]
+    },
+    {
+      "rank": 6,
+      "sim": 0.9973,
+      "a": {
+        "id": "aa840caf-5d0e-46f0-b3fc-a9cf7af40041",
+        "email": "annick.charlier@lessentiel.lu"
+      },
+      "b": {
+        "id": "92162d9b-f960-4deb-8037-fb5877ed1056",
+        "email": "antony.franz@lessentiel.lu"
+      },
+      "top_axes": [
+        "network_signature",
+        "username_reuse",
+        "breaches"
+      ]
+    },
+    {
+      "rank": 7,
+      "sim": 0.9958,
+      "a": {
+        "id": "f6262610-4cb3-442d-9ebe-c67aad8740a6",
+        "email": "thierry.bollekens@lessentiel.lu"
+      },
+      "b": {
+        "id": "890b8adb-fabd-4d4a-85d3-9e593b8e8e77",
+        "email": "celines.hess@lessentiel.lu"
+      },
+      "top_axes": [
+        "network_signature",
+        "breaches",
+        "accounts"
+      ]
+    },
+    {
+      "rank": 8,
+      "sim": 0.9958,
+      "a": {
+        "id": "f6262610-4cb3-442d-9ebe-c67aad8740a6",
+        "email": "thierry.bollekens@lessentiel.lu"
+      },
+      "b": {
+        "id": "92162d9b-f960-4deb-8037-fb5877ed1056",
+        "email": "antony.franz@lessentiel.lu"
+      },
+      "top_axes": [
+        "network_signature",
+        "breaches",
+        "accounts"
+      ]
+    },
+    {
+      "rank": 9,
+      "sim": 0.9936,
+      "a": {
+        "id": "aae82f93-c58b-4af5-9457-91b688eb26ab",
+        "email": "sebastien.bonoris@lessentiel.lu"
+      },
+      "b": {
+        "id": "aa840caf-5d0e-46f0-b3fc-a9cf7af40041",
+        "email": "annick.charlier@lessentiel.lu"
+      },
+      "top_axes": [
+        "network_signature",
+        "breaches",
+        "username_reuse"
+      ]
+    },
+    {
+      "rank": 10,
+      "sim": 0.9932,
+      "a": {
+        "id": "8f5c298f-651a-4220-8c5a-5397249a1d1b",
+        "email": "ahmed.feddag@lessentiel.lu"
+      },
+      "b": {
+        "id": "fe4bd1ae-462e-48e9-abe2-cc38a11632e4",
+        "email": "frederic.noel@lessentiel.lu"
+      },
+      "top_axes": [
+        "network_signature",
+        "breaches",
+        "username_reuse"
+      ]
+    },
+    {
+      "rank": 11,
+      "sim": 0.9928,
+      "a": {
+        "id": "f6262610-4cb3-442d-9ebe-c67aad8740a6",
+        "email": "thierry.bollekens@lessentiel.lu"
+      },
+      "b": {
+        "id": "aa840caf-5d0e-46f0-b3fc-a9cf7af40041",
+        "email": "annick.charlier@lessentiel.lu"
+      },
+      "top_axes": [
+        "network_signature",
+        "breaches",
+        "username_reuse"
+      ]
+    },
+    {
+      "rank": 12,
+      "sim": 0.9926,
+      "a": {
+        "id": "ac257dfe-c7eb-4452-b21f-be9ec1ed144e",
+        "email": "emmanuel.fleig@lessentiel.lu"
+      },
+      "b": {
+        "id": "aa840caf-5d0e-46f0-b3fc-a9cf7af40041",
+        "email": "annick.charlier@lessentiel.lu"
+      },
+      "top_axes": [
+        "network_signature",
+        "username_reuse",
+        "breaches"
+      ]
+    },
+    {
+      "rank": 13,
+      "sim": 0.9913,
+      "a": {
+        "id": "ac257dfe-c7eb-4452-b21f-be9ec1ed144e",
+        "email": "emmanuel.fleig@lessentiel.lu"
+      },
+      "b": {
+        "id": "fe4bd1ae-462e-48e9-abe2-cc38a11632e4",
+        "email": "frederic.noel@lessentiel.lu"
+      },
+      "top_axes": [
+        "network_signature",
+        "breaches",
+        "username_reuse"
+      ]
+    },
+    {
+      "rank": 14,
+      "sim": 0.9893,
+      "a": {
+        "id": "aae82f93-c58b-4af5-9457-91b688eb26ab",
+        "email": "sebastien.bonoris@lessentiel.lu"
+      },
+      "b": {
+        "id": "0520d0bd-8c54-4874-8c36-f85bee04f8d5",
+        "email": "thomas.fullenwarth@lessentiel.lu"
+      },
+      "top_axes": [
+        "network_signature",
+        "breaches",
+        "accounts"
+      ]
+    },
+    {
+      "rank": 15,
+      "sim": 0.9891,
+      "a": {
+        "id": "890b8adb-fabd-4d4a-85d3-9e593b8e8e77",
+        "email": "celines.hess@lessentiel.lu"
+      },
+      "b": {
+        "id": "ac257dfe-c7eb-4452-b21f-be9ec1ed144e",
+        "email": "emmanuel.fleig@lessentiel.lu"
+      },
+      "top_axes": [
+        "network_signature",
+        "username_reuse",
+        "breaches"
+      ]
+    },
+    {
+      "rank": 16,
+      "sim": 0.989,
+      "a": {
+        "id": "ac257dfe-c7eb-4452-b21f-be9ec1ed144e",
+        "email": "emmanuel.fleig@lessentiel.lu"
+      },
+      "b": {
+        "id": "92162d9b-f960-4deb-8037-fb5877ed1056",
+        "email": "antony.franz@lessentiel.lu"
+      },
+      "top_axes": [
+        "network_signature",
+        "username_reuse",
+        "breaches"
+      ]
+    },
+    {
+      "rank": 17,
+      "sim": 0.9886,
+      "a": {
+        "id": "f6262610-4cb3-442d-9ebe-c67aad8740a6",
+        "email": "thierry.bollekens@lessentiel.lu"
+      },
+      "b": {
+        "id": "0520d0bd-8c54-4874-8c36-f85bee04f8d5",
+        "email": "thomas.fullenwarth@lessentiel.lu"
+      },
+      "top_axes": [
+        "network_signature",
+        "breaches",
+        "accounts"
+      ]
+    },
+    {
+      "rank": 18,
+      "sim": 0.9885,
+      "a": {
+        "id": "f6262610-4cb3-442d-9ebe-c67aad8740a6",
+        "email": "thierry.bollekens@lessentiel.lu"
+      },
+      "b": {
+        "id": "ac257dfe-c7eb-4452-b21f-be9ec1ed144e",
+        "email": "emmanuel.fleig@lessentiel.lu"
+      },
+      "top_axes": [
+        "network_signature",
+        "breaches",
+        "accounts"
+      ]
+    },
+    {
+      "rank": 19,
+      "sim": 0.9883,
+      "a": {
+        "id": "aae82f93-c58b-4af5-9457-91b688eb26ab",
+        "email": "sebastien.bonoris@lessentiel.lu"
+      },
+      "b": {
+        "id": "ac257dfe-c7eb-4452-b21f-be9ec1ed144e",
+        "email": "emmanuel.fleig@lessentiel.lu"
+      },
+      "top_axes": [
+        "network_signature",
+        "breaches",
+        "accounts"
+      ]
+    },
+    {
+      "rank": 20,
+      "sim": 0.988,
+      "a": {
+        "id": "29af3643-5ae0-4673-8ccf-8945ef28d355",
+        "email": "us.petitions@rb.nic.in"
+      },
+      "b": {
+        "id": "b24d1a5b-b76b-4b8b-96a9-33ea92b5dd2e",
+        "email": "youcef.damardji@abouthebrand.lu"
+      },
+      "top_axes": [
+        "network_signature",
+        "security",
+        "username_reuse"
+      ]
+    }
+  ],
+  "observations": [
+    "starved: `public_exposure` is zero for 92.3% of fingerprints \u2014 data plumbing or AXIS_MAX too high",
+    "starved: `formal_records` is zero for 100.0% of fingerprints \u2014 data plumbing or AXIS_MAX too high",
+    "similarity threshold sanity: 100.00% of pairs \u2265 0.7 \u2192 threshold likely too low",
+    "calibration thin: only 6 targets have \u22657/9 axes populated (>0.1) \u2014 consider growing the corpus before tuning weights"
+  ],
+  "generated_at_utc": "2026-05-21 15:33 UTC"
+}

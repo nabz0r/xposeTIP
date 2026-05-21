@@ -1,5 +1,21 @@
 [
   {
+    "sha": "7b4d907",
+    "date": "2026-05-21T17:16:33+02:00",
+    "type": "feat",
+    "scope": "S146",
+    "sprint": "S146",
+    "subject": "name-aware similarity engine — combined = cosine × name_sim"
+  },
+  {
+    "sha": "b9a21cd",
+    "date": "2026-05-21T16:58:05+02:00",
+    "type": "feat",
+    "scope": "S145",
+    "sprint": "S145",
+    "subject": "formal_records 10th axis + fingerprint recompute (P3 step 1)"
+  },
+  {
     "sha": "1a57162",
     "date": "2026-05-21T16:24:43+02:00",
     "type": "feat",

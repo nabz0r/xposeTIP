@@ -11,6 +11,7 @@ const ALL_AXIS_LABELS = [
   { key: 'security', label: 'security' },
   { key: 'public_exposure', label: 'public exposure' },
   { key: 'formal_records', label: 'formal records' },
+  { key: 'network_signature', label: 'network signature' },
 ]
 
 // Dynamic: return only the axes actually present in the fingerprint.
@@ -32,6 +33,7 @@ const RAW_LABELS = {
   security: (v) => `${v} security weaknesses`,
   public_exposure: (v) => `${(v * 100).toFixed(0)}% public exposure`,
   formal_records: (v) => `${v} formal records (courts + commercial register + gazette)`,
+  network_signature: (v) => `${(v * 100).toFixed(0)}% topology spread (spectral entropy of identity graph)`,
 }
 
 function polarToCartesian(cx, cy, r, i, total = 9) {

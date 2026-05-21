@@ -1,0 +1,929 @@
+{
+  "version": "S143-v1",
+  "workspace": {
+    "slug": "dataminr",
+    "name": "Dataminr",
+    "id": "2ec3c06a-c3f4-4ccd-9838-ebfc647dc220"
+  },
+  "summary": {
+    "n_total": 9,
+    "n_with_fingerprint": 9,
+    "n_extractable": 9
+  },
+  "axes_normalized": {
+    "accounts": {
+      "n": 9,
+      "mean": 0.43877777777777777,
+      "stdev": 0.23981491705989524,
+      "min": 0.083,
+      "max": 0.833,
+      "p10": 0.083,
+      "p50": 0.46699999999999997,
+      "p90": 0.833,
+      "hist": [
+        2,
+        0,
+        0,
+        1,
+        2,
+        3,
+        0,
+        0,
+        1,
+        0
+      ],
+      "pct_zero": 0.0,
+      "pct_saturated": 0.0
+    },
+    "platforms": {
+      "n": 9,
+      "mean": 0.38222222222222224,
+      "stdev": 0.22526527571830607,
+      "min": 0.1,
+      "max": 0.8,
+      "p10": 0.1,
+      "p50": 0.34,
+      "p90": 0.8,
+      "hist": [
+        0,
+        2,
+        0,
+        4,
+        1,
+        0,
+        1,
+        0,
+        1,
+        0
+      ],
+      "pct_zero": 0.0,
+      "pct_saturated": 0.0
+    },
+    "username_reuse": {
+      "n": 9,
+      "mean": 0.28888888888888886,
+      "stdev": 0.23154073315749674,
+      "min": 0.1,
+      "max": 0.7,
+      "p10": 0.1,
+      "p50": 0.2,
+      "p90": 0.7,
+      "hist": [
+        0,
+        4,
+        2,
+        0,
+        1,
+        1,
+        1,
+        0,
+        0,
+        0
+      ],
+      "pct_zero": 0.0,
+      "pct_saturated": 0.0
+    },
+    "breaches": {
+      "n": 9,
+      "mean": 0.5111111111111111,
+      "stdev": 0.30184617127124724,
+      "min": 0.0,
+      "max": 0.8,
+      "p10": 0.0,
+      "p50": 0.6,
+      "p90": 0.8,
+      "hist": [
+        2,
+        0,
+        0,
+        0,
+        0,
+        5,
+        0,
+        0,
+        2,
+        0
+      ],
+      "pct_zero": 22.22222222222222,
+      "pct_saturated": 0.0
+    },
+    "geo_spread": {
+      "n": 9,
+      "mean": 0.5077777777777778,
+      "stdev": 0.13899440436378885,
+      "min": 0.41,
+      "max": 0.74,
+      "p10": 0.41,
+      "p50": 0.42000000000000004,
+      "p90": 0.74,
+      "hist": [
+        0,
+        0,
+        0,
+        0,
+        6,
+        0,
+        1,
+        2,
+        0,
+        0
+      ],
+      "pct_zero": 0.0,
+      "pct_saturated": 0.0
+    },
+    "data_leaked": {
+      "n": 9,
+      "mean": 0.06666666666666667,
+      "stdev": 0.14560219778561037,
+      "min": 0.0,
+      "max": 0.44,
+      "p10": 0.0,
+      "p50": 0.0,
+      "p90": 0.44000000000000006,
+      "hist": [
+        7,
+        1,
+        0,
+        0,
+        1,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "pct_zero": 66.66666666666667,
+      "pct_saturated": 0.0
+    },
+    "email_age": {
+      "n": 9,
+      "mean": 0.1611111111111111,
+      "stdev": 0.18754162500925256,
+      "min": 0.0,
+      "max": 0.425,
+      "p10": 0.0,
+      "p50": 0.10200000000000001,
+      "p90": 0.425,
+      "hist": [
+        4,
+        2,
+        0,
+        1,
+        2,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "pct_zero": 44.44444444444444,
+      "pct_saturated": 0.0
+    },
+    "security": {
+      "n": 9,
+      "mean": 0.0,
+      "stdev": 0.0,
+      "min": 0.0,
+      "max": 0.0,
+      "p10": 0.0,
+      "p50": 0.0,
+      "p90": 0.0,
+      "hist": [
+        9,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "pct_zero": 100.0,
+      "pct_saturated": 0.0
+    },
+    "public_exposure": {
+      "n": 9,
+      "mean": 0.027777777777777776,
+      "stdev": 0.08333333333333333,
+      "min": 0.0,
+      "max": 0.25,
+      "p10": 0.0,
+      "p50": 0.0,
+      "p90": 0.25,
+      "hist": [
+        8,
+        0,
+        1,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "pct_zero": 88.88888888888889,
+      "pct_saturated": 0.0
+    },
+    "formal_records": {
+      "n": 9,
+      "mean": 0.0,
+      "stdev": 0.0,
+      "min": 0.0,
+      "max": 0.0,
+      "p10": 0.0,
+      "p50": 0.0,
+      "p90": 0.0,
+      "hist": [
+        9,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "pct_zero": 100.0,
+      "pct_saturated": 0.0
+    },
+    "network_signature": {
+      "n": 9,
+      "mean": 0.8261111111111111,
+      "stdev": 0.021168635079076556,
+      "min": 0.809,
+      "max": 0.866,
+      "p10": 0.8089999999999999,
+      "p50": 0.817,
+      "p90": 0.866,
+      "hist": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        9,
+        0
+      ],
+      "pct_zero": 0.0,
+      "pct_saturated": 0.0
+    }
+  },
+  "axes_raw": {
+    "accounts": {
+      "n": 9,
+      "mean": 26.333333333333332,
+      "stdev": 14.38749456993816,
+      "min": 5.0,
+      "max": 50.0,
+      "p10": 5.0,
+      "p50": 28.0,
+      "p90": 50.0,
+      "hist": [
+        2,
+        0,
+        0,
+        1,
+        2,
+        3,
+        0,
+        0,
+        1,
+        0
+      ],
+      "pct_at_max": 0.0
+    },
+    "platforms": {
+      "n": 9,
+      "mean": 19.11111111111111,
+      "stdev": 11.263263785915303,
+      "min": 5.0,
+      "max": 40.0,
+      "p10": 5.0,
+      "p50": 17.0,
+      "p90": 40.0,
+      "hist": [
+        0,
+        2,
+        0,
+        4,
+        1,
+        0,
+        1,
+        0,
+        1,
+        0
+      ],
+      "pct_at_max": 0.0
+    },
+    "username_reuse": {
+      "n": 9,
+      "mean": 2.888888888888889,
+      "stdev": 2.3154073315749675,
+      "min": 1.0,
+      "max": 7.0,
+      "p10": 1.0,
+      "p50": 2.0,
+      "p90": 7.0,
+      "hist": [
+        0,
+        4,
+        1,
+        1,
+        1,
+        0,
+        1,
+        1,
+        0,
+        0
+      ],
+      "pct_at_max": 0.0
+    },
+    "breaches": {
+      "n": 9,
+      "mean": 2.5555555555555554,
+      "stdev": 1.509230856356236,
+      "min": 0.0,
+      "max": 4.0,
+      "p10": 0.0,
+      "p50": 3.0,
+      "p90": 4.0,
+      "hist": [
+        2,
+        0,
+        0,
+        0,
+        0,
+        0,
+        5,
+        0,
+        2,
+        0
+      ],
+      "pct_at_max": 0.0
+    },
+    "geo_spread": {
+      "n": 9,
+      "mean": 2.5388888888888888,
+      "stdev": 0.6949720218189442,
+      "min": 2.05,
+      "max": 3.6999999999999997,
+      "p10": 2.05,
+      "p50": 2.1,
+      "p90": 3.7,
+      "hist": [
+        0,
+        0,
+        0,
+        0,
+        6,
+        0,
+        1,
+        2,
+        0,
+        0
+      ],
+      "pct_at_max": 0.0
+    },
+    "data_leaked": {
+      "n": 9,
+      "mean": 1.6666666666666667,
+      "stdev": 3.640054944640259,
+      "min": 0.0,
+      "max": 11.0,
+      "p10": 0.0,
+      "p50": 0.0,
+      "p90": 11.0,
+      "hist": [
+        7,
+        1,
+        0,
+        0,
+        1,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "pct_at_max": 0.0
+    },
+    "email_age": {
+      "n": 9,
+      "mean": 6.444444444444445,
+      "stdev": 7.501851623284599,
+      "min": 0.0,
+      "max": 17.0,
+      "p10": 0.0,
+      "p50": 4.1,
+      "p90": 17.0,
+      "hist": [
+        4,
+        2,
+        0,
+        1,
+        2,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "pct_at_max": 0.0
+    },
+    "security": {
+      "n": 9,
+      "mean": 0.0,
+      "stdev": 0.0,
+      "min": 0.0,
+      "max": 0.0,
+      "p10": 0.0,
+      "p50": 0.0,
+      "p90": 0.0,
+      "hist": [
+        9,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "pct_at_max": 0.0
+    },
+    "public_exposure": {
+      "n": 9,
+      "mean": 0.027777777777777776,
+      "stdev": 0.08333333333333333,
+      "min": 0.0,
+      "max": 0.25,
+      "p10": 0.0,
+      "p50": 0.0,
+      "p90": 0.25,
+      "hist": [
+        8,
+        0,
+        1,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "pct_at_max": 0.0
+    },
+    "formal_records": {
+      "n": 9,
+      "mean": 0.0,
+      "stdev": 0.0,
+      "min": 0.0,
+      "max": 0.0,
+      "p10": 0.0,
+      "p50": 0.0,
+      "p90": 0.0,
+      "hist": [
+        9,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "pct_at_max": 0.0
+    },
+    "network_signature": {
+      "n": 9,
+      "mean": 0.8261333333333334,
+      "stdev": 0.021064246960192993,
+      "min": 0.8092,
+      "max": 0.8658,
+      "p10": 0.8092,
+      "p50": 0.8173999999999999,
+      "p90": 0.8657999999999999,
+      "hist": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        9,
+        0
+      ],
+      "pct_at_max": 0.0
+    }
+  },
+  "rich_targets": {
+    "3": 7,
+    "5": 7,
+    "7": 4,
+    "9": 0
+  },
+  "similarity": {
+    "total_pairs": 36,
+    "mean": 0.8503722222222222,
+    "stdev": 0.10427982303429313,
+    "above": {
+      "0.5": {
+        "count": 36,
+        "pct": 100.0
+      },
+      "0.6": {
+        "count": 36,
+        "pct": 100.0
+      },
+      "0.7": {
+        "count": 34,
+        "pct": 94.44444444444444
+      },
+      "0.8": {
+        "count": 22,
+        "pct": 61.111111111111114
+      },
+      "0.9": {
+        "count": 14,
+        "pct": 38.888888888888886
+      }
+    },
+    "hist": [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      2,
+      12,
+      8,
+      14
+    ]
+  },
+  "top_pairs": [
+    {
+      "rank": 1,
+      "sim": 0.9997,
+      "a": {
+        "id": "7bc91ca1-7cba-41fa-ba14-7728770064f3",
+        "email": "info@dataminr.com"
+      },
+      "b": {
+        "id": "ab7c31e2-27c7-4250-8078-a30abcf9e4a2",
+        "email": "dsouza@dataminr.com"
+      },
+      "top_axes": [
+        "network_signature",
+        "geo_spread",
+        "platforms"
+      ]
+    },
+    {
+      "rank": 2,
+      "sim": 0.9979,
+      "a": {
+        "id": "5f1ef9f7-3430-4761-bb78-41297a2d5d68",
+        "email": "regina.bonsu@dataminr.com"
+      },
+      "b": {
+        "id": "3ffe6e0a-0110-4a93-bd5f-f0bf726981b5",
+        "email": "becki.bailey@dataminr.com"
+      },
+      "top_axes": [
+        "network_signature",
+        "username_reuse",
+        "breaches"
+      ]
+    },
+    {
+      "rank": 3,
+      "sim": 0.9905,
+      "a": {
+        "id": "0db56541-8edc-490d-a915-6dd02ab9cde2",
+        "email": "rbasset@dataminr.com"
+      },
+      "b": {
+        "id": "10713caa-2d4b-44d8-b100-ca867de41759",
+        "email": "kpoulsen@dataminr.com"
+      },
+      "top_axes": [
+        "network_signature",
+        "geo_spread",
+        "breaches"
+      ]
+    },
+    {
+      "rank": 4,
+      "sim": 0.9696,
+      "a": {
+        "id": "e026e3fd-12d6-4e1b-b9ea-1095005f46ad",
+        "email": "balaji.yelamanchili@dataminr.com"
+      },
+      "b": {
+        "id": "5f1ef9f7-3430-4761-bb78-41297a2d5d68",
+        "email": "regina.bonsu@dataminr.com"
+      },
+      "top_axes": [
+        "network_signature",
+        "breaches",
+        "accounts"
+      ]
+    },
+    {
+      "rank": 5,
+      "sim": 0.9678,
+      "a": {
+        "id": "f2b1edd9-d84b-4ed3-81b1-0472219f02cb",
+        "email": "tbailey@dataminr.com"
+      },
+      "b": {
+        "id": "10713caa-2d4b-44d8-b100-ca867de41759",
+        "email": "kpoulsen@dataminr.com"
+      },
+      "top_axes": [
+        "network_signature",
+        "geo_spread",
+        "platforms"
+      ]
+    },
+    {
+      "rank": 6,
+      "sim": 0.9606,
+      "a": {
+        "id": "921d7c14-6e68-4525-9393-6b6da7219dfa",
+        "email": "wbenner@dataminr.com"
+      },
+      "b": {
+        "id": "0db56541-8edc-490d-a915-6dd02ab9cde2",
+        "email": "rbasset@dataminr.com"
+      },
+      "top_axes": [
+        "network_signature",
+        "breaches",
+        "geo_spread"
+      ]
+    },
+    {
+      "rank": 7,
+      "sim": 0.9595,
+      "a": {
+        "id": "e026e3fd-12d6-4e1b-b9ea-1095005f46ad",
+        "email": "balaji.yelamanchili@dataminr.com"
+      },
+      "b": {
+        "id": "3ffe6e0a-0110-4a93-bd5f-f0bf726981b5",
+        "email": "becki.bailey@dataminr.com"
+      },
+      "top_axes": [
+        "network_signature",
+        "breaches",
+        "accounts"
+      ]
+    },
+    {
+      "rank": 8,
+      "sim": 0.9429,
+      "a": {
+        "id": "f2b1edd9-d84b-4ed3-81b1-0472219f02cb",
+        "email": "tbailey@dataminr.com"
+      },
+      "b": {
+        "id": "0db56541-8edc-490d-a915-6dd02ab9cde2",
+        "email": "rbasset@dataminr.com"
+      },
+      "top_axes": [
+        "network_signature",
+        "geo_spread",
+        "breaches"
+      ]
+    },
+    {
+      "rank": 9,
+      "sim": 0.938,
+      "a": {
+        "id": "e026e3fd-12d6-4e1b-b9ea-1095005f46ad",
+        "email": "balaji.yelamanchili@dataminr.com"
+      },
+      "b": {
+        "id": "921d7c14-6e68-4525-9393-6b6da7219dfa",
+        "email": "wbenner@dataminr.com"
+      },
+      "top_axes": [
+        "network_signature",
+        "breaches",
+        "geo_spread"
+      ]
+    },
+    {
+      "rank": 10,
+      "sim": 0.9348,
+      "a": {
+        "id": "921d7c14-6e68-4525-9393-6b6da7219dfa",
+        "email": "wbenner@dataminr.com"
+      },
+      "b": {
+        "id": "10713caa-2d4b-44d8-b100-ca867de41759",
+        "email": "kpoulsen@dataminr.com"
+      },
+      "top_axes": [
+        "network_signature",
+        "breaches",
+        "geo_spread"
+      ]
+    },
+    {
+      "rank": 11,
+      "sim": 0.9269,
+      "a": {
+        "id": "e026e3fd-12d6-4e1b-b9ea-1095005f46ad",
+        "email": "balaji.yelamanchili@dataminr.com"
+      },
+      "b": {
+        "id": "0db56541-8edc-490d-a915-6dd02ab9cde2",
+        "email": "rbasset@dataminr.com"
+      },
+      "top_axes": [
+        "network_signature",
+        "breaches",
+        "accounts"
+      ]
+    },
+    {
+      "rank": 12,
+      "sim": 0.9225,
+      "a": {
+        "id": "f2b1edd9-d84b-4ed3-81b1-0472219f02cb",
+        "email": "tbailey@dataminr.com"
+      },
+      "b": {
+        "id": "921d7c14-6e68-4525-9393-6b6da7219dfa",
+        "email": "wbenner@dataminr.com"
+      },
+      "top_axes": [
+        "network_signature",
+        "breaches",
+        "geo_spread"
+      ]
+    },
+    {
+      "rank": 13,
+      "sim": 0.9205,
+      "a": {
+        "id": "e026e3fd-12d6-4e1b-b9ea-1095005f46ad",
+        "email": "balaji.yelamanchili@dataminr.com"
+      },
+      "b": {
+        "id": "10713caa-2d4b-44d8-b100-ca867de41759",
+        "email": "kpoulsen@dataminr.com"
+      },
+      "top_axes": [
+        "network_signature",
+        "breaches",
+        "accounts"
+      ]
+    },
+    {
+      "rank": 14,
+      "sim": 0.9049,
+      "a": {
+        "id": "921d7c14-6e68-4525-9393-6b6da7219dfa",
+        "email": "wbenner@dataminr.com"
+      },
+      "b": {
+        "id": "5f1ef9f7-3430-4761-bb78-41297a2d5d68",
+        "email": "regina.bonsu@dataminr.com"
+      },
+      "top_axes": [
+        "network_signature",
+        "breaches",
+        "geo_spread"
+      ]
+    },
+    {
+      "rank": 15,
+      "sim": 0.8963,
+      "a": {
+        "id": "f2b1edd9-d84b-4ed3-81b1-0472219f02cb",
+        "email": "tbailey@dataminr.com"
+      },
+      "b": {
+        "id": "e026e3fd-12d6-4e1b-b9ea-1095005f46ad",
+        "email": "balaji.yelamanchili@dataminr.com"
+      },
+      "top_axes": [
+        "network_signature",
+        "breaches",
+        "accounts"
+      ]
+    },
+    {
+      "rank": 16,
+      "sim": 0.8875,
+      "a": {
+        "id": "5f1ef9f7-3430-4761-bb78-41297a2d5d68",
+        "email": "regina.bonsu@dataminr.com"
+      },
+      "b": {
+        "id": "10713caa-2d4b-44d8-b100-ca867de41759",
+        "email": "kpoulsen@dataminr.com"
+      },
+      "top_axes": [
+        "network_signature",
+        "breaches",
+        "accounts"
+      ]
+    },
+    {
+      "rank": 17,
+      "sim": 0.8847,
+      "a": {
+        "id": "5f1ef9f7-3430-4761-bb78-41297a2d5d68",
+        "email": "regina.bonsu@dataminr.com"
+      },
+      "b": {
+        "id": "0db56541-8edc-490d-a915-6dd02ab9cde2",
+        "email": "rbasset@dataminr.com"
+      },
+      "top_axes": [
+        "network_signature",
+        "breaches",
+        "accounts"
+      ]
+    },
+    {
+      "rank": 18,
+      "sim": 0.881,
+      "a": {
+        "id": "921d7c14-6e68-4525-9393-6b6da7219dfa",
+        "email": "wbenner@dataminr.com"
+      },
+      "b": {
+        "id": "3ffe6e0a-0110-4a93-bd5f-f0bf726981b5",
+        "email": "becki.bailey@dataminr.com"
+      },
+      "top_axes": [
+        "network_signature",
+        "breaches",
+        "geo_spread"
+      ]
+    },
+    {
+      "rank": 19,
+      "sim": 0.8752,
+      "a": {
+        "id": "f2b1edd9-d84b-4ed3-81b1-0472219f02cb",
+        "email": "tbailey@dataminr.com"
+      },
+      "b": {
+        "id": "5f1ef9f7-3430-4761-bb78-41297a2d5d68",
+        "email": "regina.bonsu@dataminr.com"
+      },
+      "top_axes": [
+        "network_signature",
+        "breaches",
+        "accounts"
+      ]
+    },
+    {
+      "rank": 20,
+      "sim": 0.8684,
+      "a": {
+        "id": "3ffe6e0a-0110-4a93-bd5f-f0bf726981b5",
+        "email": "becki.bailey@dataminr.com"
+      },
+      "b": {
+        "id": "10713caa-2d4b-44d8-b100-ca867de41759",
+        "email": "kpoulsen@dataminr.com"
+      },
+      "top_axes": [
+        "network_signature",
+        "breaches",
+        "accounts"
+      ]
+    }
+  ],
+  "observations": [
+    "starved: `security` is zero for 100.0% of fingerprints \u2014 data plumbing or AXIS_MAX too high",
+    "starved: `public_exposure` is zero for 88.9% of fingerprints \u2014 data plumbing or AXIS_MAX too high",
+    "starved: `formal_records` is zero for 100.0% of fingerprints \u2014 data plumbing or AXIS_MAX too high",
+    "similarity threshold sanity: 94.44% of pairs \u2265 0.7 \u2192 threshold likely too low",
+    "calibration thin: only 4 targets have \u22657/9 axes populated (>0.1) \u2014 consider growing the corpus before tuning weights"
+  ],
+  "generated_at_utc": "2026-05-21 15:33 UTC"
+}

@@ -41,6 +41,7 @@ AXIS_RAW_KEYS = {
     "security": "security_weak",
     "public_exposure": "public_exposure_raw",
     "formal_records": "formal_records_raw",
+    "network_signature": "network_signature_raw",
 }
 
 POPULATED_THRESHOLD = 0.1  # Axes with normalized value > 0.1 count as "meaningfully populated"

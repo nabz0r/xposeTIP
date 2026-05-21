@@ -99,7 +99,7 @@ def _name_similarity(target_a: Target, target_b: Target) -> float | None:
 
 logger = logging.getLogger(__name__)
 
-# 10 normalized axes (0..1) produced by FingerprintEngine._normalize()
+# 11 normalized axes (0..1) produced by FingerprintEngine._normalize()
 FINGERPRINT_AXES: list[str] = [
     "accounts",
     "platforms",
@@ -111,6 +111,7 @@ FINGERPRINT_AXES: list[str] = [
     "security",
     "public_exposure",
     "formal_records",
+    "network_signature",
 ]
 
 # Pairs below this threshold are NOT persisted (storage hygiene)
