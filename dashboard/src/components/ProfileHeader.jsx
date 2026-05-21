@@ -5,6 +5,24 @@ import FingerprintRadar from './FingerprintRadar'
 import GenerativeAvatar from './GenerativeAvatar'
 import CountrySelector from './target/CountrySelector'
 import IdentityEditor from './target/IdentityEditor'
+
+// Aligned with Dashboard/Targets/UserPreview fallbackSeed (post-S135).
+// Mirrors backend _email_only_avatar_seed shape — produces a deterministic
+// seed even when target.fingerprint_avatar_seed is missing.
+const fallbackSeed = (email) => {
+  let hash = 0
+  for (let i = 0; i < (email || '').length; i++) {
+    hash = ((hash << 5) - hash) + email.charCodeAt(i)
+    hash |= 0
+  }
+  const eh = Math.abs(hash)
+  return {
+    email_hash: eh % 10000,
+    hue: (eh % 60) + 120,
+    num_points: 3,
+    rotation: eh % 360,
+  }
+}
 const scoreColor = (score) => {
   if (score == null) return '#666688'
   if (score >= 61) return '#ff2244'
@@ -113,13 +131,30 @@ export default function ProfileHeader({ target, findings, animScore, profileData
   return (
     <div className="bg-[#12121a] border border-[#1e1e2e] rounded-xl p-6">
       <div className="flex gap-6">
-        {/* Avatar */}
-        <div className="shrink-0">
+        {/* Avatar — real photo + glyph badge (dual identity pattern) */}
+        <div className="shrink-0 relative">
           {avatarUrl ? (
-            <img src={avatarUrl} alt="" className="w-20 h-20 rounded-full border-2 border-[#1e1e2e]" />
+            <>
+              <img
+                src={avatarUrl}
+                alt=""
+                className="w-20 h-20 rounded-full border-2 border-[#1e1e2e]"
+              />
+              {/* Glyph badge — pixel art identity signature, bottom-right of photo */}
+              <div
+                className="absolute -bottom-1 -right-1 w-9 h-9 rounded-md overflow-hidden border-2 border-[#12121a] bg-[#0a0a0f] shadow-md"
+                title="Identity glyph — generated from this target's digital fingerprint"
+              >
+                <GenerativeAvatar
+                  seed={target.fingerprint_avatar_seed || fallbackSeed(target.email)}
+                  size={32}
+                  score={target.exposure_score || 0}
+                />
+              </div>
+            </>
           ) : (
             <GenerativeAvatar
-              seed={target.fingerprint_avatar_seed || target.email}
+              seed={target.fingerprint_avatar_seed || fallbackSeed(target.email)}
               size={80}
               score={target.exposure_score || 0}
               className="rounded-full"

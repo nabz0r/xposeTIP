@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react'
+import React, { useMemo, useState, useRef, useEffect } from 'react'
 
 const AXIS_LABELS_8 = [
   { key: 'accounts', label: 'accounts' },
@@ -285,15 +285,46 @@ export default function FingerprintRadar({ fingerprint, size = 'large', animate 
 }
 
 export function FingerprintTimeline({ snapshots = [], onSelectSnapshot }) {
+  const scrollRef = useRef(null)
+  const [showLeftFade, setShowLeftFade] = useState(false)
+  const [showRightFade, setShowRightFade] = useState(snapshots.length > 4)
+
+  useEffect(() => {
+    const el = scrollRef.current
+    if (!el) return
+    const updateFades = () => {
+      setShowLeftFade(el.scrollLeft > 8)
+      setShowRightFade(el.scrollLeft + el.clientWidth < el.scrollWidth - 8)
+    }
+    updateFades()
+    el.addEventListener('scroll', updateFades, { passive: true })
+    const ro = new ResizeObserver(updateFades)
+    ro.observe(el)
+    return () => {
+      el.removeEventListener('scroll', updateFades)
+      ro.disconnect()
+    }
+  }, [snapshots.length])
+
   if (!snapshots.length) return null
 
   return (
     <div>
-      <h3 className="text-xs font-semibold uppercase tracking-wider text-gray-500 mb-3">
-        Fingerprint Evolution ({snapshots.length} scans)
-      </h3>
-      <div className="flex gap-4 overflow-x-auto pb-3">
-        {snapshots.map((snap, i) => {
+      <div className="flex items-baseline justify-between mb-3">
+        <h3 className="text-xs font-semibold uppercase tracking-wider text-gray-500">
+          Fingerprint Evolution ({snapshots.length} scans)
+        </h3>
+        {snapshots.length > 4 && (
+          <span className="text-[10px] text-gray-600">← drag to scroll →</span>
+        )}
+      </div>
+      <div className="relative">
+        <div
+          ref={scrollRef}
+          className="flex gap-4 overflow-x-auto pb-3 scroll-smooth snap-x snap-mandatory"
+          style={{ scrollbarWidth: 'thin' }}
+        >
+          {snapshots.map((snap, i) => {
           const prev = i > 0 ? snapshots[i - 1] : null
           const scoreDiff = prev ? snap.score - prev.score : 0
           const color = snap.score <= 20 ? '#1D9E75' : snap.score <= 50 ? '#EF9F27' : snap.score <= 75 ? '#D85A30' : '#E24B4A'
@@ -312,7 +343,7 @@ export function FingerprintTimeline({ snapshots = [], onSelectSnapshot }) {
           const date = snap.computed_at ? new Date(snap.computed_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : ''
 
           return (
-            <div key={i} className="shrink-0 bg-[#12121a] border border-[#1e1e2e] rounded-lg p-3 w-44 hover:border-gray-600 transition-colors cursor-pointer"
+            <div key={i} className="shrink-0 snap-start bg-[#12121a] border border-[#1e1e2e] rounded-lg p-3 w-44 hover:border-gray-600 transition-colors cursor-pointer"
               onClick={() => onSelectSnapshot?.(snap)}>
               <svg width="100" height="100" viewBox="0 0 100 100" className="mx-auto">
                 <circle cx={miniCx} cy={miniCy} r={miniR} fill="none" stroke="#1e1e2e" strokeWidth="0.5" />
@@ -336,6 +367,16 @@ export function FingerprintTimeline({ snapshots = [], onSelectSnapshot }) {
             </div>
           )
         })}
+        </div>
+
+        {/* Left fade — visible when scrolled away from start */}
+        {showLeftFade && (
+          <div className="absolute top-0 left-0 bottom-3 w-12 bg-gradient-to-r from-[#12121a] via-[#12121a]/80 to-transparent pointer-events-none" />
+        )}
+        {/* Right fade — visible when there's more content offscreen-right */}
+        {showRightFade && (
+          <div className="absolute top-0 right-0 bottom-3 w-16 bg-gradient-to-l from-[#12121a] via-[#12121a]/80 to-transparent pointer-events-none" />
+        )}
       </div>
     </div>
   )
