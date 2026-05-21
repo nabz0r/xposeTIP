@@ -1,0 +1,588 @@
+{
+    "snapshots": [
+        {
+            "axes": {
+                "accounts": 1.0,
+                "breaches": 0.2,
+                "security": 0.75,
+                "email_age": 0.0,
+                "platforms": 0.5,
+                "geo_spread": 0.2,
+                "data_leaked": 0.0,
+                "username_reuse": 0.0
+            },
+            "hash": "206ffc5e",
+            "label": "Wide digital footprint",
+            "score": 29,
+            "scan_id": "f5778bac-ea73-4c21-a2df-8b914921efb6",
+            "raw_values": {
+                "accounts": 23,
+                "breaches": 1,
+                "platforms": 5,
+                "geo_spread": 1,
+                "data_leaked": 0,
+                "security_weak": 3,
+                "username_reuse": 0,
+                "email_age_years": 0
+            },
+            "risk_level": "MODERATE",
+            "computed_at": "2026-03-21T11:27:33.413810+00:00",
+            "findings_count": 91
+        },
+        {
+            "axes": {
+                "accounts": 1.0,
+                "breaches": 0.2,
+                "security": 0.75,
+                "email_age": 0.0,
+                "platforms": 0.5,
+                "geo_spread": 0.2,
+                "data_leaked": 0.0,
+                "username_reuse": 0.0
+            },
+            "hash": "206ffc5e",
+            "label": "Wide digital footprint",
+            "score": 29,
+            "scan_id": "0d3cb371-43f6-480b-98b0-e0ffdafcba39",
+            "raw_values": {
+                "accounts": 23,
+                "breaches": 1,
+                "platforms": 5,
+                "geo_spread": 1,
+                "data_leaked": 0,
+                "security_weak": 3,
+                "username_reuse": 0,
+                "email_age_years": 0
+            },
+            "risk_level": "MODERATE",
+            "computed_at": "2026-03-21T12:25:17.651310+00:00",
+            "findings_count": 86
+        },
+        {
+            "axes": {
+                "accounts": 1.0,
+                "breaches": 0.2,
+                "security": 0.75,
+                "email_age": 0.0,
+                "platforms": 0.6,
+                "geo_spread": 0.2,
+                "data_leaked": 0.0,
+                "username_reuse": 0.0
+            },
+            "hash": "e7a1bdb2",
+            "label": "Account sprawl across platforms",
+            "score": 30,
+            "scan_id": "3f0a859d-726b-499a-9f2c-827744f0be58",
+            "raw_values": {
+                "accounts": 24,
+                "breaches": 1,
+                "platforms": 6,
+                "geo_spread": 1,
+                "data_leaked": 0,
+                "security_weak": 3,
+                "username_reuse": 0,
+                "email_age_years": 0
+            },
+            "risk_level": "MODERATE",
+            "computed_at": "2026-03-21T12:37:40.945945+00:00",
+            "findings_count": 95
+        },
+        {
+            "axes": {
+                "accounts": 1.0,
+                "breaches": 0.2,
+                "security": 0.75,
+                "email_age": 0.0,
+                "platforms": 0.6,
+                "geo_spread": 0.2,
+                "data_leaked": 0.0,
+                "username_reuse": 0.0
+            },
+            "hash": "e7a1bdb2",
+            "label": "Account sprawl across platforms",
+            "score": 30,
+            "scan_id": "fd96a0d2-0016-45d5-8d1c-b984a78ddea4",
+            "raw_values": {
+                "accounts": 24,
+                "breaches": 1,
+                "platforms": 6,
+                "geo_spread": 1,
+                "data_leaked": 0,
+                "security_weak": 3,
+                "username_reuse": 0,
+                "email_age_years": 0
+            },
+            "risk_level": "MODERATE",
+            "computed_at": "2026-03-21T12:45:08.070496+00:00",
+            "findings_count": 102
+        },
+        {
+            "axes": {
+                "accounts": 1.0,
+                "breaches": 0.2,
+                "security": 0.75,
+                "email_age": 0.0,
+                "platforms": 0.6,
+                "geo_spread": 0.2,
+                "data_leaked": 0.0,
+                "username_reuse": 0.0
+            },
+            "hash": "e7a1bdb2",
+            "label": "Account sprawl across platforms",
+            "score": 30,
+            "scan_id": "74d8b191-8dc4-457c-a978-d793ded8e057",
+            "raw_values": {
+                "accounts": 24,
+                "breaches": 1,
+                "platforms": 6,
+                "geo_spread": 1,
+                "data_leaked": 0,
+                "security_weak": 3,
+                "username_reuse": 0,
+                "email_age_years": 0
+            },
+            "risk_level": "MODERATE",
+            "computed_at": "2026-03-21T12:53:53.934499+00:00",
+            "findings_count": 103
+        },
+        {
+            "axes": {
+                "accounts": 1.0,
+                "breaches": 0.2,
+                "security": 0.75,
+                "email_age": 0.0,
+                "platforms": 0.6,
+                "geo_spread": 0.2,
+                "data_leaked": 0.0,
+                "username_reuse": 0.0
+            },
+            "hash": "e7a1bdb2",
+            "label": "Account sprawl across platforms",
+            "score": 30,
+            "scan_id": "80b542cf-8fed-496a-9df9-5c01a30e2bae",
+            "raw_values": {
+                "accounts": 24,
+                "breaches": 1,
+                "platforms": 6,
+                "geo_spread": 1,
+                "data_leaked": 0,
+                "security_weak": 3,
+                "username_reuse": 0,
+                "email_age_years": 0
+            },
+            "risk_level": "MODERATE",
+            "computed_at": "2026-03-21T13:45:23.326483+00:00",
+            "findings_count": 104
+        },
+        {
+            "axes": {
+                "accounts": 1.0,
+                "breaches": 0.2,
+                "security": 0.75,
+                "email_age": 0.0,
+                "platforms": 0.6,
+                "geo_spread": 0.2,
+                "data_leaked": 0.0,
+                "username_reuse": 0.0
+            },
+            "hash": "e7a1bdb2",
+            "label": "Account sprawl across platforms",
+            "score": 30,
+            "scan_id": "5461a9e8-6916-45ca-bde4-f2ec17d4990f",
+            "raw_values": {
+                "accounts": 24,
+                "breaches": 1,
+                "platforms": 6,
+                "geo_spread": 1,
+                "data_leaked": 0,
+                "security_weak": 3,
+                "username_reuse": 0,
+                "email_age_years": 0
+            },
+            "risk_level": "MODERATE",
+            "computed_at": "2026-03-21T14:44:18.938933+00:00",
+            "findings_count": 107
+        },
+        {
+            "axes": {
+                "accounts": 1.0,
+                "breaches": 0.2,
+                "security": 0.75,
+                "email_age": 0.0,
+                "platforms": 0.6,
+                "geo_spread": 0.2,
+                "data_leaked": 0.0,
+                "username_reuse": 0.0
+            },
+            "hash": "e7a1bdb2",
+            "label": "Account sprawl across platforms",
+            "score": 30,
+            "scan_id": "c4611164-5d94-49c7-8457-431aefcccbbd",
+            "raw_values": {
+                "accounts": 24,
+                "breaches": 1,
+                "platforms": 6,
+                "geo_spread": 1,
+                "data_leaked": 0,
+                "security_weak": 3,
+                "username_reuse": 0,
+                "email_age_years": 0
+            },
+            "risk_level": "MODERATE",
+            "computed_at": "2026-03-21T14:51:19.590660+00:00",
+            "findings_count": 109
+        },
+        {
+            "axes": {
+                "accounts": 1.0,
+                "breaches": 0.2,
+                "security": 0.75,
+                "email_age": 0.0,
+                "platforms": 0.9,
+                "geo_spread": 0.2,
+                "data_leaked": 0.0,
+                "username_reuse": 0.0
+            },
+            "hash": "1aac4b70",
+            "label": "Account sprawl across platforms",
+            "score": 32,
+            "scan_id": "4510c109-369a-4ce9-abdb-f6f533527dc1",
+            "raw_values": {
+                "accounts": 27,
+                "breaches": 1,
+                "platforms": 9,
+                "geo_spread": 1,
+                "data_leaked": 0,
+                "security_weak": 3,
+                "username_reuse": 0,
+                "email_age_years": 0
+            },
+            "risk_level": "MODERATE",
+            "computed_at": "2026-03-21T17:32:33.484472+00:00",
+            "findings_count": 112
+        },
+        {
+            "axes": {
+                "accounts": 1.0,
+                "breaches": 0.2,
+                "security": 0.75,
+                "email_age": 0.0,
+                "platforms": 0.9,
+                "geo_spread": 0.2,
+                "data_leaked": 0.0,
+                "username_reuse": 0.0
+            },
+            "hash": "d8c59a368bf3",
+            "label": "Account sprawl across platforms",
+            "score": 32,
+            "scan_id": "af411af5-21ae-436c-b621-a1c465dd3087",
+            "raw_values": {
+                "accounts": 27,
+                "breaches": 1,
+                "platforms": 9,
+                "geo_spread": 1,
+                "data_leaked": 0,
+                "security_weak": 3,
+                "username_reuse": 0,
+                "email_age_years": 0
+            },
+            "risk_level": "MODERATE",
+            "computed_at": "2026-03-21T19:51:33.228795+00:00",
+            "findings_count": 115
+        },
+        {
+            "axes": {
+                "accounts": 1.0,
+                "breaches": 0.2,
+                "security": 0.75,
+                "email_age": 0.0,
+                "platforms": 0.9,
+                "geo_spread": 0.2,
+                "data_leaked": 0.0,
+                "username_reuse": 0.0
+            },
+            "hash": "d8c59a368bf3",
+            "label": "Account sprawl across platforms",
+            "score": 32,
+            "scan_id": "7d250faa-ba90-46d8-b144-5c0dc34a3dca",
+            "raw_values": {
+                "accounts": 27,
+                "breaches": 1,
+                "platforms": 9,
+                "geo_spread": 1,
+                "data_leaked": 0,
+                "security_weak": 3,
+                "username_reuse": 0,
+                "email_age_years": 0
+            },
+            "risk_level": "MODERATE",
+            "computed_at": "2026-03-21T21:03:07.463565+00:00",
+            "findings_count": 116
+        },
+        {
+            "axes": {
+                "accounts": 1.0,
+                "breaches": 0.4,
+                "security": 0.75,
+                "email_age": 0.0,
+                "platforms": 0.9,
+                "geo_spread": 0.2,
+                "data_leaked": 0.0,
+                "username_reuse": 0.0
+            },
+            "hash": "5cdfd9f18257",
+            "label": "Account sprawl across platforms",
+            "score": 37,
+            "scan_id": "d731b2bb-76f4-4210-bcfc-c23b01689c9c",
+            "raw_values": {
+                "accounts": 27,
+                "breaches": 2,
+                "platforms": 9,
+                "geo_spread": 1,
+                "data_leaked": 0,
+                "security_weak": 3,
+                "username_reuse": 0,
+                "email_age_years": 0
+            },
+            "risk_level": "MODERATE",
+            "computed_at": "2026-03-22T10:53:11.000730+00:00",
+            "findings_count": 125
+        },
+        {
+            "axes": {
+                "accounts": 1.0,
+                "breaches": 0.4,
+                "security": 0.75,
+                "email_age": 1.0,
+                "platforms": 0.9,
+                "geo_spread": 0.2,
+                "data_leaked": 0.0,
+                "username_reuse": 0.0
+            },
+            "hash": "0ab51522760a",
+            "label": "Account sprawl across platforms",
+            "score": 42,
+            "scan_id": "a2d96d13-1fc9-4313-9bed-1d7a54ec457b",
+            "raw_values": {
+                "accounts": 27,
+                "breaches": 2,
+                "platforms": 9,
+                "geo_spread": 1,
+                "data_leaked": 0,
+                "security_weak": 3,
+                "username_reuse": 0,
+                "email_age_years": 22
+            },
+            "risk_level": "MODERATE",
+            "computed_at": "2026-03-22T13:56:40.620942+00:00",
+            "findings_count": 126
+        },
+        {
+            "axes": {
+                "accounts": 1.0,
+                "breaches": 0.4,
+                "security": 0.75,
+                "email_age": 0.0,
+                "platforms": 0.9,
+                "geo_spread": 0.4,
+                "data_leaked": 0.0,
+                "username_reuse": 0.0
+            },
+            "hash": "c1c51046d327",
+            "label": "Account sprawl across platforms",
+            "score": 38,
+            "scan_id": "f21d7776-e92c-4f0c-a1c0-7d5bfd9355f4",
+            "raw_values": {
+                "accounts": 27,
+                "breaches": 2,
+                "platforms": 9,
+                "geo_spread": 2,
+                "data_leaked": 0,
+                "security_weak": 3,
+                "username_reuse": 0,
+                "email_age_years": 0
+            },
+            "risk_level": "MODERATE",
+            "computed_at": "2026-03-22T15:55:01.774101+00:00",
+            "findings_count": 129
+        },
+        {
+            "axes": {
+                "accounts": 1.0,
+                "breaches": 0.6,
+                "security": 0.75,
+                "email_age": 0.633,
+                "platforms": 1.0,
+                "geo_spread": 0.4,
+                "data_leaked": 0.75,
+                "username_reuse": 1.0
+            },
+            "hash": "25a5dbef236e",
+            "label": "Sprawling digital presence at risk",
+            "score": 77,
+            "scan_id": "9df6e6c5-9b0f-4504-b330-c5e39d5584a1",
+            "raw_values": {
+                "accounts": 28,
+                "breaches": 3,
+                "platforms": 10,
+                "geo_spread": 2,
+                "data_leaked": 6,
+                "security_weak": 3,
+                "username_reuse": 6,
+                "email_age_years": 9.5
+            },
+            "risk_level": "CRITICAL",
+            "computed_at": "2026-03-23T13:51:07.925830+00:00",
+            "findings_count": 133
+        },
+        {
+            "axes": {
+                "accounts": 1.0,
+                "breaches": 0.6,
+                "security": 0.75,
+                "email_age": 0.633,
+                "platforms": 1.0,
+                "geo_spread": 0.3,
+                "data_leaked": 0.75,
+                "username_reuse": 1.0
+            },
+            "hash": "9053cb9402ff",
+            "label": "Sprawling digital presence at risk",
+            "score": 77,
+            "scan_id": "9df6e6c5-9b0f-4504-b330-c5e39d5584a1",
+            "raw_values": {
+                "accounts": 28,
+                "breaches": 3,
+                "platforms": 10,
+                "geo_spread": 1.5,
+                "data_leaked": 6,
+                "security_weak": 3,
+                "username_reuse": 6,
+                "email_age_years": 9.5
+            },
+            "risk_level": "CRITICAL",
+            "computed_at": "2026-03-23T19:12:45.572461+00:00",
+            "findings_count": 133
+        },
+        {
+            "axes": {
+                "accounts": 1.0,
+                "breaches": 0.6,
+                "security": 0.75,
+                "email_age": 0.633,
+                "platforms": 1.0,
+                "geo_spread": 0.3,
+                "data_leaked": 0.75,
+                "username_reuse": 1.0
+            },
+            "hash": "9053cb9402ff",
+            "label": "Sprawling digital presence at risk",
+            "score": 77,
+            "scan_id": "9df6e6c5-9b0f-4504-b330-c5e39d5584a1",
+            "raw_values": {
+                "accounts": 28,
+                "breaches": 3,
+                "platforms": 10,
+                "geo_spread": 1.5,
+                "data_leaked": 6,
+                "security_weak": 3,
+                "username_reuse": 6,
+                "email_age_years": 9.5
+            },
+            "risk_level": "CRITICAL",
+            "computed_at": "2026-03-23T20:28:54.892634+00:00",
+            "findings_count": 134
+        },
+        {
+            "axes": {
+                "accounts": 1.0,
+                "breaches": 0.6,
+                "security": 0.75,
+                "email_age": 0.633,
+                "platforms": 1.0,
+                "geo_spread": 0.3,
+                "data_leaked": 0.75,
+                "username_reuse": 1.0
+            },
+            "hash": "9053cb9402ff",
+            "label": "Sprawling digital presence at risk",
+            "score": 77,
+            "scan_id": "9df6e6c5-9b0f-4504-b330-c5e39d5584a1",
+            "raw_values": {
+                "accounts": 28,
+                "breaches": 3,
+                "platforms": 10,
+                "geo_spread": 1.5,
+                "data_leaked": 6,
+                "security_weak": 3,
+                "username_reuse": 6,
+                "email_age_years": 9.5
+            },
+            "risk_level": "CRITICAL",
+            "computed_at": "2026-03-23T21:06:00.801136+00:00",
+            "findings_count": 134
+        },
+        {
+            "axes": {
+                "accounts": 1.0,
+                "breaches": 0.8,
+                "security": 0.75,
+                "email_age": 1.0,
+                "platforms": 1.0,
+                "geo_spread": 0.5,
+                "data_leaked": 0.75,
+                "username_reuse": 1.0,
+                "public_exposure": 0.0
+            },
+            "hash": "7fb1adadd83e",
+            "label": "Sprawling digital presence at risk",
+            "score": 74,
+            "scan_id": "c9204c44-ba00-4f96-b828-60efba2a9ab1",
+            "raw_values": {
+                "accounts": 36,
+                "breaches": 4,
+                "platforms": 16,
+                "geo_spread": 2.5,
+                "data_leaked": 6,
+                "security_weak": 3,
+                "username_reuse": 6,
+                "email_age_years": 22,
+                "public_exposure_raw": 0.0
+            },
+            "risk_level": "HIGH",
+            "computed_at": "2026-03-27T13:35:20.694614+00:00",
+            "findings_count": 155
+        },
+        {
+            "axes": {
+                "accounts": 1.0,
+                "breaches": 0.8,
+                "security": 0.75,
+                "email_age": 0.64,
+                "platforms": 1.0,
+                "geo_spread": 0.5,
+                "data_leaked": 0.75,
+                "username_reuse": 1.0,
+                "public_exposure": 0.0
+            },
+            "hash": "c8339781c5ed",
+            "label": "Sprawling digital presence at risk",
+            "score": 73,
+            "scan_id": "7c5d2012-a338-40e8-84e5-208f7db9e162",
+            "raw_values": {
+                "accounts": 36,
+                "breaches": 4,
+                "platforms": 16,
+                "geo_spread": 2.5,
+                "data_leaked": 6,
+                "security_weak": 3,
+                "username_reuse": 7,
+                "email_age_years": 9.6,
+                "public_exposure_raw": 0.0
+            },
+            "risk_level": "HIGH",
+            "computed_at": "2026-05-21T09:24:47.061941+00:00",
+            "findings_count": 157
+        }
+    ]
+}

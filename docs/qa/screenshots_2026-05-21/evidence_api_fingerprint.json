@@ -1,0 +1,150 @@
+{
+    "axes": {
+        "accounts": 1.0,
+        "breaches": 0.8,
+        "security": 0.75,
+        "email_age": 0.64,
+        "platforms": 1.0,
+        "geo_spread": 0.5,
+        "data_leaked": 0.75,
+        "username_reuse": 1.0,
+        "public_exposure": 0.0
+    },
+    "hash": "c8339781c5ed",
+    "color": "#D85A30",
+    "label": "Sprawling digital presence at risk",
+    "scars": [
+        {
+            "to": 3,
+            "from": 2,
+            "type": "credential_stuffing",
+            "label": "credential stuffing risk"
+        },
+        {
+            "to": 5,
+            "from": 3,
+            "type": "identity_theft",
+            "label": "identity theft risk"
+        },
+        {
+            "to": 0,
+            "from": 7,
+            "type": "phishing",
+            "label": "phishing attack surface"
+        },
+        {
+            "to": 4,
+            "from": 0,
+            "type": "monitoring_gap",
+            "label": "monitoring blind spots"
+        },
+        {
+            "to": 3,
+            "from": 6,
+            "type": "chronic_exposure",
+            "label": "chronic exposure"
+        }
+    ],
+    "score": 73,
+    "points": [
+        [
+            340.0,
+            140.0
+        ],
+        [
+            455.7,
+            182.1
+        ],
+        [
+            517.3,
+            288.7
+        ],
+        [
+            464.7,
+            392.0
+        ],
+        [
+            370.8,
+            404.6
+        ],
+        [
+            293.8,
+            446.9
+        ],
+        [
+            240.2,
+            377.6
+        ],
+        [
+            207.1,
+            296.6
+        ],
+        [
+            330.7,
+            309.0
+        ]
+    ],
+    "fill_color": "rgba(216,90,48,0.08)",
+    "raw_values": {
+        "accounts": 36,
+        "breaches": 4,
+        "platforms": 16,
+        "geo_spread": 2.5,
+        "data_leaked": 6,
+        "security_weak": 3,
+        "username_reuse": 7,
+        "email_age_years": 9.6,
+        "public_exposure_raw": 0.0
+    },
+    "risk_level": "HIGH",
+    "avatar_seed": {
+        "hue": 12,
+        "rotation": 192,
+        "lightness": 65,
+        "complexity": 5,
+        "email_hash": 6832,
+        "num_points": 8,
+        "saturation": 80,
+        "eigenvalues": [
+            31.4734,
+            15.7367,
+            7.8683,
+            4.4571,
+            3.9342
+        ],
+        "inner_radius": 0.525
+    },
+    "computed_at": "2026-05-21T09:24:47.061941+00:00",
+    "eigenvalues": [
+        31.4734,
+        15.7367,
+        7.8683,
+        4.4571,
+        3.9342
+    ],
+    "timeline_events": [
+        {
+            "date": "2016-10-01T00:00:00",
+            "type": "breach",
+            "label": "Exposed in Dailymotion.com breach",
+            "source": "leakcheck_public"
+        }
+    ],
+    "graph_intelligence": {
+        "total_edges": 67,
+        "total_nodes": 50,
+        "cluster_count": 1,
+        "avg_node_confidence": 0.1895,
+        "max_cluster_density": 0.0538,
+        "avg_cluster_confidence": 0.7161
+    },
+    "public_exposure_breakdown": {
+        "media": 0.0,
+        "corporate": 0.0,
+        "pep_count": 0,
+        "sanctions": 0.0,
+        "media_count": 0,
+        "corporate_count": 0,
+        "sanctions_count": 0
+    }
+}
