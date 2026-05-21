@@ -1,0 +1,838 @@
+{
+  "version": "S143-v1",
+  "workspace": {
+    "slug": "threatconnect",
+    "name": "Threatconnect",
+    "id": "99fbe6bb-2209-4b48-8810-da1711751988"
+  },
+  "summary": {
+    "n_total": 12,
+    "n_with_fingerprint": 12,
+    "n_extractable": 12
+  },
+  "axes_normalized": {
+    "accounts": {
+      "n": 12,
+      "mean": 0.8944166666666666,
+      "stdev": 0.20982999973282845,
+      "min": 0.4,
+      "max": 1.0,
+      "p10": 0.43990000000000007,
+      "p50": 1.0,
+      "p90": 1.0,
+      "hist": [
+        0,
+        0,
+        0,
+        0,
+        1,
+        1,
+        0,
+        0,
+        1,
+        9
+      ],
+      "pct_zero": 0.0,
+      "pct_saturated": 75.0
+    },
+    "platforms": {
+      "n": 12,
+      "mean": 0.8833333333333333,
+      "stdev": 0.22087978356535662,
+      "min": 0.4,
+      "max": 1.0,
+      "p10": 0.43000000000000005,
+      "p50": 1.0,
+      "p90": 1.0,
+      "hist": [
+        0,
+        0,
+        0,
+        0,
+        1,
+        1,
+        1,
+        0,
+        0,
+        9
+      ],
+      "pct_zero": 0.0,
+      "pct_saturated": 75.0
+    },
+    "username_reuse": {
+      "n": 12,
+      "mean": 0.25,
+      "stdev": 0.09045340337332909,
+      "min": 0.2,
+      "max": 0.4,
+      "p10": 0.2,
+      "p50": 0.2,
+      "p90": 0.4,
+      "hist": [
+        0,
+        0,
+        9,
+        0,
+        3,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "pct_zero": 0.0,
+      "pct_saturated": 0.0
+    },
+    "breaches": {
+      "n": 12,
+      "mean": 0.4666666666666667,
+      "stdev": 0.24618298195866548,
+      "min": 0.0,
+      "max": 0.8,
+      "p10": 0.0,
+      "p50": 0.6,
+      "p90": 0.74,
+      "hist": [
+        2,
+        0,
+        0,
+        0,
+        3,
+        6,
+        0,
+        0,
+        1,
+        0
+      ],
+      "pct_zero": 16.666666666666668,
+      "pct_saturated": 0.0
+    },
+    "geo_spread": {
+      "n": 12,
+      "mean": 0.37916666666666665,
+      "stdev": 0.23399527319753252,
+      "min": 0.25,
+      "max": 1.0,
+      "p10": 0.25,
+      "p50": 0.25,
+      "p90": 0.8949999999999999,
+      "hist": [
+        0,
+        0,
+        8,
+        0,
+        2,
+        0,
+        1,
+        0,
+        0,
+        1
+      ],
+      "pct_zero": 0.0,
+      "pct_saturated": 8.333333333333334
+    },
+    "data_leaked": {
+      "n": 12,
+      "mean": 0.3020833333333333,
+      "stdev": 0.22270504681930287,
+      "min": 0.0,
+      "max": 0.75,
+      "p10": 0.0,
+      "p50": 0.3125,
+      "p90": 0.675,
+      "hist": [
+        2,
+        2,
+        2,
+        3,
+        0,
+        2,
+        0,
+        1,
+        0,
+        0
+      ],
+      "pct_zero": 16.666666666666668,
+      "pct_saturated": 0.0
+    },
+    "email_age": {
+      "n": 12,
+      "mean": 0.67425,
+      "stdev": 0.4137021601015968,
+      "min": 0.0,
+      "max": 1.0,
+      "p10": 0.0,
+      "p50": 0.873,
+      "p90": 0.9859,
+      "hist": [
+        3,
+        0,
+        0,
+        0,
+        0,
+        0,
+        1,
+        0,
+        3,
+        5
+      ],
+      "pct_zero": 16.666666666666668,
+      "pct_saturated": 8.333333333333334
+    },
+    "security": {
+      "n": 12,
+      "mean": 0.0,
+      "stdev": 0.0,
+      "min": 0.0,
+      "max": 0.0,
+      "p10": 0.0,
+      "p50": 0.0,
+      "p90": 0.0,
+      "hist": [
+        12,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "pct_zero": 100.0,
+      "pct_saturated": 0.0
+    },
+    "public_exposure": {
+      "n": 12,
+      "mean": 0.013166666666666667,
+      "stdev": 0.04561067126598044,
+      "min": 0.0,
+      "max": 0.158,
+      "p10": 0.0,
+      "p50": 0.0,
+      "p90": 0.1106,
+      "hist": [
+        11,
+        1,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "pct_zero": 91.66666666666667,
+      "pct_saturated": 0.0
+    }
+  },
+  "axes_raw": {
+    "accounts": {
+      "n": 12,
+      "mean": 23.166666666666668,
+      "stdev": 12.748143061448264,
+      "min": 6.0,
+      "max": 45.0,
+      "p10": 6.6,
+      "p50": 20.5,
+      "p90": 43.5,
+      "hist": [
+        0,
+        0,
+        0,
+        0,
+        1,
+        1,
+        0,
+        0,
+        1,
+        9
+      ],
+      "pct_at_max": 75.0
+    },
+    "platforms": {
+      "n": 12,
+      "mean": 18.833333333333332,
+      "stdev": 11.621557815568705,
+      "min": 4.0,
+      "max": 38.0,
+      "p10": 4.3,
+      "p50": 17.5,
+      "p90": 37.1,
+      "hist": [
+        0,
+        0,
+        0,
+        0,
+        1,
+        1,
+        0,
+        1,
+        0,
+        9
+      ],
+      "pct_at_max": 75.0
+    },
+    "username_reuse": {
+      "n": 12,
+      "mean": 1.25,
+      "stdev": 0.45226701686664544,
+      "min": 1.0,
+      "max": 2.0,
+      "p10": 1.0,
+      "p50": 1.0,
+      "p90": 2.0,
+      "hist": [
+        0,
+        0,
+        9,
+        0,
+        3,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "pct_at_max": 0.0
+    },
+    "breaches": {
+      "n": 12,
+      "mean": 2.3333333333333335,
+      "stdev": 1.2309149097933274,
+      "min": 0.0,
+      "max": 4.0,
+      "p10": 0.0,
+      "p50": 3.0,
+      "p90": 3.7,
+      "hist": [
+        2,
+        0,
+        0,
+        0,
+        3,
+        0,
+        6,
+        0,
+        1,
+        0
+      ],
+      "pct_at_max": 0.0
+    },
+    "geo_spread": {
+      "n": 12,
+      "mean": 2.0,
+      "stdev": 1.4847711791873706,
+      "min": 1.25,
+      "max": 6.25,
+      "p10": 1.25,
+      "p50": 1.25,
+      "p90": 5.35,
+      "hist": [
+        0,
+        0,
+        8,
+        0,
+        2,
+        0,
+        1,
+        0,
+        0,
+        1
+      ],
+      "pct_at_max": 8.333333333333334
+    },
+    "data_leaked": {
+      "n": 12,
+      "mean": 2.4166666666666665,
+      "stdev": 1.781640374554423,
+      "min": 0.0,
+      "max": 6.0,
+      "p10": 0.0,
+      "p50": 2.5,
+      "p90": 5.4,
+      "hist": [
+        2,
+        2,
+        2,
+        3,
+        0,
+        2,
+        0,
+        1,
+        0,
+        0
+      ],
+      "pct_at_max": 0.0
+    },
+    "email_age": {
+      "n": 12,
+      "mean": 10.358333333333333,
+      "stdev": 6.465215785379105,
+      "min": 0.0,
+      "max": 17.9,
+      "p10": 0.0,
+      "p50": 13.1,
+      "p90": 16.82,
+      "hist": [
+        3,
+        0,
+        0,
+        0,
+        0,
+        0,
+        1,
+        0,
+        3,
+        5
+      ],
+      "pct_at_max": 8.333333333333334
+    },
+    "security": {
+      "n": 12,
+      "mean": 0.0,
+      "stdev": 0.0,
+      "min": 0.0,
+      "max": 0.0,
+      "p10": 0.0,
+      "p50": 0.0,
+      "p90": 0.0,
+      "hist": [
+        12,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "pct_at_max": 0.0
+    },
+    "public_exposure": {
+      "n": 12,
+      "mean": 0.013166666666666667,
+      "stdev": 0.04561067126598044,
+      "min": 0.0,
+      "max": 0.158,
+      "p10": 0.0,
+      "p50": 0.0,
+      "p90": 0.1106,
+      "hist": [
+        11,
+        1,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "pct_at_max": 0.0
+    }
+  },
+  "rich_targets": {
+    "3": 12,
+    "5": 12,
+    "7": 7,
+    "9": 0
+  },
+  "similarity": {
+    "total_pairs": 66,
+    "mean": 0.8764272727272727,
+    "stdev": 0.10118128824495709,
+    "above": {
+      "0.5": {
+        "count": 66,
+        "pct": 100.0
+      },
+      "0.6": {
+        "count": 66,
+        "pct": 100.0
+      },
+      "0.7": {
+        "count": 62,
+        "pct": 93.93939393939394
+      },
+      "0.8": {
+        "count": 49,
+        "pct": 74.24242424242425
+      },
+      "0.9": {
+        "count": 33,
+        "pct": 50.0
+      }
+    },
+    "hist": [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      4,
+      13,
+      16,
+      33
+    ]
+  },
+  "top_pairs": [
+    {
+      "rank": 1,
+      "sim": 0.992,
+      "a": {
+        "id": "8a89017d-aefd-4d6f-a3eb-22ae81737851",
+        "email": "jjacobs@threatconnect.com"
+      },
+      "b": {
+        "id": "f66b015a-ba32-4fdf-9e7d-a489cb381dcb",
+        "email": "dtineo@threatconnect.com"
+      },
+      "top_axes": [
+        "accounts",
+        "platforms",
+        "email_age"
+      ]
+    },
+    {
+      "rank": 2,
+      "sim": 0.9914,
+      "a": {
+        "id": "205c82e1-ecc0-48b6-afd3-df79419feed4",
+        "email": "tbhullar@threatconnect.com"
+      },
+      "b": {
+        "id": "1623b4ff-0ce9-4b86-94e8-5801c5f3515b",
+        "email": "hbrandon@threatconnect.com"
+      },
+      "top_axes": [
+        "accounts",
+        "platforms",
+        "email_age"
+      ]
+    },
+    {
+      "rank": 3,
+      "sim": 0.9902,
+      "a": {
+        "id": "15c96e00-c2b7-4448-b6aa-56fec8ac54af",
+        "email": "moblack@threatconnect.com"
+      },
+      "b": {
+        "id": "2de38e3e-8702-4acf-8674-70441eee1978",
+        "email": "btomes@threatconnect.com"
+      },
+      "top_axes": [
+        "accounts",
+        "platforms",
+        "email_age"
+      ]
+    },
+    {
+      "rank": 4,
+      "sim": 0.9898,
+      "a": {
+        "id": "8a89017d-aefd-4d6f-a3eb-22ae81737851",
+        "email": "jjacobs@threatconnect.com"
+      },
+      "b": {
+        "id": "205c82e1-ecc0-48b6-afd3-df79419feed4",
+        "email": "tbhullar@threatconnect.com"
+      },
+      "top_axes": [
+        "accounts",
+        "platforms",
+        "email_age"
+      ]
+    },
+    {
+      "rank": 5,
+      "sim": 0.9878,
+      "a": {
+        "id": "f66b015a-ba32-4fdf-9e7d-a489cb381dcb",
+        "email": "dtineo@threatconnect.com"
+      },
+      "b": {
+        "id": "1623b4ff-0ce9-4b86-94e8-5801c5f3515b",
+        "email": "hbrandon@threatconnect.com"
+      },
+      "top_axes": [
+        "accounts",
+        "platforms",
+        "email_age"
+      ]
+    },
+    {
+      "rank": 6,
+      "sim": 0.9853,
+      "a": {
+        "id": "205c82e1-ecc0-48b6-afd3-df79419feed4",
+        "email": "tbhullar@threatconnect.com"
+      },
+      "b": {
+        "id": "2de38e3e-8702-4acf-8674-70441eee1978",
+        "email": "btomes@threatconnect.com"
+      },
+      "top_axes": [
+        "accounts",
+        "platforms",
+        "email_age"
+      ]
+    },
+    {
+      "rank": 7,
+      "sim": 0.9848,
+      "a": {
+        "id": "f66b015a-ba32-4fdf-9e7d-a489cb381dcb",
+        "email": "dtineo@threatconnect.com"
+      },
+      "b": {
+        "id": "205c82e1-ecc0-48b6-afd3-df79419feed4",
+        "email": "tbhullar@threatconnect.com"
+      },
+      "top_axes": [
+        "accounts",
+        "platforms",
+        "email_age"
+      ]
+    },
+    {
+      "rank": 8,
+      "sim": 0.9838,
+      "a": {
+        "id": "1623b4ff-0ce9-4b86-94e8-5801c5f3515b",
+        "email": "hbrandon@threatconnect.com"
+      },
+      "b": {
+        "id": "dd3d6c4e-3eed-44b0-a607-e6f818d90ec4",
+        "email": "jmcfadyen@threatconnect.com"
+      },
+      "top_axes": [
+        "accounts",
+        "platforms",
+        "email_age"
+      ]
+    },
+    {
+      "rank": 9,
+      "sim": 0.9828,
+      "a": {
+        "id": "205c82e1-ecc0-48b6-afd3-df79419feed4",
+        "email": "tbhullar@threatconnect.com"
+      },
+      "b": {
+        "id": "dd3d6c4e-3eed-44b0-a607-e6f818d90ec4",
+        "email": "jmcfadyen@threatconnect.com"
+      },
+      "top_axes": [
+        "accounts",
+        "platforms",
+        "email_age"
+      ]
+    },
+    {
+      "rank": 10,
+      "sim": 0.978,
+      "a": {
+        "id": "dd3d6c4e-3eed-44b0-a607-e6f818d90ec4",
+        "email": "jmcfadyen@threatconnect.com"
+      },
+      "b": {
+        "id": "2de38e3e-8702-4acf-8674-70441eee1978",
+        "email": "btomes@threatconnect.com"
+      },
+      "top_axes": [
+        "accounts",
+        "platforms",
+        "email_age"
+      ]
+    },
+    {
+      "rank": 11,
+      "sim": 0.9765,
+      "a": {
+        "id": "8a89017d-aefd-4d6f-a3eb-22ae81737851",
+        "email": "jjacobs@threatconnect.com"
+      },
+      "b": {
+        "id": "1623b4ff-0ce9-4b86-94e8-5801c5f3515b",
+        "email": "hbrandon@threatconnect.com"
+      },
+      "top_axes": [
+        "accounts",
+        "platforms",
+        "email_age"
+      ]
+    },
+    {
+      "rank": 12,
+      "sim": 0.9718,
+      "a": {
+        "id": "5c42f17d-a196-4fc6-a84f-ec5be1d02c4d",
+        "email": "asalcedo@threatconnect.com"
+      },
+      "b": {
+        "id": "15c96e00-c2b7-4448-b6aa-56fec8ac54af",
+        "email": "moblack@threatconnect.com"
+      },
+      "top_axes": [
+        "accounts",
+        "platforms",
+        "email_age"
+      ]
+    },
+    {
+      "rank": 13,
+      "sim": 0.9696,
+      "a": {
+        "id": "f66b015a-ba32-4fdf-9e7d-a489cb381dcb",
+        "email": "dtineo@threatconnect.com"
+      },
+      "b": {
+        "id": "7b72e7d9-5954-40dc-b1ae-433fb944b861",
+        "email": "byelamanchili@threatconnect.com"
+      },
+      "top_axes": [
+        "email_age",
+        "accounts",
+        "platforms"
+      ]
+    },
+    {
+      "rank": 14,
+      "sim": 0.9673,
+      "a": {
+        "id": "1623b4ff-0ce9-4b86-94e8-5801c5f3515b",
+        "email": "hbrandon@threatconnect.com"
+      },
+      "b": {
+        "id": "2de38e3e-8702-4acf-8674-70441eee1978",
+        "email": "btomes@threatconnect.com"
+      },
+      "top_axes": [
+        "accounts",
+        "platforms",
+        "email_age"
+      ]
+    },
+    {
+      "rank": 15,
+      "sim": 0.9671,
+      "a": {
+        "id": "8a89017d-aefd-4d6f-a3eb-22ae81737851",
+        "email": "jjacobs@threatconnect.com"
+      },
+      "b": {
+        "id": "2de38e3e-8702-4acf-8674-70441eee1978",
+        "email": "btomes@threatconnect.com"
+      },
+      "top_axes": [
+        "accounts",
+        "platforms",
+        "email_age"
+      ]
+    },
+    {
+      "rank": 16,
+      "sim": 0.9667,
+      "a": {
+        "id": "f66b015a-ba32-4fdf-9e7d-a489cb381dcb",
+        "email": "dtineo@threatconnect.com"
+      },
+      "b": {
+        "id": "dd3d6c4e-3eed-44b0-a607-e6f818d90ec4",
+        "email": "jmcfadyen@threatconnect.com"
+      },
+      "top_axes": [
+        "accounts",
+        "platforms",
+        "email_age"
+      ]
+    },
+    {
+      "rank": 17,
+      "sim": 0.9655,
+      "a": {
+        "id": "15c96e00-c2b7-4448-b6aa-56fec8ac54af",
+        "email": "moblack@threatconnect.com"
+      },
+      "b": {
+        "id": "205c82e1-ecc0-48b6-afd3-df79419feed4",
+        "email": "tbhullar@threatconnect.com"
+      },
+      "top_axes": [
+        "accounts",
+        "platforms",
+        "email_age"
+      ]
+    },
+    {
+      "rank": 18,
+      "sim": 0.9617,
+      "a": {
+        "id": "15c96e00-c2b7-4448-b6aa-56fec8ac54af",
+        "email": "moblack@threatconnect.com"
+      },
+      "b": {
+        "id": "dd3d6c4e-3eed-44b0-a607-e6f818d90ec4",
+        "email": "jmcfadyen@threatconnect.com"
+      },
+      "top_axes": [
+        "accounts",
+        "platforms",
+        "email_age"
+      ]
+    },
+    {
+      "rank": 19,
+      "sim": 0.9607,
+      "a": {
+        "id": "8a89017d-aefd-4d6f-a3eb-22ae81737851",
+        "email": "jjacobs@threatconnect.com"
+      },
+      "b": {
+        "id": "dd3d6c4e-3eed-44b0-a607-e6f818d90ec4",
+        "email": "jmcfadyen@threatconnect.com"
+      },
+      "top_axes": [
+        "accounts",
+        "platforms",
+        "email_age"
+      ]
+    },
+    {
+      "rank": 20,
+      "sim": 0.9589,
+      "a": {
+        "id": "8a89017d-aefd-4d6f-a3eb-22ae81737851",
+        "email": "jjacobs@threatconnect.com"
+      },
+      "b": {
+        "id": "7b72e7d9-5954-40dc-b1ae-433fb944b861",
+        "email": "byelamanchili@threatconnect.com"
+      },
+      "top_axes": [
+        "email_age",
+        "accounts",
+        "platforms"
+      ]
+    }
+  ],
+  "observations": [
+    "saturation: `accounts` is 75.0% saturated \u2014 AXIS_MAX[`accounts`]=15 likely too low",
+    "saturation: `platforms` is 75.0% saturated \u2014 AXIS_MAX[`platforms`]=10 likely too low",
+    "starved: `security` is zero for 100.0% of fingerprints \u2014 data plumbing or AXIS_MAX too high",
+    "starved: `public_exposure` is zero for 91.7% of fingerprints \u2014 data plumbing or AXIS_MAX too high",
+    "saturation cause confirmed: `accounts` raw \u2265 AXIS_MAX (=15) in 75.0% of fingerprints",
+    "saturation cause confirmed: `platforms` raw \u2265 AXIS_MAX (=10) in 75.0% of fingerprints",
+    "similarity threshold sanity: 93.94% of pairs \u2265 0.7 \u2192 threshold likely too low",
+    "calibration thin: only 7 targets have \u22657/9 axes populated (>0.1) \u2014 consider growing the corpus before tuning weights"
+  ],
+  "generated_at_utc": "2026-05-21 13:58 UTC"
+}
