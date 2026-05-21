@@ -5,6 +5,9 @@
   "license": "AGPL-3.0-only",
   "type": "module",
   "scripts": {
+    "changelog:gen": "node scripts/generate-changelog.mjs",
+    "predev": "node scripts/generate-changelog.mjs",
+    "prebuild": "node scripts/generate-changelog.mjs",
     "dev": "vite",
     "dev:clean": "pkill -f vite 2>/dev/null; sleep 1; vite",
     "build": "vite build",

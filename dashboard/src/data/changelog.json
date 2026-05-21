@@ -1,0 +1,1682 @@
+[
+  {
+    "sha": "d935fb3",
+    "date": "2026-05-21T13:31:22+02:00",
+    "type": "feat",
+    "scope": "S140",
+    "sprint": "S140",
+    "subject": "architecture page — full sexy refresh with all S130+ advances"
+  },
+  {
+    "sha": "f9520c4",
+    "date": "2026-05-21T13:05:35+02:00",
+    "type": "feat",
+    "scope": "S139",
+    "sprint": "S139",
+    "subject": "drop paid tier prices from pricing section"
+  },
+  {
+    "sha": "e9a8c12",
+    "date": "2026-05-21T12:51:16+02:00",
+    "type": "feat",
+    "scope": "S138",
+    "sprint": "S138",
+    "subject": "public nav + footer unification — single source of truth"
+  },
+  {
+    "sha": "c0ad867",
+    "date": "2026-05-21T12:34:14+02:00",
+    "type": "chore",
+    "scope": "S137",
+    "sprint": "S137",
+    "subject": "cleanup combo — centralize fallbackSeed util + lock smoke protocol"
+  },
+  {
+    "sha": "39c0427",
+    "date": "2026-05-21T12:21:21+02:00",
+    "type": "chore",
+    "scope": "qa",
+    "sprint": "S134",
+    "subject": "UX smoke test S134 + S135 + S136 chain — Camelia Belab in browser with multi-layer evidence"
+  },
+  {
+    "sha": "f46f2a8",
+    "date": "2026-05-21T11:54:05+02:00",
+    "type": "feat",
+    "scope": "S136",
+    "sprint": "S136",
+    "subject": "UI polish round 2 — glyph promoted to header (dual avatar) + Fingerprint Evolution scroll cue"
+  },
+  {
+    "sha": "1743e9b",
+    "date": "2026-05-21T11:42:31+02:00",
+    "type": "feat",
+    "scope": "S135",
+    "sprint": "S135",
+    "subject": "UI polish 4-pack — stable avatars, stable fingerprint axes, cascade post-done re-fetch, fallbackSeed alignment"
+  },
+  {
+    "sha": "af3f6a9",
+    "date": "2026-05-21T11:09:31+02:00",
+    "type": "feat",
+    "scope": "S134",
+    "sprint": "S134",
+    "subject": "R4 cleanup combo — about-me junk name, Courtlistener list coerce, cascade_state + UI follow-up"
+  },
+  {
+    "sha": "9a35173",
+    "date": "2026-05-21T10:45:35+02:00",
+    "type": "chore",
+    "scope": "qa",
+    "sprint": "S131",
+    "subject": "forensic round 4 — automated overnight, post-S131 + S132 health check"
+  },
+  {
+    "sha": "d6d4671",
+    "date": "2026-05-21T02:02:18+02:00",
+    "type": "feat",
+    "scope": "S133",
+    "sprint": "S133",
+    "subject": "geomap polish — TopoJSON + D3 geo, country density heatmap, zoom/pan"
+  },
+  {
+    "sha": "abc6714",
+    "date": "2026-05-21T01:51:59+02:00",
+    "type": "feat",
+    "scope": "S132",
+    "sprint": "S132",
+    "subject": "landing refresh + Compare page — surface phone/crypto/legal/provenance/similarity, new /compare positioning page"
+  },
+  {
+    "sha": "8845d88",
+    "date": "2026-05-21T01:40:51+02:00",
+    "type": "feat",
+    "scope": "S131",
+    "sprint": "S131",
+    "subject": "persisted similarity engine — target_similarities table, async post-scan recompute, Overview block"
+  },
+  {
+    "sha": "84b2329",
+    "date": "2026-05-21T00:51:02+02:00",
+    "type": "docs",
+    "scope": "S130",
+    "sprint": "S130",
+    "subject": "doc closure + v1.2.0 stamp — sweep 127/110/11 cats, backfill S121-S129 sprint log, DEMO archive Nexus + rewrite Play 1/Play 2"
+  },
+  {
+    "sha": "3c383da",
+    "date": "2026-05-21T00:26:32+02:00",
+    "type": "fix",
+    "scope": "S129",
+    "sprint": "S129",
+    "subject": "gate Pass 1 username dispatch with is_valid_username — match Pass 1.5 validation, eliminate HN-style 400 root cause"
+  },
+  {
+    "sha": "77b08f5",
+    "date": "2026-05-21T00:06:43+02:00",
+    "type": "fix",
+    "scope": "S128",
+    "sprint": "S128",
+    "subject": "scraper_engine returns (found, reason); reclassify explicit_not_found / blocked_403 as no_data in attempt_log"
+  },
+  {
+    "sha": "fb394be",
+    "date": "2026-05-20T23:49:15+02:00",
+    "type": "chore",
+    "scope": "qa",
+    "sprint": "S122",
+    "subject": "forensic round 3 — full S122 -> S127 chain validation post-S127"
+  },
+  {
+    "sha": "9226a37",
+    "date": "2026-05-20T23:05:11+02:00",
+    "type": "fix",
+    "scope": "S127",
+    "sprint": "S127",
+    "subject": "name_scraper_engine dispatched sequentially post-A3 — fixes no_name_input on first scan"
+  },
+  {
+    "sha": "d7894df",
+    "date": "2026-05-20T22:45:55+02:00",
+    "type": "feat",
+    "scope": "S126",
+    "sprint": "S126",
+    "subject": "surface data.match_confidence as separate row in ProvenanceCard"
+  },
+  {
+    "sha": "0f30272",
+    "date": "2026-05-20T22:32:01+02:00",
+    "type": "feat",
+    "scope": "S125",
+    "sprint": "S125",
+    "subject": "Recalculate Profiles rebuilds finding confidence + cross-verif retroactively"
+  },
+  {
+    "sha": "705eb3f",
+    "date": "2026-05-20T22:19:25+02:00",
+    "type": "feat",
+    "scope": "S124",
+    "sprint": "S124",
+    "subject": "verified provenance UI per finding — tier + cross-verif + timeline"
+  },
+  {
+    "sha": "51c5663",
+    "date": "2026-05-20T21:54:49+02:00",
+    "type": "fix",
+    "scope": "S123",
+    "sprint": "S123",
+    "subject": "R1 int→str coerce in PASS2 finding creation + R2 courtlistener defensive + holdover rollback (4 disabled)"
+  },
+  {
+    "sha": "d2bb4ee",
+    "date": "2026-05-20T21:33:18+02:00",
+    "type": "chore",
+    "scope": "qa",
+    "sprint": "S122",
+    "subject": "forensic round 2 — pipeline health + scraper inventory post-S122"
+  },
+  {
+    "sha": "4fb647f",
+    "date": "2026-05-20T20:44:42+02:00",
+    "type": "fix",
+    "scope": "S122e-holdover",
+    "sprint": null,
+    "subject": "low-confidence severity + manual-check title for 5 placeholder name-scrapers"
+  },
+  {
+    "sha": "6544804",
+    "date": "2026-05-20T20:11:59+02:00",
+    "type": "feat",
+    "scope": "S122e",
+    "sprint": "S122e",
+    "subject": "name-input scraper dispatch via new name_scraper_engine module"
+  },
+  {
+    "sha": "0893acc",
+    "date": "2026-05-20T19:59:22+02:00",
+    "type": "fix",
+    "scope": "S122-name",
+    "sprint": null,
+    "subject": "aggregator tie-break + emoji regex extends to U+2600 block"
+  },
+  {
+    "sha": "2cd5f44",
+    "date": "2026-05-20T19:44:36+02:00",
+    "type": "chore",
+    "scope": "S122-hk",
+    "sprint": null,
+    "subject": "move QA reports to docs/qa, add .gitignore entries"
+  },
+  {
+    "sha": "0c8c2d9",
+    "date": "2026-05-20T19:44:27+02:00",
+    "type": "feat",
+    "scope": "S122-obs",
+    "sprint": null,
+    "subject": "per-scraper attempt logging + name-resolution diag enrichment"
+  },
+  {
+    "sha": "350f173",
+    "date": "2026-05-20T19:44:13+02:00",
+    "type": "fix",
+    "scope": "S122-clean",
+    "sprint": null,
+    "subject": "disable 2 Gravatar duplicates + fix pastebin_user HTML extraction"
+  },
+  {
+    "sha": "1758466",
+    "date": "2026-05-20T19:10:42+02:00",
+    "type": "feat",
+    "scope": "S122c",
+    "sprint": "S122c",
+    "subject": "diagnostic logging + UI banner for failed name resolution"
+  },
+  {
+    "sha": "514e4d4",
+    "date": "2026-05-20T19:10:33+02:00",
+    "type": "fix",
+    "scope": "S122b",
+    "sprint": "S122b",
+    "subject": "pre-truncate result.indicator_value before SELECT/Identity insert"
+  },
+  {
+    "sha": "e994b2f",
+    "date": "2026-05-20T17:57:23+02:00",
+    "type": "fix",
+    "scope": "S122a",
+    "sprint": "S122a",
+    "subject": "QA quick-fixes — sync_avatars, targets cap, error renderer, version bump"
+  },
+  {
+    "sha": "984c129",
+    "date": "2026-05-14T15:11:31+02:00",
+    "type": "docs",
+    "scope": null,
+    "sprint": "S121b",
+    "subject": "Sprint 121b — Complete sweep of remaining drift"
+  },
+  {
+    "sha": "64b57aa",
+    "date": "2026-05-14T14:19:41+02:00",
+    "type": "docs",
+    "scope": null,
+    "sprint": "S121",
+    "subject": "Sprint 121 — Doc drift closure post-S116→S120"
+  },
+  {
+    "sha": "45e8ba0",
+    "date": "2026-05-14T13:50:42+02:00",
+    "type": "feat",
+    "scope": null,
+    "sprint": "S120",
+    "subject": "Sprint 120 — Findings tab preset filter chips"
+  },
+  {
+    "sha": "64a52d8",
+    "date": "2026-05-14T13:17:57+02:00",
+    "type": "feat",
+    "scope": null,
+    "sprint": "S119",
+    "subject": "Sprint 119 — Risk Signals UI block on Overview tab"
+  },
+  {
+    "sha": "d1d2094",
+    "date": "2026-05-14T12:45:19+02:00",
+    "type": "feat",
+    "scope": null,
+    "sprint": "S118",
+    "subject": "Sprint 118 — EU legal scrapers BODACC (FR) + UK Gazette"
+  },
+  {
+    "sha": "8a9a5ef",
+    "date": "2026-05-14T12:14:08+02:00",
+    "type": "feat",
+    "scope": null,
+    "sprint": "S117",
+    "subject": "Sprint 117 — Courtlistener legal scraper (MVP, collection only)"
+  },
+  {
+    "sha": "0321a0c",
+    "date": "2026-05-14T12:01:23+02:00",
+    "type": "feat",
+    "scope": null,
+    "sprint": "S116b",
+    "subject": "Sprint 116b — Frontend plan rename + Team tier UI"
+  },
+  {
+    "sha": "db63db3",
+    "date": "2026-05-14T11:50:17+02:00",
+    "type": "feat",
+    "scope": null,
+    "sprint": "S116a",
+    "subject": "Sprint 116a — Backend plan config 4-tier alignment"
+  },
+  {
+    "sha": "4be7ec0",
+    "date": "2026-05-14T00:55:13+02:00",
+    "type": "docs",
+    "scope": null,
+    "sprint": "S115",
+    "subject": "Sprint 115 — Doc drift closure post-trilogy"
+  },
+  {
+    "sha": "fff7950",
+    "date": "2026-05-13T21:52:04+02:00",
+    "type": "docs",
+    "scope": null,
+    "sprint": null,
+    "subject": "post-trilogy version bump + sprint log entries (v1.1.11)"
+  },
+  {
+    "sha": "b007b64",
+    "date": "2026-05-13T21:41:10+02:00",
+    "type": "feat",
+    "scope": null,
+    "sprint": "S114",
+    "subject": "Sprint 114 — OSS readiness: LICENSE + CLA + secrets audit (Sprint A, v1.1.11)"
+  },
+  {
+    "sha": "b4b55d0",
+    "date": "2026-05-13T19:28:07+02:00",
+    "type": "feat",
+    "scope": null,
+    "sprint": "S113",
+    "subject": "Sprint 113 — Public positioning refresh for Play 1 + Play 2 (Sprint B)"
+  },
+  {
+    "sha": "cdcf425",
+    "date": "2026-05-13T18:41:27+02:00",
+    "type": "feat",
+    "scope": null,
+    "sprint": "S112",
+    "subject": "Sprint 112 — Identity Intelligence Report templates (Sprint C, v1.1.11)"
+  },
+  {
+    "sha": "9474f8d",
+    "date": "2026-05-13T16:58:21+02:00",
+    "type": "feat",
+    "scope": "manifesto",
+    "sprint": "S111",
+    "subject": "S111 — Identity-layer thesis Foundation section"
+  },
+  {
+    "sha": "b0495c7",
+    "date": "2026-05-13T16:45:20+02:00",
+    "type": "feat",
+    "scope": "landing",
+    "sprint": "S110",
+    "subject": "S110 — Hero identity-layer thesis statement"
+  },
+  {
+    "sha": "67090e6",
+    "date": "2026-05-13T16:30:32+02:00",
+    "type": "test",
+    "scope": null,
+    "sprint": "S108",
+    "subject": "S108 — Secondary identifier extraction characterization tests"
+  },
+  {
+    "sha": "3948a7e",
+    "date": "2026-05-13T16:06:12+02:00",
+    "type": "docs",
+    "scope": null,
+    "sprint": "S107e",
+    "subject": "S107e — Docs closure + mastodon_search dedupe (count → 124)"
+  },
+  {
+    "sha": "bddc11a",
+    "date": "2026-04-02T15:59:00Z",
+    "type": "docs",
+    "scope": null,
+    "sprint": "S107d",
+    "subject": "Sprint 107d — Docs & landing update for phone/crypto capabilities (v1.1.10)"
+  },
+  {
+    "sha": "bf1b225",
+    "date": "2026-04-02T15:42:42Z",
+    "type": "fix",
+    "scope": null,
+    "sprint": null,
+    "subject": "Hotfix 107c — Profile aggregator preserves phones/crypto_wallets"
+  },
+  {
+    "sha": "f02df2e",
+    "date": "2026-04-02T15:21:26Z",
+    "type": "feat",
+    "scope": null,
+    "sprint": "S107c",
+    "subject": "Sprint 107c — Phone + Crypto Scrapers (v1.1.10)"
+  },
+  {
+    "sha": "e444496",
+    "date": "2026-04-02T15:00:29Z",
+    "type": "feat",
+    "scope": null,
+    "sprint": "S107b",
+    "subject": "Sprint 107b — Secondary Identifier Pipeline: phone + crypto infra (v1.1.9)"
+  },
+  {
+    "sha": "0848e40",
+    "date": "2026-04-02T13:13:06Z",
+    "type": "fix",
+    "scope": null,
+    "sprint": "S107a",
+    "subject": "Sprint 107a — Module Cleanup: disable phantoms, remove out-of-scope (v1.1.8)"
+  },
+  {
+    "sha": "4fbf071",
+    "date": "2026-04-01T13:01:42+02:00",
+    "type": "other",
+    "scope": null,
+    "sprint": null,
+    "subject": "Add files via upload"
+  },
+  {
+    "sha": "3a97f66",
+    "date": "2026-03-31T18:28:21Z",
+    "type": "fix",
+    "scope": null,
+    "sprint": "S106b",
+    "subject": "Sprint 106b — Comprehensive Hotfix: timeouts + UI + email_age + tabs (v1.1.7)"
+  },
+  {
+    "sha": "e84be2b",
+    "date": "2026-03-31T17:20:06Z",
+    "type": "fix",
+    "scope": null,
+    "sprint": "S106",
+    "subject": "Sprint 106 — Stability Hotfixes: graph dedup + discovery timeout + junk filter (v1.1.6)"
+  },
+  {
+    "sha": "06e1b60",
+    "date": "2026-03-31T16:44:28Z",
+    "type": "feat",
+    "scope": null,
+    "sprint": "S105",
+    "subject": "Sprint 105 — Auto-Ingest + Phase A.5 Targeted Rescan (v1.1.5)"
+  },
+  {
+    "sha": "1aee3eb",
+    "date": "2026-03-31T16:37:42Z",
+    "type": "feat",
+    "scope": null,
+    "sprint": "S104",
+    "subject": "Sprint 104 — Discovery Loop: multi-round pivot execution (v1.1.4)"
+  },
+  {
+    "sha": "24152c6",
+    "date": "2026-03-31T16:18:22Z",
+    "type": "feat",
+    "scope": null,
+    "sprint": "S103",
+    "subject": "Sprint 103 — PivotStrategy engine + target updated_at (v1.1.3)"
+  },
+  {
+    "sha": "4094c8c",
+    "date": "2026-03-31T15:55:00Z",
+    "type": "feat",
+    "scope": null,
+    "sprint": "S102",
+    "subject": "Sprint 102 — Email Status Banner + EmailRep API key + Avatar Fix (v1.1.2)"
+  },
+  {
+    "sha": "26f51d1",
+    "date": "2026-03-31T15:11:34Z",
+    "type": "feat",
+    "scope": null,
+    "sprint": "S101",
+    "subject": "Sprint 101 — Discovery UX: event trail, zombie guard, junk filter (v1.1.1)"
+  },
+  {
+    "sha": "3f72d84",
+    "date": "2026-03-31T14:01:40Z",
+    "type": "docs",
+    "scope": null,
+    "sprint": null,
+    "subject": "Sprint F.1 — Full docs, landing & version bump to v1.1.0"
+  },
+  {
+    "sha": "801e870",
+    "date": "2026-03-31T13:21:51Z",
+    "type": "feat",
+    "scope": null,
+    "sprint": null,
+    "subject": "Sprint F — Discovery Engine: Discovered Tab (Flat View) (v1.0.9)"
+  },
+  {
+    "sha": "430db52",
+    "date": "2026-03-31T12:57:09Z",
+    "type": "feat",
+    "scope": null,
+    "sprint": null,
+    "subject": "Sprint E — Discovery Engine: Celery Task + API Endpoints (v1.0.8)"
+  },
+  {
+    "sha": "efd2d1e",
+    "date": "2026-03-31T12:40:52Z",
+    "type": "fix",
+    "scope": null,
+    "sprint": null,
+    "subject": "Sprint D.7 hotfix — page relevance fires on resolved_name in query string"
+  },
+  {
+    "sha": "492449e",
+    "date": "2026-03-31T12:20:03Z",
+    "type": "fix",
+    "scope": null,
+    "sprint": null,
+    "subject": "Sprint D.7 — Discovery Final Quality Fixes (v1.0.7)"
+  },
+  {
+    "sha": "219d399",
+    "date": "2026-03-31T11:44:22Z",
+    "type": "fix",
+    "scope": null,
+    "sprint": null,
+    "subject": "Sprint D.6 — Discovery Quality Hotfix: 8 fixes from real-target testing (v1.0.6)"
+  },
+  {
+    "sha": "883c7c6",
+    "date": "2026-03-31T11:19:55Z",
+    "type": "fix",
+    "scope": null,
+    "sprint": null,
+    "subject": "Sprint D.5 — Discovery Extractor Relevance Filter (v1.0.5)"
+  },
+  {
+    "sha": "ca91868",
+    "date": "2026-03-31T10:58:46Z",
+    "type": "feat",
+    "scope": null,
+    "sprint": null,
+    "subject": "Sprint D — Discovery Engine: Fetch + Extract Pipeline (v1.0.4)"
+  },
+  {
+    "sha": "db5f758",
+    "date": "2026-03-30T23:49:27Z",
+    "type": "feat",
+    "scope": null,
+    "sprint": null,
+    "subject": "Sprint C — Discovery Engine: Query Generator (v1.0.3)"
+  },
+  {
+    "sha": "5203888",
+    "date": "2026-03-30T23:46:23Z",
+    "type": "feat",
+    "scope": null,
+    "sprint": null,
+    "subject": "Sprint B — Discovery Engine: 6 Extractors + Pipeline (v1.0.2)"
+  },
+  {
+    "sha": "87fc7de",
+    "date": "2026-03-30T23:40:58Z",
+    "type": "feat",
+    "scope": null,
+    "sprint": null,
+    "subject": "Sprint A — Discovery Engine DB Migration (v1.0.1)"
+  },
+  {
+    "sha": "c09cb47",
+    "date": "2026-03-30T16:57:28Z",
+    "type": "feat",
+    "scope": null,
+    "sprint": "S100",
+    "subject": "Sprint 100 — v1.0.0: Persona confidence + tab labels + scan progress + MX lookup"
+  },
+  {
+    "sha": "cfc367c",
+    "date": "2026-03-30T16:41:14Z",
+    "type": "feat",
+    "scope": null,
+    "sprint": "S99",
+    "subject": "Sprint 99 — Smarter Pass 2 queries + photo quality tiers (v0.99.0)"
+  },
+  {
+    "sha": "914ddd3",
+    "date": "2026-03-30T16:10:21Z",
+    "type": "docs",
+    "scope": null,
+    "sprint": "S98b",
+    "subject": "Sprint 98b — SCANNERS.md rewrite + architecture visual updates + demo script (v0.98.1)"
+  },
+  {
+    "sha": "c54cdaf",
+    "date": "2026-03-30T16:00:31Z",
+    "type": "docs",
+    "scope": null,
+    "sprint": "S98",
+    "subject": "Sprint 98 — Full documentation & landing alignment for Nexus (v0.98.0)"
+  },
+  {
+    "sha": "b818640",
+    "date": "2026-03-30T15:49:07Z",
+    "type": "fix",
+    "scope": null,
+    "sprint": "S97",
+    "subject": "Sprint 97 — Timeline wayback leak + geo perf + email banner (v0.97.0)"
+  },
+  {
+    "sha": "5015532",
+    "date": "2026-03-30T14:52:38Z",
+    "type": "feat",
+    "scope": null,
+    "sprint": "S96",
+    "subject": "Sprint 96 — Geo Consistency Scoring: cross-correlate 6 geo signal sources (v0.96.0)"
+  },
+  {
+    "sha": "cc6cd3f",
+    "date": "2026-03-30T14:39:57Z",
+    "type": "feat",
+    "scope": null,
+    "sprint": "S95",
+    "subject": "Sprint 95 — Timezone Intelligence: infer location from activity timestamps (v0.95.0)"
+  },
+  {
+    "sha": "ae0a868",
+    "date": "2026-03-30T14:27:39Z",
+    "type": "feat",
+    "scope": null,
+    "sprint": "S94",
+    "subject": "Sprint 94 — Geographic Intelligence: 132 countries, 123 cities, location normalization (v0.94.0)"
+  },
+  {
+    "sha": "f6f8a96",
+    "date": "2026-03-30T13:51:48Z",
+    "type": "feat",
+    "scope": null,
+    "sprint": "S93",
+    "subject": "Sprint 93 — Extraction Rules Enrichment: 17 scrapers, ~68 new fields (v0.93.0)"
+  },
+  {
+    "sha": "721fa14",
+    "date": "2026-03-28T22:38:58Z",
+    "type": "feat",
+    "scope": null,
+    "sprint": "S92",
+    "subject": "Sprint 92 — Manifesto v2: Red Lines, Data Commitment, B2B Clarity (v0.92.0)"
+  },
+  {
+    "sha": "ef418ac",
+    "date": "2026-03-28T21:26:21Z",
+    "type": "docs",
+    "scope": null,
+    "sprint": "S91",
+    "subject": "Sprint 91 — README Rewrite: v0.90.0 (v0.91.0)"
+  },
+  {
+    "sha": "6d1dbfc",
+    "date": "2026-03-28T16:52:06Z",
+    "type": "docs",
+    "scope": null,
+    "sprint": "S90",
+    "subject": "Sprint 90 — Docs, landing & architecture update to v0.90.0"
+  },
+  {
+    "sha": "84e40fb",
+    "date": "2026-03-28T16:29:16Z",
+    "type": "fix",
+    "scope": null,
+    "sprint": "S89",
+    "subject": "Sprint 89 — Scraper Real Module Names + Deep Scan Dedup Fix (v0.89.0)"
+  },
+  {
+    "sha": "2478511",
+    "date": "2026-03-28T14:57:33Z",
+    "type": "fix",
+    "scope": null,
+    "sprint": "S88",
+    "subject": "Sprint 88 — Graph Username Nodes Fix + Deep Scan Status Panel (v0.88.0)"
+  },
+  {
+    "sha": "8521ca6",
+    "date": "2026-03-28T14:45:50Z",
+    "type": "fix",
+    "scope": null,
+    "sprint": "S87",
+    "subject": "Sprint 87 — Bug Fix Blitz II: Risk Level + Persona Confidence + 429 Retry (v0.87.0)"
+  },
+  {
+    "sha": "38b4fe3",
+    "date": "2026-03-28T13:34:44Z",
+    "type": "fix",
+    "scope": null,
+    "sprint": "S86",
+    "subject": "Sprint 86 — Pipeline Reorder: Gather-then-Compute (v0.86.0)"
+  },
+  {
+    "sha": "694bb0f",
+    "date": "2026-03-28T13:13:12Z",
+    "type": "docs",
+    "scope": null,
+    "sprint": "S85",
+    "subject": "Sprint 85 — Docs, landing & version bump to v0.85.0"
+  },
+  {
+    "sha": "60b75ce",
+    "date": "2026-03-28T12:50:49Z",
+    "type": "fix",
+    "scope": null,
+    "sprint": "S84",
+    "subject": "Sprint 84 — Deep Scan Pipeline Fix + Cascade Scan (v0.84.0)"
+  },
+  {
+    "sha": "878756a",
+    "date": "2026-03-27T19:45:05Z",
+    "type": "feat",
+    "scope": null,
+    "sprint": "S83",
+    "subject": "Sprint 83 — The xpose Manifesto: Ethical · Green · Educational (v0.83.0)"
+  },
+  {
+    "sha": "1076e96",
+    "date": "2026-03-27T19:03:11Z",
+    "type": "feat",
+    "scope": null,
+    "sprint": "S82",
+    "subject": "Sprint 82 — Generic Deep Indicator Scan (v0.82.0)"
+  },
+  {
+    "sha": "ed4d0a7",
+    "date": "2026-03-27T18:17:45Z",
+    "type": "docs",
+    "scope": null,
+    "sprint": "S81",
+    "subject": "Sprint 81 — Full docs & landing update to v0.80.0"
+  },
+  {
+    "sha": "2ca72d5",
+    "date": "2026-03-27T18:07:10Z",
+    "type": "feat",
+    "scope": null,
+    "sprint": "S80",
+    "subject": "Sprint 80 — Account Depth Profiling (v0.80.0)"
+  },
+  {
+    "sha": "b61b20d",
+    "date": "2026-03-27T17:53:09Z",
+    "type": "feat",
+    "scope": null,
+    "sprint": "S79",
+    "subject": "Sprint 79 — Code Leak & Paste Monitoring (v0.79.0)"
+  },
+  {
+    "sha": "d706a1a",
+    "date": "2026-03-27T17:39:45Z",
+    "type": "feat",
+    "scope": null,
+    "sprint": "S78",
+    "subject": "Sprint 78 — User Dashboard Preview (/user-preview) for Nexus pitch (v0.78.0)"
+  },
+  {
+    "sha": "46b44e9",
+    "date": "2026-03-27T17:27:55Z",
+    "type": "fix",
+    "scope": null,
+    "sprint": "S77",
+    "subject": "Sprint 77 — Bug Fix Blitz: photos confidence, timeline DNS, username quality (v0.77.0)"
+  },
+  {
+    "sha": "3e568ef",
+    "date": "2026-03-27T17:06:40Z",
+    "type": "feat",
+    "scope": null,
+    "sprint": "S76",
+    "subject": "Sprint 76 — Deep Username Scan (v0.76.0)"
+  },
+  {
+    "sha": "d86a444",
+    "date": "2026-03-27T16:50:26Z",
+    "type": "feat",
+    "scope": null,
+    "sprint": "S75",
+    "subject": "Sprint 75 — Avatar quality gate + Dashboard cleanup (v0.75.0)"
+  },
+  {
+    "sha": "4f8d4f5",
+    "date": "2026-03-25T19:48:37+01:00",
+    "type": "other",
+    "scope": null,
+    "sprint": null,
+    "subject": "Add files via upload"
+  },
+  {
+    "sha": "5e5e635",
+    "date": "2026-03-25T19:08:34+01:00",
+    "type": "fix",
+    "scope": null,
+    "sprint": null,
+    "subject": "PDF download auth — fetch with JWT instead of window.open"
+  },
+  {
+    "sha": "7cf8864",
+    "date": "2026-03-25T16:46:07Z",
+    "type": "feat",
+    "scope": null,
+    "sprint": "S74",
+    "subject": "Sprint 74 — PDF Identity Report Export (v0.74.0)"
+  },
+  {
+    "sha": "a25d029",
+    "date": "2026-03-25T16:03:43Z",
+    "type": "feat",
+    "scope": null,
+    "sprint": "S73d",
+    "subject": "Sprint 73d — Split CLAUDE.md into 4 files, update to v0.73.0"
+  },
+  {
+    "sha": "fd3b095",
+    "date": "2026-03-25T15:45:21Z",
+    "type": "feat",
+    "scope": null,
+    "sprint": "S73c",
+    "subject": "Sprint 73c — Avatar quality ranking + sync to target list"
+  },
+  {
+    "sha": "72eba63",
+    "date": "2026-03-25T15:37:35Z",
+    "type": "feat",
+    "scope": null,
+    "sprint": "S73b",
+    "subject": "Sprint 73b — Filter junk usernames from pipeline"
+  },
+  {
+    "sha": "bd7cbb4",
+    "date": "2026-03-25T15:11:45Z",
+    "type": "fix",
+    "scope": null,
+    "sprint": null,
+    "subject": "BUG 7 — Dashboard geo map pins missing"
+  },
+  {
+    "sha": "a67fc2e",
+    "date": "2026-03-25T13:33:54Z",
+    "type": "fix",
+    "scope": null,
+    "sprint": "S73",
+    "subject": "Sprint 73 — Bug Fix Blitz (v0.73.0)"
+  },
+  {
+    "sha": "eaf8ee2",
+    "date": "2026-03-25T12:01:51Z",
+    "type": "feat",
+    "scope": null,
+    "sprint": "S72",
+    "subject": "Sprint 72 — Narrative rewrite: identity-first landing + architecture (v0.72.0)"
+  },
+  {
+    "sha": "7c4a074",
+    "date": "2026-03-24T22:16:34Z",
+    "type": "refactor",
+    "scope": null,
+    "sprint": null,
+    "subject": "Extract Landing.jsx and Architecture.jsx into component modules"
+  },
+  {
+    "sha": "b086f6e",
+    "date": "2026-03-24T19:43:48Z",
+    "type": "fix",
+    "scope": null,
+    "sprint": null,
+    "subject": "Batch fix — 10 issues across expander, scrapers, aggregator, frontend"
+  },
+  {
+    "sha": "6c8d72d",
+    "date": "2026-03-24T17:31:42Z",
+    "type": "fix",
+    "scope": null,
+    "sprint": null,
+    "subject": "Pass 1.5 username selection reads findings, not just identities"
+  },
+  {
+    "sha": "0179b8b",
+    "date": "2026-03-24T17:06:16Z",
+    "type": "feat",
+    "scope": null,
+    "sprint": "S71",
+    "subject": "Sprint 71 — Pass 1.5 username expansion + Usernames tab + health fix"
+  },
+  {
+    "sha": "da61f89",
+    "date": "2026-03-24T14:15:10Z",
+    "type": "feat",
+    "scope": null,
+    "sprint": "S70",
+    "subject": "Sprint 70 — Landing page + Architecture page update"
+  },
+  {
+    "sha": "813c857",
+    "date": "2026-03-24T13:54:09Z",
+    "type": "feat",
+    "scope": null,
+    "sprint": "S69",
+    "subject": "Sprint 69 — UI polish + operator name fix + scraper health dashboard"
+  },
+  {
+    "sha": "7786dce",
+    "date": "2026-03-24T13:20:01Z",
+    "type": "fix",
+    "scope": null,
+    "sprint": "S68",
+    "subject": "Sprint 68 — Full pipeline fix: public exposure end-to-end"
+  },
+  {
+    "sha": "04c0e31",
+    "date": "2026-03-24T12:45:46Z",
+    "type": "feat",
+    "scope": null,
+    "sprint": "S67",
+    "subject": "Sprint 67 — User-asserted identity (first/last name ground truth)"
+  },
+  {
+    "sha": "09e5510",
+    "date": "2026-03-24T12:20:09Z",
+    "type": "feat",
+    "scope": null,
+    "sprint": "S66",
+    "subject": "Sprint 66 — Editable user_country ground truth + Pass 2 hotfixes"
+  },
+  {
+    "sha": "549be46",
+    "date": "2026-03-24T11:35:11Z",
+    "type": "feat",
+    "scope": null,
+    "sprint": "S65",
+    "subject": "Sprint 65 — 9th radar axis public_exposure + nonagon UI"
+  },
+  {
+    "sha": "12d684f",
+    "date": "2026-03-24T11:24:31Z",
+    "type": "feat",
+    "scope": null,
+    "sprint": "S64",
+    "subject": "Sprint 64 — OpenCorporates + LBR Luxembourg corporate intelligence"
+  },
+  {
+    "sha": "6e842cb",
+    "date": "2026-03-24T11:18:24Z",
+    "type": "feat",
+    "scope": null,
+    "sprint": "S63",
+    "subject": "Sprint 63 — OpenSanctions + Interpol Red Notices compliance layer"
+  },
+  {
+    "sha": "b244bcc",
+    "date": "2026-03-24T11:01:55Z",
+    "type": "feat",
+    "scope": null,
+    "sprint": "S62",
+    "subject": "Sprint 62 — GNews.io scraper + Google News RSS fallback"
+  },
+  {
+    "sha": "737cad9",
+    "date": "2026-03-24T10:50:02Z",
+    "type": "feat",
+    "scope": null,
+    "sprint": "S61",
+    "subject": "Sprint 61 — Two-pass scan architecture + GDELT news scraper"
+  },
+  {
+    "sha": "8a3c470",
+    "date": "2026-03-23T20:54:36Z",
+    "type": "feat",
+    "scope": null,
+    "sprint": "S60",
+    "subject": "Sprint 60 — Corporate email pattern intelligence"
+  },
+  {
+    "sha": "7bcbd09",
+    "date": "2026-03-23T20:16:52Z",
+    "type": "other",
+    "scope": null,
+    "sprint": "S59",
+    "subject": "Sprint 59 hotfix: dedup upgrade, email prefix bonus, emoji cleanup"
+  },
+  {
+    "sha": "b55f910",
+    "date": "2026-03-23T19:55:37Z",
+    "type": "feat",
+    "scope": null,
+    "sprint": "S59",
+    "subject": "Sprint 59 — Deep email & domain intelligence layer"
+  },
+  {
+    "sha": "c3cae45",
+    "date": "2026-03-23T19:28:50Z",
+    "type": "other",
+    "scope": null,
+    "sprint": null,
+    "subject": "hotfix: disable 4 dead scrapers, fix 4 broken ones"
+  },
+  {
+    "sha": "ce48e12",
+    "date": "2026-03-23T18:09:56Z",
+    "type": "feat",
+    "scope": null,
+    "sprint": "S58",
+    "subject": "Sprint 58 — Landing page + whitepaper update"
+  },
+  {
+    "sha": "ae9609b",
+    "date": "2026-03-23T17:50:53Z",
+    "type": "feat",
+    "scope": null,
+    "sprint": "S57",
+    "subject": "Sprint 57 — Dashboard workspace geo map"
+  },
+  {
+    "sha": "adcfab0",
+    "date": "2026-03-23T17:30:28Z",
+    "type": "other",
+    "scope": null,
+    "sprint": "S56",
+    "subject": "Sprint 56 hotfix: tier-based name resolution — email-verified vs username-guessed"
+  },
+  {
+    "sha": "29f3be8",
+    "date": "2026-03-23T16:58:42Z",
+    "type": "other",
+    "scope": null,
+    "sprint": "S56",
+    "subject": "Sprint 56 hotfix: fix username-guessed penalty for scraper_engine findings"
+  },
+  {
+    "sha": "8a0a45c",
+    "date": "2026-03-23T16:38:54Z",
+    "type": "other",
+    "scope": null,
+    "sprint": "S56",
+    "subject": "Sprint 56: Name resolution quality overhaul — 4 axes"
+  },
+  {
+    "sha": "9776bfe",
+    "date": "2026-03-23T16:08:17Z",
+    "type": "feat",
+    "scope": null,
+    "sprint": "S55",
+    "subject": "Sprint 55 — Geolocation foundation"
+  },
+  {
+    "sha": "1a87765",
+    "date": "2026-03-23T15:49:10Z",
+    "type": "fix",
+    "scope": null,
+    "sprint": "S54",
+    "subject": "Sprint 54 — UI polish + identity API rate limiting"
+  },
+  {
+    "sha": "dd968fa",
+    "date": "2026-03-23T15:23:19Z",
+    "type": "feat",
+    "scope": null,
+    "sprint": "S53",
+    "subject": "Sprint 53 — Fix dead scrapers + extend Google surface"
+  },
+  {
+    "sha": "a62e67c",
+    "date": "2026-03-23T14:51:49Z",
+    "type": "feat",
+    "scope": null,
+    "sprint": "S52",
+    "subject": "Sprint 52 — PageRank rebalancing, Photos tab"
+  },
+  {
+    "sha": "494ed78",
+    "date": "2026-03-23T13:54:58Z",
+    "type": "feat",
+    "scope": null,
+    "sprint": "S51",
+    "subject": "Sprint 51 — Persona display names, LinkedIn intelligence, API keys"
+  },
+  {
+    "sha": "97b7264",
+    "date": "2026-03-23T13:34:50Z",
+    "type": "fix",
+    "scope": null,
+    "sprint": null,
+    "subject": "exclude regex blacklist rules from username validation"
+  },
+  {
+    "sha": "4adee37",
+    "date": "2026-03-23T13:20:44Z",
+    "type": "fix",
+    "scope": null,
+    "sprint": "S50",
+    "subject": "Sprint 50 hotfix — persona crash debugging + NameError guard"
+  },
+  {
+    "sha": "a9c3cdf",
+    "date": "2026-03-23T12:59:20Z",
+    "type": "fix",
+    "scope": null,
+    "sprint": "S50",
+    "subject": "Sprint 50 — Persona quality, graph zoom-to-fit, nationality cleanup"
+  },
+  {
+    "sha": "4049222",
+    "date": "2026-03-23T12:32:53Z",
+    "type": "fix",
+    "scope": null,
+    "sprint": "S49",
+    "subject": "Sprint 49 — Persona quality, username validation, accounts cleanup"
+  },
+  {
+    "sha": "dee4d32",
+    "date": "2026-03-23T11:30:27Z",
+    "type": "fix",
+    "scope": null,
+    "sprint": null,
+    "subject": "remove invalid requires_api_key/api_key_header from dehashed_public scraper"
+  },
+  {
+    "sha": "f81179d",
+    "date": "2026-03-23T11:26:30Z",
+    "type": "feat",
+    "scope": null,
+    "sprint": "S48",
+    "subject": "Sprint 48 — username_reuse fix, graph cleanup, 20 new scrapers"
+  },
+  {
+    "sha": "419ad71",
+    "date": "2026-03-22T18:57:07Z",
+    "type": "fix",
+    "scope": null,
+    "sprint": "S47",
+    "subject": "Sprint 47 — Username identity extraction + graph normalization"
+  },
+  {
+    "sha": "8f21107",
+    "date": "2026-03-22T16:36:53Z",
+    "type": "fix",
+    "scope": null,
+    "sprint": "S46",
+    "subject": "Sprint 46 — Graph persistence debug, data quality foundation"
+  },
+  {
+    "sha": "b15ab1a",
+    "date": "2026-03-22T15:56:07Z",
+    "type": "other",
+    "scope": null,
+    "sprint": "S45",
+    "subject": "Sprint 45: Split TargetDetail + System into tab components"
+  },
+  {
+    "sha": "47e6f71",
+    "date": "2026-03-22T15:25:15Z",
+    "type": "fix",
+    "scope": null,
+    "sprint": "S44",
+    "subject": "Sprint 44 — Persona/name/timeline debug fixes from DB analysis"
+  },
+  {
+    "sha": "f974f6f",
+    "date": "2026-03-22T15:13:06Z",
+    "type": "docs",
+    "scope": null,
+    "sprint": "S43",
+    "subject": "Sprint 43 — CLAUDE.md rewrite, architecture whitepaper page, roadmap"
+  },
+  {
+    "sha": "4e881fd",
+    "date": "2026-03-22T14:40:34Z",
+    "type": "fix",
+    "scope": null,
+    "sprint": "S42",
+    "subject": "Sprint 42 — Accounts tab, geo exposure, graph readability, breach count"
+  },
+  {
+    "sha": "1139a89",
+    "date": "2026-03-22T14:21:39Z",
+    "type": "fix",
+    "scope": null,
+    "sprint": "S41",
+    "subject": "Sprint 41 — Persona clustering, email age, name linking fixes"
+  },
+  {
+    "sha": "d767ba2",
+    "date": "2026-03-22T14:02:56Z",
+    "type": "other",
+    "scope": null,
+    "sprint": "S40",
+    "subject": "Sprint 40: Graph connectivity + Telegram cleanup + persona platform fix"
+  },
+  {
+    "sha": "3304feb",
+    "date": "2026-03-22T13:40:06Z",
+    "type": "fix",
+    "scope": null,
+    "sprint": "S39",
+    "subject": "Sprint 39 — Name resolution, email age, blacklist enforcement, graph propagation"
+  },
+  {
+    "sha": "16e9013",
+    "date": "2026-03-22T13:10:12Z",
+    "type": "feat",
+    "scope": null,
+    "sprint": "S38",
+    "subject": "Sprint 38 — Markov chain integration: graph as source of truth"
+  },
+  {
+    "sha": "1384e95",
+    "date": "2026-03-22T12:43:25Z",
+    "type": "feat",
+    "scope": null,
+    "sprint": "S37",
+    "subject": "Sprint 37 — Real-time leak counter, account age inference, Life Timeline"
+  },
+  {
+    "sha": "25efb0a",
+    "date": "2026-03-22T12:26:33Z",
+    "type": "feat",
+    "scope": null,
+    "sprint": "S36",
+    "subject": "Sprint 36 — Landing page \"Why Should I Care\" rewrite"
+  },
+  {
+    "sha": "ecf6722",
+    "date": "2026-03-22T12:04:28Z",
+    "type": "feat",
+    "scope": null,
+    "sprint": "S35",
+    "subject": "Sprint 35 — System reorganization, leaderboard, quick scan, move targets, scraper progress"
+  },
+  {
+    "sha": "08b690b",
+    "date": "2026-03-22T10:42:15Z",
+    "type": "feat",
+    "scope": null,
+    "sprint": "S34",
+    "subject": "Sprint 34 — Quick scan freemium flow, UX polish"
+  },
+  {
+    "sha": "e26b5e3",
+    "date": "2026-03-21T21:43:24Z",
+    "type": "feat",
+    "scope": null,
+    "sprint": "S33",
+    "subject": "Sprint 33 — 20 new scrapers (51→71 total)"
+  },
+  {
+    "sha": "875dc18",
+    "date": "2026-03-21T21:23:57Z",
+    "type": "feat",
+    "scope": null,
+    "sprint": "S32",
+    "subject": "Sprint 32 — Landing page pixel avatars, polish, extended blacklists"
+  },
+  {
+    "sha": "a0cd353",
+    "date": "2026-03-21T21:13:19Z",
+    "type": "feat",
+    "scope": null,
+    "sprint": "S31",
+    "subject": "Sprint 31 — 32x32 pixel art identity avatar"
+  },
+  {
+    "sha": "de285fe",
+    "date": "2026-03-21T20:47:20Z",
+    "type": "fix",
+    "scope": null,
+    "sprint": "S30",
+    "subject": "Sprint 30 — Avatar pipeline fix, fingerprint placement, stability"
+  },
+  {
+    "sha": "fecef6b",
+    "date": "2026-03-21T20:18:35Z",
+    "type": "feat",
+    "scope": null,
+    "sprint": "S29",
+    "subject": "Sprint 29 — SSE real-time, bug fixes, avatar/bio blacklist, landing route"
+  },
+  {
+    "sha": "b13834b",
+    "date": "2026-03-21T19:41:42Z",
+    "type": "feat",
+    "scope": null,
+    "sprint": "S28",
+    "subject": "Sprint 28 — Landing page redesign, HeroGraph, CountUp, docs update"
+  },
+  {
+    "sha": "cf2018e",
+    "date": "2026-03-21T19:21:17Z",
+    "type": "feat",
+    "scope": null,
+    "sprint": "S27",
+    "subject": "Sprint 27 — PageRank confidence, eigenvalue fingerprint, generative avatar"
+  },
+  {
+    "sha": "9421c46",
+    "date": "2026-03-21T18:32:02Z",
+    "type": "feat",
+    "scope": null,
+    "sprint": "S26",
+    "subject": "Sprint 26 — 8 new scrapers: people search, gaming, social (43→51 total)"
+  },
+  {
+    "sha": "3411fdc",
+    "date": "2026-03-21T18:12:38Z",
+    "type": "feat",
+    "scope": null,
+    "sprint": "S25",
+    "subject": "Sprint 25 — Identity intelligence fix, blacklist expansion, re-query engine"
+  },
+  {
+    "sha": "d7e72bf",
+    "date": "2026-03-21T17:30:53Z",
+    "type": "feat",
+    "scope": null,
+    "sprint": "S24",
+    "subject": "Sprint 24 — Global API keys, DNS SaaS blocklist, executive summary, UX polish"
+  },
+  {
+    "sha": "46196dd",
+    "date": "2026-03-21T16:53:17Z",
+    "type": "feat",
+    "scope": null,
+    "sprint": "S23",
+    "subject": "Sprint 23 — Name blacklist system, targets rework, quality polish"
+  },
+  {
+    "sha": "ec300e4",
+    "date": "2026-03-21T16:29:43Z",
+    "type": "docs",
+    "scope": null,
+    "sprint": "S22",
+    "subject": "Sprint 22 — Documentation update (v0.14.0 → v0.21.0)"
+  },
+  {
+    "sha": "2376ab2",
+    "date": "2026-03-21T16:19:06Z",
+    "type": "feat",
+    "scope": null,
+    "sprint": "S21",
+    "subject": "Sprint 21 — Admin panel (users/workspaces), quick scan, invite flow"
+  },
+  {
+    "sha": "0a18aca",
+    "date": "2026-03-21T15:54:32Z",
+    "type": "feat",
+    "scope": null,
+    "sprint": "S20",
+    "subject": "Sprint 20 — Plans (Free/Consultant/Enterprise), open registration, plan enforcement"
+  },
+  {
+    "sha": "b44a1e2",
+    "date": "2026-03-21T15:24:59Z",
+    "type": "feat",
+    "scope": null,
+    "sprint": "S19",
+    "subject": "Sprint 19 — 15 new scrapers: gaming, social, music, archive (28→43 total)"
+  },
+  {
+    "sha": "b8b5695",
+    "date": "2026-03-21T14:53:43Z",
+    "type": "feat",
+    "scope": null,
+    "sprint": "S18",
+    "subject": "Sprint 18 — UX polish, per-field confidence, bug fixes"
+  },
+  {
+    "sha": "4f9a742",
+    "date": "2026-03-21T14:17:37Z",
+    "type": "feat",
+    "scope": null,
+    "sprint": "S17",
+    "subject": "Sprint 17 — Persona clustering, dual score (exposure/threat), graph upgrade"
+  },
+  {
+    "sha": "7af5ec0",
+    "date": "2026-03-21T13:52:42Z",
+    "type": "feat",
+    "scope": null,
+    "sprint": "S16",
+    "subject": "Sprint 16 — Confidence engine, score weights, graph edges, dedup, bug fixes"
+  },
+  {
+    "sha": "2ed5890",
+    "date": "2026-03-21T13:29:07Z",
+    "type": "fix",
+    "scope": null,
+    "sprint": "S15",
+    "subject": "Sprint 15 — Permission fixes, scan cancel UI, log viewer polish"
+  },
+  {
+    "sha": "6ef26fa",
+    "date": "2026-03-21T13:11:01Z",
+    "type": "feat",
+    "scope": null,
+    "sprint": "S14",
+    "subject": "Sprint 14 — Real-time log viewer with Redis ring buffer + syslog forwarding"
+  },
+  {
+    "sha": "7b9ed8b",
+    "date": "2026-03-21T12:55:43Z",
+    "type": "docs",
+    "scope": null,
+    "sprint": "S13",
+    "subject": "Sprint 13 — full documentation update for v0.12.0"
+  },
+  {
+    "sha": "0bc6f89",
+    "date": "2026-03-21T12:46:06Z",
+    "type": "feat",
+    "scope": null,
+    "sprint": "S12",
+    "subject": "Sprint 12 — Identity Card, photo strip, profile aggregator fix, UX polish"
+  },
+  {
+    "sha": "7c6da7f",
+    "date": "2026-03-21T12:23:24Z",
+    "type": "feat",
+    "scope": null,
+    "sprint": "S11",
+    "subject": "Sprint 11 — 15 new scrapers: identity estimation, Wayback archive, social expansion"
+  },
+  {
+    "sha": "1d39c0e",
+    "date": "2026-03-21T11:39:14Z",
+    "type": "fix",
+    "scope": null,
+    "sprint": null,
+    "subject": "replace broken SQL dedup (MAX on UUID) with Python-side dedup"
+  },
+  {
+    "sha": "a83d086",
+    "date": "2026-03-21T11:24:11Z",
+    "type": "fix",
+    "scope": null,
+    "sprint": "S10",
+    "subject": "Sprint 10 — Quality polish, dedup, profile name fix, finding details"
+  },
+  {
+    "sha": "c06a1bf",
+    "date": "2026-03-21T10:57:24Z",
+    "type": "feat",
+    "scope": null,
+    "sprint": "S9",
+    "subject": "Sprint 9 — Scraper engine: modular scrapers with editable regex"
+  },
+  {
+    "sha": "9d2ff37",
+    "date": "2026-03-20T23:53:14Z",
+    "type": "feat",
+    "scope": null,
+    "sprint": "S8",
+    "subject": "Sprint 8 — Digital fingerprint: unique identity visualization"
+  },
+  {
+    "sha": "936b9a7",
+    "date": "2026-03-20T23:22:57Z",
+    "type": "docs",
+    "scope": null,
+    "sprint": null,
+    "subject": "professional README + split docs for Nexus 2026"
+  },
+  {
+    "sha": "73ad8ca",
+    "date": "2026-03-20T23:02:24Z",
+    "type": "feat",
+    "scope": null,
+    "sprint": "S7",
+    "subject": "Sprint 7 — Nexus ready: intelligence engine, Google OAuth audit, UX wow, demo flow, scaling"
+  },
+  {
+    "sha": "b299259",
+    "date": "2026-03-20T21:20:56Z",
+    "type": "feat",
+    "scope": null,
+    "sprint": "S6",
+    "subject": "add reverse image search, SaaS connectors, OAuth framework (Sprint 6 Axe 4)"
+  },
+  {
+    "sha": "4e4a4ef",
+    "date": "2026-03-20T21:01:28Z",
+    "type": "feat",
+    "scope": null,
+    "sprint": null,
+    "subject": "add 5 premium Layer 2 scanners (VirusTotal, Shodan, IntelX, Hunter.io, Dehashed)"
+  },
+  {
+    "sha": "7adda92",
+    "date": "2026-03-20T20:56:34Z",
+    "type": "feat",
+    "scope": null,
+    "sprint": "S6",
+    "subject": "Sprint 6 Axe 2 — Unified API keys admin"
+  },
+  {
+    "sha": "5e85a71",
+    "date": "2026-03-20T20:52:46Z",
+    "type": "feat",
+    "scope": null,
+    "sprint": "S6",
+    "subject": "Sprint 6 Axe 1 — Source scoring & verification engine"
+  },
+  {
+    "sha": "857b31a",
+    "date": "2026-03-20T19:52:55Z",
+    "type": "docs",
+    "scope": null,
+    "sprint": null,
+    "subject": "complete documentation update for v0.5.0"
+  },
+  {
+    "sha": "c780bf8",
+    "date": "2026-03-20T19:37:38Z",
+    "type": "fix",
+    "scope": null,
+    "sprint": null,
+    "subject": "replace Leaflet with SVG map, update default scan modules"
+  },
+  {
+    "sha": "40938a5",
+    "date": "2026-03-20T19:16:46Z",
+    "type": "fix",
+    "scope": null,
+    "sprint": "S5",
+    "subject": "Sprint 5 scanner activation, leaflet, geoip labeling, health checks"
+  },
+  {
+    "sha": "492cdcb",
+    "date": "2026-03-20T18:43:53Z",
+    "type": "feat",
+    "scope": null,
+    "sprint": "S5",
+    "subject": "Sprint 5 — Data beast mode, 7 new intelligence scanners, admin polish"
+  },
+  {
+    "sha": "f7a1282",
+    "date": "2026-03-20T18:09:47Z",
+    "type": "feat",
+    "scope": null,
+    "sprint": null,
+    "subject": "dynamic API keys from modules + custom key support"
+  },
+  {
+    "sha": "140be7a",
+    "date": "2026-03-20T18:01:15Z",
+    "type": "feat",
+    "scope": null,
+    "sprint": "S4",
+    "subject": "Sprint 4 — Real intelligence, profile enrichment, location mapping"
+  },
+  {
+    "sha": "73e151b",
+    "date": "2026-03-20T17:37:27Z",
+    "type": "fix",
+    "scope": null,
+    "sprint": null,
+    "subject": "rename settings router import to avoid shadowing config.settings"
+  },
+  {
+    "sha": "dc4a430",
+    "date": "2026-03-20T13:22:38Z",
+    "type": "feat",
+    "scope": null,
+    "sprint": "S3",
+    "subject": "Sprint 3 — Settings pro, organizations, multi-workspace, fixes"
+  },
+  {
+    "sha": "eb5942f",
+    "date": "2026-03-20T12:59:32Z",
+    "type": "feat",
+    "scope": null,
+    "sprint": "S2",
+    "subject": "Sprint 2.5 — target quick view, system admin page, score fix"
+  },
+  {
+    "sha": "1a2ef7e",
+    "date": "2026-03-20T12:45:42Z",
+    "type": "docs",
+    "scope": null,
+    "sprint": "S2",
+    "subject": "update CLAUDE.md and README for Sprint 2"
+  },
+  {
+    "sha": "41b1a48",
+    "date": "2026-03-20T12:28:40Z",
+    "type": "feat",
+    "scope": null,
+    "sprint": "S2",
+    "subject": "Sprint 2 — TIP intelligence layer, 4 new scanners, admin UX overhaul"
+  },
+  {
+    "sha": "63104a2",
+    "date": "2026-03-20T12:07:43Z",
+    "type": "chore",
+    "scope": null,
+    "sprint": null,
+    "subject": "add dashboard package-lock.json for reproducible builds"
+  },
+  {
+    "sha": "528839d",
+    "date": "2026-03-20T12:07:25Z",
+    "type": "fix",
+    "scope": null,
+    "sprint": null,
+    "subject": "rewrite holehe scanner to use correct API (core.get_functions)"
+  },
+  {
+    "sha": "f7da1dc",
+    "date": "2026-03-20T11:57:05Z",
+    "type": "fix",
+    "scope": null,
+    "sprint": null,
+    "subject": "worker queues + scan dispatch error logging"
+  },
+  {
+    "sha": "2df31af",
+    "date": "2026-03-20T11:46:58Z",
+    "type": "fix",
+    "scope": null,
+    "sprint": null,
+    "subject": "use TIMESTAMP(timezone=True) on all model datetime columns"
+  },
+  {
+    "sha": "78be764",
+    "date": "2026-03-20T11:39:56Z",
+    "type": "fix",
+    "scope": null,
+    "sprint": null,
+    "subject": "add psycopg2-binary for sync SQLAlchemy engine in Celery workers"
+  },
+  {
+    "sha": "68846f1",
+    "date": "2026-03-20T11:36:58Z",
+    "type": "fix",
+    "scope": null,
+    "sprint": null,
+    "subject": "break circular import between scan_orchestrator and module_tasks"
+  },
+  {
+    "sha": "11d4574",
+    "date": "2026-03-20T11:30:20Z",
+    "type": "fix",
+    "scope": null,
+    "sprint": null,
+    "subject": "3 bugs blocking Docker build and scan execution"
+  },
+  {
+    "sha": "d441a10",
+    "date": "2026-03-20T11:12:10Z",
+    "type": "fix",
+    "scope": null,
+    "sprint": null,
+    "subject": "pin aiohttp/arabic-reshaper to unblock maigret install"
+  },
+  {
+    "sha": "d4d166a",
+    "date": "2026-03-20T11:02:19Z",
+    "type": "feat",
+    "scope": null,
+    "sprint": null,
+    "subject": "v0.1.0 — xpose MVP, Identity Threat Intelligence platform"
+  },
+  {
+    "sha": "21cff4f",
+    "date": "2026-03-20T11:51:12+01:00",
+    "type": "other",
+    "scope": null,
+    "sprint": null,
+    "subject": "Add files via upload"
+  }
+]
