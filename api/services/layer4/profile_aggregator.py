@@ -657,9 +657,12 @@ def _clean_name_value(raw_name):
     if len(name) < 3:
         return None
 
-    # Reject code/technical artifacts
-    if re.match(r'^[a-z_]+$', name) and len(name) < 15:
-        return None  # lowercase-only single word = username, not a name
+    # Reject code/technical artifacts AND lowercase short phrases (S134 fix #1).
+    # Real human names always have at least one capital — anything entirely lowercase
+    # under 15 chars is scraper junk ("about me", "home page", "log in", etc.).
+    if (re.match(r'^[a-z_]+$', name) or
+        re.match(r'^[a-z][a-z\s_\-]{1,13}[a-z]$', name)) and len(name) < 15:
+        return None
 
     # Reject platform names
     if name.strip().lower() in _PLATFORM_NAMES_SET:

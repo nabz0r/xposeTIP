@@ -224,5 +224,6 @@ def _scan_dict(s: Scan, target_email: str = None) -> dict:
         "findings_count": s.findings_count,
         "new_findings": s.new_findings,
         "error_log": s.error_log,
+        "cascade_state": s.cascade_state,
         "created_at": s.created_at.isoformat() if s.created_at else None,
     }

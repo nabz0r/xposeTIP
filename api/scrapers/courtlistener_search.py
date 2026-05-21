@@ -16,6 +16,26 @@ import requests
 
 logger = logging.getLogger(__name__)
 
+
+def _coerce_to_str(value) -> str:
+    """Normalize a Courtlistener field that may be str, list, dict, or None (S134 fix #2).
+
+    Courtlistener v4 API returns multi-party fields as either:
+      - "Smith, John" (single party, string)
+      - ["Smith, John", "Doe, Jane"] (multi-party, list)
+      - None (missing)
+
+    .lower() on a list raises AttributeError — this helper coerces to flat str.
+    """
+    if not value:
+        return ""
+    if isinstance(value, str):
+        return value
+    if isinstance(value, list):
+        return " ".join(str(v) for v in value if v)
+    return str(value)
+
+
 REDIS_DISABLE_KEY = "courtlistener:disabled"
 REDIS_DISABLE_TTL = 3600
 
@@ -141,8 +161,8 @@ def search_courtlistener(primary_name: str, api_key: str | None = None) -> list[
 
         findings = []
         for r in results[:MAX_RESULTS]:
-            case_name = r.get("caseName") or r.get("caseNameFull") or ""
-            party_field = r.get("party") or r.get("party_name") or ""
+            case_name = _coerce_to_str(r.get("caseName") or r.get("caseNameFull"))
+            party_field = _coerce_to_str(r.get("party") or r.get("party_name"))
             confidence = _compute_name_confidence(case_name, party_field, primary_name)
             if confidence < MIN_NAME_CONFIDENCE:
                 continue

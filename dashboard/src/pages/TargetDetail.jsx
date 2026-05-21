@@ -97,7 +97,12 @@ export default function TargetDetail() {
     pollRef.current = setInterval(async () => {
       try {
         const updated = await Promise.all(runningScans.map(s => getScan(s.id)))
-        const done = updated.every(s => s.status !== 'running' && s.status !== 'queued')
+        const done = updated.every(s => {
+          if (s.status === 'running' || s.status === 'queued') return false
+          // Status is completed/failed/cancelled. Keep polling if cascade still working.
+          // cascade_state === null/undefined means legacy scan (pre-S134) — treat as done.
+          return s.cascade_state == null || s.cascade_state === 'done' || s.cascade_state === 'failed'
+        })
         setScans(prev => prev.map(s => {
           const u = updated.find(x => x.id === s.id)
           return u || s
@@ -284,9 +289,17 @@ export default function TargetDetail() {
         </div>
       </div>
 
-      {/* Live scan progress */}
-      {scans.some(s => s.status === 'running' || s.status === 'queued') && (() => {
-        const runningScan = scans.find(s => s.status === 'running' || s.status === 'queued')
+      {/* Live scan progress — S134 extended to include cascade window */}
+      {scans.some(s =>
+        s.status === 'running' ||
+        s.status === 'queued' ||
+        (s.status === 'completed' && s.cascade_state && s.cascade_state !== 'done' && s.cascade_state !== 'failed')
+      ) && (() => {
+        const runningScan = scans.find(s =>
+          s.status === 'running' ||
+          s.status === 'queued' ||
+          (s.status === 'completed' && s.cascade_state && s.cascade_state !== 'done' && s.cascade_state !== 'failed')
+        )
         const progress = runningScan?.module_progress || {}
         const total = Object.keys(progress).length
         const completed = Object.values(progress).filter(s => s === 'completed' || s === 'failed' || s === 'skipped').length
@@ -296,12 +309,21 @@ export default function TargetDetail() {
           const scraperFrac = (scraperProgress.current || 0) / (scraperProgress.total || 120)
           pct = Math.round(((completed + scraperFrac) / total) * 100)
         }
+        // S134: during cascade, scraper modules are done — show cascade-based pct
+        if (runningScan?.status === 'completed' && runningScan?.cascade_state) {
+          const cascadeMap = { gathering: 75, computing: 85, similarity: 95, done: 100 }
+          pct = cascadeMap[runningScan.cascade_state] ?? pct
+        }
         return (
           <div className="bg-[#12121a] border border-[#00ff88]/20 rounded-xl p-4 animate-pulse-subtle">
             <div className="flex items-center justify-between mb-3">
               <div className="flex items-center gap-2">
                 <div className="w-2 h-2 rounded-full bg-[#00ff88] animate-pulse" />
-                <span className="text-sm font-medium">Scanning {target.email}...</span>
+                <span className="text-sm font-medium">
+                  {runningScan.status === 'completed'
+                    ? `Computing intelligence for ${target.email}...`
+                    : `Scanning ${target.email}...`}
+                </span>
                 <span className="text-xs text-gray-500">{completed}/{total} modules</span>
               </div>
               <div className="flex items-center gap-3">
@@ -338,6 +360,34 @@ export default function TargetDetail() {
                 )}
               </div>
             )}
+            {runningScan.status === 'completed' && runningScan.cascade_state && runningScan.cascade_state !== 'done' && (
+              <div className="mb-3 px-3 py-2 rounded bg-[#0a0a0f] border border-[#1e1e2e]">
+                <div className="text-[10px] uppercase tracking-wider text-gray-500 mb-2">Computing intelligence</div>
+                <div className="flex items-center gap-2 text-xs">
+                  {[
+                    { key: 'gathering', label: 'Gather' },
+                    { key: 'computing', label: 'Compute' },
+                    { key: 'similarity', label: 'Similarity' },
+                  ].map(({ key, label }, idx, arr) => {
+                    const states = ['gathering', 'computing', 'similarity', 'done']
+                    const currentIdx = states.indexOf(runningScan.cascade_state)
+                    const stepIdx = states.indexOf(key)
+                    const isDone = stepIdx < currentIdx
+                    const isActive = stepIdx === currentIdx
+                    return (
+                      <div key={key} className="flex items-center gap-1.5">
+                        {isDone ? <CheckCircle className="w-3 h-3 text-[#00ff88]" /> :
+                         isActive ? <Radar className="w-3 h-3 text-[#3388ff] animate-spin" /> :
+                         <div className="w-3 h-3 rounded-full border border-gray-600" />}
+                        <span className={isDone ? 'text-[#00ff88]' : isActive ? 'text-[#3388ff]' : 'text-gray-600'}>{label}</span>
+                        {idx < arr.length - 1 && <span className="text-gray-700">›</span>}
+                      </div>
+                    )
+                  })}
+                </div>
+              </div>
+            )}
+
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-1.5">
               {Object.entries(progress).map(([mod, st]) => (
                 <div key={mod} className="flex items-center gap-1.5 text-xs font-mono px-2 py-1 rounded bg-[#0a0a0f]">

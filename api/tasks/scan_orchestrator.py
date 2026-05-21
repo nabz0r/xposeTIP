@@ -211,6 +211,21 @@ def launch_scan(self, scan_id: str):
         session.close()
 
 
+def _set_cascade_state(session, scan, state: str):
+    """Update scan.cascade_state and commit. Logs on failure but never raises
+    — cascade state is observability, not correctness-critical."""
+    try:
+        scan.cascade_state = state
+        session.commit()
+        logger.debug("cascade_state[%s] -> %s", scan.id, state)
+    except Exception:
+        logger.exception("Failed to set cascade_state=%s for scan %s", state, scan.id)
+        try:
+            session.rollback()
+        except Exception:
+            pass
+
+
 @celery_app.task(name="api.tasks.scan_orchestrator.finalize_scan")
 def finalize_scan(scan_id: str):
     from api.models.scan import Scan
@@ -245,6 +260,9 @@ def finalize_scan(scan_id: str):
                 target.first_scanned = datetime.now(timezone.utc)
 
         session.commit()
+
+        # S134 — cascade visibility (status='completed' is misleading; cascade still has Phase A/B + similarity)
+        _set_cascade_state(session, scan, "gathering")
 
         # ═══════════════════════════════════════════════════════════════
         # PHASE A — GATHER (create all findings before graph/score/profile)
@@ -352,6 +370,8 @@ def finalize_scan(scan_id: str):
         except Exception:
             logger.exception("Pass 2 public exposure enrichment failed for %s", scan.target_id)
         logger.info("PIPELINE[%s]: pass2 done", scan.target_id)
+
+        _set_cascade_state(session, scan, "computing")
 
         # ═══════════════════════════════════════════════════════════════
         # PHASE B — COMPUTE (all findings now in DB)
@@ -703,6 +723,8 @@ def finalize_scan(scan_id: str):
         except Exception:
             pass
 
+        _set_cascade_state(session, scan, "similarity")
+
         # S131 — enqueue similarity recompute (async, non-blocking)
         try:
             from api.tasks.similarity import recompute_similarities_for_target
@@ -713,12 +735,19 @@ def finalize_scan(scan_id: str):
         except Exception:
             logger.warning("Failed to enqueue similarity recompute for %s (non-fatal)", scan.target_id)
 
+        _set_cascade_state(session, scan, "done")
+
         # No-cascade guard: Phase A.5 rescans do NOT trigger follow-up discovery
         if getattr(scan, "scan_type", None) == "discovery_rescan":
             logger.info("Skipping discovery trigger for Phase A.5 rescan %s", scan_id)
 
     except Exception:
         session.rollback()
+        try:
+            if scan is not None:
+                _set_cascade_state(session, scan, "failed")
+        except Exception:
+            pass
         logger.exception("finalize_scan failed for %s", scan_id)
         raise
     finally:
