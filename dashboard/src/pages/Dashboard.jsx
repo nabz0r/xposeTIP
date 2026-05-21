@@ -9,13 +9,23 @@ import FingerprintRadar from '../components/FingerprintRadar'
 import GenerativeAvatar from '../components/GenerativeAvatar'
 import useSSE from '../hooks/useSSE'
 
+// Aligned with backend _email_only_avatar_seed (api/routers/targets.py).
+// Returned shape must match for visual consistency if the backend value is missing.
+// Defense in depth — post-S135 the backend always populates fingerprint_avatar_seed,
+// but this fallback keeps avatars deterministic on legacy clients / stale caches.
 const fallbackSeed = (email) => {
   let hash = 0
   for (let i = 0; i < (email || '').length; i++) {
     hash = ((hash << 5) - hash) + email.charCodeAt(i)
     hash |= 0
   }
-  return { email_hash: Math.abs(hash) }
+  const eh = Math.abs(hash)
+  return {
+    email_hash: eh % 10000,
+    hue: (eh % 60) + 120,
+    num_points: 3,
+    rotation: eh % 360,
+  }
 }
 
 const severityColors = {
@@ -143,7 +153,7 @@ export default function Dashboard() {
               </div>
             </div>
             <div className="flex items-center gap-3">
-              {topFingerprint ? (
+              {topFingerprint && topFingerprint.axes && Object.values(topFingerprint.axes).some(v => v > 0) ? (
                 <FingerprintRadar fingerprint={topFingerprint} size="small" animate={true} />
               ) : (
                 <ScoreRing score={topTarget.exposure_score} size={60} />
@@ -223,10 +233,14 @@ export default function Dashboard() {
                     <div className="text-sm font-medium truncate">{t.primary_name || t.display_name || t.email}</div>
                     {(t.primary_name || t.display_name) && <div className="text-[10px] text-gray-600 font-mono truncate">{t.email}</div>}
                   </div>
-                  {/* Mini radar */}
-                  {t.fingerprint_axes && (
+                  {/* Mini radar — show only when at least one axis has data; else ScoreRing */}
+                  {t.fingerprint_axes && Object.values(t.fingerprint_axes).some(v => v > 0) ? (
                     <div className="shrink-0">
                       <FingerprintRadar fingerprint={{ axes: t.fingerprint_axes, color: '#00ff88', fill_color: 'rgba(0,255,136,0.1)' }} size="small" />
+                    </div>
+                  ) : (
+                    <div className="shrink-0 w-[44px] h-[44px] flex items-center justify-center">
+                      <ScoreRing score={t.exposure_score || 0} size={44} />
                     </div>
                   )}
                   {/* Scores */}

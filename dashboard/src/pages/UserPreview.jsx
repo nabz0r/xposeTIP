@@ -5,13 +5,21 @@ import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'rec
 import { getTargets, getRemediation, getFingerprintHistory } from '../lib/api'
 import GenerativeAvatar from '../components/GenerativeAvatar'
 
+// Aligned with backend _email_only_avatar_seed (api/routers/targets.py).
+// Defense in depth — post-S135 backend always populates fingerprint_avatar_seed.
 const fallbackSeed = (email) => {
   let hash = 0
   for (let i = 0; i < (email || '').length; i++) {
     hash = ((hash << 5) - hash) + email.charCodeAt(i)
     hash |= 0
   }
-  return { email_hash: Math.abs(hash) }
+  const eh = Math.abs(hash)
+  return {
+    email_hash: eh % 10000,
+    hue: (eh % 60) + 120,
+    num_points: 3,
+    rotation: eh % 360,
+  }
 }
 
 const riskLabel = (score) => {

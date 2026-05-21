@@ -15,6 +15,42 @@ from api.models.workspace import Workspace
 router = APIRouter()
 
 
+# ─── Fingerprint defaults — used when a target has no computed fingerprint yet ──
+# 9-axis schema mirror of api/services/layer4/fingerprint_engine.py FINGERPRINT_AXES
+DEFAULT_FP_AXES = {
+    "accounts": 0,
+    "platforms": 0,
+    "username_reuse": 0,
+    "breaches": 0,
+    "geo_spread": 0,
+    "data_leaked": 0,
+    "email_age": 0,
+    "security": 0,
+    "public_exposure": 0,
+}
+
+
+def _email_only_avatar_seed(email: str) -> dict:
+    """Generate a minimal avatar_seed for targets without a computed fingerprint.
+
+    Mirrors fingerprint_engine._compute_avatar_seed for axes={}, eigenvalues=[].
+    Guarantees the same avatar before and after a data-starved first scan.
+    """
+    import hashlib
+    email_hash = int(hashlib.md5((email or "").lower().encode()).hexdigest()[:8], 16)
+    return {
+        "num_points": 3,
+        "rotation": email_hash % 360,
+        "inner_radius": 0.3,
+        "hue": (email_hash % 60) + 120,
+        "saturation": 40,
+        "lightness": 45,
+        "eigenvalues": [],
+        "complexity": 0,
+        "email_hash": email_hash % 10000,
+    }
+
+
 class TargetCreate(BaseModel):
     email: EmailStr
     country_code: str | None = None
@@ -755,8 +791,8 @@ def _target_dict(t: Target) -> dict:
         "fingerprint_hash": fp.get("hash") if fp else None,
         "fingerprint_score": fp.get("score") if fp else None,
         "fingerprint_risk": fp.get("risk_level") if fp else None,
-        "fingerprint_avatar_seed": fp.get("avatar_seed") if fp else None,
-        "fingerprint_axes": fp.get("axes") if fp else None,
+        "fingerprint_avatar_seed": (fp.get("avatar_seed") if fp else None) or _email_only_avatar_seed(t.email),
+        "fingerprint_axes": (fp.get("axes") if fp else None) or DEFAULT_FP_AXES,
         "location_data": best_location,
         "location_label": profile.get("location", ""),
         "geo_locations": profile.get("geo_locations", []),

@@ -134,6 +134,19 @@ export default function TargetDetail() {
             setToast({ type: 'success', message: `Scan completed — ${newCount > 0 ? newCount : 0} new findings` })
           }
           setTimeout(() => setToast(null), 5000)
+
+          // S135 follow-up: cascade can transition gathering -> done in <3s
+          // (faster than poll interval). One extra fetch after 2s guarantees
+          // we observe the final state even on fast cascades — block hides
+          // without requiring page refresh.
+          setTimeout(async () => {
+            try {
+              const finalScans = await Promise.all(runningScans.map(s => getScan(s.id)))
+              setScans(prev => prev.map(s => finalScans.find(x => x.id === s.id) || s))
+            } catch {
+              // Silent — if the second fetch fails, the user can refresh
+            }
+          }, 2000)
         }
       } catch {}
     }, 3000)
