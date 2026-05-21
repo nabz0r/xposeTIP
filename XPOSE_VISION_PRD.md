@@ -1,6 +1,6 @@
 # xposeTIP — Product Vision & Requirements Document
 
-**Version**: 1.1 (live)
+**Version**: 1.2 (live)
 **Author**: Nabil Ksontini (nabz0r) — PM + Lead Dev
 **Date**: May 2026
 **Status**: In production — v1.2.0

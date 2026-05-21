@@ -60,6 +60,31 @@
 | 104.7 | Discovery Engine: Final quality — page relevance, common name blocklist, generic fallback removal |
 | 105 (E) | Discovery Engine: Celery task + 3 API endpoints + 4 SSE event types |
 | 106 (F) | Discovery Engine: Discovered tab — launch, lead cards, dismiss/undo, filter pills, chain view |
+| 107-110 | Discovery UX polish chain (v1.1.1-v1.1.4): event trail + zombie guard + junk filter + EmailRep API key + avatar fix + PivotStrategy engine + multi-round pivot execution |
+| 111-112 | Auto-ingest + Phase A.5 targeted rescan (v1.1.5) + stability hotfixes (v1.1.6: graph dedup, discovery timeout, junk filter) |
+| 113-114 | Comprehensive hotfix (v1.1.7: timeouts, UI, email_age, tabs) + module cleanup (v1.1.8: 9 phantoms removed/disabled) |
+| 115-117 | Secondary identifier pipeline (v1.1.9: finalize_scan A1.5/A1.6 steps) + Phone + crypto scrapers (v1.1.10: 6 sources seeded disabled, key-based JSONB extraction) + OSS readiness (v1.1.11: LICENSE flip to AGPL-3.0, CLA infra, gitleaks audit clean) |
+| 118 | 4-tier SaaS alignment (v1.1.12): consultant→starter plan rename, new Team tier, Alembic migration 012, frontend planColors shared module |
+| 119 | Courtlistener (v1.1.13): US federal court scraper MVP, RECAP archive via REST API v4, token auth, legal_record indicator_type |
+| 120 | EU legal scrapers (v1.1.14): BODACC (FR procédures collectives) + UK Gazette (London/Edinburgh/Belfast) |
+| S119-S120 | Risk Signals UI block on Overview (v1.1.15) + Findings tab preset filter chips with shared `lib/findingFilters.js` (v1.1.16) |
+| S121 + S121b | Doc drift closure post-S116→S120: stale landing JSX refs, DEMO_SCRIPT pricing table aligned with S113 4-tier |
+| S122 chain (S122a → S122e-holdover) | Per-scraper attempt logging in `attempt_log` JSONB, `name_scraper_engine` factored out, aggregator tie-break (Gravatar email-verified beats heuristic), emoji regex extended to U+2600 block, 2 Gravatar duplicates disabled, pastebin_user HTML extraction fixed, low-confidence severity for placeholder name-scrapers |
+| S123 | Holdover rollback + courtlistener defensive: PASS2 int→str coerce for indicator_value, courtlistener RECAP shape variant parse |
+| S124-S126 | Verified provenance UI per finding (tier badges + cross-verif + first_seen/last_seen timeline) + Recalculate Profiles retro-rebuild + match_confidence row in ProvenanceCard |
+| S127-S129 | name_scraper_engine sequential dispatch post-A3 + telemetry rectification (scraper_engine returns (found, reason), no_data classification for explicit_not_found/blocked_403) + Pass 1 username dispatch gated by is_valid_username (HN-style 400 fix) |
+| S130 | Doc closure + v1.2.0 stamp: scripts/seed_scrapers.py audit (127/110/17/11 cats), SPRINT_LOG backfill S121-S130, DEMO_SCRIPT archived as Nexus v1 + rewritten dual Play 1/Play 2 narrative |
+| S131 | DB-persisted similarity engine: Alembic 013 (`target_similarities` table), 9-axis cosine threshold 0.70, `first_detected` preserved across recomputes, Celery task post scan.completed, `GET /targets/{id}/similar`, `SimilarityBlock.jsx` on Overview tab |
+| S132 | Landing refresh + Compare page: 6-card FeaturesSection, TwoWaysSection (Play 1 purple / Play 2 green), `/compare` route + Compare.jsx (tri-segment matrix + SVG quadrant) |
+| S133 | TopoJSON geomap: world-atlas 110m, D3 Natural Earth, country-density heatmap, zoom/pan 1-8×, `lib/geo.js` (useWorldData/useZoom), `topojson-client` dep |
+| S134 | R4 cleanup combo: `_clean_name_value` regex tightening + Courtlistener defensive cast + NEW `scans.cascade_state` (Alembic 014, gathering/computing/similarity/done/failed) + cascade stepper UI |
+| S135 | UI polish 4-pack: backend always-non-null fingerprint_avatar_seed/axes, `TargetDetail` post-`done` re-fetch kills cascade race, fallbackSeed aligned across 4 consumers |
+| S136 | Glyph in header dual-avatar (80px photo + 32px glyph badge) + Fingerprint Evolution scroll cue (right/left fades + drag hint + scroll-snap) |
+| S137 | Cleanup combo: centralized `fallbackSeed` → `dashboard/src/lib/avatar.js`, NEW `docs/qa/SMOKE_PROTOCOL.md` |
+| S138 | Public nav + footer unification: NEW `PublicNav.jsx` + `PublicFooter.jsx` shared across 4 public pages, active state via `useLocation()`, deleted `LandingFooter.jsx` + `ArchFooter.jsx`, `ArchCTA` extracted, `/changelog` link pre-added |
+| S139 | Pricing tweaks: dropped `price` field from Starter/Team/Enterprise, Free keeps "€0 forever", `PricingSection` conditional render |
+| S140 | Architecture full sexy refresh: 3 new stages (Cascade/Similarity/Discovery) + diagrams, hero stat banner 127·9·5.4B·11·0, NEW TechStackSection.jsx, ScraperBreakdown active/disabled split (110/17), RoadmapSection v1 backfill, CollectDiagram counts realigned (127) |
+| S141 | `/changelog` public page parsed from git log: build-time `generate-changelog.mjs` via predev/prebuild hooks, 210 commits in JSON, filterable timeline grouped by month |
 
 ## Known issues
 
