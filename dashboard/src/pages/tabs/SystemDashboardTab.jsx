@@ -1,14 +1,16 @@
 import React, { useEffect, useState } from 'react'
 import { RefreshCw, XCircle } from 'lucide-react'
 import { getSystemStats } from '../../lib/api'
+import { useAuth } from '../../lib/auth'
 import useSSE from '../../hooks/useSSE'
 
 export default function SystemDashboardTab() {
+  const { refreshKey } = useAuth()
   const [stats, setStats] = useState(null)
   const [loading, setLoading] = useState(true)
   const [refreshing, setRefreshing] = useState(false)
 
-  useEffect(() => { loadStats() }, [])
+  useEffect(() => { loadStats() }, [refreshKey])
   useSSE({ 'scan.completed': () => loadStats() })
 
   async function loadStats() {

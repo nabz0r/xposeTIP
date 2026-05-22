@@ -1,7 +1,9 @@
 import React, { useEffect, useState } from 'react'
 import { getNameBlacklist, addNameBlacklist, removeNameBlacklist } from '../../lib/api'
+import { useAuth } from '../../lib/auth'
 
 export default function SystemNameRulesTab() {
+  const { refreshKey } = useAuth()
   const [entries, setEntries] = useState([])
   const [loading, setLoading] = useState(true)
   const [newPattern, setNewPattern] = useState('')
@@ -10,7 +12,7 @@ export default function SystemNameRulesTab() {
   const [testName, setTestName] = useState('')
   const [testResult, setTestResult] = useState(null)
 
-  useEffect(() => { loadEntries() }, [])
+  useEffect(() => { loadEntries() }, [refreshKey])
 
   async function loadEntries() {
     try {

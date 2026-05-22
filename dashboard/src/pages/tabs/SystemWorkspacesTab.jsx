@@ -1,12 +1,14 @@
 import React, { useEffect, useState } from 'react'
 import { adminListWorkspaces, updateWorkspacePlan } from '../../lib/api'
 import { planColors } from '../../lib/planColors'
+import { useAuth } from '../../lib/auth'
 
 export default function SystemWorkspacesTab() {
+  const { refreshKey } = useAuth()
   const [workspaces, setWorkspaces] = useState([])
   const [loading, setLoading] = useState(true)
 
-  useEffect(() => { loadWorkspaces() }, [])
+  useEffect(() => { loadWorkspaces() }, [refreshKey])
 
   async function loadWorkspaces() {
     try {

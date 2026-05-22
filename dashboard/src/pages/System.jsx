@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { LayoutDashboard, HeartPulse, Puzzle, ScrollText, Users, Building2, ShieldBan } from 'lucide-react'
+import { LayoutDashboard, HeartPulse, Puzzle, ScrollText, Users, Building2, ShieldBan, Radar } from 'lucide-react'
 import { useAuth } from '../lib/auth'
 import LogViewer from '../components/LogViewer'
 import SystemDashboardTab from './tabs/SystemDashboardTab'
@@ -8,6 +8,7 @@ import SystemModulesTab from './tabs/SystemModulesTab'
 import SystemUsersTab from './tabs/SystemUsersTab'
 import SystemWorkspacesTab from './tabs/SystemWorkspacesTab'
 import SystemNameRulesTab from './tabs/SystemNameRulesTab'
+import SystemLiveScansTab from './tabs/SystemLiveScansTab'
 
 export default function System() {
   const [activeTab, setActiveTab] = useState('dashboard')
@@ -28,6 +29,7 @@ export default function System() {
     { id: 'modules', label: 'Modules', icon: Puzzle },
     { id: 'logs', label: 'Logs', icon: ScrollText },
     ...(isSuperAdmin ? [
+      { id: 'livescans', label: 'Live Scans', icon: Radar },
       { id: 'users', label: 'Users', icon: Users },
       { id: 'workspaces', label: 'Workspaces', icon: Building2 },
       { id: 'namerules', label: 'Name Rules', icon: ShieldBan },
@@ -64,6 +66,7 @@ export default function System() {
       {activeTab === 'health' && <SystemHealthTab />}
       {activeTab === 'modules' && <SystemModulesTab />}
       {activeTab === 'logs' && <LogViewer />}
+      {activeTab === 'livescans' && isSuperAdmin && <SystemLiveScansTab />}
       {activeTab === 'users' && isSuperAdmin && <SystemUsersTab />}
       {activeTab === 'workspaces' && isSuperAdmin && <SystemWorkspacesTab />}
       {activeTab === 'namerules' && isSuperAdmin && <SystemNameRulesTab />}

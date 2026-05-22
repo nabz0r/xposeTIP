@@ -337,6 +337,97 @@ async def recalculate_fingerprints(
 
 # ---- Platform Admin (superadmin only) ----
 
+# S152: Live scans cross-workspace view for superadmin monitoring.
+# Returns all in-flight scans (running / queued / cascade-active) joined
+# with target email and workspace name. No workspace_id filter — this is
+# the platform-wide view.
+@router.get("/scans/live")
+async def list_live_scans(
+    role: str = Depends(require_role("superadmin")),
+    db: AsyncSession = Depends(get_db),
+):
+    from sqlalchemy import and_, or_
+
+    rows = await db.execute(
+        select(Scan, Target.email, Workspace.name)
+        .join(Target, Scan.target_id == Target.id, isouter=True)
+        .join(Workspace, Scan.workspace_id == Workspace.id, isouter=True)
+        .where(
+            or_(
+                Scan.status == "running",
+                Scan.status == "queued",
+                and_(
+                    Scan.status == "completed",
+                    Scan.cascade_state.isnot(None),
+                    Scan.cascade_state.notin_(["done", "failed"]),
+                ),
+            )
+        )
+        .order_by(Scan.created_at.desc())
+    )
+
+    now = datetime.now(timezone.utc)
+    items = []
+    for scan, target_email, workspace_name in rows.all():
+        progress = scan.module_progress or {}
+        modules_total = len(progress)
+        modules_done = sum(
+            1 for v in progress.values()
+            if v in ("completed", "failed", "skipped")
+        )
+
+        # Age in seconds — prefer started_at, fall back to created_at for queued scans
+        anchor = scan.started_at or scan.created_at
+        age_seconds = int((now - anchor).total_seconds()) if anchor else None
+
+        items.append({
+            "id": str(scan.id),
+            "workspace_id": str(scan.workspace_id),
+            "workspace_name": workspace_name or "—",
+            "target_id": str(scan.target_id),
+            "target_email": target_email or "—",
+            "status": scan.status,
+            "cascade_state": scan.cascade_state,
+            "scan_type": scan.scan_type,
+            "modules_total": modules_total,
+            "modules_done": modules_done,
+            "started_at": scan.started_at.isoformat() if scan.started_at else None,
+            "created_at": scan.created_at.isoformat() if scan.created_at else None,
+            "age_seconds": age_seconds,
+        })
+
+    return {"items": items, "total": len(items)}
+
+
+# S152: Superadmin cross-workspace scan cancel. Mirrors /scans/{id}/cancel
+# but without the Scan.workspace_id == workspace_id filter, so a superadmin
+# can kill a stuck scan in any workspace from the Live Scans view.
+@router.post("/scans/{scan_id}/cancel")
+async def superadmin_cancel_scan(
+    scan_id: str,
+    role: str = Depends(require_role("superadmin")),
+    db: AsyncSession = Depends(get_db),
+):
+    result = await db.execute(select(Scan).where(Scan.id == uuid.UUID(scan_id)))
+    scan = result.scalar_one_or_none()
+    if not scan:
+        raise HTTPException(status_code=404, detail="Scan not found")
+
+    if scan.celery_task_id:
+        try:
+            from api.tasks import celery_app
+            celery_app.control.revoke(scan.celery_task_id, terminate=True)
+        except Exception:
+            logger.exception("revoke failed for scan %s (non-fatal)", scan.id)
+
+    scan.status = "cancelled"
+    scan.completed_at = datetime.now(timezone.utc)
+    if scan.cascade_state and scan.cascade_state not in ("done", "failed"):
+        scan.cascade_state = "failed"
+    await db.commit()
+    return {"id": str(scan.id), "status": "cancelled"}
+
+
 @router.get("/users")
 async def list_all_users(
     role: str = Depends(require_role("superadmin")),

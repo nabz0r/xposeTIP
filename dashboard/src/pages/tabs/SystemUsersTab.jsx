@@ -2,18 +2,20 @@ import React, { useEffect, useState } from 'react'
 import { Search, ChevronDown, ChevronRight } from 'lucide-react'
 import { adminListUsers, adminUpdateUser } from '../../lib/api'
 import { planColors } from '../../lib/planColors'
+import { useAuth } from '../../lib/auth'
 
 const roleColors = {
   superadmin: '#ff2244', admin: '#ff8800', consultant: '#3388ff', client: '#00ff88', user: '#666688',
 }
 
 export default function SystemUsersTab() {
+  const { refreshKey } = useAuth()
   const [users, setUsers] = useState([])
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
   const [expanded, setExpanded] = useState(null)
 
-  useEffect(() => { loadUsers() }, [])
+  useEffect(() => { loadUsers() }, [refreshKey])
 
   async function loadUsers() {
     try {

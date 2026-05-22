@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import { RefreshCw, CheckCircle, XCircle, AlertCircle, ChevronDown, ChevronRight } from 'lucide-react'
 import { getSystemStats, patchModule } from '../../lib/api'
+import { useAuth } from '../../lib/auth'
 
 const statusIcon = (status) => {
   if (status === 'healthy') return <CheckCircle className="w-4 h-4 text-[#00ff88]" />
@@ -9,11 +10,12 @@ const statusIcon = (status) => {
 }
 
 export default function SystemModulesTab() {
+  const { refreshKey } = useAuth()
   const [stats, setStats] = useState(null)
   const [loading, setLoading] = useState(true)
   const [expandedModule, setExpandedModule] = useState(null)
 
-  useEffect(() => { loadModules() }, [])
+  useEffect(() => { loadModules() }, [refreshKey])
 
   async function loadModules() {
     try {

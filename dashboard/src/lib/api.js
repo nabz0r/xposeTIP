@@ -117,6 +117,8 @@ export const recalculateProfiles = () => request('/system/recalculate-profiles',
 export const recalculateFingerprints = () => request('/system/recalculate-fingerprints', { method: 'POST' })
 export const getLogs = (params = '') => request(`/system/logs${params ? '?' + params : ''}`)
 export const clearLogs = () => request('/system/logs', { method: 'DELETE' })
+export const getLiveScans = () => request('/system/scans/live')
+export const superadminCancelScan = (scanId) => request(`/system/scans/${scanId}/cancel`, { method: 'POST' })
 
 // Admin (superadmin only)
 export const adminListUsers = () => request('/system/users')

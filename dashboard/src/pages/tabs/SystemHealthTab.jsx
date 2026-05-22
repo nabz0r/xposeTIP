@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import { RefreshCw, Database, Server, Cpu, Wifi, CheckCircle, XCircle, AlertCircle, Users, ShieldBan } from 'lucide-react'
 import { getSystemStats, recalculateScores, recalculateProfiles, recalculateFingerprints, checkAllModulesHealth } from '../../lib/api'
+import { useAuth } from '../../lib/auth'
 
 const statusIcon = (status) => {
   if (status === 'healthy') return <CheckCircle className="w-4 h-4 text-[#00ff88]" />
@@ -71,6 +72,7 @@ function InfraCard({ name, data }) {
 }
 
 export default function SystemHealthTab() {
+  const { refreshKey } = useAuth()
   const [stats, setStats] = useState(null)
   const [loading, setLoading] = useState(true)
   const [refreshing, setRefreshing] = useState(false)
@@ -79,7 +81,7 @@ export default function SystemHealthTab() {
   const [recalcFingerprints, setRecalcFingerprints] = useState(false)
   const [healthChecking, setHealthChecking] = useState(false)
 
-  useEffect(() => { loadStats() }, [])
+  useEffect(() => { loadStats() }, [refreshKey])
 
   async function loadStats() {
     try {
