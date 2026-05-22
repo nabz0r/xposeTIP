@@ -782,6 +782,13 @@ def _create_pe_graph_edges(finding_dicts: list, target, session):
 
     Creates weak edges (excluded from clustering) between the email anchor
     and PE entity nodes.
+
+    S150: idempotent on rescan. Get-or-create both Identity and IdentityLink
+    rows to handle the case where prior scans already inserted the same
+    (workspace_id, target_id, type, value) tuple. Pre-S150 behavior was a
+    silent IntegrityError that left the session in PendingRollbackError,
+    rolling back all uncommitted Pass 2 Findings and graph edges in the
+    process (silent data loss on rescan).
     """
     from api.models.identity import Identity, IdentityLink
 
@@ -798,6 +805,7 @@ def _create_pe_graph_edges(finding_dicts: list, target, session):
         return
 
     edges_created = 0
+    edges_reused = 0
     for fd in finding_dicts:
         ind_type = fd.get("indicator_type", "media_mention")
         edge_type = _PE_EDGE_TYPES.get(ind_type)
@@ -807,19 +815,66 @@ def _create_pe_graph_edges(finding_dicts: list, target, session):
         data = fd.get("data", {})
         display = fd.get("title", fd.get("url", ""))[:200]
         confidence = fd.get("confidence", 0.5)
+        value = (fd.get("indicator_value") or fd.get("url") or display)[:500]
 
         try:
-            entity_node = Identity(
-                target_id=target.id,
-                workspace_id=target.workspace_id,
-                type=ind_type,
-                value=(fd.get("indicator_value") or fd.get("url") or display)[:500],
-                platform=data.get("scraper", "public_exposure"),
-                source_module=data.get("scraper", "public_exposure"),
-                confidence=confidence,
-            )
-            session.add(entity_node)
-            session.flush()
+            # ── Get-or-create Identity entity node ────────────────────────
+            entity_node = session.execute(
+                select(Identity).where(
+                    Identity.workspace_id == target.workspace_id,
+                    Identity.target_id == target.id,
+                    Identity.type == ind_type,
+                    Identity.value == value,
+                )
+            ).scalar_one_or_none()
+
+            if entity_node is None:
+                entity_node = Identity(
+                    target_id=target.id,
+                    workspace_id=target.workspace_id,
+                    type=ind_type,
+                    value=value,
+                    platform=data.get("scraper", "public_exposure"),
+                    source_module=data.get("scraper", "public_exposure"),
+                    confidence=confidence,
+                )
+                session.add(entity_node)
+                try:
+                    session.flush()
+                except Exception:
+                    # Concurrent insert or unexpected dup — clear pending
+                    # state and re-fetch. Without this rollback, the session
+                    # would remain in PendingRollbackError and any downstream
+                    # commit would silently roll back Pass 2 Findings.
+                    session.rollback()
+                    entity_node = session.execute(
+                        select(Identity).where(
+                            Identity.workspace_id == target.workspace_id,
+                            Identity.target_id == target.id,
+                            Identity.type == ind_type,
+                            Identity.value == value,
+                        )
+                    ).scalar_one_or_none()
+                    if entity_node is None:
+                        logger.debug(
+                            "PASS2: Identity flush+refetch failed for %s/%s — skipping edge",
+                            ind_type, value[:80],
+                        )
+                        continue
+
+            # ── Get-or-create IdentityLink ────────────────────────────────
+            existing_link = session.execute(
+                select(IdentityLink).where(
+                    IdentityLink.workspace_id == target.workspace_id,
+                    IdentityLink.source_id == email_node.id,
+                    IdentityLink.dest_id == entity_node.id,
+                    IdentityLink.link_type == edge_type,
+                )
+            ).scalar_one_or_none()
+
+            if existing_link is not None:
+                edges_reused += 1
+                continue
 
             link = IdentityLink(
                 workspace_id=target.workspace_id,
@@ -830,13 +885,28 @@ def _create_pe_graph_edges(finding_dicts: list, target, session):
                 source_module=data.get("scraper", "public_exposure"),
             )
             session.add(link)
-            edges_created += 1
+            try:
+                session.flush()
+                edges_created += 1
+            except Exception:
+                session.rollback()
+                logger.debug(
+                    "PASS2: Link flush failed for %s/%s/%s — skipping",
+                    email_node.id, entity_node.id, edge_type,
+                )
         except Exception:
             logger.debug("PASS2: Failed to create edge for %s", display[:60], exc_info=True)
 
-    if edges_created > 0:
-        session.flush()
-        logger.info("PASS2: Created %d graph edges", edges_created)
+    if edges_created > 0 or edges_reused > 0:
+        try:
+            session.flush()
+            logger.info(
+                "PASS2: %d new graph edges created, %d reused (idempotent rescan)",
+                edges_created, edges_reused,
+            )
+        except Exception:
+            logger.exception("PASS2: Final flush failed")
+            session.rollback()
 
 
 # ---------------------------------------------------------------------------
