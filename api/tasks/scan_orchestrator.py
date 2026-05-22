@@ -203,9 +203,23 @@ def launch_scan(self, scan_id: str):
         session.commit()
 
         from api.tasks.module_tasks import run_module
+        from api.tasks.utils import stash_scan_child_tasks
         module_tasks = [run_module.s(scan_id, mod, email) for mod in modules]
         callback = finalize_scan.si(scan_id)
-        chord(module_tasks)(callback)
+        chord_result = chord(module_tasks)(callback)
+
+        # S153: persist child task IDs in Redis so cancel can revoke them.
+        # chord_result.parent is the GroupResult holding the per-module tasks;
+        # chord_result itself is the callback's AsyncResult.
+        try:
+            child_ids = []
+            if chord_result.parent and chord_result.parent.children:
+                child_ids = [c.id for c in chord_result.parent.children]
+            if chord_result.id:
+                child_ids.append(chord_result.id)
+            stash_scan_child_tasks(scan_id, child_ids)
+        except Exception:
+            logger.exception("S153: stash_scan_child_tasks failed for %s (non-fatal)", scan_id)
 
         return {"status": "launched", "modules": modules}
     except Exception:
@@ -242,6 +256,19 @@ def finalize_scan(scan_id: str):
     try:
         scan = session.execute(select(Scan).where(Scan.id == uuid.UUID(scan_id))).scalar_one_or_none()
         if not scan:
+            return
+
+        # S153: respect cancellation. The chord callback fires regardless of
+        # cancel state. Without this guard, finalize_scan would overwrite
+        # status='cancelled' back to 'completed' and run Phase A/B pipeline
+        # on a scan the operator explicitly killed, leaving cascade_state
+        # stuck at an intermediate value (smoke evidence: T3 cancel → stuck
+        # at 'gathering').
+        if scan.status == "cancelled":
+            logger.info(
+                "finalize_scan: scan %s was cancelled before callback fired; skipping pipeline",
+                scan.id,
+            )
             return
 
         # Count findings

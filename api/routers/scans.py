@@ -1,4 +1,6 @@
+import logging
 import uuid
+from datetime import datetime, timezone
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from pydantic import BaseModel
@@ -17,6 +19,7 @@ from api.models.workspace import Workspace
 from api.tasks.module_tasks import SCANNER_REGISTRY
 
 router = APIRouter()
+logger = logging.getLogger(__name__)
 
 
 DEFAULT_QUICK_MODULES = [
@@ -179,14 +182,18 @@ async def cancel_scan(
     if not scan:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Scan not found")
 
-    if scan.celery_task_id:
-        try:
-            from api.tasks import celery_app
-            celery_app.control.revoke(scan.celery_task_id, terminate=True)
-        except Exception:
-            pass
+    # S153: revoke the whole chord (children + parent), not just the parent.
+    try:
+        from api.tasks.utils import revoke_scan_tasks
+        revoked = revoke_scan_tasks(str(scan.id), scan.celery_task_id)
+        logger.info("cancel_scan: revoked %d tasks for scan %s", revoked, scan.id)
+    except Exception:
+        logger.exception("cancel_scan: revoke chain failed for %s (non-fatal, status flip still happens)", scan.id)
 
     scan.status = "cancelled"
+    scan.completed_at = datetime.now(timezone.utc)
+    if scan.cascade_state and scan.cascade_state not in ("done", "failed"):
+        scan.cascade_state = "failed"
     await db.commit()
     return _scan_dict(scan)
 

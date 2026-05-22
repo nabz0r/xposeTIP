@@ -413,12 +413,13 @@ async def superadmin_cancel_scan(
     if not scan:
         raise HTTPException(status_code=404, detail="Scan not found")
 
-    if scan.celery_task_id:
-        try:
-            from api.tasks import celery_app
-            celery_app.control.revoke(scan.celery_task_id, terminate=True)
-        except Exception:
-            logger.exception("revoke failed for scan %s (non-fatal)", scan.id)
+    # S153: revoke the whole chord (children + parent), not just the parent.
+    try:
+        from api.tasks.utils import revoke_scan_tasks
+        revoked = revoke_scan_tasks(str(scan.id), scan.celery_task_id)
+        logger.info("superadmin_cancel_scan: revoked %d tasks for scan %s", revoked, scan.id)
+    except Exception:
+        logger.exception("superadmin_cancel_scan: revoke chain failed for %s (non-fatal)", scan.id)
 
     scan.status = "cancelled"
     scan.completed_at = datetime.now(timezone.utc)
