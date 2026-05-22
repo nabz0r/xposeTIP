@@ -415,6 +415,10 @@ class FingerprintEngine:
         # Avatar seed from eigenvalues + axes
         avatar_seed = self._compute_avatar_seed(axes, eigen, email)
 
+        # S166 — BFP behavioral hash v1 (locality-sensitive clustering primitive).
+        # See _compute_behavioral_hash_v1 docstring for the "not a unique identifier" caveat.
+        behavioral_hash_v1 = self._compute_behavioral_hash_v1(axes, raw, email)
+
         result = {
             "axes": axes,
             "points": points,
@@ -431,6 +435,7 @@ class FingerprintEngine:
             "timeline_events": raw.pop("timeline_events", []),
             "public_exposure_breakdown": pe_breakdown,
             "formal_records_breakdown": fr_breakdown,
+            "bfp_behavioral_hash_v1": behavioral_hash_v1,
             "computed_at": datetime.now(timezone.utc).isoformat(),
         }
 
@@ -917,6 +922,58 @@ class FingerprintEngine:
             "|".join(f"{v:.4f}" for v in eigenvalues[:5]),
         ])
         return hashlib.sha256(sig.encode()).hexdigest()[:12]
+
+    def _compute_behavioral_hash_v1(self, axes: dict, raw: dict, email: str) -> str:
+        """Compute BFP behavioral hash v1 (S166 — first BFP-protocol code in repo).
+
+        Locality-sensitive hash over 3 invariant axes identified by S165:
+          - public_exposure (Δ 0.003, 18 buckets, N=189)
+          - geo_spread     (Δ 0.021, 36 buckets, N=206)
+          - data_leaked    (Δ 0.030, 45 buckets, N=206)
+
+        Each axis value (float in [0,1]) is discretized into 20 buckets,
+        then the resulting (axis_name, bucket_id) tuples are MinHashed with
+        128 permutations (datasketch default), seed=42 for determinism.
+
+        Returns: hex-encoded MinHash signature (128 uint64 = 1024 bytes = 2048 hex chars).
+
+        IMPORTANT — this is a CLUSTERING / SIMILARITY PRIMITIVE, not a uniqueness identifier.
+        Per S165 entropy analysis: 11 axes contain ~28 bits total. K=3 = 6.68 bits = 103
+        distinct buckets. At 4.5B subjects, that's ~43M collisions/bucket. Uniqueness arises
+        from composition: this hash + subject binding signature + future network-layer signals.
+        See docs/BFP_SPEC_v0.md.
+
+        `email` and `raw` parameters are accepted for API parity with sibling hash methods
+        (_compute_hash, _compute_enhanced_hash) but NOT used here — by design v1 derives
+        only from invariant axes, not from changeable identifiers.
+        """
+        try:
+            from datasketch import MinHash
+        except ImportError:
+            # datasketch not installed — return empty string rather than crashing the engine.
+            # The orchestrator persists '' as NULL via `or None`.
+            return ""
+
+        SELECTED_AXES = ("public_exposure", "geo_spread", "data_leaked")
+        N_BUCKETS = 20
+
+        elements = set()
+        for axis_name in SELECTED_AXES:
+            value = axes.get(axis_name)
+            if value is None:
+                continue  # missing axis → omit from set, do not default to 0 (would bias the hash)
+            value = max(0.0, min(1.0, float(value)))
+            bucket = min(int(value * N_BUCKETS), N_BUCKETS - 1)
+            elements.add(f"{axis_name}:{bucket}".encode())
+
+        if not elements:
+            return ""  # no axes available — empty hash
+
+        m = MinHash(num_perm=128, seed=42)
+        for el in elements:
+            m.update(el)
+
+        return m.hashvalues.tobytes().hex()
 
     def _compute_graph_signature(self, identities, links):
         """Compute eigenvalue-based signature of the identity graph topology.

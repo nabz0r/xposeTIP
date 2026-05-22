@@ -1,9 +1,9 @@
 const CRYPTO_STACK = [
   {
-    role: 'Canonical identity hash',
+    role: 'Canonical behavioral hash',
     algo: 'MinHash over SHA-3-256',
     family: 'Locality-sensitive hashing',
-    why: 'Locality-sensitive — small footprint changes produce small hash shifts. Derived from invariants only (never name, email, or usernames). Forgery-resistant via subject binding ceremony. 256-bit post-quantum security via Grover bound.',
+    why: 'Locality-sensitive — small footprint changes produce small hash shifts. Derived from invariants only (never name, email, or usernames). Behavioral clustering primitive — unique identity arises from composition with subject binding signature and future network-layer signals. 256-bit post-quantum security via Grover bound.',
   },
   {
     role: 'Subject attestations',

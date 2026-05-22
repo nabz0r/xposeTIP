@@ -28,6 +28,10 @@ class Target(UUIDMixin, TimestampMixin, Base):
     notes: Mapped[str | None] = mapped_column(Text)
     profile_data: Mapped[dict | None] = mapped_column(JSONB)
     fingerprint_history: Mapped[list | None] = mapped_column(JSONB, default=list)
+    # S166 — BFP Phase 1 behavioral clustering hash (MinHash over 3 invariant axes
+    # identified by S165: public_exposure, geo_spread, data_leaked). NOT a uniqueness
+    # identifier; uniqueness arises from composition with future signatures + network signals.
+    bfp_behavioral_hash_v1: Mapped[str | None] = mapped_column(Text, index=True)
 
     workspace = relationship("Workspace", back_populates="targets")
     scans = relationship("Scan", back_populates="target", cascade="all, delete-orphan")

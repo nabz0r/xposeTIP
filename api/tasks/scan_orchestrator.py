@@ -697,6 +697,8 @@ def finalize_scan(scan_id: str):
             history = list(target.fingerprint_history or [])
             history.append(snapshot)
             target.fingerprint_history = history[-50:]
+            # S166 — persist BFP behavioral hash v1 to dedicated indexed column for fast lookup
+            target.bfp_behavioral_hash_v1 = fingerprint.get("bfp_behavioral_hash_v1") or None
 
             # Save current fingerprint in profile_data
             profile = dict(target.profile_data or {})
@@ -1221,6 +1223,8 @@ def _full_refinalize(target_id_str: str, workspace_id_str: str, session):
             history = list(target.fingerprint_history or [])
             history.append(snapshot)
             target.fingerprint_history = history[-50:]
+            # S166 — persist BFP behavioral hash v1 (Deep Scan path)
+            target.bfp_behavioral_hash_v1 = fingerprint.get("bfp_behavioral_hash_v1") or None
 
             profile = dict(target.profile_data or {})
             profile["fingerprint"] = fingerprint

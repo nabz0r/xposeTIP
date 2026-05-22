@@ -60,7 +60,7 @@ export default function BFPArchitecture() {
             Cryptographic core. Runs on operator hardware. Same independence model as CT logs and MISP instances.
           </p>
           <ul className="space-y-2 text-sm text-gray-300">
-            <li className="flex items-start gap-2"><span className="text-[#00ff88]/40 mt-1">·</span>Canonical identity hash (locality-sensitive)</li>
+            <li className="flex items-start gap-2"><span className="text-[#00ff88]/40 mt-1">·</span>Canonical behavioral hash (locality-sensitive)</li>
             <li className="flex items-start gap-2"><span className="text-[#00ff88]/40 mt-1">·</span>Subject + operator signatures (post-quantum)</li>
             <li className="flex items-start gap-2"><span className="text-[#00ff88]/40 mt-1">·</span>Append-only claim log (Merkle-anchored)</li>
             <li className="flex items-start gap-2"><span className="text-[#00ff88]/40 mt-1">·</span>Subject binding ceremony</li>

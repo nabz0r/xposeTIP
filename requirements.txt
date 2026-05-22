@@ -29,3 +29,4 @@ google-search-results
 trafilatura
 pdfplumber
 phonenumbers>=8.13
+datasketch>=1.6,<2.0
