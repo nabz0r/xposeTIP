@@ -1,3 +1,5 @@
+import BFPInversionVisual from './BFPInversionVisual'
+
 export default function BFPHero() {
   return (
     <section className="py-20">
@@ -6,6 +8,8 @@ export default function BFPHero() {
           <span className="w-1.5 h-1.5 bg-[#00ff88] rounded-full animate-pulse" />
           Behavioral Fingerprint Protocol · Draft v0
         </div>
+
+        <BFPInversionVisual />
 
         <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight leading-[1.1] mb-8 font-['Instrument_Sans',sans-serif]">
           The internet knows who you are.<br />
