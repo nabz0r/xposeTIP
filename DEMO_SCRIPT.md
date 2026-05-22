@@ -37,7 +37,7 @@ This script is dual-purpose by design. The same product narrative works for Play
 Walk the Overview tab:
 
 1. **Score** : "Exposure 73, threat 41. Exposure is digital footprint size — high here. Threat is breach severity weighted by credential leaks. The ratio tells you what kind of problem you have."
-2. **9-axis behavioral radar** : "This is the persistent signature. Accounts, platforms, username reuse, breach history, geographic spread, data leak volume, email age, security posture, public exposure. The shape persists across scans even when individual indicators rotate."
+2. **11-axis behavioral radar** : "This is the persistent signature. Accounts, platforms, username reuse, breach history, geographic spread, data leak volume, email age, security posture, public exposure, formal records (legal filings), and network signature (identity-graph topology entropy). The shape persists across scans even when individual indicators rotate."
 3. **Generative pixel art avatar** : "Deterministic from the identity graph eigenvalues. Same data, same avatar — when data shifts, the avatar evolves. 5.4 billion combinations, zero GPU, zero external API."
 4. **Risk Signals block** (if visible) : "Phone numbers extracted from breach data. Crypto wallets cross-referenced against scam flags. Legal record matches in US federal court, French BODACC, UK Gazette. All actionable in one block."
 

@@ -12,8 +12,8 @@
 [![Docker](https://img.shields.io/badge/Docker-Compose-2496ED?logo=docker)](https://docker.com)
 [![License: AGPL v3](https://img.shields.io/badge/License-AGPL_v3-blue.svg)](LICENSE)
 [![Scrapers](https://img.shields.io/badge/scrapers-127-3388ff)](#scraper-engine)
-[![Sprints](https://img.shields.io/badge/sprints-141+-00ff88)](#changelog)
-[![Version](https://img.shields.io/badge/version-1.2.0-green)](#changelog)
+[![Sprints](https://img.shields.io/badge/sprints-154+-00ff88)](#changelog)
+[![Version](https://img.shields.io/badge/version-1.3.0-green)](#changelog)
 
 **Enter an email. See what the internet knows. Fix it.**
 
@@ -39,7 +39,7 @@ Email input
 │ Identity graph → PageRank              │
 │ Score (exposure + threat)              │
 │ Profile → Personas → Intelligence      │
-│ 9-axis fingerprint + pixel art avatar  │
+│ 11-axis fingerprint + pixel art avatar │
 └────────────────────────────────────────┘
     │
     ▼
@@ -65,7 +65,7 @@ Dashboard: graph, timeline, accounts,
 - **PageRank confidence** — confidence propagates through the graph (damping=0.85), cross-verified findings get boosted
 - **Dual scoring** — exposure (digital footprint size) + threat (breach severity, credential leaks) with ratio-based thresholds
 - **Persona clustering** — groups usernames by platform overlap, name similarity, and cross-verification
-- **9-axis digital fingerprint** — accounts, platforms, username_reuse, breaches, geo_spread, data_leaked, email_age, security, public_exposure
+- **11-axis digital fingerprint** — accounts, platforms, username_reuse, breaches, geo_spread, data_leaked, email_age, security, public_exposure, formal_records (S145), network_signature (S147)
 - **Generative pixel art** — deterministic 32x32 CryptoPunk-style avatar from graph eigenvalues (5.4B unique combinations, zero GPU)
 - **Deep Scan** — operator-triggered per-indicator scan across all matching scrapers, with cascade (discovered cross-type indicators are chain-scanned)
 - **Web Discovery (Phase C)** — fingerprint-driven Google dorking + 6 content extractors — explores the open web beyond the 127 fixed scrapers
@@ -172,10 +172,11 @@ Custom identity intelligence reports (due diligence, compliance, threat attribut
 
 ## Changelog
 
-141+ sprints delivered. Key milestones:
+154+ sprints delivered. Key milestones:
 
 | Version | Highlights |
 |---------|-----------|
+| v1.3.0 | **Major reliability + admin milestone — S131 → S154.** **DB-persisted similarity engine** with audit-grade first_detected (S131), landing refresh + `/compare` page (S132), TopoJSON geomap with country-density heatmap (S133), **cascade state machine** `gathering → computing → similarity → done` (S134), UI polish 4-pack (S135), glyph header dual-avatar (S136), `fallbackSeed` centralization + `SMOKE_PROTOCOL.md` lock (S137), public nav/footer unification (S138), paid-tier pricing strip (S139), architecture page sexy refresh (S140), `/changelog` git-log-driven (S141), S142 doc closure, **BFP P3 axes work** — fingerprint calibration diag (S143), data-driven AXIS_MAX recalibration (S144), `formal_records` 10th axis (S145), **name-aware similarity** combined cosine × name_sim Jaccard (S146 — kills cross-domain FPs), `network_signature` 11th axis spectral entropy (S147 — closes same-name homonym failure mode). **Full bug-hunt session May 22:** lost-task fragility fix — `acks_late` + Celery beat watchdog `sweep_orphan_scans` (S148), polling cascade UI orphelin fix (S149 — Playwright validated, ~4-min freeze pre-fix on 100+ finding targets), **uq_identity rollback on rescan** — get-or-create in `_create_pe_graph_edges` (S150 — silent data loss closure), S151 investigated/skipped (fingerprint_history bug no longer reproducible — likely backfilled by S144 recompute), **Live Scans cross-orgs admin tab** + 6 System tabs stale-data bundle fix (S152), **cancel race condition fix** — chord child task revoke + finalize_scan guard (S153 — exposed by S152 smoke), workspace-aware refresh bundle + Redis close + system_stats scoping consistency (S154). Net: reliability hardened, BFP discriminative axes in place, admin observability complete. **+ synthetic test for S150 idempotency** (S155). |
 | v1.2.0 | **Major stability milestone — S121 → S129 chain.** Doc drift closure (S121), QA chain S122a→S122e (per-scraper attempt logging, name_scraper_engine module, aggregator tie-break, Gravatar dedup, pastebin extraction fix, low-confidence severity for placeholder name-scrapers), holdover rollback + courtlistener defensive (S123), **verified provenance UI per finding** (S124: tier badges + cross-verif + timeline), Recalculate Profiles retro-rebuilds finding confidence (S125), match_confidence surfaced separately in ProvenanceCard (S126), name_scraper_engine sequential dispatch post-A3 fixes no_name_input regression (S127), **telemetry rectification — scraper_engine returns (found, reason)** with proper no_data classification for explicit_not_found/blocked_403 (S128), **Pass 1 username dispatch gated by is_valid_username** matching Pass 1.5 validation symmetry (S129 — eliminates HN-style 400 false errors). Net: pipeline now knows what it can't do instead of generating false-positive noise; provenance is auditable per-finding. **+ S130-S141 chain (May 21 2026):** doc closure v1.2.0 stamp (S130), **DB-persisted similarity engine** with 9-axis cosine, threshold 0.70, audit-grade `first_detected` (S131 — BFP scaffolding), landing refresh + new `/compare` page (S132), **TopoJSON geomap** with country-density heatmap and zoom/pan 1-8× (S133), Forensic R4 cleanup combo (S134: cascade_state machine — gathering→computing→similarity→done — plus `_clean_name_value` regex tightening + Courtlistener defensive cast), **UI polish 4-pack** stable avatars + stable fingerprint axes + cascade post-done re-fetch + fallbackSeed alignment (S135), **glyph in header dual-avatar pattern** + Fingerprint Evolution scroll cue (S136), centralized fallbackSeed util + `SMOKE_PROTOCOL.md` lock (S137), **public nav + footer unification** — single source of truth `PublicNav`/`PublicFooter` across Landing/Architecture/Manifesto/Compare (S138), dropped paid-tier prices from pricing section (S139), **architecture page full sexy refresh** — 3 new stages (Cascade/Similarity/Discovery) + hero stat banner + TechStackSection + RoadmapSection v1 backfill (S140), **/changelog public page** parsed from git log via build-time node script with predev/prebuild hooks (S141 — 210 commits filterable timeline grouped by month). Net: similarity surfaces become BFP-ready, landing is internally consistent end-to-end, the architecture page now reflects every advance |
 | v1.1.16 | **Findings tab preset filter chips** — closes S119 navigation loop: deep-link from Risk Signals "View all" to a filtered Findings tab. New shared lib/findingFilters.js classifier |
 | v1.1.15 | **Risk Signals UI block** on Overview tab — surface phone/crypto/legal findings in a 3-column self-hiding block (deferred S108 plan) |

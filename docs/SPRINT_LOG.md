@@ -85,6 +85,21 @@
 | S139 | Pricing tweaks: dropped `price` field from Starter/Team/Enterprise, Free keeps "€0 forever", `PricingSection` conditional render |
 | S140 | Architecture full sexy refresh: 3 new stages (Cascade/Similarity/Discovery) + diagrams, hero stat banner 127·9·5.4B·11·0, NEW TechStackSection.jsx, ScraperBreakdown active/disabled split (110/17), RoadmapSection v1 backfill, CollectDiagram counts realigned (127) |
 | S141 | `/changelog` public page parsed from git log: build-time `generate-changelog.mjs` via predev/prebuild hooks, 210 commits in JSON, filterable timeline grouped by month |
+| S142 | Doc closure post-S141 — markdown reflects reality, sprint count badge updated, `/changelog` page noted, footer dashboard count reconciled (commit 035192b) |
+| S143 | Fingerprint calibration diagnostic — pre-BFP audit. NEW `scripts/diag_fingerprint_calibration.py` ran 12 workspaces (159 FPs, 1968 pairs), proved 9-axis saturates 5/9 axes + 3 workspace-constants → cosine 0.88-1.00 intra-corpus. Justified S144 + S145+S147 (commit 87b1ce5 + 7 chore commits) |
+| S144 | Data-driven AXIS_MAX recalibration + fingerprint recompute. `accounts` 15→60, `platforms` 10→50, `username_reuse` 5→10, `data_leaked` 8→25, `email_age_years` 15→40. NEW `scripts/recompute_fingerprints.py` (idempotent, `--dry-run`/`--limit`/`--workspace`). 172 targets recomputed, sim table 56→3586 backfill (commit 1a57162) |
+| S145 | `formal_records` 10th fingerprint axis — routes Courtlistener/BODACC/UK Gazette via `indicator_type='legal_record'`, `FingerprintRadar.jsx` consumes dynamic `ALL_AXIS_LABELS` from backend, AXIS_MAX=5 (commit b9a21cd) |
+| S146 | Name-aware similarity engine — `combined = cosine × name_sim`. NEW migration 015 (`name_similarity` + `cosine_similarity` cols), Unicode token-set Jaccard via stdlib `unicodedata`. `target_similarities` 3586→0 on first recompute (FP cleanup) (commit 7b4d907) |
+| S147 | `network_signature` 11th fingerprint axis — spectral entropy of identity-graph eigenvalues. AXIS_MAX 1.0, SCORE_WEIGHTS rebalanced (data_leaked 0.18→0.13, network_signature 0.05). Closes same-name homonym failure mode (commit af81c14) |
+| S148 | Lost-task fragility — `acks_late=True` + `reject_on_worker_lost=True` on `launch_scan`, Redis broker `visibility_timeout=7200`. NEW `api/tasks/watchdog.py` `sweep_orphan_scans` every 5min via `beat_schedule` (queued>30min, no-progress>20min, hard-cap>240min). Exposed by orphan scan `c48712fc` (nabz0r@gmail.com, May 20 worker restart storm) — first watchdog tick swept it via hard_timeout branch (commit dc0475a) |
+| S149 | Polling cascade orphelin — `TargetDetail.jsx` polling guard now uses shared `isScanInProgress` predicate matching the wider display predicate (covers `status='completed' AND cascade_state ∈ {gathering,computing,similarity}`). Playwright validated 4-min cascade window with continuous polling (commit 4ae31ff) |
+| S150 | uq_identity rollback on rescan — get-or-create both `Identity` and `IdentityLink` in `_create_pe_graph_edges`, `session.rollback()` in every except around flush. Re-classified P0→P2 (silent data loss, not crash — `_set_cascade_state` S134 rollback masked `PendingRollbackError`, lost Pass 2 Findings + graph edges) (commit 6112faf) |
+| S151 | Investigated, no repro found (fingerprint_history "absent on some profiles" — 215/215 targets had populated history, likely backfilled by S144 recompute). Skipped, no code change |
+| S152 | Live Scans cross-orgs admin tab + System stale-data bundle fix. NEW `GET /system/scans/live` + `POST /system/scans/{id}/cancel` (superadmin), NEW `SystemLiveScansTab.jsx` (polls 3s). Bundle fix: 6 System tabs `useEffect` deps gain `refreshKey` (commit ed6d269) |
+| Smoke S148-S152 | Multi-layer Playwright validation on 3 targets across 2 workspaces. Verdict: PASS WITH NOTES. Surfaced S153 cancel race bug, S150 validation gap, /system/stats counter inconsistency. Evidence + report in `docs/qa/smoke_2026-05-22_s148_s149_s150_s152.md` (commit 05299a1) |
+| S153 | Cancel race condition fix — chord child task revoke + finalize_scan guard. NEW `api/tasks/utils.py` helpers `stash_scan_child_tasks` + `revoke_scan_tasks`, Redis SADD `scan:{id}:child_tasks` TTL 24h at dispatch, both cancel endpoints iterate+revoke before status flip. Layer B killed chord callback before Layer A's early-return ever fired in validation (commit e2befba) |
+| S154 | Workspace-aware refresh bundle + Redis close + system_stats scoping. Settings.jsx + Scrapers.jsx `useEffect` deps gain `refreshKey`, `scraper_progress` Redis client closed in `finally`, `/system/stats` table counts now workspace-scoped (targets/scans/findings/identities + users via UserWorkspace; modules stay global) (commit 1f7ade4) |
+| S155 | Synthetic test for S150 `_create_pe_graph_edges` idempotency. NEW `tests/test_create_pe_graph_edges.py` — 3 integration tests against throwaway `_s155_smoke` workspace (fixture-managed cleanup): reuses existing Identity on duplicate value, second call doesn't duplicate link, new value still creates new Identity+link. All 3 PASS. Closes S152 smoke validation gap (commit a7c308b) |
 
 ## Known issues
 
@@ -111,7 +126,7 @@
 - [x] Freemium quick scan (zero friction)
 - [x] Plans (Free/Consultant/Enterprise)
 - [x] 3-pass pipeline (email → username → name)
-- [x] 9-axis digital fingerprint
+- [x] 11-axis digital fingerprint (9 axes at v1.0, +formal_records S145, +network_signature S147)
 - [x] Identity-first narrative rewrite
 - [x] PDF report export (ReportLab, dark theme, plan-tiered)
 - [x] Deep username scan (operator-triggered)
