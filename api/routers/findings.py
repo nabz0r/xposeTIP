@@ -51,22 +51,9 @@ async def list_findings(
     user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
-    # S124 — compute cross-verification map BEFORE module/severity/etc filters so
-    # filtering by one module still surfaces peers from other modules.
-    # Target-scoped only; workspace-wide cross-verif would be too noisy.
-    cross_verif_meta: dict[str, set[str]] = {}
-    if target_id:
-        cv_q = select(Finding).where(
-            Finding.workspace_id == workspace_id,
-            Finding.target_id == target_id,
-        )
-        cv_result = await db.execute(cv_q)
-        indicator_modules: dict[str, set[str]] = defaultdict(set)
-        for f in cv_result.scalars().all():
-            if f.indicator_value:
-                indicator_modules[f.indicator_value].add(f.module)
-        cross_verif_meta = dict(indicator_modules)
-
+    # S168 — cross-verification is now stored on the Finding row (count + sources),
+    # populated by persist_scanner_results at write-time. The runtime indicator_modules
+    # join from S124-S126 is gone. Reads come straight from the indexed column.
     q = select(Finding).where(Finding.workspace_id == workspace_id)
     if target_id:
         q = q.where(Finding.target_id == target_id)
@@ -93,7 +80,7 @@ async def list_findings(
     findings = all_findings[start:start + per_page]
 
     return {
-        "items": [_finding_dict(f, include_data=True, cross_verif_meta=cross_verif_meta) for f in findings],
+        "items": [_finding_dict(f, include_data=True) for f in findings],
         "total": total,
         "page": page,
         "per_page": per_page,
@@ -151,21 +138,8 @@ async def get_finding(
     if not finding:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Finding not found")
 
-    # S124 — peer findings for cross-verification context
-    peers_result = await db.execute(
-        select(Finding).where(
-            Finding.target_id == finding.target_id,
-            Finding.workspace_id == workspace_id,
-            Finding.status == "active",
-        )
-    )
-    peers = peers_result.scalars().all()
-    indicator_modules: dict[str, set[str]] = defaultdict(set)
-    for f in peers:
-        if f.indicator_value:
-            indicator_modules[f.indicator_value].add(f.module)
-
-    return _finding_dict(finding, include_data=True, cross_verif_meta=dict(indicator_modules))
+    # S168 — peer cross-verification is stored on the row itself
+    return _finding_dict(finding, include_data=True)
 
 
 @router.patch("/{finding_id}")
@@ -193,9 +167,13 @@ async def update_finding(
     return _finding_dict(finding)
 
 
-def _finding_dict(f: Finding, include_data: bool = False, cross_verif_meta: dict | None = None) -> dict:
+def _finding_dict(f: Finding, include_data: bool = False) -> dict:
     reliability = get_source_reliability(f.module)
     tier = reliability_tier(reliability)
+    # S168 — cross_verified_* response keys preserved unchanged for dashboard
+    # compatibility (ProvenanceCard.jsx and friends). Values now read from the
+    # stored columns instead of the per-request indicator_modules join.
+    sources = list(f.cross_verification_sources or [])
     d = {
         "id": str(f.id),
         "scan_id": str(f.scan_id),
@@ -219,14 +197,9 @@ def _finding_dict(f: Finding, include_data: bool = False, cross_verif_meta: dict
         "source_reliability": round(reliability, 2),
         "reliability_tier": tier,
         "reliability_label": reliability_explanation(tier),
-        "cross_verified_count": 0,
-        "cross_verified_by": [],
+        "cross_verified_count": f.cross_verification_count,
+        "cross_verified_by": sources[:5],
     }
-    if cross_verif_meta and f.indicator_value:
-        peers = cross_verif_meta.get(f.indicator_value, set()) - {f.module}
-        if peers:
-            d["cross_verified_count"] = len(peers)
-            d["cross_verified_by"] = sorted(peers)[:5]
     if include_data:
         d["data"] = f.data
     return d

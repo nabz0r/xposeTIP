@@ -25,6 +25,11 @@ class Finding(UUIDMixin, Base):
     indicator_value: Mapped[str | None] = mapped_column(String(500))
     indicator_type: Mapped[str | None] = mapped_column(String(30))
     verified: Mapped[bool] = mapped_column(Boolean, default=False)
+    # S168 — cross-verification trust signal, formalized from read-time computation.
+    # "claim X about subject Y is corroborated by N independent modules". Foundation
+    # signal for the BFP trust layer; bfp_claims (S167) will reference these directly.
+    cross_verification_count: Mapped[int] = mapped_column(Integer, default=0, server_default="0", nullable=False)
+    cross_verification_sources: Mapped[list] = mapped_column(JSONB, default=list, server_default="[]", nullable=False)
     confidence: Mapped[float | None] = mapped_column(Float, default=1.0)
     status: Mapped[str] = mapped_column(String(20), default="active")
     first_seen: Mapped[datetime] = mapped_column(TIMESTAMP(timezone=True), default=func.now())
@@ -42,4 +47,5 @@ class Finding(UUIDMixin, Base):
         Index("idx_findings_severity", "severity"),
         Index("idx_findings_category", "category"),
         Index("idx_findings_indicator", "indicator_value"),
+        Index("idx_findings_cross_verification_count", "cross_verification_count"),
     )

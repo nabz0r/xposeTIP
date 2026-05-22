@@ -155,6 +155,37 @@ def persist_scanner_results(scan, results, session) -> int:
                     )
                     session.add(identity)
 
+    # S168 — recompute cross-verification for all (target_id, indicator_value) tuples
+    # touched in this batch. Lands in the SAME transaction as the new findings (caller
+    # commits). Trust-layer foundation: every new claim that arrives knows how many
+    # peers corroborate it BEFORE the row is read by the API.
+    affected_indicators = {
+        r.indicator_value
+        for r in results
+        if r.indicator_value
+    }
+    if affected_indicators:
+        from collections import defaultdict
+        peer_findings = session.execute(
+            select(Finding).where(
+                Finding.target_id == scan.target_id,
+                Finding.indicator_value.in_(affected_indicators),
+            )
+        ).scalars().all()
+
+        by_indicator: dict[str, list] = defaultdict(list)
+        for f in peer_findings:
+            by_indicator[f.indicator_value].append(f)
+
+        for indicator_value, group in by_indicator.items():
+            all_modules = sorted({f.module for f in group})
+            for f in group:
+                peers = [m for m in all_modules if m != f.module]
+                new_count = len(peers)
+                if f.cross_verification_count != new_count or list(f.cross_verification_sources or []) != peers:
+                    f.cross_verification_count = new_count
+                    f.cross_verification_sources = peers
+
     return created
 
 
