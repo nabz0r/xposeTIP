@@ -35,16 +35,20 @@ const MODULE_PLATFORM_MAP = {
 
 function getPlatformColor(platform) {
   if (!platform) return '#666688'
-  const key = platform.toLowerCase().replace(/[.\-\s]/g, '_')
+  // S159b: strip separators (dots / hyphens / spaces / underscores) so
+  // "dev.to" matches "devto", "about_me" matches "aboutme", etc.
+  const key = platform.toLowerCase().replace(/[.\-\s_]/g, '')
   return PLATFORM_COLORS[key] || '#666688'
 }
 
 // S159: canonical platform extraction — prefer explicit override, then
 // data.platform from backend, then derived from module name (strip suffixes).
-function extractPlatform(finding) {
-  const m = finding.module
+// S159b: accepts either a Finding (.module, .data.platform) or a graph node
+// (.source_module, .platform) — same logic, both sources.
+function extractPlatform(item) {
+  const m = item.module || item.source_module
   if (m && MODULE_PLATFORM_MAP[m]) return MODULE_PLATFORM_MAP[m]
-  let p = finding.data?.platform
+  let p = item.data?.platform || item.platform
   if (!p && m) {
     p = m
       .replace(/_profile$/, '')
@@ -117,8 +121,10 @@ export default function UsernameTab({ findings, graphData, targetId, onRefresh }
         if (node.type !== 'username' || !node.value) continue
         // S159: same defense as findings loop
         if (isJunkUsernameValue(node.value)) continue
-        const nodePlatform = node.platform ? node.platform.toLowerCase().trim() : null
-        if (nodePlatform && !PLATFORM_COLORS[nodePlatform]) continue
+        // S159b: use the same canonical extractor as the findings path so
+        // MODULE_PLATFORM_MAP (e.g. npm_maintainer → npm) also applies here.
+        const nodePlatform = extractPlatform(node)
+        if (!nodePlatform || !PLATFORM_COLORS[nodePlatform]) continue
         const key = node.value.toLowerCase()
         if (!groups[key]) {
           groups[key] = {
@@ -130,9 +136,10 @@ export default function UsernameTab({ findings, graphData, targetId, onRefresh }
             maxConfidence: node.confidence || 0,
           }
         }
-        if (node.platform && !groups[key].platforms.some(p => p.name === node.platform)) {
+        // S159b: store the canonical platform name, not the raw verbose form
+        if (nodePlatform && !groups[key].platforms.some(p => p.name === nodePlatform)) {
           groups[key].platforms.push({
-            name: node.platform,
+            name: nodePlatform,
             url: null,
             module: node.source_module,
             severity: null,

@@ -26,6 +26,20 @@ const PLATFORMS = {
   whatsapp: { color: '#25D366', label: 'WhatsApp' },
   mastodon: { color: '#6364FF', label: 'Mastodon' },
   twitch: { color: '#9146FF', label: 'Twitch' },
+  // S159b: tech / dev platforms (previously missing — chips fell to grey default)
+  npm: { color: '#CB3837', label: 'npm' },
+  pypi: { color: '#3775A9', label: 'PyPI' },
+  kaggle: { color: '#20BEFF', label: 'Kaggle' },
+}
+
+// S159b: aliases for verbose verbatim module names produced by some scrapers
+// (e.g. f.data.platform = 'npm_maintainer' instead of canonical 'npm').
+// Keys are the post-normalize form ([^a-z0-9] → '').
+const PLATFORM_ALIASES = {
+  npmmaintainer: 'npm',
+  waybacklinkedinuser: 'linkedin',
+  githubemailsearch: 'github',
+  pypiprofile: 'pypi',
 }
 
 const REMEDIATION_LINKS = {
@@ -49,18 +63,21 @@ const REMEDIATION_LINKS = {
   tumblr: 'https://www.tumblr.com/settings/account',
 }
 
+function resolveKey(name) {
+  const raw = (name || '').toLowerCase().replace(/[^a-z0-9]/g, '')
+  return PLATFORM_ALIASES[raw] || raw
+}
+
 export function getPlatformInfo(name) {
-  const key = (name || '').toLowerCase().replace(/[^a-z0-9]/g, '')
-  return PLATFORMS[key] || null
+  return PLATFORMS[resolveKey(name)] || null
 }
 
 export function getRemediationLink(name) {
-  const key = (name || '').toLowerCase().replace(/[^a-z0-9]/g, '')
-  return REMEDIATION_LINKS[key] || null
+  return REMEDIATION_LINKS[resolveKey(name)] || null
 }
 
 export default function PlatformIcon({ platform, size = 'md', showLabel = true, url, username }) {
-  const key = (platform || '').toLowerCase().replace(/[^a-z0-9]/g, '')
+  const key = resolveKey(platform)
   const info = PLATFORMS[key]
   const color = info?.color || '#666688'
   const label = info?.label || platform
