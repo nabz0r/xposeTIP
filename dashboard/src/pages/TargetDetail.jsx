@@ -20,6 +20,16 @@ import SourcesTab from './tabs/SourcesTab'
 import BreachesTab from './tabs/BreachesTab'
 import SanctionsAlert from '../components/target/SanctionsAlert'
 
+// S149: shared predicate for "scan is still working" — covers both the active
+// scrape window (status running/queued) and the cascade window (status completed
+// but cascade_state still gathering/computing/similarity). Used by the polling
+// effect AND the live progress UI block — both must agree, else the polling
+// stops while the cascade UI still claims work-in-progress.
+const isScanInProgress = (s) =>
+  s.status === 'running' ||
+  s.status === 'queued' ||
+  (s.status === 'completed' && s.cascade_state && s.cascade_state !== 'done' && s.cascade_state !== 'failed')
+
 export default function TargetDetail() {
   const { id } = useParams()
   const [target, setTarget] = useState(null)
@@ -89,7 +99,7 @@ export default function TargetDetail() {
 
   // Poll while scanning
   useEffect(() => {
-    const runningScans = scans.filter(s => s.status === 'running' || s.status === 'queued')
+    const runningScans = scans.filter(isScanInProgress)
     if (!runningScans.length) {
       if (pollRef.current) clearInterval(pollRef.current)
       return
@@ -302,17 +312,9 @@ export default function TargetDetail() {
         </div>
       </div>
 
-      {/* Live scan progress — S134 extended to include cascade window */}
-      {scans.some(s =>
-        s.status === 'running' ||
-        s.status === 'queued' ||
-        (s.status === 'completed' && s.cascade_state && s.cascade_state !== 'done' && s.cascade_state !== 'failed')
-      ) && (() => {
-        const runningScan = scans.find(s =>
-          s.status === 'running' ||
-          s.status === 'queued' ||
-          (s.status === 'completed' && s.cascade_state && s.cascade_state !== 'done' && s.cascade_state !== 'failed')
-        )
+      {/* Live scan progress — S134 extended to include cascade window, S149 unified predicate */}
+      {scans.some(isScanInProgress) && (() => {
+        const runningScan = scans.find(isScanInProgress)
         const progress = runningScan?.module_progress || {}
         const total = Object.keys(progress).length
         const completed = Object.values(progress).filter(s => s === 'completed' || s === 'failed' || s === 'skipped').length
