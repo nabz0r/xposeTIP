@@ -3,6 +3,7 @@ import { useParams, Link } from 'react-router-dom'
 import { Radar, CheckCircle, AlertTriangle, XCircle, ArrowRightLeft, FileDown } from 'lucide-react'
 import { getTarget, getFindings, getScans, createScan, getModules, getScan, getGraph, patchFinding, getTargetSources, getAccounts, startOAuth, auditAccount, disconnectAccount, getFingerprint, getFingerprintHistory, getTargetProfile, cancelScan, getWorkspaces, moveTarget, getScraperProgress } from '../lib/api'
 import { applyPreset } from '../lib/findingFilters'
+import { normalizeModuleStatus } from '../lib/moduleProgress'
 import IdentityGraph from '../components/IdentityGraph'
 import LocationMap from '../components/LocationMap'
 import ProfileHeader from '../components/ProfileHeader'
@@ -136,7 +137,7 @@ export default function TargetDetail() {
         }))
         // Fetch scraper-level progress for richer display
         const runningScanObj = updated.find(s => s.status === 'running')
-        if (runningScanObj?.module_progress?.scraper_engine === 'running') {
+        if (normalizeModuleStatus(runningScanObj?.module_progress?.scraper_engine) === 'running') {
           try { const sp = await getScraperProgress(runningScanObj.id); setScraperProgress(sp) } catch {}
         } else {
           setScraperProgress(null)
@@ -336,10 +337,10 @@ export default function TargetDetail() {
         const runningScan = scans.find(isScanInProgress)
         const progress = runningScan?.module_progress || {}
         const total = Object.keys(progress).length
-        const completed = Object.values(progress).filter(s => s === 'completed' || s === 'failed' || s === 'skipped').length
+        const completed = Object.values(progress).map(normalizeModuleStatus).filter(s => s === 'completed' || s === 'failed' || s === 'skipped').length
         // Enhanced percentage: interpolate scraper sub-progress
         let pct = total > 0 ? Math.round((completed / total) * 100) : 0
-        if (scraperProgress && total > 0 && progress.scraper_engine === 'running') {
+        if (scraperProgress && total > 0 && normalizeModuleStatus(progress.scraper_engine) === 'running') {
           const scraperFrac = (scraperProgress.current || 0) / (scraperProgress.total || 120)
           pct = Math.round(((completed + scraperFrac) / total) * 100)
         }
@@ -383,7 +384,7 @@ export default function TargetDetail() {
             <div className="h-1.5 bg-[#0a0a0f] rounded-full overflow-hidden mb-3">
               <div className="h-full rounded-full bg-[#00ff88] transition-all duration-500" style={{ width: `${pct}%` }} />
             </div>
-            {scraperProgress && progress.scraper_engine === 'running' && (
+            {scraperProgress && normalizeModuleStatus(progress.scraper_engine) === 'running' && (
               <div className="flex items-center gap-2 mb-2 text-xs text-gray-500">
                 <span className="font-mono text-[#3388ff]">
                   {scraperProgress.current || 0}/{scraperProgress.total || 120}

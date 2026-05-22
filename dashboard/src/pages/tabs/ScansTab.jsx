@@ -1,6 +1,7 @@
 import React from 'react'
 import { Radar, Lock, CheckCircle, XCircle } from 'lucide-react'
 import { getLogs, cancelScan } from '../../lib/api'
+import { normalizeModuleStatus, formatModuleStatus } from '../../lib/moduleProgress'
 
 const SCAN_TIMES = {
   email_validator: '~5s', holehe: '~2min', hibp: '~5s', sherlock: '~60s',
@@ -83,11 +84,20 @@ export default function ScansTab({ scans, modules, load, showScanModal, setShowS
                 </div>
               </div>
               <div className="flex flex-wrap gap-2">
-                {Object.entries(scan.module_progress || {}).map(([mod, status]) => (
-                  <span key={mod} className="text-xs font-mono px-2 py-1 rounded bg-[#0a0a0f] border border-[#1e1e2e]">
-                    {mod}: <span style={{ color: status === 'completed' ? '#00ff88' : status === 'running' ? '#ffcc00' : status === 'failed' ? '#ff2244' : status === 'skipped' ? '#666688' : '#666688' }}>{status}</span>
-                  </span>
-                ))}
+                {Object.entries(scan.module_progress || {}).map(([mod, status]) => {
+                  const aggregate = normalizeModuleStatus(status)
+                  const display = formatModuleStatus(status)
+                  const color = aggregate === 'completed' ? '#00ff88'
+                    : aggregate === 'running' ? '#ffcc00'
+                    : aggregate === 'failed' ? '#ff2244'
+                    : aggregate === 'mixed' ? '#ff8800'
+                    : '#666688'
+                  return (
+                    <span key={mod} className="text-xs font-mono px-2 py-1 rounded bg-[#0a0a0f] border border-[#1e1e2e]">
+                      {mod}: <span style={{ color }}>{display}</span>
+                    </span>
+                  )
+                })}
               </div>
             </div>
           )
