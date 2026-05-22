@@ -74,11 +74,23 @@ async def system_stats(
     # API
     infra["api"] = {"status": "healthy", "timestamp": datetime.now(timezone.utc).isoformat()}
 
-    # Table row counts
+    # Table row counts — S154: workspace-scoped where possible, consistent with recent_scans.
+    # Modules are truly platform-wide (no workspace_id column). Users count is via UserWorkspace
+    # membership for this workspace, not global User table.
+    from api.models.user import UserWorkspace
+
     tables = {}
-    for model, name in [(User, "users"), (Target, "targets"), (Scan, "scans"), (Finding, "findings"), (Identity, "identities"), (Module, "modules")]:
+    scoped_models = [
+        ("targets", select(func.count()).select_from(Target).where(Target.workspace_id == workspace_id)),
+        ("scans", select(func.count()).select_from(Scan).where(Scan.workspace_id == workspace_id)),
+        ("findings", select(func.count()).select_from(Finding).where(Finding.workspace_id == workspace_id)),
+        ("identities", select(func.count()).select_from(Identity).where(Identity.workspace_id == workspace_id)),
+        ("users", select(func.count()).select_from(UserWorkspace).where(UserWorkspace.workspace_id == workspace_id)),
+        ("modules", select(func.count()).select_from(Module)),  # truly global, no workspace concept
+    ]
+    for name, query in scoped_models:
         try:
-            count = await db.scalar(select(func.count()).select_from(model))
+            count = await db.scalar(query)
             tables[name] = {"count": count or 0}
         except Exception:
             tables[name] = {"count": 0}

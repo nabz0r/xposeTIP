@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Plus, Code, Play, Download, Upload, X, Trash2, ToggleLeft, ToggleRight, ChevronDown, ChevronRight } from 'lucide-react'
 import { getScrapers, getScraper, createScraper, updateScraper, deleteScraper, testScraper, toggleScraper, exportScraper, importScraper } from '../lib/api'
+import { useAuth } from '../lib/auth'
 
 const CATEGORIES = ['social', 'breach', 'metadata', 'people_search', 'identity', 'archive', 'gaming']
 const INPUT_TYPES = ['email', 'username', 'domain', 'url', 'ip', 'first_name']
@@ -11,6 +12,7 @@ const TRANSFORMS = ['', 'lowercase', 'strip_html', 'parse_int', 'strip']
 const statusColor = (s) => s === 'working' ? '#00ff88' : s === 'broken' ? '#ff2244' : s === 'rate_limited' ? '#ff8800' : '#666688'
 
 export default function Scrapers() {
+  const { refreshKey } = useAuth()
   const [scrapers, setScrapers] = useState([])
   const [selected, setSelected] = useState(null)
   const [editing, setEditing] = useState(null)
@@ -22,7 +24,7 @@ export default function Scrapers() {
   const [importJson, setImportJson] = useState('')
   const [catFilter, setCatFilter] = useState('all')
 
-  useEffect(() => { loadScrapers() }, [])
+  useEffect(() => { loadScrapers() }, [refreshKey])
 
   async function loadScrapers() {
     try {

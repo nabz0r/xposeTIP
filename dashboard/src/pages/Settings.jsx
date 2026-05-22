@@ -50,6 +50,7 @@ export default function Settings() {
 
 // ===================== API Keys Tab =====================
 function ApiKeysTab() {
+  const { refreshKey } = useAuth()
   const [keys, setKeys] = useState([])
   const [inputs, setInputs] = useState({})
   const [validating, setValidating] = useState({})
@@ -60,7 +61,7 @@ function ApiKeysTab() {
   const [customDesc, setCustomDesc] = useState('')
   const [customSaving, setCustomSaving] = useState(false)
 
-  useEffect(() => { loadKeys() }, [])
+  useEffect(() => { loadKeys() }, [refreshKey])
 
   async function loadKeys() {
     try {

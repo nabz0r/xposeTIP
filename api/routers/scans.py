@@ -209,11 +209,14 @@ async def scraper_progress(
     import redis as r
     from api.config import settings
     redis = r.from_url(settings.REDIS_URL)
-    key = f"scan:{scan_id}:scraper_progress"
-    data = redis.get(key)
-    if data:
-        return json.loads(data)
-    return {"current": 0, "total": 0, "current_name": ""}
+    try:
+        key = f"scan:{scan_id}:scraper_progress"
+        data = redis.get(key)
+        if data:
+            return json.loads(data)
+        return {"current": 0, "total": 0, "current_name": ""}
+    finally:
+        redis.close()
 
 
 def _scan_dict(s: Scan, target_email: str = None) -> dict:
