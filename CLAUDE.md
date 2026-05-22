@@ -5,9 +5,9 @@
 Identity Threat Intelligence platform. Scans email → builds identity graph →
 PageRank/Markov confidence → clusters personas → pixel art avatar → remediation plan.
 
-## Current version: v1.3.2
+## Current version: v1.3.3
 
-161+ sprints. 127 scrapers (110 active, 17 disabled placeholders), 27 scanners, 9 intelligence analyzers, 11-axis fingerprint (S145 formal_records + S147 network_signature).
+162+ sprints. 127 scrapers (110 active, 17 disabled placeholders), 27 scanners, 9 intelligence analyzers, 11-axis fingerprint (S145 formal_records + S147 network_signature).
 DB-persisted similarity engine (post-S131): target_similarities table, 11-axis cosine, name-aware combined score (S146 — cosine × name_sim Jaccard), threshold 0.70, audit-grade first_detected preserved across recomputes.
 Cascade state machine (post-S134): scans.cascade_state column tracks gathering → computing → similarity → done (failed terminal).
 Scanners: 26 registered (SCANNER_REGISTRY) + 9 analyzers. 5 disabled placeholders (maigret, h8mail, ghunt, paste_monitor, databroker_check).
@@ -22,6 +22,7 @@ page fetch → 6 extractors (rel_me/jsonld/social_link/email/meta_tag/username) 
 
 ## Recent sprints
 
+- **S162** — BFP page Subject Layer + Ethics sections — NEW `BFPSubjectLayer.jsx` (4 service tiers: Level I Read free / Level II Guidance free / Level III Monitoring Play 3a paid / Level IV Managed Remediation Play 3b paid; Takedown rendered as separate purple-accented card with circular ⏻ icon = legal safety valve, not a product tier) + NEW `BFPEthics.jsx` (italic thesis with `border-l-2 border-[#00ff88]` accent + cypherpunk/Brin/Right-to-Read lineage; 3-principle grid: Asymmetry is the harm, Empowerment over paternalism, Auditable by design; 2-card commitments grid: Takedown protocol + Auditable methodology). Page now 7 sections total (Hero → Foundation → Architecture → Cryptography → Subject Layer → Ethics → Roadmap)
 - **S161** — BFP page Architecture + Cryptography sections — NEW `BFPArchitecture.jsx` (2-layer split: xposeTIP cloud vs BFP local binary, 4 infrastructure parallels DNS/CT/MISP/BFP, Trust + Threat model cards) + NEW `BFPCryptography.jsx` (PQC stack: MinHash over SHA-3-256, SPHINCS+ / SLH-DSA, ML-DSA / Dilithium, ML-KEM / Kyber, Merkle tree — all NIST FIPS 203/204/205 since August 2024). `BFP.jsx` updated to interleave the new sections between Foundation and Roadmap with alternating `[#0a0a0f]`/`[#0d0d14]` backgrounds
 - **S160** — BFP public page MVP — NEW `/bfp` route + `dashboard/src/pages/BFP.jsx` wrapper, 3 components (`BFPHero` / `BFPFoundation` / `BFPRoadmap`) under `dashboard/src/components/bfp/`. Hero: "The internet knows who you are… Except you." Inversion statement + 4 attribute pills (Protocol / Subject / Post-quantum / Local-first). Foundation: 4 pillar cards (Identity is a layer / Protocol not product / Subject as first-class / Post-quantum local-first green). Roadmap: 4 buckets (Shipped / Active / Next / Long-term) with color-coded dots + sprint IDs. PublicNav adds `/bfp` between Architecture and Compare. Architecture / Cryptography / Subject Layer / Ethics / Status sections deferred to S161-S163 (56a3783→TBD)
 - **S159b** — Cosmetic chip fixes post-S159. UsernameTab.jsx: `getPlatformColor()` normalize regex changed to strip separators entirely (`/[.\-\s_]/g → ''`) so `dev.to` matches `devto` key; `extractPlatform()` generalized to accept both Finding (`.module`/`.data.platform`) and graph node (`.source_module`/`.platform`); graph-node loop now stores canonical platform name. PlatformIcon.jsx (used by OverviewTab): added `npm`/`pypi`/`kaggle` to PLATFORMS map (previously fell to grey default), NEW `PLATFORM_ALIASES` map (`npmmaintainer → npm`, `waybacklinkedinuser → linkedin`, etc.), extracted shared `resolveKey()` helper used by `getPlatformInfo`/`getRemediationLink`/`PlatformIcon` default export (56a3783)
