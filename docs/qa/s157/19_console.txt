@@ -1,0 +1,129 @@
+Total messages: 4 (Errors: 1, Warnings: 0)
+Returning 24 messages for level "error"
+
+[ERROR] Failed to load resource: the server responded with a status of 401 (Unauthorized) @ http://localhost:5173/api/v1/scans:0
+[ERROR] Failed to load resource: the server responded with a status of 401 (Unauthorized) @ http://localhost:5173/api/v1/findings/stats:0
+[ERROR] Failed to load resource: the server responded with a status of 401 (Unauthorized) @ http://localhost:5173/api/v1/targets?per_page=100:0
+[ERROR] Failed to load resource: the server responded with a status of 401 (Unauthorized) @ http://localhost:5173/api/v1/auth/me:0
+[ERROR] Failed to load resource: the server responded with a status of 401 (Unauthorized) @ http://localhost:5173/api/v1/workspaces:0
+[ERROR] Failed to load resource: the server responded with a status of 401 (Unauthorized) @ http://localhost:5173/api/v1/scans:0
+[ERROR] Failed to load resource: the server responded with a status of 401 (Unauthorized) @ http://localhost:5173/api/v1/findings/stats:0
+[ERROR] Failed to load resource: the server responded with a status of 401 (Unauthorized) @ http://localhost:5173/api/v1/targets?per_page=100:0
+[ERROR] Failed to load resource: the server responded with a status of 401 (Unauthorized) @ http://localhost:5173/api/v1/auth/me:0
+[ERROR] Failed to load resource: the server responded with a status of 401 (Unauthorized) @ http://localhost:5173/api/v1/workspaces:0
+[ERROR] Failed to load resource: the server responded with a status of 404 () @ https://t3.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=http://npmmaintainer.com&size=32:0
+[ERROR] Failed to load resource: the server responded with a status of 404 () @ https://t3.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=http://steam.com&size=32:0
+[ERROR] The above error occurred in the <span> component:
+
+    at span
+    at span
+    at div
+    at div
+    at div
+    at ScansTab (http://localhost:5173/src/pages/tabs/ScansTab.jsx?t=1779459732924:47:36)
+    at div
+    at TargetDetail (http://localhost:5173/src/pages/TargetDetail.jsx?t=1779472681412:36:18)
+    at RenderedRoute (http://localhost:5173/node_modules/.vite/deps/react-router-dom.js?v=85cc5a79:6355:26)
+    at Outlet (http://localhost:5173/node_modules/.vite/deps/react-router-dom.js?v=85cc5a79:7143:26)
+    at div
+    at main
+    at div
+    at Layout (http://localhost:5173/src/components/Layout.jsx?t=1779459732924:51:83)
+    at ProtectedRoute (http://localhost:5173/src/main.jsx?t=1779472718454:41:27)
+    at RenderedRoute (http://localhost:5173/node_modules/.vite/deps/react-router-dom.js?v=85cc5a79:6355:26)
+    at Routes (http://localhost:5173/node_modules/.vite/deps/react-router-dom.js?v=85cc5a79:7222:3)
+    at Router (http://localhost:5173/node_modules/.vite/deps/react-router-dom.js?v=85cc5a79:7152:13)
+    at BrowserRouter (http://localhost:5173/node_modules/.vite/deps/react-router-dom.js?v=85cc5a79:10363:3)
+    at ToastProvider (http://localhost:5173/src/components/Toast.jsx:33:33)
+    at AuthProvider (http://localhost:5173/src/lib/auth.jsx:20:32)
+    at App
+
+Consider adding an error boundary to your tree to customize error handling behavior.
+Visit https://reactjs.org/link/error-boundaries to learn more about error boundaries. @ http://localhost:5173/node_modules/.vite/deps/chunk-KDCVS43I.js?v=85cc5a79:14079
+[ERROR] The above error occurred in the <span> component:
+
+    at span
+    at span
+    at div
+    at div
+    at div
+    at ScansTab (http://localhost:5173/src/pages/tabs/ScansTab.jsx?t=1779459732924:47:36)
+    at div
+    at TargetDetail (http://localhost:5173/src/pages/TargetDetail.jsx?t=1779472681412:36:18)
+    at RenderedRoute (http://localhost:5173/node_modules/.vite/deps/react-router-dom.js?v=85cc5a79:6355:26)
+    at Outlet (http://localhost:5173/node_modules/.vite/deps/react-router-dom.js?v=85cc5a79:7143:26)
+    at div
+    at main
+    at div
+    at Layout (http://localhost:5173/src/components/Layout.jsx?t=1779459732924:51:83)
+    at ProtectedRoute (http://localhost:5173/src/main.jsx?t=1779472718454:41:27)
+    at RenderedRoute (http://localhost:5173/node_modules/.vite/deps/react-router-dom.js?v=85cc5a79:6355:26)
+    at Routes (http://localhost:5173/node_modules/.vite/deps/react-router-dom.js?v=85cc5a79:7222:3)
+    at Router (http://localhost:5173/node_modules/.vite/deps/react-router-dom.js?v=85cc5a79:7152:13)
+    at BrowserRouter (http://localhost:5173/node_modules/.vite/deps/react-router-dom.js?v=85cc5a79:10363:3)
+    at ToastProvider (http://localhost:5173/src/components/Toast.jsx:33:33)
+    at AuthProvider (http://localhost:5173/src/lib/auth.jsx:20:32)
+    at App
+
+Consider adding an error boundary to your tree to customize error handling behavior.
+Visit https://reactjs.org/link/error-boundaries to learn more about error boundaries. @ http://localhost:5173/node_modules/.vite/deps/chunk-KDCVS43I.js?v=85cc5a79:14079
+[ERROR] Failed to load resource: the server responded with a status of 404 () @ https://t3.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=http://npmmaintainer.com&size=32:0
+[ERROR] Failed to load resource: the server responded with a status of 404 () @ https://t3.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=http://steam.com&size=32:0
+[ERROR] Failed to load resource: the server responded with a status of 404 () @ https://t3.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=http://npmmaintainer.com&size=32:0
+[ERROR] Failed to load resource: the server responded with a status of 404 () @ https://t3.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=http://steam.com&size=32:0
+[ERROR] Failed to load resource: the server responded with a status of 404 () @ https://t3.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=http://steam.com&size=32:0
+Error: Objects are not valid as a React child (found: object with keys {agify, genderize, gcal_public, leak_lookup, nationalize, rdap_domain, disify_email, dns_txt_saas, pypi_profile, aboutme_check, devto_profile, imgur_profile, intelx_public, pastebin_user, psbdmp_search, steam_profile, vimeo_profile, wayback_count, webmii_search, disqus_profile, flickr_profile, github_scraper, gitlab_profile, kaggle_profile, lastfm_profile, medium_profile, npm_maintainer, reddit_profile, replit_profile, roblox_profile, strava_profile, tiktok_profile, tumblr_profile, twitch_profile, wayback_domain, wayback_github, aboutme_profile, anilist_profile, behance_profile, bluesky_profile, discogs_profile, dns_dmarc_check, github_timezone, github_user_api, keybase_profile, lichess_profile, mailcheck_email, mastodon_search, threads_profile, wayback_profile, wayback_twitter, bandcamp_profile, chainabuse_check, chesscom_profile, codeberg_profile, codewars_profile, crtsh_subdomains, dribbble_profile, duolingo_profile, gravatar_scraper, hashnode_profile, leakcheck_public, linkedin_profile, linktree_profile, mixcloud_profile, rubygems_profile, snapchat_profile, speedrun_profile, telegram_profile, wayback_facebook, wayback_linkedin, bitbucket_profile, blockchair_wallet, dockerhub_profile, emailrep_breaches, github_gists_user, goodreads_profile, google_phone_dork, packagist_profile, pinterest_profile, runescape_profile, soundcloud_search, wayback_instagram, crunchbase_profile, github_code_search, hackernews_profile, hackertarget_hosts, letterboxd_profile, slideshare_profile, blockchain_info_btc, github_email_search, huggingface_profile, myanimelist_profile, producthunt_profile, xposedornot_scraper, buymeacoffee_profile, google_groups_search, stackoverflow_search, google_scholar_search, gravatar_email_lookup, viewdns_reverse_whois, wayback_linkedin_user, disposable_email_check, steam_community_profile, github_code_search_username}). If you meant to render a collection of children, use an array instead.
+    at throwOnInvalidObjectType (http://localhost:5173/node_modules/.vite/deps/chunk-KDCVS43I.js?v=85cc5a79:9981:17)
+    at reconcileChildFibers2 (http://localhost:5173/node_modules/.vite/deps/chunk-KDCVS43I.js?v=85cc5a79:10611:15)
+    at reconcileChildren (http://localhost:5173/node_modules/.vite/deps/chunk-KDCVS43I.js?v=85cc5a79:14338:37)
+    at updateHostComponent (http://localhost:5173/node_modules/.vite/deps/chunk-KDCVS43I.js?v=85cc5a79:14855:11)
+    at beginWork (http://localhost:5173/node_modules/.vite/deps/chunk-KDCVS43I.js?v=85cc5a79:15983:22)
+    at HTMLUnknownElement.callCallback2 (http://localhost:5173/node_modules/.vite/deps/chunk-KDCVS43I.js?v=85cc5a79:3680:22)
+    at Object.invokeGuardedCallbackDev (http://localhost:5173/node_modules/.vite/deps/chunk-KDCVS43I.js?v=85cc5a79:3705:24)
+    at invokeGuardedCallback (http://localhost:5173/node_modules/.vite/deps/chunk-KDCVS43I.js?v=85cc5a79:3739:39)
+    at beginWork$1 (http://localhost:5173/node_modules/.vite/deps/chunk-KDCVS43I.js?v=85cc5a79:19818:15)
+    at performUnitOfWork (http://localhost:5173/node_modules/.vite/deps/chunk-KDCVS43I.js?v=85cc5a79:19251:20)
+Error: Objects are not valid as a React child (found: object with keys {gdelt_news, gnews_news, google_news_rss, interpol_red_notices, opensanctions_search}). If you meant to render a collection of children, use an array instead.
+    at throwOnInvalidObjectType (http://localhost:5173/node_modules/.vite/deps/chunk-KDCVS43I.js?v=85cc5a79:9981:17)
+    at reconcileChildFibers2 (http://localhost:5173/node_modules/.vite/deps/chunk-KDCVS43I.js?v=85cc5a79:10611:15)
+    at reconcileChildren (http://localhost:5173/node_modules/.vite/deps/chunk-KDCVS43I.js?v=85cc5a79:14338:37)
+    at updateHostComponent (http://localhost:5173/node_modules/.vite/deps/chunk-KDCVS43I.js?v=85cc5a79:14855:11)
+    at beginWork (http://localhost:5173/node_modules/.vite/deps/chunk-KDCVS43I.js?v=85cc5a79:15983:22)
+    at HTMLUnknownElement.callCallback2 (http://localhost:5173/node_modules/.vite/deps/chunk-KDCVS43I.js?v=85cc5a79:3680:22)
+    at Object.invokeGuardedCallbackDev (http://localhost:5173/node_modules/.vite/deps/chunk-KDCVS43I.js?v=85cc5a79:3705:24)
+    at invokeGuardedCallback (http://localhost:5173/node_modules/.vite/deps/chunk-KDCVS43I.js?v=85cc5a79:3739:39)
+    at beginWork$1 (http://localhost:5173/node_modules/.vite/deps/chunk-KDCVS43I.js?v=85cc5a79:19818:15)
+    at performUnitOfWork (http://localhost:5173/node_modules/.vite/deps/chunk-KDCVS43I.js?v=85cc5a79:19251:20)
+Error: Objects are not valid as a React child (found: object with keys {agify, genderize, gcal_public, leak_lookup, nationalize, rdap_domain, disify_email, dns_txt_saas, pypi_profile, aboutme_check, devto_profile, imgur_profile, intelx_public, pastebin_user, psbdmp_search, steam_profile, vimeo_profile, wayback_count, webmii_search, disqus_profile, flickr_profile, github_scraper, gitlab_profile, kaggle_profile, lastfm_profile, medium_profile, npm_maintainer, reddit_profile, replit_profile, roblox_profile, strava_profile, tiktok_profile, tumblr_profile, twitch_profile, wayback_domain, wayback_github, aboutme_profile, anilist_profile, behance_profile, bluesky_profile, discogs_profile, dns_dmarc_check, github_timezone, github_user_api, keybase_profile, lichess_profile, mailcheck_email, mastodon_search, threads_profile, wayback_profile, wayback_twitter, bandcamp_profile, chainabuse_check, chesscom_profile, codeberg_profile, codewars_profile, crtsh_subdomains, dribbble_profile, duolingo_profile, gravatar_scraper, hashnode_profile, leakcheck_public, linkedin_profile, linktree_profile, mixcloud_profile, rubygems_profile, snapchat_profile, speedrun_profile, telegram_profile, wayback_facebook, wayback_linkedin, bitbucket_profile, blockchair_wallet, dockerhub_profile, emailrep_breaches, github_gists_user, goodreads_profile, google_phone_dork, packagist_profile, pinterest_profile, runescape_profile, soundcloud_search, wayback_instagram, crunchbase_profile, github_code_search, hackernews_profile, hackertarget_hosts, letterboxd_profile, slideshare_profile, blockchain_info_btc, github_email_search, huggingface_profile, myanimelist_profile, producthunt_profile, xposedornot_scraper, buymeacoffee_profile, google_groups_search, stackoverflow_search, google_scholar_search, gravatar_email_lookup, viewdns_reverse_whois, wayback_linkedin_user, disposable_email_check, steam_community_profile, github_code_search_username}). If you meant to render a collection of children, use an array instead.
+    at throwOnInvalidObjectType (http://localhost:5173/node_modules/.vite/deps/chunk-KDCVS43I.js?v=85cc5a79:9981:17)
+    at reconcileChildFibers2 (http://localhost:5173/node_modules/.vite/deps/chunk-KDCVS43I.js?v=85cc5a79:10611:15)
+    at reconcileChildren (http://localhost:5173/node_modules/.vite/deps/chunk-KDCVS43I.js?v=85cc5a79:14338:37)
+    at updateHostComponent (http://localhost:5173/node_modules/.vite/deps/chunk-KDCVS43I.js?v=85cc5a79:14855:11)
+    at beginWork (http://localhost:5173/node_modules/.vite/deps/chunk-KDCVS43I.js?v=85cc5a79:15983:22)
+    at HTMLUnknownElement.callCallback2 (http://localhost:5173/node_modules/.vite/deps/chunk-KDCVS43I.js?v=85cc5a79:3680:22)
+    at Object.invokeGuardedCallbackDev (http://localhost:5173/node_modules/.vite/deps/chunk-KDCVS43I.js?v=85cc5a79:3705:24)
+    at invokeGuardedCallback (http://localhost:5173/node_modules/.vite/deps/chunk-KDCVS43I.js?v=85cc5a79:3739:39)
+    at beginWork$1 (http://localhost:5173/node_modules/.vite/deps/chunk-KDCVS43I.js?v=85cc5a79:19818:15)
+    at performUnitOfWork (http://localhost:5173/node_modules/.vite/deps/chunk-KDCVS43I.js?v=85cc5a79:19251:20)
+Error: Objects are not valid as a React child (found: object with keys {gdelt_news, gnews_news, google_news_rss, interpol_red_notices, opensanctions_search}). If you meant to render a collection of children, use an array instead.
+    at throwOnInvalidObjectType (http://localhost:5173/node_modules/.vite/deps/chunk-KDCVS43I.js?v=85cc5a79:9981:17)
+    at reconcileChildFibers2 (http://localhost:5173/node_modules/.vite/deps/chunk-KDCVS43I.js?v=85cc5a79:10611:15)
+    at reconcileChildren (http://localhost:5173/node_modules/.vite/deps/chunk-KDCVS43I.js?v=85cc5a79:14338:37)
+    at updateHostComponent (http://localhost:5173/node_modules/.vite/deps/chunk-KDCVS43I.js?v=85cc5a79:14855:11)
+    at beginWork (http://localhost:5173/node_modules/.vite/deps/chunk-KDCVS43I.js?v=85cc5a79:15983:22)
+    at HTMLUnknownElement.callCallback2 (http://localhost:5173/node_modules/.vite/deps/chunk-KDCVS43I.js?v=85cc5a79:3680:22)
+    at Object.invokeGuardedCallbackDev (http://localhost:5173/node_modules/.vite/deps/chunk-KDCVS43I.js?v=85cc5a79:3705:24)
+    at invokeGuardedCallback (http://localhost:5173/node_modules/.vite/deps/chunk-KDCVS43I.js?v=85cc5a79:3739:39)
+    at beginWork$1 (http://localhost:5173/node_modules/.vite/deps/chunk-KDCVS43I.js?v=85cc5a79:19818:15)
+    at performUnitOfWork (http://localhost:5173/node_modules/.vite/deps/chunk-KDCVS43I.js?v=85cc5a79:19251:20)
+Error: Objects are not valid as a React child (found: object with keys {agify, genderize, gcal_public, leak_lookup, nationalize, rdap_domain, disify_email, dns_txt_saas, pypi_profile, aboutme_check, devto_profile, imgur_profile, intelx_public, pastebin_user, psbdmp_search, steam_profile, vimeo_profile, wayback_count, webmii_search, disqus_profile, flickr_profile, github_scraper, gitlab_profile, kaggle_profile, lastfm_profile, medium_profile, npm_maintainer, reddit_profile, replit_profile, roblox_profile, strava_profile, tiktok_profile, tumblr_profile, twitch_profile, wayback_domain, wayback_github, aboutme_profile, anilist_profile, behance_profile, bluesky_profile, discogs_profile, dns_dmarc_check, github_timezone, github_user_api, keybase_profile, lichess_profile, mailcheck_email, mastodon_search, threads_profile, wayback_profile, wayback_twitter, bandcamp_profile, chainabuse_check, chesscom_profile, codeberg_profile, codewars_profile, crtsh_subdomains, dribbble_profile, duolingo_profile, gravatar_scraper, hashnode_profile, leakcheck_public, linkedin_profile, linktree_profile, mixcloud_profile, rubygems_profile, snapchat_profile, speedrun_profile, telegram_profile, wayback_facebook, wayback_linkedin, bitbucket_profile, blockchair_wallet, dockerhub_profile, emailrep_breaches, github_gists_user, goodreads_profile, google_phone_dork, packagist_profile, pinterest_profile, runescape_profile, soundcloud_search, wayback_instagram, crunchbase_profile, github_code_search, hackernews_profile, hackertarget_hosts, letterboxd_profile, slideshare_profile, blockchain_info_btc, github_email_search, huggingface_profile, myanimelist_profile, producthunt_profile, xposedornot_scraper, buymeacoffee_profile, google_groups_search, stackoverflow_search, google_scholar_search, gravatar_email_lookup, viewdns_reverse_whois, wayback_linkedin_user, disposable_email_check, steam_community_profile, github_code_search_username}). If you meant to render a collection of children, use an array instead.
+    at throwOnInvalidObjectType (http://localhost:5173/node_modules/.vite/deps/chunk-KDCVS43I.js?v=85cc5a79:9981:17)
+    at reconcileChildFibers2 (http://localhost:5173/node_modules/.vite/deps/chunk-KDCVS43I.js?v=85cc5a79:10611:15)
+    at reconcileChildren (http://localhost:5173/node_modules/.vite/deps/chunk-KDCVS43I.js?v=85cc5a79:14338:37)
+    at updateHostComponent (http://localhost:5173/node_modules/.vite/deps/chunk-KDCVS43I.js?v=85cc5a79:14855:11)
+    at beginWork (http://localhost:5173/node_modules/.vite/deps/chunk-KDCVS43I.js?v=85cc5a79:15983:22)
+    at beginWork$1 (http://localhost:5173/node_modules/.vite/deps/chunk-KDCVS43I.js?v=85cc5a79:19806:22)
+    at performUnitOfWork (http://localhost:5173/node_modules/.vite/deps/chunk-KDCVS43I.js?v=85cc5a79:19251:20)
+    at workLoopSync (http://localhost:5173/node_modules/.vite/deps/chunk-KDCVS43I.js?v=85cc5a79:19190:13)
+    at renderRootSync (http://localhost:5173/node_modules/.vite/deps/chunk-KDCVS43I.js?v=85cc5a79:19169:15)
+    at recoverFromConcurrentError (http://localhost:5173/node_modules/.vite/deps/chunk-KDCVS43I.js?v=85cc5a79:18786:28)
