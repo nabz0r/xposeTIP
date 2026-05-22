@@ -2,22 +2,66 @@ import { useMemo, useState, useEffect } from 'react'
 import { ChevronDown, ChevronRight, ExternalLink, Zap, Search, Loader2 } from 'lucide-react'
 import { scanIndicator } from '../../lib/api'
 
+// Aligned with seed_scrapers.py scraper names + data.platform values produced.
+// This map IS the username-platform allow-list — only keys present here will
+// appear in UsernameTab (defense-in-depth on top of S159 backend taxonomy fix).
 const PLATFORM_COLORS = {
-  github: '#238636', gitlab: '#fc6d26', reddit: '#ff4500',
-  steam: '#1b2838', medium: '#00ab6c', telegram: '#0088cc',
-  mastodon: '#6364ff', pinterest: '#e60023', linkedin: '#0a66c2',
-  twitter: '#1da1f2', instagram: '#e4405f', flickr: '#ff0084',
-  keybase: '#ff6f21', imgur: '#1bb76e', stackoverflow: '#f48024',
-  hackerrank: '#2ec866', chess: '#769656', lichess: '#ffffff',
-  codewars: '#b1361e', replit: '#f26207', soundcloud: '#ff5500',
-  devto: '#0a0a0a', hashnode: '#2962ff', bluesky: '#0085ff',
-  about_me: '#00405d', linktree: '#43e55e', speedrun: '#ffdd57',
+  // Social / forums
+  reddit: '#ff4500', github: '#238636', gitlab: '#fc6d26',
+  medium: '#00ab6c', devto: '#0a0a0a', hackernews: '#ff6600',
+  mastodon: '#6364ff', stackoverflow: '#f48024', linktree: '#43e55e',
+  hashnode: '#2962ff', bluesky: '#0085ff', disqus: '#2e9fff',
+  // Networks / platforms
+  telegram: '#0088cc', threads: '#000000', linkedin: '#0a66c2',
+  keybase: '#ff6f21', aboutme: '#00405d', pinterest: '#e60023',
+  imgur: '#1bb76e', flickr: '#ff0084', soundcloud: '#ff5500',
+  // Gaming / activities
+  steam: '#1b2838', twitch: '#9146ff', chesscom: '#769656',
+  lichess: '#759900', roblox: '#ff2e2e', strava: '#fc4c02',
+  anilist: '#02a9ff', myanimelist: '#2e51a2', speedrun: '#ffdd57',
+  // Tech / dev platforms
+  npm: '#cb3837', pypi: '#3775a9', kaggle: '#20beff',
+  codewars: '#b1361e', replit: '#f26207',
+}
+
+// Special-case module → canonical platform mapping.
+// Use when data.platform stores the verbose verbatim form but the finding
+// IS a real username on a known platform (vetted via Q2 sample).
+const MODULE_PLATFORM_MAP = {
+  'wayback_linkedin_user': 'linkedin',
+  'npm_maintainer': 'npm',
+  'github_email_search': 'github',
 }
 
 function getPlatformColor(platform) {
   if (!platform) return '#666688'
   const key = platform.toLowerCase().replace(/[.\-\s]/g, '_')
   return PLATFORM_COLORS[key] || '#666688'
+}
+
+// S159: canonical platform extraction — prefer explicit override, then
+// data.platform from backend, then derived from module name (strip suffixes).
+function extractPlatform(finding) {
+  const m = finding.module
+  if (m && MODULE_PLATFORM_MAP[m]) return MODULE_PLATFORM_MAP[m]
+  let p = finding.data?.platform
+  if (!p && m) {
+    p = m
+      .replace(/_profile$/, '')
+      .replace(/_scraper$/, '')
+      .replace(/_search$/, '')
+      .replace(/_maintainer$/, '')
+  }
+  return p ? p.toLowerCase().trim() : null
+}
+
+// S159: indicator_value looks like an email or a bare domain → not a username.
+function isJunkUsernameValue(v) {
+  if (!v) return true
+  if (v.includes('@')) return true  // email
+  // bare domain (e.g., "gmail.com", "kpmg.lu") — letters/digits/hyphens + TLD
+  if (/^[a-z0-9-]+\.[a-z]{2,}$/i.test(v)) return true
+  return false
 }
 
 export default function UsernameTab({ findings, graphData, targetId, onRefresh }) {
@@ -31,6 +75,11 @@ export default function UsernameTab({ findings, graphData, targetId, onRefresh }
     // From findings with indicator_type="username"
     for (const f of findings) {
       if (f.indicator_type !== 'username' || !f.indicator_value) continue
+      // S159: defense — skip junk values that leaked from misconfigured scrapers
+      if (isJunkUsernameValue(f.indicator_value)) continue
+      // S159: defense — skip findings whose platform is not in the allow-list
+      const fPlatform = extractPlatform(f)
+      if (!fPlatform || !PLATFORM_COLORS[fPlatform]) continue
       const key = f.indicator_value.toLowerCase()
       if (!groups[key]) {
         groups[key] = {
@@ -47,8 +96,8 @@ export default function UsernameTab({ findings, graphData, targetId, onRefresh }
       if (f.data?.pass === '1.5') groups[key].fromExpansion = true
       if (f.data?.pass === 'deep') groups[key].fromDeepScan = true
 
-      // Extract platform from module name
-      const platform = f.module?.replace('scraper_', '').split('_')[0] || f.data?.platform
+      // S159: canonical platform via helper (override > data.platform > module-derived)
+      const platform = fPlatform  // already resolved above for filtering
       if (platform && !groups[key].platforms.some(p => p.name === platform)) {
         groups[key].platforms.push({
           name: platform,
@@ -66,6 +115,10 @@ export default function UsernameTab({ findings, graphData, targetId, onRefresh }
     if (graphData?.nodes) {
       for (const node of graphData.nodes) {
         if (node.type !== 'username' || !node.value) continue
+        // S159: same defense as findings loop
+        if (isJunkUsernameValue(node.value)) continue
+        const nodePlatform = node.platform ? node.platform.toLowerCase().trim() : null
+        if (nodePlatform && !PLATFORM_COLORS[nodePlatform]) continue
         const key = node.value.toLowerCase()
         if (!groups[key]) {
           groups[key] = {

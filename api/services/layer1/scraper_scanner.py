@@ -134,6 +134,17 @@ class ScraperScanner(BaseScanner):
                 except (KeyError, IndexError):
                     title = f"{scraper.display_name or scraper.name}: profile found"
 
+                # S159: writer guard — skip materializing "tried, found nothing" as a finding.
+                # These polluted UsernameTab + fingerprint axes with low-confidence empty rows.
+                # Real telemetry of attempts lives in scan.module_progress (S122-obs).
+                resolved_indicator = (
+                    extracted.get("display_name") or
+                    extracted.get("username") or
+                    input_value
+                )
+                if not resolved_indicator or not str(resolved_indicator).strip():
+                    continue  # don't materialize empty findings
+
                 results.append(ScanResult(
                     module=scraper.name,
                     layer=self.LAYER,
@@ -148,12 +159,11 @@ class ScraperScanner(BaseScanner):
                         "extracted": extracted,
                         "status_code": result.get("status_code"),
                     },
-                    indicator_value=(
-                        extracted.get("display_name") or
-                        extracted.get("username") or
-                        input_value
-                    ),
-                    indicator_type=scraper.identity_type or "username",
+                    indicator_value=resolved_indicator,
+                    # S159: safer fallback — when scraper.identity_type is unspecified,
+                    # default to input_type. A DNS scraper given a domain should write
+                    # 'domain' findings, not pretend it produced a 'username'.
+                    indicator_type=scraper.identity_type or scraper.input_type,
                 ))
 
                 # Wait between scrapers to respect rate limits
