@@ -8,16 +8,10 @@ import LocationMap from '../components/LocationMap'
 import ProfileHeader from '../components/ProfileHeader'
 import useSSE from '../hooks/useSSE'
 import OverviewTab from './tabs/OverviewTab'
-import FindingsTab from './tabs/FindingsTab'
-import TimelineTab from './tabs/TimelineTab'
-import AccountsTab from './tabs/AccountsTab'
-import PhotosTab from './tabs/PhotosTab'
 import ScansTab from './tabs/ScansTab'
-import PublicExposureTab from '../components/target/PublicExposureTab'
-import UsernameTab from './tabs/UsernameTab'
-import DiscoveredTab from './tabs/DiscoveredTab'
-import SourcesTab from './tabs/SourcesTab'
-import BreachesTab from './tabs/BreachesTab'
+import FindingsHubTab from './tabs/FindingsHubTab'
+import GraphHubTab from './tabs/GraphHubTab'
+import SourcesHubTab from './tabs/SourcesHubTab'
 import SanctionsAlert from '../components/target/SanctionsAlert'
 
 // S149: shared predicate for "scan is still working" — covers both the active
@@ -43,6 +37,29 @@ export default function TargetDetail() {
   const [selectedModules, setSelectedModules] = useState([])
   const [scanning, setScanning] = useState(false)
   const [activeTab, setActiveTab] = useState('overview')
+  const [subTab, setSubTab] = useState({ findings: 'all', graph: 'graph', sources: 'sources' })
+
+  const navigateTo = (tab, sub = null) => {
+    setActiveTab(tab)
+    if (sub) setSubTab(prev => ({ ...prev, [tab]: sub }))
+  }
+
+  const setSubTabFor = (top) => (key) => setSubTab(prev => ({ ...prev, [top]: key }))
+
+  // S157 compatibility shim: maps old flat-tab names (still used by
+  // OverviewTab deep-links) to the new {top, sub} structure. Lets
+  // OverviewTab stay unchanged.
+  const setActiveTabCompat = (oldName) => {
+    if (['exposure', 'breaches', 'usernames', 'photos', 'locations', 'discovered'].includes(oldName)) {
+      navigateTo('findings', oldName)
+    } else if (oldName === 'timeline') {
+      navigateTo('graph', 'timeline')
+    } else if (oldName === 'accounts') {
+      navigateTo('sources', 'accounts')
+    } else {
+      navigateTo(oldName)
+    }
+  }
   const [toast, setToast] = useState(null)
   const [accounts, setAccounts] = useState([])
   const [auditingAccount, setAuditingAccount] = useState(null)
@@ -179,9 +196,11 @@ export default function TargetDetail() {
     }
   }, [findings.length, id])
 
-  // Load connected accounts
+  // Load connected accounts — S157: 'accounts' was a top tab pre-S157; now
+  // it's a sub-pill under 'sources'. Load when we enter sources (either sub)
+  // or overview, since overview also surfaces account hints.
   useEffect(() => {
-    if (activeTab === 'accounts' || activeTab === 'overview') {
+    if (activeTab === 'sources' || activeTab === 'overview') {
       getAccounts(id).then(d => setAccounts(d.items || [])).catch(() => {})
     }
   }, [activeTab, id])
@@ -241,7 +260,7 @@ export default function TargetDetail() {
     setSevFilter('all')
     setModFilter('all')
     setStatusFilter('all')
-    setActiveTab('findings')
+    navigateTo('findings', 'all')
   }
 
   // Filtered findings
@@ -422,22 +441,20 @@ export default function TargetDetail() {
       {/* Sanctions/PEP Alert Banner */}
       <SanctionsAlert findings={findings} />
 
-      {/* Tabs */}
-      <div className="flex gap-1 border-b border-[#1e1e2e]">
-        {['overview', 'findings', 'graph', 'timeline', 'photos', 'exposure', 'breaches', 'locations', 'accounts', 'usernames', 'discovered', 'sources', 'scans'].map(tab => (
-          <button key={tab} onClick={() => setActiveTab(tab)}
-            className={`px-4 py-2 text-sm capitalize transition-colors ${activeTab === tab ? 'text-[#00ff88] border-b-2 border-[#00ff88]' : 'text-gray-400 hover:text-white'}`}>
-            {tab} {(() => {
-              if (tab === 'findings') return `(${findings.length})`
-              if (tab === 'scans') return `(${scans.length})`
-              if (tab === 'accounts') { const c = socialFindings.length + accounts.length; return c > 0 ? `(${c})` : '' }
-              if (tab === 'photos') { const c = (profile?.avatars || []).length; return c > 0 ? `(${c})` : '' }
-              if (tab === 'usernames') { const c = new Set(findings.filter(f => f.indicator_type === 'username' && f.indicator_value).map(f => f.indicator_value.toLowerCase())).size; return c > 0 ? `(${c})` : '' }
-              if (tab === 'exposure') { const c = findings.filter(f => f.category === 'public_exposure' || f.category === 'compliance' || f.category === 'corporate' || f.indicator_type === 'media_mention' || f.indicator_type === 'sanctions_match' || f.indicator_type === 'pep_match' || f.indicator_type === 'corporate_officer').length; return c > 0 ? `(${c})` : '' }
-              if (tab === 'breaches') { const c = breachFindings.length; return c > 0 ? `(${c})` : '' }
-              if (tab === 'sources') { const c = sourcesData?.sources?.length || 0; return c > 0 ? `(${c})` : '' }
-              return ''
-            })()}
+      {/* Tabs (S157: 13 → 5 with sub-pill hubs) */}
+      <div className="flex gap-1 border-b border-[#1e1e2e] overflow-x-auto">
+        {[
+          { key: 'overview', label: 'Overview' },
+          { key: 'findings', label: 'Findings', count: findings.length },
+          { key: 'graph',    label: 'Graph' },
+          { key: 'sources',  label: 'Sources' },
+          { key: 'scans',    label: 'Scans', count: scans.length },
+        ].map(tab => (
+          <button key={tab.key} onClick={() => setActiveTab(tab.key)}
+            className={`px-4 py-2 text-sm transition-colors whitespace-nowrap ${
+              activeTab === tab.key ? 'text-[#00ff88] border-b-2 border-[#00ff88]' : 'text-gray-400 hover:text-white'
+            }`}>
+            {tab.label}{tab.count != null ? <span className="ml-1 text-xs font-mono opacity-70">({tab.count})</span> : null}
           </button>
         ))}
       </div>
@@ -450,13 +467,14 @@ export default function TargetDetail() {
           socialFindings={socialFindings} breachFindings={breachFindings}
           geoFindings={geoFindings} riskAssessment={riskAssessment}
           remediations={remediations} criticalCount={criticalCount}
-          setActiveTab={setActiveTab} setShowScanModal={setShowScanModal}
+          setActiveTab={setActiveTabCompat} setShowScanModal={setShowScanModal}
           onRiskSignalViewAll={handleRiskSignalViewAll}
         />
       )}
 
       {activeTab === 'findings' && (
-        <FindingsTab
+        <FindingsHubTab
+          activeSub={subTab.findings} setActiveSub={setSubTabFor('findings')}
           target={target} findings={findings} filteredFindings={filteredFindings}
           expanded={expanded} setExpanded={setExpanded}
           sevFilter={sevFilter} setSevFilter={setSevFilter}
@@ -465,44 +483,29 @@ export default function TargetDetail() {
           presetFilter={presetFilter} setPresetFilter={setPresetFilter}
           findingsLimit={findingsLimit} setFindingsLimit={setFindingsLimit}
           uniqueModules={uniqueModules} load={load} patchFinding={patchFinding}
-          targetId={id} onRefresh={load}
+          targetId={id} profile={profile}
+          socialFindings={socialFindings} breachFindings={breachFindings}
+          geoFindings={geoFindings} graphData={graphData}
         />
       )}
 
-      {activeTab === 'graph' && <IdentityGraph data={graphData} personas={profile?.personas || []} />}
+      {activeTab === 'graph' && (
+        <GraphHubTab
+          activeSub={subTab.graph} setActiveSub={setSubTabFor('graph')}
+          graphData={graphData} profile={profile} findings={findings}
+        />
+      )}
 
-      {activeTab === 'timeline' && <TimelineTab profile={profile} findings={findings} />}
-
-      {activeTab === 'photos' && <PhotosTab profile={profile} target={target} />}
-
-      {activeTab === 'exposure' && <PublicExposureTab findings={findings} profile={profile} />}
-
-      {activeTab === 'locations' && <LocationMap findings={findings} userLocations={profile?.user_locations} countryCode={target?.country_code} />}
-
-      {activeTab === 'accounts' && (
-        <AccountsTab
+      {activeTab === 'sources' && (
+        <SourcesHubTab
+          activeSub={subTab.sources} setActiveSub={setSubTabFor('sources')}
+          sourcesData={sourcesData}
           id={id} socialFindings={socialFindings} accounts={accounts}
           setAccounts={setAccounts} auditingAccount={auditingAccount}
           setAuditingAccount={setAuditingAccount} toast={toast} setToast={setToast}
           load={load} startOAuth={startOAuth} auditAccount={auditAccount}
           disconnectAccount={disconnectAccount}
         />
-      )}
-
-      {activeTab === 'usernames' && (
-        <UsernameTab findings={findings} graphData={graphData} targetId={id} onRefresh={load} />
-      )}
-
-      {activeTab === 'breaches' && (
-        <BreachesTab breachFindings={breachFindings} />
-      )}
-
-      {activeTab === 'discovered' && (
-        <DiscoveredTab targetId={id} targetStatus={target?.status} />
-      )}
-
-      {activeTab === 'sources' && (
-        <SourcesTab sourcesData={sourcesData} />
       )}
 
       {activeTab === 'scans' && (
