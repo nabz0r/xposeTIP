@@ -153,7 +153,12 @@ def _build_graph_context(target_id, workspace_id, session):
     }
 
 
-@celery_app.task(name="api.tasks.scan_orchestrator.launch_scan", bind=True)
+@celery_app.task(
+    name="api.tasks.scan_orchestrator.launch_scan",
+    bind=True,
+    acks_late=True,
+    reject_on_worker_lost=True,
+)
 def launch_scan(self, scan_id: str):
     from api.models.scan import Scan
     from api.models.target import Target

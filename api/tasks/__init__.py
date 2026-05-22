@@ -18,6 +18,18 @@ celery_app.conf.update(
         "api.tasks.scan_orchestrator.*": {"queue": "scans"},
         "api.tasks.module_tasks.*": {"queue": "modules"},
         "api.tasks.similarity.*": {"queue": "scans"},
+        "api.tasks.watchdog.*": {"queue": "scans"},
+    },
+    # S148: Redis broker visibility_timeout — gives acks_late tasks
+    # enough headroom to complete before broker redelivers. 2h covers
+    # even the longest cascade scans.
+    broker_transport_options={"visibility_timeout": 7200},
+    # S148: beat schedule — orphan-scan watchdog every 5 minutes.
+    beat_schedule={
+        "sweep-orphan-scans": {
+            "task": "api.tasks.watchdog.sweep_orphan_scans",
+            "schedule": 300.0,
+        },
     },
 )
 
@@ -27,6 +39,7 @@ import api.tasks.scan_orchestrator  # noqa: E402, F401
 import api.tasks.module_tasks  # noqa: E402, F401
 import api.tasks.web_discovery  # noqa: E402, F401
 import api.tasks.similarity  # noqa: E402, F401
+import api.tasks.watchdog  # noqa: E402, F401
 
 
 @celery_app.on_after_configure.connect
