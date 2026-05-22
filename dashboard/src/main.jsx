@@ -16,6 +16,7 @@ import Landing from './pages/Landing'
 import Architecture from './pages/Architecture'
 import UserPreview from './pages/UserPreview'
 import Manifesto from './pages/Manifesto'
+import BFP from './pages/BFP'
 import Compare from './pages/Compare'
 import Changelog from './pages/Changelog'
 import Consulting from './pages/Consulting'
@@ -37,6 +38,7 @@ function App() {
           <Route path="/welcome" element={<Landing />} />
           <Route path="/architecture" element={<Architecture />} />
           <Route path="/manifesto" element={<Manifesto />} />
+          <Route path="/bfp" element={<BFP />} />
           <Route path="/compare" element={<Compare />} />
           <Route path="/changelog" element={<Changelog />} />
           <Route path="/login" element={<Login />} />
