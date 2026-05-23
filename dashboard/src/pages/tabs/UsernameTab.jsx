@@ -31,6 +31,7 @@ const MODULE_PLATFORM_MAP = {
   'wayback_linkedin_user': 'linkedin',
   'npm_maintainer': 'npm',
   'github_email_search': 'github',
+  'github_deep': 'github',  // S178: github_scanner.py writes NULL data.platform
 }
 
 function getPlatformColor(platform) {
@@ -68,6 +69,60 @@ function isJunkUsernameValue(v) {
   return false
 }
 
+// S178: handle intelligence-module analyzer findings.
+// Shape: indicator_value=username, data.platforms=['Reddit','GitHub',...]
+//        (array, may be empty for pair-correlation rows),
+//        optional data.usernames=[u1, u2] for pair correlations.
+// Bypasses PLATFORM_COLORS allow-list (that filter is scraper-specific).
+function _addIntelligenceFinding(groups, f) {
+  // Pair-correlation rows surface a second username we'd otherwise miss.
+  const usernames = Array.isArray(f.data?.usernames) && f.data.usernames.length > 0
+    ? f.data.usernames
+    : [f.indicator_value]
+
+  // Normalize platform array using same key shape as PLATFORM_COLORS lookup.
+  const platformsRaw = Array.isArray(f.data?.platforms) ? f.data.platforms : []
+  const platformsNorm = platformsRaw
+    .map(p => (typeof p === 'string' ? p.toLowerCase().replace(/[.\-\s_]/g, '') : null))
+    .filter(p => p && PLATFORM_COLORS[p])
+
+  for (const u of usernames) {
+    if (!u || isJunkUsernameValue(u)) continue
+    const key = String(u).toLowerCase()
+    if (!groups[key]) {
+      groups[key] = {
+        username: String(u),
+        platforms: [],
+        findings: [],
+        fromExpansion: false,
+        fromDeepScan: false,
+        fromCorrelation: false,
+        maxConfidence: 0,
+      }
+    }
+    groups[key].findings.push(f)
+    groups[key].fromCorrelation = true
+    groups[key].maxConfidence = Math.max(groups[key].maxConfidence, f.confidence || 0)
+
+    for (const p of platformsNorm) {
+      if (!groups[key].platforms.some(x => x.name === p)) {
+        groups[key].platforms.push({
+          name: p,
+          url: null,
+          module: 'intelligence',
+          severity: f.severity,
+          confidence: f.confidence,
+          fromExpansion: false,
+          fromDeepScan: false,
+          fromCorrelation: true,
+        })
+      }
+    }
+    // Pair-correlation rows have no platforms[] — the group exists with
+    // platforms=[] and fromCorrelation=true; UI shows correlation badge.
+  }
+}
+
 export default function UsernameTab({ findings, graphData, targetId, onRefresh }) {
   const [expandedUser, setExpandedUser] = useState(null)
   const [scanningUser, setScanningUser] = useState(null)
@@ -81,6 +136,17 @@ export default function UsernameTab({ findings, graphData, targetId, onRefresh }
       if (f.indicator_type !== 'username' || !f.indicator_value) continue
       // S159: defense — skip junk values that leaked from misconfigured scrapers
       if (isJunkUsernameValue(f.indicator_value)) continue
+
+      // S178: Intelligence-module analyzer outputs use a different shape
+      // (data.platforms[] array, no scalar platform). The PLATFORM_COLORS
+      // allow-list — designed for scraper findings — silently dropped them
+      // since S159. Route them through a dedicated path that expands the
+      // array and surfaces both endpoints of pair-correlation rows.
+      if (f.module === 'intelligence') {
+        _addIntelligenceFinding(groups, f)
+        continue
+      }
+
       // S159: defense — skip findings whose platform is not in the allow-list
       const fPlatform = extractPlatform(f)
       if (!fPlatform || !PLATFORM_COLORS[fPlatform]) continue
@@ -92,6 +158,7 @@ export default function UsernameTab({ findings, graphData, targetId, onRefresh }
           findings: [],
           fromExpansion: false,
           fromDeepScan: false,
+          fromCorrelation: false,
           maxConfidence: 0,
         }
       }
@@ -133,6 +200,7 @@ export default function UsernameTab({ findings, graphData, targetId, onRefresh }
             findings: [],
             fromExpansion: false,
             fromDeepScan: false,
+            fromCorrelation: false,
             maxConfidence: node.confidence || 0,
           }
         }
@@ -212,6 +280,7 @@ export default function UsernameTab({ findings, graphData, targetId, onRefresh }
   const reuseCount = usernameGroups.filter(g => g.platforms.length >= 2).length
   const expansionCount = usernameGroups.filter(g => g.fromExpansion).length
   const deepCount = usernameGroups.filter(g => g.fromDeepScan).length
+  const correlationCount = usernameGroups.filter(g => g.fromCorrelation).length
   const totalPlatforms = usernameGroups.reduce((sum, g) => sum + g.platforms.length, 0)
 
   if (usernameGroups.length === 0) {
@@ -247,6 +316,11 @@ export default function UsernameTab({ findings, graphData, targetId, onRefresh }
           <span className="flex items-center gap-1 text-[#3388ff] font-mono">
             <Search className="w-3 h-3" />
             {deepCount} deep scanned
+          </span>
+        )}
+        {correlationCount > 0 && (
+          <span className="flex items-center gap-1 text-[#a855f7] font-mono">
+            {correlationCount} correlation{correlationCount !== 1 ? 's' : ''}
           </span>
         )}
       </div>
