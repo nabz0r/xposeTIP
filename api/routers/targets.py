@@ -655,6 +655,66 @@ async def compare_fingerprints(
     }
 
 
+@router.get("/{target_id}/bfp")
+async def get_target_bfp_dossier(
+    target_id: uuid.UUID,
+    workspace_id: uuid.UUID = Depends(get_current_workspace),
+    user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """Return the BFP substrate dossier for a target.
+
+    Includes the behavioral fingerprint hash (S166), claim log summary
+    (S167), and cross-verification aggregate (S168). Read-only view of
+    the per-target trust substrate. Does NOT expose Merkle inclusion
+    proofs — those are workspace-scoped and require future spec work
+    (BFP_SPEC §17 Appendix B).
+    """
+    from api.models.bfp_claim import BfpClaim
+    target = await _get_target(db, target_id, workspace_id)
+
+    # Claims: total + breakdown by type
+    claim_rows = (await db.execute(
+        select(BfpClaim.claim_type, func.count())
+        .where(BfpClaim.target_id == target_id)
+        .group_by(BfpClaim.claim_type)
+    )).all()
+    claims_total = sum(c for _, c in claim_rows)
+    claims_by_type = {t: c for t, c in claim_rows}
+
+    # Cross-verification: ratio of findings with count >= 1
+    findings_total = (await db.scalar(
+        select(func.count()).select_from(Finding)
+        .where(Finding.target_id == target_id)
+    )) or 0
+    findings_verified = (await db.scalar(
+        select(func.count()).select_from(Finding)
+        .where(Finding.target_id == target_id,
+               Finding.cross_verification_count >= 1)
+    )) or 0
+
+    bh = target.bfp_behavioral_hash_v1  # full hash or None
+
+    return {
+        "behavioral_hash": {
+            "present": bh is not None,
+            "full": bh,
+            "short": (bh[:12] if bh else None),
+            "version": 1,  # bfp_behavioral_hash_v1
+        },
+        "claims": {
+            "total": claims_total,
+            "by_type": claims_by_type,
+        },
+        "cross_verification": {
+            "verified": int(findings_verified),
+            "total": int(findings_total),
+            "ratio": (round(findings_verified / findings_total, 4)
+                      if findings_total else 0.0),
+        },
+    }
+
+
 @router.get("/{target_id}/similar")
 async def get_similar_targets(
     target_id: uuid.UUID,

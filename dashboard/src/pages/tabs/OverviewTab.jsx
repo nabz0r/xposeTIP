@@ -8,6 +8,7 @@ import GenerativeAvatar from '../../components/GenerativeAvatar'
 import LifeTimeline from '../../components/LifeTimeline'
 import RiskSignalsBlock from '../../components/RiskSignalsBlock'
 import SimilarityBlock from '../../components/SimilarityBlock'
+import BFPSubstrateBlock from '../../components/bfp/BFPSubstrateBlock'
 
 const severityColors = {
   critical: '#ff2244', high: '#ff8800', medium: '#ffcc00', low: '#3388ff', info: '#666688',
@@ -264,6 +265,9 @@ export default function OverviewTab({ target, findings, profile, fingerprint, fp
           </div>
         </div>
       )}
+
+      {/* BFP Substrate — trust layer dossier (S180-L) */}
+      <BFPSubstrateBlock targetId={target?.id} />
 
       {/* Fingerprint Evolution */}
       {fpHistory.length > 1 && (
