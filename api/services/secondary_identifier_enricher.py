@@ -81,6 +81,13 @@ def enrich_secondary_identifiers(target, scan, session):
                 for scraper in crypto_scrapers:
                     addr = wallet["address"]
                     key = f"{scraper.name}::{addr[:20]}"
+                    # S185: chain-shape gate. Skip if scraper declares a
+                    # chain whitelist and wallet's chain isn't in it.
+                    # NULL accepts_chain = no gate (multi-chain scrapers).
+                    wallet_chain = wallet.get("chain")
+                    if scraper.accepts_chain and wallet_chain not in scraper.accepts_chain:
+                        attempt_log[key] = "skipped_chain_mismatch"
+                        continue
                     try:
                         if _run_scraper(client, scraper.to_dict(), addr, target, scan, session):
                             created += 1

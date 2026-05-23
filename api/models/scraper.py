@@ -2,7 +2,7 @@ import uuid
 from datetime import datetime
 
 from sqlalchemy import TIMESTAMP, Boolean, ForeignKey, Integer, String, Text, func
-from sqlalchemy.dialects.postgresql import JSONB
+from sqlalchemy.dialects.postgresql import ARRAY, JSONB
 from sqlalchemy.orm import Mapped, mapped_column
 
 from api.models.base import Base, TimestampMixin, UUIDMixin
@@ -27,6 +27,10 @@ class Scraper(UUIDMixin, TimestampMixin, Base):
     # Input mapping
     input_type: Mapped[str] = mapped_column(String(50))
     input_transform: Mapped[str | None] = mapped_column(String(200))
+    # S185: chain-shape whitelist for crypto_wallet scrapers.
+    # NULL = no gate (scraper accepts any chain). Non-NULL = A1.6
+    # skips dispatch when wallet["chain"] not in accepts_chain.
+    accepts_chain: Mapped[list | None] = mapped_column(ARRAY(Text), default=None)
 
     # Extraction rules (editable regex/jsonpath patterns)
     extraction_rules: Mapped[list] = mapped_column(JSONB, default=list)
@@ -74,6 +78,7 @@ class Scraper(UUIDMixin, TimestampMixin, Base):
             "body_template": self.body_template,
             "input_type": self.input_type,
             "input_transform": self.input_transform,
+            "accepts_chain": self.accepts_chain,
             "extraction_rules": self.extraction_rules,
             "finding_title_template": self.finding_title_template,
             "finding_category": self.finding_category,
