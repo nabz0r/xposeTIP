@@ -186,6 +186,13 @@ def persist_scanner_results(scan, results, session) -> int:
                     f.cross_verification_count = new_count
                     f.cross_verification_sources = peers
 
+        # S167 — emit BFP claims for any finding now qualifying (cross_verif_count >= 1).
+        # The S168 recompute above just updated counts; re-read from peer_findings (the
+        # SAME Finding instances in this session) to ensure the emitter sees fresh values.
+        from api.services.bfp.claim_emitter import emit_claim_for_finding
+        for f in peer_findings:
+            emit_claim_for_finding(f, session)
+
     return created
 
 
