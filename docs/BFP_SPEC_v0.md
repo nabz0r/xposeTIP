@@ -7,7 +7,7 @@ Behavioral Fingerprint Protocol — Specification v0 (working draft)
 # Behavioral Fingerprint Protocol — Specification v0
 
 **Status**: Public working draft. Released for external review and external implementation feedback.
-**Version**: 0.2.2
+**Version**: 0.2.3
 **Date**: 2026-05-23
 **License**: Apache License 2.0
 **Editor**: Nabil Ksontini
@@ -20,7 +20,7 @@ This document is a public working draft of the **Behavioral Fingerprint Protocol
 
 This v0.2 draft is **code-agnostic on normalization functions and threshold values**: those are left to implementations. The protocol fixes the *structure* (axes, layers, vector format, similarity model, trust-layer mechanisms) but not the exact mathematics of any single axis.
 
-The v0.2.x series is formalized across three editorial sessions: Session 1 (v0.2.0) established the trust layer mechanics in §15-17. Session 2 sub-A (v0.2.1) formalized the trust-layer terminology, conceptual model, conformance, subject-rights tiers, and component versioning. Session 2 sub-B (v0.2.2, this revision) adds per-axis implementation status flags (§5) and the behavioral hash specification (§9.3). Session 2 continues in v0.2.3 with the post-quantum cryptography stack (§13).
+The v0.2.x series was formalized across three editorial sessions: Session 1 (v0.2.0) established the trust layer mechanics in §15-17. Session 2 sub-A (v0.2.1) formalized the trust-layer terminology, conceptual model, conformance, subject-rights tiers, and component versioning. Session 2 sub-B (v0.2.2) added per-axis implementation status flags (§5) and the behavioral hash specification (§9.3). Session 2 sub-C (v0.2.3, this revision) completes the post-quantum cryptography stack (§13.2) citing the spec-companion document `docs/specs/pqc_choices_v0.md`. With v0.2.3, Session 2 is complete; the v0.2.x protocol is feature-stable pending external implementation feedback.
 
 This draft is licensed under the Apache License, Version 2.0. Implementation and adoption feedback is welcome via the project repository.
 
@@ -99,8 +99,8 @@ The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT", "SHOULD", "S
 - **Anchor** (Merkle anchor): a Merkle root computed over the trust log within a trust boundary at a given point in time. See §17.
 - **Merkle leaf**: the hash of a single claim's `claim_hash` field, padded with the domain-separation prefix `0x00`. See §17.4.
 - **Merkle root**: the top-of-tree hash of the Merkle anchor.
-- **Subject signature**: a cryptographic signature produced by the subject over an attestation. Post-quantum algorithm choice specified in §13 (specified in v0.2.3).
-- **Operator signature**: a cryptographic signature produced by the operator over a claim or batch. Post-quantum algorithm choice specified in §13 (specified in v0.2.3).
+- **Subject signature**: a cryptographic signature produced by the subject over an attestation. Post-quantum algorithm choice specified in §13.2.
+- **Operator signature**: a cryptographic signature produced by the operator over a claim or batch. Post-quantum algorithm choice specified in §13.2.
 
 ---
 
@@ -181,7 +181,7 @@ A fingerprint-conformant implementation MAY operate without any trust-layer mach
 
 | Component | Section |
 |---|---|
-| Subject + operator signatures (PQC) | §13 (v0.2.3) |
+| Subject + operator signatures (PQC) | §13.2 |
 | Cross-verification | §15 |
 | Claim log | §16 |
 | Merkle anchor | §17 |
@@ -756,15 +756,165 @@ The normative content of §12.1 is the EXISTENCE of these tiers as a structure. 
 
 ## 13. Security Considerations
 
+### 13.1 General Security Considerations
+
 - **Adversarial input**: implementations MUST treat input data as untrusted. Adversaries may inject signals intended to manipulate axis values.
 - **Fingerprint forgery**: an adversary with knowledge of `F_axis` functions MAY attempt to construct synthetic identities that produce target fingerprints. Implementations SHOULD treat low-source-count fingerprints with reduced confidence.
 - **Side channels**: similarity scores can themselves leak information about the corpus. Implementations exposing similarity APIs SHOULD apply rate limiting and access controls.
+
+### 13.2 Post-Quantum Cryptography Stack
+
+The trust layer (§13-§17) requires three distinct cryptographic primitives. All three are specified as post-quantum algorithms standardized by NIST in August 2024 (FIPS 203, 204, 205). The protocol does NOT permit pre-quantum alternatives (RSA, ECDSA, ECDH) for trust-layer use.
+
+#### 13.2.1 Use Cases
+
+The protocol defines three trust-layer use cases requiring asymmetric cryptography:
+
+| Use case | Direction | Frequency | Latency budget |
+|---|---|---|---|
+| Subject attestation signatures | Subject signs an attestation about themselves (e.g. binding ceremony, claim refutation) | Low (one per attestation event) | Generous (subject is online and waiting) |
+| Operator claim signatures | Operator signs an emitted claim or claim batch | Medium-to-high (one per claim or one per batch tick) | Strict (claim emission is on the hot path) |
+| Confidential subject-operator channels | Key encapsulation for ephemeral session keys between subject and operator | Low (one per session, Phase 2+) | Generous |
+
+Each use case is bound to a specific algorithm family below.
+
+#### 13.2.2 Algorithm Choices (normative)
+
+Trust-layer conformant implementations MUST use the following algorithm families:
+
+| Use case | Algorithm | FIPS standard | Rationale |
+|---|---|---|---|
+| Subject attestation signatures | **SLH-DSA** (formerly SPHINCS+) | FIPS 205 | Hash-based, stateless, conservative security profile. No reliance on lattice or code assumptions. Slower signing acceptable for the subject use case. |
+| Operator claim signatures | **ML-DSA** (formerly Dilithium) | FIPS 204 | Lattice-based, fast verification critical for high-volume claim emission. ~2-4 KB signatures balance speed and size. |
+| Confidential channel KEM | **ML-KEM** (formerly Kyber) | FIPS 203 | Lattice-based KEM, standard pairing with ML-DSA, small ciphertexts. |
+
+Implementations MUST NOT substitute pre-quantum algorithms (RSA, ECDSA, ECDH, Ed25519) for these use cases. Hybrid post-quantum + pre-quantum constructions (combining ML-KEM with ECDH, for example) are NEITHER required NOR forbidden at the protocol level — implementations MAY adopt them as defense-in-depth, but only the post-quantum half is normative.
+
+#### 13.2.3 Parameter Sets (normative)
+
+| Algorithm | Allowed parameter sets | Default |
+|---|---|---|
+| SLH-DSA | `SLH-DSA-128s`, `SLH-DSA-192s` (the `s` "small" variants) | `SLH-DSA-128s` |
+| ML-DSA | `ML-DSA-44`, `ML-DSA-65`, `ML-DSA-87` | `ML-DSA-65` |
+| ML-KEM | `ML-KEM-768` | `ML-KEM-768` |
+
+The `s` (small) variants of SLH-DSA are mandated over `f` (fast) variants because the subject attestation use case prioritizes signature size (~7.8 KB for 128s vs ~17 KB for 128f) over signing speed.
+
+Operators MAY use higher-security parameter sets within an algorithm family (e.g. ML-DSA-87 instead of ML-DSA-65). Operators MUST declare their chosen parameter set in signature metadata (see §13.2.7).
+
+ML-KEM-512 and ML-KEM-1024 are NOT mandated; ML-KEM-768 alone covers Phase 1 needs at NIST security category 3.
+
+#### 13.2.4 Reference Library and Implementation Choice (informative)
+
+The reference implementation uses `liboqs-python` (Open Quantum Safe project) version `>=0.15.0, <1.0` for all three algorithm families. The rationale, benchmarks, and known risks are documented in [`docs/specs/pqc_choices_v0.md`](specs/pqc_choices_v0.md) (S174 — companion document).
+
+Other implementations MAY use any FIPS-conformant library producing byte-compatible signatures, ciphertexts, and shared secrets. Specifically, the reference companion document identifies these alternatives:
+
+- **SLH-DSA**: `pyspx` (CC0 license, SPHINCS+ reference team)
+- **ML-DSA, ML-KEM**: `cryptography` (pyca) `>=48.0.0` (Apache/BSD, Cure53-audited)
+- **Other language ecosystems**: RustCrypto's `slh-dsa`, `ml-dsa`, `ml-kem` crates; AWS-LC (C, FIPS 140-3 validated)
+
+Implementations MUST verify their chosen library produces test-vector-conformant outputs against NIST KAT (Known Answer Test) vectors before claiming trust-layer conformance.
+
+The library choice is OPERATIONAL, not normative. Two operators using different libraries for the same algorithm produce interoperable signatures and shared secrets, provided both implement FIPS 203/204/205 correctly.
+
+#### 13.2.5 Known Risks (informative)
+
+Risks tracked at protocol level (sourced from `pqc_choices_v0.md` §5):
+
+| # | Risk | Status |
+|---|---|---|
+| R1 | **No end-to-end constant-time / side-channel audit of `liboqs` is publicly available as of 2026-05.** Functional + memory-safety tests exist; timing-leak tests do not. | Open. Tracked in Appendix B. Re-evaluation trigger if audit is published. |
+| R2 | **pyca's `MLKEM768PublicKey.encapsulate()` returns `(shared_secret, ciphertext)` — the OPPOSITE tuple order from `liboqs` and `pqcrypto` which return `(ct, ss)`.** Silent breakage of decapsulation between mixed-library deployments. | Mitigation: implementations crossing library boundaries MUST normalize at a facade layer. Document the chosen order in the implementation's PQC abstraction. |
+| R3 | **NIST may publish FIPS 203/204/205 errata.** Algorithm parameter changes would require key migration. | Mitigation: `signature_version` (§14.1) is the migration vector. New PQC algorithm version = `signature_version` bump. Existing signatures at old version MUST remain verifiable. |
+
+Implementations SHOULD subscribe to upstream library security advisories and NIST CSRC announcements.
+
+#### 13.2.6 Sizes (informative)
+
+Approximate sizes per algorithm and parameter set (for implementation planning; exact bytes depend on encoding):
+
+| Algorithm | Parameter set | Public key | Secret key | Signature / ciphertext |
+|---|---|---|---|---|
+| SLH-DSA | 128s | 32 bytes | 64 bytes | ~7.8 KB |
+| SLH-DSA | 192s | 48 bytes | 96 bytes | ~16 KB |
+| ML-DSA | 44 | 1.3 KB | 2.5 KB | 2.4 KB |
+| ML-DSA | 65 | 2.0 KB | 4.0 KB | 3.3 KB |
+| ML-DSA | 87 | 2.6 KB | 4.9 KB | 4.6 KB |
+| ML-KEM | 768 | 1.2 KB | 2.4 KB | 1.1 KB (ciphertext) |
+
+Storage implications for the trust log:
+
+- A claim record (§16.2) with both `subject_signature` (SLH-DSA-128s ~7.8 KB) and `operator_signature` (ML-DSA-65 ~3.3 KB) adds ~11 KB to the row's serialized size.
+- At 4,320 anchored claims/day (current xposeTIP rate post-S172, all workspaces), full signature wiring would add ~47 MB/day = ~17 GB/year of trust-log storage. Operators with higher claim volumes scale linearly.
+
+These figures inform but do not constrain protocol-level requirements.
+
+#### 13.2.7 Signature Format
+
+Subject signatures and operator signatures are serialized as JSON objects within their respective fields in the claim structure (§16.2):
+
+```json
+{
+  "alg": "<algorithm identifier>",
+  "param_set": "<parameter set identifier>",
+  "signature_version": <integer>,
+  "key_id": "<public key identifier or fingerprint>",
+  "signature": "<base64url-encoded signature bytes>",
+  "signed_at": "<RFC 3339 timestamp>"
+}
+```
+
+Where:
+
+| Field | Type | Required | Description |
+|---|---|---|---|
+| `alg` | string | yes | One of: `SLH-DSA`, `ML-DSA`, `ML-KEM` (the last for KEM use cases only — not used in signature fields) |
+| `param_set` | string | yes | Specific parameter set, e.g. `SLH-DSA-128s`, `ML-DSA-65` |
+| `signature_version` | integer | yes | Currently `1`. Bumped on PQC algorithm version changes (see §14.1) |
+| `key_id` | string | yes | Identifier for the public key — implementation-defined format (e.g. SHA3-256 hash of public key, opaque UUID) |
+| `signature` | string | yes | Base64url-encoded signature bytes (no padding, RFC 4648 §5) |
+| `signed_at` | string | yes | RFC 3339 UTC timestamp of signature production |
+
+Implementations MUST verify all required fields are present before treating a signature as valid. Missing or malformed fields MUST result in signature verification failure, not silent acceptance.
+
+#### 13.2.8 Versioning
+
+`signature_version = 1` corresponds to:
+
+- SLH-DSA per FIPS 205 (published 2024-08)
+- ML-DSA per FIPS 204 (published 2024-08)
+- ML-KEM per FIPS 203 (published 2024-08)
+
+Any of the following REQUIRES bumping `signature_version`:
+
+- A FIPS 203/204/205 errata that changes algorithm parameters, key derivation, or signature/ciphertext format
+- A protocol-level decision to add a new mandatory algorithm family
+- A protocol-level decision to remove or deprecate an existing algorithm family
+
+Signatures at older `signature_version` values MUST remain verifiable indefinitely. Implementations MUST NOT silently recompute signatures under a new version (doing so would invalidate the historical claim log).
+
+#### 13.2.9 Conformance
+
+A trust-layer conformant implementation (§11.2) MAY emit `subject_signature` and `operator_signature` per this section.
+
+In v0.x, signature emission is OPTIONAL. The `subject_signature` and `operator_signature` fields in the claim structure (§16.2) MAY be `null` for claims emitted by trust-layer conformant implementations in v0.x.
+
+When emitted, signatures MUST:
+
+1. Use only the algorithm families specified in §13.2.2.
+2. Use only the parameter sets enumerated in §13.2.3.
+3. Be serialized per §13.2.7.
+4. Carry a `signature_version` field consistent with §13.2.8.
+5. Be produced by a library that has been verified against NIST KAT vectors for the chosen algorithm and parameter set.
+
+The protocol anticipates that cross-trust-boundary claim transfer (Appendix B open item) will REQUIRE signatures in a future version. Implementations targeting that future capability SHOULD wire signature emission in v0.x even though it is optional.
 
 ---
 
 ## 14. Versioning
 
-This is v0.2.2. The versioning policy for `bfp_version` itself is:
+This is v0.2.3. The versioning policy for `bfp_version` itself is:
 
 - **0.x.y**: pre-stable. Breaking changes permitted between minor versions. Not for external interoperability claims.
 - **1.0.0**: first stable version. Breaking changes between major versions only.
@@ -783,7 +933,7 @@ Beyond `bfp_version`, the protocol defines several component-specific version fi
 | Claim canonical encoding | `claim_hash_version` | Per-claim | §16.3 | Major bump on canonical JSON encoding change. Minor bump on field additions that preserve canonical hash of pre-existing claims. |
 | Merkle root algorithm | `root_version` | Per-anchor snapshot | §17.8 | Major bump on algorithm change (e.g., SHA3-256 → BLAKE3, leaf/internal hash structure change, ordering change). |
 | Behavioral hash algorithm | `behavioral_hash_version` | Per-subject | §9.3 (v0.2.2) | Major bump on MinHash parameter change (number of permutations, axis selection, bucket count). |
-| Signature algorithm | `signature_version` | Per-signature | §13 (v0.2.3) | Major bump on PQC algorithm or parameter set change. |
+| Signature algorithm | `signature_version` | Per-signature | §13.2 | Major bump on PQC algorithm or parameter set change. |
 
 These component versions are decoupled from `bfp_version`. A `bfp_version=0.2.1` implementation MAY use `claim_hash_version=1` AND `root_version=1`. When future versions introduce new component algorithms, OLD components MUST remain interpretable in their original version: implementations MUST NOT silently rebuild past anchors under a new `root_version` (doing so would invalidate the tamper-evidence property — see §17.10).
 
@@ -1177,4 +1327,4 @@ The following items are intentionally deferred from v0.x. They are anchored here
 
 ---
 
-*End of BFP v0.2.2 public working draft.*
+*End of BFP v0.2.3 public working draft — end of Session 2, v0.2.x feature-stable.*
