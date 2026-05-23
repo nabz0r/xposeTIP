@@ -31,6 +31,10 @@ def enrich_secondary_identifiers(target, scan, session):
     wallets = profile_data.get("crypto_wallets", [])
 
     if not phones and not wallets:
+        logger.info(
+            "A1.6: skipped — target %s has no phones/crypto_wallets in profile_data",
+            target.id,
+        )
         return
 
     scrapers = session.execute(
@@ -52,29 +56,61 @@ def enrich_secondary_identifiers(target, scan, session):
         crypto_scrapers = [s for s in scrapers if s.input_type == "crypto_wallet"]
 
         created = 0
+        # S180-G: track per-scraper attempt outcomes for module_progress.
+        # Key shape: "{scraper_name}::{input_value[:20]}" -> status string.
+        # Values: "success" | "no_match" | "exception"
+        attempt_log = {}
+
         if phone_scrapers and phones:
             for phone in phones[:3]:
                 for scraper in phone_scrapers:
+                    key = f"{scraper.name}::{phone[:20]}"
                     try:
                         if _run_scraper(client, scraper.to_dict(), phone, target, scan, session):
                             created += 1
+                            attempt_log[key] = "success"
+                        else:
+                            attempt_log[key] = "no_match"
                     except Exception as e:
+                        attempt_log[key] = "exception"
                         logger.debug("A1.6: %s failed for %s: %s", scraper.name, phone, e)
                     time.sleep(0.5)
 
         if crypto_scrapers and wallets:
             for wallet in wallets[:3]:
                 for scraper in crypto_scrapers:
+                    addr = wallet["address"]
+                    key = f"{scraper.name}::{addr[:20]}"
                     try:
-                        if _run_scraper(client, scraper.to_dict(), wallet["address"], target, scan, session):
+                        if _run_scraper(client, scraper.to_dict(), addr, target, scan, session):
                             created += 1
+                            attempt_log[key] = "success"
+                        else:
+                            attempt_log[key] = "no_match"
                     except Exception as e:
-                        logger.debug("A1.6: %s failed for %s: %s", scraper.name, wallet["address"][:20], e)
+                        attempt_log[key] = "exception"
+                        logger.debug("A1.6: %s failed for %s: %s", scraper.name, addr[:20], e)
                     time.sleep(0.5)
 
         if created:
             session.commit()
-            logger.info("A1.6: Created %d findings from secondary identifier scrapers", created)
+        logger.info(
+            "A1.6: scrapers=%d inputs=phone:%d/crypto:%d created=%d attempts=%d",
+            len(scrapers), len(phones), len(wallets), created, len(attempt_log),
+        )
+
+        # S180-G: persist per-scraper attempt log to scan.module_progress
+        # (mirrors S122-obs scraper_engine_attempts pattern).
+        if scan and attempt_log:
+            try:
+                from sqlalchemy.orm.attributes import flag_modified
+                mp = dict(scan.module_progress or {})
+                mp["secondary_enricher_attempts"] = attempt_log
+                scan.module_progress = mp
+                flag_modified(scan, "module_progress")
+                session.commit()
+            except Exception:
+                logger.exception("A1.6: failed to persist secondary_enricher_attempts")
     finally:
         client.close()
 

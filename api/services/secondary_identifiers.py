@@ -44,6 +44,14 @@ def extract_secondary_identifiers(target, findings, session):
     if changed:
         target.profile_data = pd
         session.commit()
+    else:
+        # S180-G: explicit log on empty extraction. Symmetric with the
+        # "Extracted N" lines above. Lets operators distinguish "A1.5
+        # never ran" from "A1.5 ran, no patterns matched in N findings".
+        logger.info(
+            "A1.5: no phone/crypto patterns matched in %d findings for target %s",
+            len(findings), target.id,
+        )
 
 
 def _extract_phones(findings):
