@@ -30,6 +30,12 @@ celery_app.conf.update(
             "task": "api.tasks.watchdog.sweep_orphan_scans",
             "schedule": 300.0,
         },
+        # S172 — Live Merkle rebuild over bfp_claims, every 5min.
+        # Always-insert semantic: each tick appends one row per workspace.
+        "rebuild-bfp-merkle-roots": {
+            "task": "api.tasks.bfp.rebuild_merkle_roots",
+            "schedule": 300.0,
+        },
     },
 )
 
@@ -40,6 +46,7 @@ import api.tasks.module_tasks  # noqa: E402, F401
 import api.tasks.web_discovery  # noqa: E402, F401
 import api.tasks.similarity  # noqa: E402, F401
 import api.tasks.watchdog  # noqa: E402, F401
+import api.tasks.bfp  # noqa: E402, F401
 
 
 @celery_app.on_after_configure.connect
