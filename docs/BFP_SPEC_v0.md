@@ -7,7 +7,7 @@ Behavioral Fingerprint Protocol — Specification v0 (working draft)
 # Behavioral Fingerprint Protocol — Specification v0
 
 **Status**: Public working draft. Released for external review and external implementation feedback.
-**Version**: 0.2.0
+**Version**: 0.2.1
 **Date**: 2026-05-23
 **License**: Apache License 2.0
 **Editor**: Nabil Ksontini
@@ -18,7 +18,9 @@ Behavioral Fingerprint Protocol — Specification v0 (working draft)
 
 This document is a public working draft of the **Behavioral Fingerprint Protocol** (BFP). It specifies a vendor-neutral representation of behavioral identity fingerprints derived from open-source intelligence sources. It is not a published standard. It is intended to capture, in normative form, the implicit protocol currently implemented by the xposeTIP reference implementation, and to serve as the basis for future public release.
 
-This v0.2 draft is **code-agnostic on normalization functions and threshold values**: those are left to implementations. The protocol fixes the *structure* (axes, layers, vector format, similarity model) but not the exact mathematics of any single axis.
+This v0.2 draft is **code-agnostic on normalization functions and threshold values**: those are left to implementations. The protocol fixes the *structure* (axes, layers, vector format, similarity model, trust-layer mechanisms) but not the exact mathematics of any single axis.
+
+The v0.2.x series is formalized across three editorial sessions: Session 1 (v0.2.0) established the trust layer mechanics in §15-17. Session 2 (v0.2.1, this revision) formalizes the trust-layer terminology, conceptual model, conformance, subject-rights tiers, and component versioning. Session 2 continues in v0.2.2 (axis status flags + behavioral hash specification) and v0.2.3 (post-quantum cryptography stack).
 
 This draft is licensed under the Apache License, Version 2.0. Implementation and adoption feedback is welcome via the project repository.
 
@@ -74,13 +76,31 @@ The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT", "SHOULD", "S
 
 ### 3.1 Definitions
 
-- **Entity**: the underlying subject (typically a natural person) whose behavior is being characterized.
+#### Fingerprint-layer terms (v0.1+)
+
+- **Entity**: the underlying subject (typically a natural person) whose behavior is being characterized. Used interchangeably with **Subject** in the trust-layer context.
+- **Subject**: a natural person whose behavioral fingerprint is being computed. Subject is the trust-layer term; entity is the fingerprint-layer term. They refer to the same real-world person.
 - **Observation**: data collected about an entity from one or more sources at a given point in time.
 - **Axis**: a single normative dimension of behavioral identity, producing a scalar value and confidence.
 - **Layer**: a grouping of axes that share a conceptual category (Surface, Forensic, Temporal, Linguistic, Relational, Adverse).
 - **Fingerprint**: the complete confidence-weighted vector across all 16 axes for a given entity at a given observation time.
 - **Implementation**: software that computes BFP fingerprints from observations.
+- **Operator**: an entity (organization or individual) running an implementation. Operators are the parties with operational responsibility for emitted claims and anchored trust logs.
+- **Reference implementation**: an implementation maintained by the BFP project itself (currently the xposeTIP project) serving as the canonical reference for protocol conformance testing.
+- **Behavioral hash**: a clustering-primitive locality-sensitive hash (MinHash family) over selected invariant axes. Distinct from the fingerprint hash (§9.2), which is identity-typed. See §9.3 (specified in v0.2.2).
 - **Conformant implementation**: an implementation satisfying the requirements of §11.
+
+#### Trust-layer terms (v0.2+)
+
+- **Trust boundary**: the scope within which claims are emitted and anchored. Per implementation, this typically corresponds to a tenant, workspace, or operator instance. Trust boundaries DO NOT share claim spaces or Merkle anchors; cross-boundary claim transfer requires explicit federation (out of scope for v0.x).
+- **Trust log**: the totality of claims emitted within a trust boundary, ordered by emission time, periodically anchored via Merkle roots (§17).
+- **Claim**: an atomic, content-addressable assertion about a subject made by an operator. The unit of the trust log. See §16.
+- **Cross-verification source**: an independent source whose signal contributes to a claim's cross-verification count. See §15.
+- **Anchor** (Merkle anchor): a Merkle root computed over the trust log within a trust boundary at a given point in time. See §17.
+- **Merkle leaf**: the hash of a single claim's `claim_hash` field, padded with the domain-separation prefix `0x00`. See §17.4.
+- **Merkle root**: the top-of-tree hash of the Merkle anchor.
+- **Subject signature**: a cryptographic signature produced by the subject over an attestation. Post-quantum algorithm choice specified in §13 (specified in v0.2.3).
+- **Operator signature**: a cryptographic signature produced by the operator over a claim or batch. Post-quantum algorithm choice specified in §13 (specified in v0.2.3).
 
 ---
 
@@ -138,6 +158,72 @@ This ensures that:
 - Fingerprint vectors are always of fixed length.
 - Similarity computation (§7) handles empty axes uniformly via the confidence weight.
 - Implementations have a consistent shape for downstream consumers.
+
+### 4.5 Trust Layer Model
+
+BFP defines two distinct conceptual layers. An implementation MAY conform to one or both. They have separate conformance requirements (§11).
+
+**Layer 1: Fingerprint Computation** — produces a confidence-weighted vector across axes for an entity. Specified in §4-§9.
+
+| Component | Section |
+|---|---|
+| Axes (16 dimensions) | §5 |
+| Fingerprint vector | §4.2 |
+| Confidence semantics | §4.3 |
+| Normalization | §6 |
+| Similarity computation | §7 |
+| Profiles | §8 |
+| Serialization + fingerprint hash | §9 |
+
+A fingerprint-conformant implementation MAY operate without any trust-layer machinery. It produces fingerprints; it does not emit attested claims or anchor a trust log.
+
+**Layer 2: Trust + Anchoring** — formalizes who attests to what about whom, with what corroboration, anchored in time. Specified in §13-§17.
+
+| Component | Section |
+|---|---|
+| Subject + operator signatures (PQC) | §13 (v0.2.3) |
+| Cross-verification | §15 |
+| Claim log | §16 |
+| Merkle anchor | §17 |
+
+A trust-layer conformant implementation MUST also be fingerprint-conformant. The trust layer ANCHORS fingerprint-derived findings; it does not exist in isolation.
+
+The two layers compose as:
+
+```
+                  ┌───────────────────────────────────────────┐
+                  │  Layer 2: Trust + Anchoring               │
+                  │                                           │
+                  │  Cross-verification (§15)                 │
+                  │     ↓                                     │
+                  │  Claim emission (§16)                     │
+                  │     ↓                                     │
+                  │  Periodic Merkle anchor (§17)             │
+                  │     ↓                                     │
+                  │  Subject + operator signatures (§13)      │
+                  └───────────────────────────────────────────┘
+                                    ▲
+                                    │ findings + scores
+                                    │
+                  ┌───────────────────────────────────────────┐
+                  │  Layer 1: Fingerprint Computation         │
+                  │                                           │
+                  │  Observations → axes (§5)                 │
+                  │     ↓                                     │
+                  │  Normalization (§6) → fingerprint vector  │
+                  │     ↓                                     │
+                  │  Similarity (§7) under a profile (§8)     │
+                  │     ↓                                     │
+                  │  Fingerprint hash (§9.2)                  │
+                  │  Behavioral hash (§9.3)                   │
+                  └───────────────────────────────────────────┘
+```
+
+The separation matters because:
+
+- An air-gapped fingerprint computer never emits attested claims; Layer 1 suffices.
+- A multi-operator interoperable trust network requires Layer 2 for cross-attestation.
+- Reference implementations SHOULD conform to both layers.
 
 ---
 
@@ -457,7 +543,11 @@ Future v1 extensions will add signed provenance, per-source attribution, and rep
 
 ## 11. Conformance
 
-A **conformant BFP v0 implementation** MUST:
+BFP defines two layers of conformance (see §4.5 Trust Layer Model). An implementation declares which layer(s) it conforms to. Most fingerprint conformance requirements (§11.1) are unchanged from v0.1. The trust-layer conformance (§11.2) is new in v0.2.
+
+### 11.1 Fingerprint Layer Conformance
+
+A **fingerprint-layer conformant BFP v0 implementation** MUST:
 
 1. Compute and emit all 16 axes specified in §5, with both `value` and `confidence` fields for each.
 2. Emit `value` and `confidence` in [0.0, 1.0].
@@ -467,11 +557,31 @@ A **conformant BFP v0 implementation** MUST:
 6. Conform to the serialization format in §9.
 7. Provide the provenance stub specified in §10.
 
-A conformant implementation MAY:
+A fingerprint-layer conformant implementation MAY:
 
 - Emit `(0.0, 0.0)` for the three v0-deferred axes (`activity_rhythm`, `linguistic_signature`, `network_signature`) without further computation.
 - Implement additional similarity profiles beyond `bfp-cosine-default-v0`.
 - Add implementation-specific fields outside the `axes` and `provenance` objects, prefixed with `x_` (extension fields).
+
+### 11.2 Trust Layer Conformance
+
+A **trust-layer conformant BFP v0 implementation** MUST ALSO be fingerprint-layer conformant per §11.1, AND MUST:
+
+1. Implement cross-verification per §15: recompute on finding emission, persist `cross_verification_count` and `cross_verification_sources` for every (subject, indicator) tuple.
+2. Emit claims per §16 obeying the locked emission rule (`cross_verification_count >= 1` AND non-null `indicator_type` AND non-null `indicator_value`).
+3. Compute and persist Merkle anchors per §17 at least on operator demand (explicit batch trigger). Implementations SHOULD also support a regular cadence (Celery beat or equivalent).
+4. Provide a means for an independent verifier to re-derive a Merkle root from raw `claim_hash` values stored in the trust log, returning byte-for-byte equality with the stored root or surfacing the divergence.
+5. Preserve the append-only property of the claim log: either via application-level discipline (no UPDATE / DELETE on `claims`) or via DB-level enforcement (triggers, REVOKE). Application-level discipline is acceptable for v0.x; DB-level enforcement is RECOMMENDED for production deployments.
+6. Scope all claims and anchors to a single trust boundary (§3). Cross-boundary claim transfer is out of scope for v0.x.
+
+A trust-layer conformant implementation MAY:
+
+- Emit `subject_signature` and `operator_signature` per §13 (REQUIRED for cross-trust-boundary claim transfer when that is specified in a future version; OPTIONAL in v0.x).
+- Implement inclusion proofs for claims (§17.12 — out of scope for v0.2, anticipated for v0.3+).
+- Implement claim supersession when evidence about a past claim evolves (out of scope for v0.2, anticipated for v1+).
+- Provide subject-rights tiers per §12.1.
+
+A fingerprint-conformant implementation MAY operate without any trust-layer machinery; in that case, §11.2 does not apply.
 
 ---
 
@@ -480,12 +590,28 @@ A conformant implementation MAY:
 BFP enables the construction of detailed behavioral profiles from public data. Implementations and operators MUST consider:
 
 - **Data minimization**: implementations SHOULD collect only the signals needed to compute the axes.
-- **Subject rights**: where legally applicable, subjects SHOULD have the right to request fingerprint disclosure and challenge inaccurate inferences.
+- **Subject rights**: where legally applicable, subjects SHOULD have the right to request fingerprint disclosure and challenge inaccurate inferences. See §12.1 for the normative tier structure.
 - **Adversarial misuse**: BFP can be used to deanonymize or surveil. Implementations SHOULD include safeguards against bulk profiling of non-targeted populations and against use for harassment, doxxing, or unlawful surveillance.
 - **Confidence honesty**: implementations MUST NOT inflate `confidence` for marketing or scoring purposes. Calibration SHOULD be documented and auditable.
 - **Reproducibility**: implementations SHOULD make their normalization choices documented enough that a fingerprint can be re-derived from the same input data.
 
 Implementations targeting use in due diligence, employment screening, insurance underwriting, or any high-stakes domain MUST be auditable and SHOULD be subject to independent calibration review.
+
+### 12.1 Subject-Rights Tiers
+
+The protocol defines four normative tiers of subject-facing rights plus one constrained mechanism for record alteration. Operators MAY implement any subset of the tiers. The tiers themselves are normative as a STRUCTURE — pricing, packaging, and commercial framing are OPERATIONAL concerns explicitly outside the protocol. Different operators MAY price the same tier differently or offer it free.
+
+**Tier 1 — Read.** Subjects SHOULD be able to request and receive the current fingerprint computed about them within the operator's trust boundary. RECOMMENDED for all conformant operators without compensation.
+
+**Tier 2 — Guidance.** Subjects SHOULD be able to request a human-readable explanation of which axes drive their fingerprint and what observable changes (account closures, public-records corrections, etc.) would reduce specific exposure scores. RECOMMENDED for all conformant operators without compensation.
+
+**Tier 3 — Monitoring.** Subjects MAY subscribe to active monitoring of changes to their fingerprint within the operator's trust boundary, with notifications on significant deltas. Operators MAY charge for this tier or offer it bundled.
+
+**Tier 4 — Managed Remediation.** Subjects MAY commission an operator to actively reduce specific exposure on their behalf (e.g., coordinating removal requests with databrokers, social platforms, or public registries within applicable legal frameworks). Operators MAY charge for this tier.
+
+**Takedown — Legal Soupape.** A subject's right to have specific findings or claims removed from an operator's trust log is constrained to legally-defined channels: court orders, GDPR Article 8 sub-13 (data of minors), expungement orders, witness-protection requirements, and equivalent statutory mechanisms in the operator's jurisdiction. The protocol DOES NOT define a discretionary takedown mechanism. This is intentional: discretionary takedown would erode the append-only property of the trust log (§16.7) and enable gaming.
+
+The normative content of §12.1 is the EXISTENCE of these tiers as a structure. Pricing, packaging, exact mechanics, and which tiers an operator chooses to offer are operational concerns outside the protocol.
 
 ---
 
@@ -499,15 +625,30 @@ Implementations targeting use in due diligence, employment screening, insurance 
 
 ## 14. Versioning
 
-This is v0.1.0. The versioning policy is:
+This is v0.2.1. The versioning policy for `bfp_version` itself is:
 
 - **0.x.y**: pre-stable. Breaking changes permitted between minor versions. Not for external interoperability claims.
 - **1.0.0**: first stable version. Breaking changes between major versions only.
 - **Major version bumps**: changes to the axis set, layer model, similarity formula structure, or serialization format MUST bump the major version.
-- **Minor version bumps**: additions to provenance, profiles, or non-normative clarifications.
+- **Minor version bumps**: additions to provenance, profiles, conformance, trust-layer mechanics, or non-normative clarifications.
 - **Patch version bumps**: editorial corrections, no semantic changes.
 
 A fingerprint serialization includes `bfp_version` to allow consumers to handle multiple versions.
+
+### 14.1 Component Versioning
+
+Beyond `bfp_version`, the protocol defines several component-specific version fields that evolve independently. Each component version is bumped on changes to that component's algorithm or canonical encoding, independent of the overall `bfp_version`.
+
+| Component | Field name | Scope | Defined in | Bump rule |
+|---|---|---|---|---|
+| Claim canonical encoding | `claim_hash_version` | Per-claim | §16.3 | Major bump on canonical JSON encoding change. Minor bump on field additions that preserve canonical hash of pre-existing claims. |
+| Merkle root algorithm | `root_version` | Per-anchor snapshot | §17.8 | Major bump on algorithm change (e.g., SHA3-256 → BLAKE3, leaf/internal hash structure change, ordering change). |
+| Behavioral hash algorithm | `behavioral_hash_version` | Per-subject | §9.3 (v0.2.2) | Major bump on MinHash parameter change (number of permutations, axis selection, bucket count). |
+| Signature algorithm | `signature_version` | Per-signature | §13 (v0.2.3) | Major bump on PQC algorithm or parameter set change. |
+
+These component versions are decoupled from `bfp_version`. A `bfp_version=0.2.1` implementation MAY use `claim_hash_version=1` AND `root_version=1`. When future versions introduce new component algorithms, OLD components MUST remain interpretable in their original version: implementations MUST NOT silently rebuild past anchors under a new `root_version` (doing so would invalidate the tamper-evidence property — see §17.10).
+
+Component version transitions are coordinated via the `bfp_version` minor bump that introduces the new component version. The minor bump itself does NOT obsolete old component versions; both old and new MUST be readable.
 
 ---
 
@@ -859,7 +1000,9 @@ After the one-release deprecation window, the legacy names MUST be removed.
 
 ## Appendix B: Open Items for v1
 
-The following items are intentionally deferred:
+The following items are intentionally deferred from v0.x. They are anchored here to track scope toward v1.0.
+
+### Fingerprint-layer open items
 
 - Full signed provenance model with per-source attribution.
 - Cross-implementation calibration procedure for `F_axis` functions.
@@ -867,11 +1010,32 @@ The following items are intentionally deferred:
 - Per-axis weight tuning with normative constraints.
 - Stylometric pipeline for `linguistic_signature`.
 - Activity-pattern extraction for `activity_rhythm`.
-- Graph signature computation for `network_signature`.
-- Conformance test suite.
-- Mapping to common data-subject-rights frameworks (GDPR, CCPA).
-- Threat model for adversarial fingerprint manipulation.
+- Conformance test suite (fingerprint-layer).
+- Reference test vectors for the fingerprint hash (§9.2) and behavioral hash (§9.3).
+
+### Trust-layer open items
+
+- PQC integration in claim emission: subject and operator signatures wired into the claim emitter, populating the `subject_signature` and `operator_signature` fields already reserved in the claim structure (§16.2).
+- Subject portal: a normative interface specification for the Read (§12.1 Tier 1) and Guidance (§12.1 Tier 2) tiers.
+- Monitoring tier infrastructure: delta computation, change-significance thresholds, notification dispatch.
+- Managed Remediation workflow: scrubbing, coordination with databrokers, takedown request packaging within legal-soupape constraints.
+- Inclusion-proof generation for claims (currently §17.12 lists this as out-of-scope for v0.2; v0.3+ target).
+- Claim supersession mechanism: defines what happens when evidence about a past claim evolves (typo correction, refutation, etc.) while preserving append-only of the original (§16.8).
+- Multi-operator trust-boundary federation: cross-operator claim transfer and audit semantics.
+- Independent end-to-end audit of the chosen PQC library's constant-time properties (cited as risk #1 in `docs/specs/pqc_choices_v0.md` §5).
+- Conformance test suite (trust-layer).
+
+### Cross-cutting open items
+
+- Mapping to common data-subject-rights frameworks (GDPR, CCPA, PIPEDA, etc.) at the level of §12.1 tiers.
+- Threat model for adversarial fingerprint manipulation and trust-log gaming.
+- Versioning interaction matrix for the four component versions in §14.1 (which combinations are forward-compatible, which require migration).
+
+### Items moved out of "deferred" as of v0.2.1
+
+- ~~Graph signature computation for `network_signature`~~ — shipped in S147 of the reference implementation; axis is now in production use. Spec section §5.5.x will be flagged STABLE in v0.2.2.
+- ~~Basic trust layer mechanics~~ — shipped across S166-S170 of the reference implementation; specified in §13-§17 of this document.
 
 ---
 
-*End of BFP v0.2.0 public working draft.*
+*End of BFP v0.2.1 public working draft.*
