@@ -1,24 +1,24 @@
 """BFP public + future protocol endpoints.
 
-Currently exposes a single PUBLIC, unauthenticated aggregate-stats endpoint
-consumed by `/bfp` marketing page (BFPStatus.jsx). Aggregates COUNT(*) across
-ALL workspaces — no PII, no per-workspace data, no claim contents. Numbers
-exposed are already public via SPRINT_LOG.md and BFP_SPEC_v0 non-normative
-notes.
+Currently exposes two PUBLIC, unauthenticated endpoints consumed by `/bfp`
+marketing page:
+- GET /stats           (S171) — aggregate counts across all workspaces
+- GET /recent_anchors  (S173) — N most recent Merkle root snapshots,
+                                no workspace_id field exposed
+
+Both endpoints have independent in-memory TTL caches (per worker process).
+No PII, no per-workspace identifiers, no claim contents. Numbers exposed
+are already public via SPRINT_LOG.md and BFP_SPEC_v0 non-normative notes.
 
 DESIGN — public endpoint isolation:
 - No `Depends(get_current_user)` / `require_role` / `get_current_workspace`.
-- 300s in-memory TTL cache: a single shared dict per worker process. Per-
-  worker means up to N workers can hold slightly different snapshots
-  (≤300s drift). Acceptable for displayed counts.
-- All queries are COUNT(*) on indexed or small tables — fast, no JOINs.
-- Future auth-gated BFP routes (subject portal, claim emission API) MUST
-  add their own `Depends(...)` per route — do NOT lift auth to router level
-  or this public endpoint breaks.
+- In-memory TTL cache shields DB from public-traffic spikes.
+- Future auth-gated BFP routes MUST add their own `Depends(...)` per route.
+  Do NOT lift auth to router level or these public endpoints break.
 """
 import time
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Query
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -29,8 +29,15 @@ from api.models.target import Target
 
 router = APIRouter()
 
-_CACHE: dict = {"data": None, "ts": 0.0}
-_TTL_SECONDS = 300.0
+# /stats cache (S171)
+_STATS_CACHE: dict = {"data": None, "ts": 0.0}
+_STATS_TTL_SECONDS = 300.0
+
+# /recent_anchors cache (S173) — single cache slot always holding the top 100,
+# slice for the requested limit. Avoids per-limit cache fragmentation.
+_RECENT_CACHE: dict = {"data": None, "ts": 0.0}
+_RECENT_TTL_SECONDS = 60.0
+_RECENT_CACHE_SIZE = 100  # always cache 100 rows, slice for requested limit
 
 
 @router.get("/stats")
@@ -47,8 +54,8 @@ async def bfp_public_stats(db: AsyncSession = Depends(get_db)):
     Cached 300s per worker. No PII, no per-workspace data.
     """
     now = time.time()
-    if _CACHE["data"] is not None and (now - _CACHE["ts"]) < _TTL_SECONDS:
-        return _CACHE["data"]
+    if _STATS_CACHE["data"] is not None and (now - _STATS_CACHE["ts"]) < _STATS_TTL_SECONDS:
+        return _STATS_CACHE["data"]
 
     behavioral_hashes = await db.scalar(
         select(func.count())
@@ -63,6 +70,56 @@ async def bfp_public_stats(db: AsyncSession = Depends(get_db)):
         "trust_claims_logged": int(trust_claims or 0),
         "merkle_roots_committed": int(merkle_roots or 0),
     }
-    _CACHE["data"] = data
-    _CACHE["ts"] = now
+    _STATS_CACHE["data"] = data
+    _STATS_CACHE["ts"] = now
     return data
+
+
+@router.get("/recent_anchors")
+async def bfp_recent_anchors(
+    limit: int = Query(20, ge=1, le=100),
+    db: AsyncSession = Depends(get_db),
+):
+    """N most recent Merkle root snapshots across all workspaces. PUBLIC — no auth.
+
+    Returns:
+        {
+            "anchors": [
+                {
+                    "root_hash": str (64 hex chars, SHA3-256),
+                    "num_leaves": int,
+                    "computed_at": str (ISO 8601 UTC)
+                },
+                ...
+            ]
+        }
+
+    Ordered by computed_at DESC (newest first). No workspace_id field exposed —
+    deliberate omission for privacy and visual cleanliness on the public page.
+
+    Cached 60s per worker. Cache always holds the top 100 rows; the response
+    slices to `limit`. Hit rate is effectively 100% under the widget's 60s
+    polling cadence.
+    """
+    now = time.time()
+    if _RECENT_CACHE["data"] is None or (now - _RECENT_CACHE["ts"]) >= _RECENT_TTL_SECONDS:
+        result = await db.execute(
+            select(
+                BfpMerkleRoot.root_hash,
+                BfpMerkleRoot.num_leaves,
+                BfpMerkleRoot.computed_at,
+            )
+            .order_by(BfpMerkleRoot.computed_at.desc())
+            .limit(_RECENT_CACHE_SIZE)
+        )
+        _RECENT_CACHE["data"] = [
+            {
+                "root_hash": row.root_hash,
+                "num_leaves": row.num_leaves,
+                "computed_at": row.computed_at.isoformat(),
+            }
+            for row in result.all()
+        ]
+        _RECENT_CACHE["ts"] = now
+
+    return {"anchors": _RECENT_CACHE["data"][:limit]}

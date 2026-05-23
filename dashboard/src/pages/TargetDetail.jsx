@@ -7,7 +7,6 @@ import { normalizeModuleStatus } from '../lib/moduleProgress'
 import IdentityGraph from '../components/IdentityGraph'
 import LocationMap from '../components/LocationMap'
 import ProfileHeader from '../components/ProfileHeader'
-import useSSE from '../hooks/useSSE'
 import OverviewTab from './tabs/OverviewTab'
 import ScansTab from './tabs/ScansTab'
 import FindingsHubTab from './tabs/FindingsHubTab'
@@ -96,10 +95,6 @@ export default function TargetDetail() {
   }, [id])
 
   useEffect(() => { load() }, [load])
-  useSSE({
-    'scan.completed': (e) => { if (e.target_id === id) load() },
-    'target.updated': (e) => { if (e.target_id === id) load() },
-  })
 
   // Animate score
   useEffect(() => {

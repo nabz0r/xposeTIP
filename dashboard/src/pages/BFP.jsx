@@ -6,6 +6,7 @@ import BFPCryptography from '../components/bfp/BFPCryptography'
 import BFPSubjectLayer from '../components/bfp/BFPSubjectLayer'
 import BFPEthics from '../components/bfp/BFPEthics'
 import BFPStatus from '../components/bfp/BFPStatus'
+import BFPLiveLog from '../components/bfp/BFPLiveLog'
 import BFPRoadmap from '../components/bfp/BFPRoadmap'
 import PublicNav from '../components/landing/PublicNav'
 import PublicFooter from '../components/landing/PublicFooter'
@@ -35,6 +36,9 @@ export default function BFP() {
           <BFPStatus />
         </Section>
         <Section className="py-20">
+          <BFPLiveLog />
+        </Section>
+        <Section className="py-20 bg-[#0d0d14]">
           <BFPRoadmap />
         </Section>
       </div>

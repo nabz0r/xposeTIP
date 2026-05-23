@@ -8,7 +8,6 @@ import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pi
 import WorkspaceGeoMap from '../components/WorkspaceGeoMap'
 import FingerprintRadar from '../components/FingerprintRadar'
 import GenerativeAvatar from '../components/GenerativeAvatar'
-import useSSE from '../hooks/useSSE'
 
 const severityColors = {
   critical: '#ff2244', high: '#ff8800', medium: '#ffcc00', low: '#3388ff', info: '#666688',
@@ -52,7 +51,6 @@ export default function Dashboard() {
   const navigate = useNavigate()
 
   useEffect(() => { loadData() }, [refreshKey])
-  useSSE({ 'scan.completed': () => loadData(), 'target.updated': () => loadData() })
 
   async function loadData() {
     try {
