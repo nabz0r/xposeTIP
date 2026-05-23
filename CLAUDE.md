@@ -143,6 +143,14 @@ cd dashboard && npm install --legacy-peer-deps && npm run dev &
 
 After deploy: System → Recalculate Fingerprints → Recalculate Profiles
 
+**Worker code edits** (anything under `api/tasks/`, `api/services/secondary_identifier_enricher.py`, `api/services/secondary_identifiers.py`, or any module imported by Celery tasks): the `docker compose up -d --build` line rebuilds images but `docker compose restart api` alone does NOT reload the worker's Python interpreter — Celery caches module imports at process boot. After any worker-code change without a full `--build`, also run:
+
+```bash
+docker compose restart worker beat
+```
+
+Surfaced in S185 validation: edits to `secondary_identifier_enricher.py` weren't picked up by running worker until explicit restart. First re-scan ran stale dispatch code (gate appeared dead); second re-scan post-restart fired correctly. Same caveat applies to `scan_orchestrator.py`, `module_tasks.py`, `watchdog.py`, `bfp.py`, and any helper they import.
+
 ## Key files
 
 ### Backend
