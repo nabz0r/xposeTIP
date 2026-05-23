@@ -8,6 +8,7 @@ from sqlalchemy.orm import Session
 from api.models.finding import Finding
 from api.models.identity import Identity, IdentityLink
 from api.services.layer4.source_scoring import get_source_reliability
+from api.services.layer4.username_validator import is_valid_username
 
 logger = logging.getLogger(__name__)
 
@@ -57,6 +58,10 @@ def _is_valid_extracted_username(username: str) -> bool:
         return False
     # Reject if it's actually a full name with spaces (names are type="name", not username)
     if ' ' in u and all(p[0].isupper() for p in u.split() if p):
+        return False
+    # S179: chain to central validator for additional defenses
+    # (FQDN single-dot, paren patterns, updated _TITLE_PATTERNS).
+    if not is_valid_username(u):
         return False
     return True
 
