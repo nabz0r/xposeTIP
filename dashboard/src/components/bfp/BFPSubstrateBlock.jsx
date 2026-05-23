@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import { Fingerprint, ShieldCheck, Network } from 'lucide-react'
-import { request } from '../../lib/api'
+import { getTargetBFP } from '../../lib/api'
 
 export default function BFPSubstrateBlock({ targetId }) {
   const [data, setData] = useState(null)
@@ -12,7 +12,7 @@ export default function BFPSubstrateBlock({ targetId }) {
     if (!targetId) return
     let cancelled = false
     setLoading(true)
-    request(`/api/v1/targets/${targetId}/bfp`)
+    getTargetBFP(targetId)
       .then(d => { if (!cancelled) { setData(d); setError(null) } })
       .catch(e => { if (!cancelled) setError(e) })
       .finally(() => { if (!cancelled) setLoading(false) })
