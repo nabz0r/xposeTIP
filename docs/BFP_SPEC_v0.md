@@ -7,7 +7,7 @@ Behavioral Fingerprint Protocol — Specification v0 (working draft)
 # Behavioral Fingerprint Protocol — Specification v0
 
 **Status**: Public working draft. Released for external review and external implementation feedback.
-**Version**: 0.2.1
+**Version**: 0.2.2
 **Date**: 2026-05-23
 **License**: Apache License 2.0
 **Editor**: Nabil Ksontini
@@ -20,7 +20,7 @@ This document is a public working draft of the **Behavioral Fingerprint Protocol
 
 This v0.2 draft is **code-agnostic on normalization functions and threshold values**: those are left to implementations. The protocol fixes the *structure* (axes, layers, vector format, similarity model, trust-layer mechanisms) but not the exact mathematics of any single axis.
 
-The v0.2.x series is formalized across three editorial sessions: Session 1 (v0.2.0) established the trust layer mechanics in §15-17. Session 2 (v0.2.1, this revision) formalizes the trust-layer terminology, conceptual model, conformance, subject-rights tiers, and component versioning. Session 2 continues in v0.2.2 (axis status flags + behavioral hash specification) and v0.2.3 (post-quantum cryptography stack).
+The v0.2.x series is formalized across three editorial sessions: Session 1 (v0.2.0) established the trust layer mechanics in §15-17. Session 2 sub-A (v0.2.1) formalized the trust-layer terminology, conceptual model, conformance, subject-rights tiers, and component versioning. Session 2 sub-B (v0.2.2, this revision) adds per-axis implementation status flags (§5) and the behavioral hash specification (§9.3). Session 2 continues in v0.2.3 with the post-quantum cryptography stack (§13).
 
 This draft is licensed under the Apache License, Version 2.0. Implementation and adoption feedback is welcome via the project repository.
 
@@ -229,13 +229,25 @@ The separation matters because:
 
 ## 5. Axes
 
-This section specifies each of the 16 axes. For each axis, the normative content is: layer, definition, empty-state, drift behavior, and constraints on the normalization function `F_axis`. The signal sources listed are informative — implementations MAY use other sources provided the definition is respected.
+This section specifies each of the 16 axes. For each axis, the normative content is: layer, **status**, definition, empty-state, drift behavior, and constraints on the normalization function `F_axis`. The signal sources listed are informative — implementations MAY use other sources provided the definition is respected.
+
+### 5.0 Axis Status Taxonomy
+
+Each axis carries a **Status** flag indicating its implementation maturity within the BFP reference implementation:
+
+- **LIVE** — axis is fully specified AND has a working reference implementation. Conformant implementations (§11.1) MUST compute and emit a meaningful value when signal is available. Empty-state semantics (§4.4) still apply when no signal is observed.
+- **DRAFT** — axis is specified but the reference implementation does not yet compute it. Conformant implementations MAY emit `(0.0, 0.0)` for DRAFT axes without further computation. Future spec versions are expected to upgrade individual axes to LIVE as the reference implementation matures.
+
+An axis moving from DRAFT to LIVE in a future spec version is a minor `bfp_version` bump (§14). Implementations targeting an older spec version MAY continue to emit `(0.0, 0.0)` for axes that were DRAFT in that version, even after a newer version flags them LIVE.
+
+As of v0.2.2: **11 LIVE** axes, **5 DRAFT** axes (`account_hygiene`, `temporal_persistence`, `activity_rhythm`, `linguistic_signature`, `adversarial_indicators`).
 
 ### 5.1 Surface layer
 
 #### 5.1.1 `account_count`
 
 - **Layer**: Surface
+- **Status**: LIVE
 - **Definition**: Normalized count of distinct accounts confirmed to belong to the entity across all observed platforms.
 - **Signal sources (informative)**: account enumeration scrapers, breach databases, social platform APIs, OAuth introspection.
 - **F_account_count constraints**: monotonic non-decreasing in number of distinct confirmed accounts; F(0) = 0.0.
@@ -245,6 +257,7 @@ This section specifies each of the 16 axes. For each axis, the normative content
 #### 5.1.2 `platform_diversity`
 
 - **Layer**: Surface
+- **Status**: LIVE
 - **Definition**: Normalized measure of the diversity of platform types the entity is present on. Intended to be orthogonal to `account_count`: an entity with 1 account on each of 5 platforms SHOULD score higher than an entity with 5 accounts on the same platform.
 - **Signal sources (informative)**: same sources as `account_count`, aggregated by platform type.
 - **F_platform_diversity constraints**: monotonic non-decreasing in number of distinct platforms; SHOULD be entropy-like or otherwise reward distribution over count; F(empty) = 0.0.
@@ -254,6 +267,7 @@ This section specifies each of the 16 axes. For each axis, the normative content
 #### 5.1.3 `geo_dispersion`
 
 - **Layer**: Surface
+- **Status**: LIVE
 - **Definition**: Normalized measure of geographic spread of the entity's observable footprint.
 - **Signal sources (informative)**: IP geolocation, profile location fields, platform regional metadata, timezone signals, language signals.
 - **F_geo_dispersion constraints**: monotonic non-decreasing in number of distinct geographic regions (countries, cities) attested by independent signals; F(no geo signal) = 0.0.
@@ -263,6 +277,7 @@ This section specifies each of the 16 axes. For each axis, the normative content
 #### 5.1.4 `media_presence`
 
 - **Layer**: Surface
+- **Status**: LIVE
 - **Definition**: Normalized measure of the entity's mentions in news media, press, blogs, and public reporting. Distinct from `formal_records` (§5.2.5) which covers structured/governmental records.
 - **Signal sources (informative)**: news aggregators, search engines, archive crawlers, public web content.
 - **F_media_presence constraints**: monotonic non-decreasing in count of independent media mentions; SHOULD be log-scaled to avoid swamping by viral events; F(no mention) = 0.0.
@@ -274,6 +289,7 @@ This section specifies each of the 16 axes. For each axis, the normative content
 #### 5.2.1 `breach_incidents`
 
 - **Layer**: Forensic
+- **Status**: LIVE
 - **Definition**: Normalized count of distinct breach incidents in which the entity's data is confirmed to appear.
 - **Signal sources (informative)**: breach aggregators, leak databases.
 - **F_breach_incidents constraints**: monotonic non-decreasing in distinct breach count; F(0) = 0.0.
@@ -284,6 +300,7 @@ This section specifies each of the 16 axes. For each axis, the normative content
 #### 5.2.2 `breach_severity`
 
 - **Layer**: Forensic
+- **Status**: LIVE
 - **Definition**: Normalized measure of the severity and sensitivity of data exposed across all breaches in which the entity appears. Categories include password hashes, plaintext passwords, financial data, biometric data, personally identifying information.
 - **Signal sources (informative)**: breach aggregators with data-type metadata, breach content samples.
 - **F_breach_severity constraints**: monotonic non-decreasing in maximum sensitivity tier and in count of exposures at that tier; F(no breach) = 0.0.
@@ -294,6 +311,7 @@ This section specifies each of the 16 axes. For each axis, the normative content
 #### 5.2.3 `email_security_posture`
 
 - **Layer**: Forensic
+- **Status**: LIVE
 - **Definition**: Normalized measure of the security posture of the entity's email domain(s) at the protocol level — SPF, DMARC, DKIM, MX configuration, TLS.
 - **Signal sources (informative)**: DNS lookups, mail server probes.
 - **F_email_security_posture constraints**: monotonic non-decreasing in protocol-level hardening signals; F(domain unreachable) = 0.0 with confidence 0.0.
@@ -304,6 +322,7 @@ This section specifies each of the 16 axes. For each axis, the normative content
 #### 5.2.4 `account_hygiene`
 
 - **Layer**: Forensic
+- **Status**: DRAFT
 - **Definition**: Normalized measure of the entity's personal security hygiene at the account level — password strength signals from breached passwords, password reuse across breaches, 2FA evidence where observable.
 - **Signal sources (informative)**: breach contents, account-level metadata.
 - **F_account_hygiene constraints**: monotonic non-increasing in count of weak-password signals, non-decreasing in 2FA evidence; F(no signal) = 0.0.
@@ -313,6 +332,7 @@ This section specifies each of the 16 axes. For each axis, the normative content
 #### 5.2.5 `formal_records`
 
 - **Layer**: Forensic
+- **Status**: LIVE
 - **Definition**: Normalized measure of the entity's presence in formal/governmental/structured records — courts, corporate registries, sanctions lists, beneficial ownership databases, regulatory filings.
 - **Signal sources (informative)**: court record APIs, gazettes, corporate registries, sanctions lists.
 - **F_formal_records constraints**: monotonic non-decreasing in count of distinct formal record matches, weighted by record type severity; F(no record) = 0.0.
@@ -324,6 +344,7 @@ This section specifies each of the 16 axes. For each axis, the normative content
 #### 5.3.1 `email_age`
 
 - **Layer**: Temporal
+- **Status**: LIVE
 - **Definition**: Normalized age of the entity's primary email account, as inferred from the earliest attested observation timestamp.
 - **Signal sources (informative)**: breach dates, account creation timestamps, platform join dates.
 - **F_email_age constraints**: monotonic non-decreasing in inferred age; SHOULD be bounded by domain launch date and a sanity cap; F(no temporal signal) = 0.0.
@@ -333,6 +354,7 @@ This section specifies each of the 16 axes. For each axis, the normative content
 #### 5.3.2 `temporal_persistence`
 
 - **Layer**: Temporal
+- **Status**: DRAFT
 - **Definition**: Normalized measure of the entity's continuous activity over time across multiple platforms. Distinct from `email_age` (a point estimate of one account's birth) — this axis captures the *breadth and depth* of historical presence.
 - **Signal sources (informative)**: account creation dates across platforms, activity timestamp distributions, archive depth.
 - **F_temporal_persistence constraints**: monotonic non-decreasing in observed temporal span across platforms; SHOULD reward both age and continuity of activity; F(single point) = low but non-zero if at least one signal.
@@ -342,18 +364,19 @@ This section specifies each of the 16 axes. For each axis, the normative content
 #### 5.3.3 `activity_rhythm`
 
 - **Layer**: Temporal
+- **Status**: DRAFT
 - **Definition**: Normalized measure of the distinctiveness of the entity's temporal activity patterns — circadian, weekly, and seasonal cycles.
 - **Signal sources (informative)**: activity timestamps clustered by hour/day/week.
 - **F_activity_rhythm constraints**: SHOULD reflect pattern distinctiveness (deviation from uniform), not raw activity volume; F(insufficient timestamps) = 0.0.
 - **Drift**: very stable.
 - **Empty-state**: 0.0 / 0.0.
-- **Notes**: defined in v0, populatable in later versions. Implementations MAY emit 0.0/0.0 for this axis without affecting conformance.
 
 ### 5.4 Linguistic layer
 
 #### 5.4.1 `handle_persistence`
 
 - **Layer**: Linguistic
+- **Status**: LIVE
 - **Definition**: Normalized measure of the entity's tendency to reuse the same or closely similar username/handle pattern across platforms.
 - **Signal sources (informative)**: collected usernames across platforms, string similarity functions.
 - **F_handle_persistence constraints**: monotonic non-decreasing in mean pairwise similarity of observed handles, weighted by number of observed handles; F(<2 handles) = 0.0.
@@ -363,30 +386,31 @@ This section specifies each of the 16 axes. For each axis, the normative content
 #### 5.4.2 `linguistic_signature`
 
 - **Layer**: Linguistic
+- **Status**: DRAFT
 - **Definition**: Normalized measure of the distinctiveness and persistence of the entity's expressive style across collected text — stylometry, lexical diversity, syntactic patterns.
 - **Signal sources (informative)**: collected posts, bios, comments, code commit messages.
 - **F_linguistic_signature constraints**: SHOULD reflect the distinctiveness of observed stylistic patterns from population baseline; F(insufficient text) = 0.0.
 - **Drift**: very stable, highest persistence among all axes.
 - **Empty-state**: 0.0 / 0.0.
-- **Notes**: defined in v0, populatable in later versions. Implementations MAY emit 0.0/0.0 for this axis without affecting conformance.
 
 ### 5.5 Relational layer
 
 #### 5.5.1 `network_signature`
 
 - **Layer**: Relational
+- **Status**: LIVE
 - **Definition**: Normalized measure derived from the structural properties of the entity's social network — centrality, clustering, neighborhood density.
 - **Signal sources (informative)**: identity graph metrics computed from collected connections.
 - **F_network_signature constraints**: SHOULD reflect distinctive structural properties of the entity's local graph; F(graph too sparse) = 0.0.
 - **Drift**: stable.
 - **Empty-state**: 0.0 / 0.0.
-- **Notes**: defined in v0, populatable in later versions. Implementations MAY emit 0.0/0.0 for this axis without affecting conformance.
 
 ### 5.6 Adverse layer
 
 #### 5.6.1 `adversarial_indicators`
 
 - **Layer**: Adverse
+- **Status**: DRAFT
 - **Definition**: Normalized aggregation of signals indicating evasion behavior, threat actor presence, dark-web exposure, code-leaked credentials, or anti-OSINT patterns.
 - **Signal sources (informative)**: dark-web monitors, code-leak detectors, threat-intel feeds, anti-OSINT behavior detectors.
 - **F_adversarial_indicators constraints**: monotonic non-decreasing in count and severity of adverse signals; F(no adverse signal) = 0.0.
@@ -513,6 +537,120 @@ Only `value` fields are hashed; `confidence` is excluded from the hash. Two fing
 
 Values MUST be serialized with 6-decimal precision (`%.6f`) to ensure cross-implementation hash stability.
 
+### 9.3 Behavioral Hash
+
+The **behavioral hash** is a locality-sensitive clustering primitive computed alongside the fingerprint. It is DISTINCT from the fingerprint hash (§9.2) in purpose, algorithm, and stability properties.
+
+#### 9.3.1 Purpose
+
+The fingerprint hash (§9.2) is an **identity hash**: two fingerprints with identical axis values produce identical hashes; any change in any value changes the hash. Use case: "are these the same fingerprint."
+
+The behavioral hash (§9.3) is a **clustering hash**: two fingerprints with similar behavioral patterns produce hashes with high Jaccard similarity; small changes in the underlying behavior produce small changes in the hash. Use case: "are these likely the same subject across observation windows."
+
+Implementations MAY compute both hashes per fingerprint. Each addresses a distinct downstream consumer.
+
+#### 9.3.2 Selected Axes (normative)
+
+The behavioral hash MUST be computed over EXACTLY these three axes, in this order:
+
+1. `media_presence` (§5.1.4)
+2. `geo_dispersion` (§5.1.3)
+3. `breach_severity` (§5.2.2)
+
+These three were selected by invariance analysis (see non-normative note below): they are the most stable axes per-subject (low intra-subject drift) AND the most discriminating across population (high inter-subject variance). Other axes either drift too much per-subject (would destabilize behavioral clustering across observation windows) or are too low-variance across the population (would not discriminate between subjects).
+
+Implementations MUST NOT substitute other axes. Implementations MUST NOT add additional axes. Locking this selection is what makes the behavioral hash comparable across operators.
+
+*Non-normative note: the reference implementation selected these axes by running `scripts/bfp_invariance_diag.py` over its 223-subject corpus (S165, May 2026). Subjects with ≥2 fingerprint snapshots were measured for per-axis stability (mean absolute delta, coefficient of variation, range) AND for population discrimination (across-population stdev, distinct bucket count). The three axes named here had the best joint stability-and-discrimination profile.*
+
+#### 9.3.3 Bucket Encoding (normative)
+
+Each axis value (a float in `[0.0, 1.0]`) MUST be discretized into one of 20 buckets using:
+
+```
+bucket_id = min(int(value * 20), 19)
+```
+
+Conformant implementations MUST clamp the input to `[0.0, 1.0]` before bucketing (values outside this range indicate an upstream bug; the protocol fixes the safe behavior).
+
+Each (axis, bucket) pair MUST be encoded as the ASCII byte string:
+
+```
+"{axis_name}:{bucket_id}"
+```
+
+where `axis_name` is the canonical axis name from §5 (e.g. `media_presence`, NOT a renamed or aliased form) and `bucket_id` is the decimal integer in `[0, 19]` without leading zeros.
+
+Example: for `media_presence` value `0.47`, `bucket_id = 9`, element = `b"media_presence:9"`.
+
+#### 9.3.4 MinHash Parameters (normative)
+
+The behavioral hash MUST be computed as a MinHash signature with:
+
+| Parameter | Value | Rationale |
+|---|---|---|
+| Number of permutations | **128** | matches `datasketch` library default; signature length 128 × 8 bytes = 1024 bytes |
+| Seed | **42** | deterministic permutation generation across implementations |
+| Hash family | MinHash with linear permutations `h_i(x) = ((a_i × x + b_i) mod p)` where `p` is the Mersenne prime `2^61 − 1`, and `(a_i, b_i)` pairs are derived from `seed=42` | matches `datasketch` v1.x internal algorithm |
+
+The 128 (a_i, b_i) coefficient pairs MUST be generated identically across implementations. The canonical reference algorithm is the one implemented in [`datasketch`](https://github.com/ekzhu/datasketch) version `>=1.6, <2.0`. Implementations not using the `datasketch` library MUST reproduce its MinHash variant exactly to maintain cross-operator hash comparability.
+
+*Non-normative note: a fully library-independent algorithmic specification of the MinHash variant used here is anticipated for a future spec version, removing the implicit `datasketch` lock-in. Currently, interop requires either using `datasketch` directly or porting its algorithm.*
+
+#### 9.3.5 Set Semantics (normative)
+
+The set of elements input to the MinHash is unordered. Implementations MUST NOT depend on insertion order to affect the output hash.
+
+The set MAY contain fewer than 3 elements if one or more of the three required axes has no value available for the subject. Specifically:
+
+- If an axis value is `None` / `null` / missing: that axis MUST be omitted from the element set. Implementations MUST NOT substitute `0.0` (this would bias the hash toward a non-meaningful bucket).
+- If the resulting set contains zero elements (all three axes missing): the behavioral hash MUST be the empty string `""`. Implementations MUST persist this as `NULL` or an equivalent null marker in storage.
+
+#### 9.3.6 Output Format (normative)
+
+The behavioral hash MUST be serialized as the lowercase hexadecimal string of the MinHash signature byte representation:
+
+- 128 permutations × 8 bytes per `uint64` hash = **1024 bytes**
+- Hex-encoded length: **2048 ASCII characters**
+
+Byte order: the native little-endian representation of `uint64` values, concatenated in permutation index order (i.e. the byte representation of `numpy.ndarray.tobytes()` for the default `numpy.uint64` dtype).
+
+#### 9.3.7 Composition Property (informative)
+
+The behavioral hash is a **clustering primitive, not a uniqueness identifier**.
+
+Entropy budget: the three selected axes collectively contain approximately 28 bits of Shannon entropy across the protocol's defined `[0.0, 1.0]` × 20-bucket discretization. With K=3 axes, the address space is effectively 6.68 bits ≈ 103 distinct cell combinations. At population scale (e.g. 4.5 × 10^9 subjects), this means tens of millions of subjects per cell. The behavioral hash by itself CANNOT establish unique identity.
+
+Uniqueness arises from COMPOSITION:
+
+```
+unique_identity = behavioral_hash + subject_binding_signature + network_layer_signals
+```
+
+where `subject_binding_signature` is a §13-defined PQC signature by the subject over an attestation, and `network_layer_signals` are out-of-band identifiers (network address, device fingerprint, etc.) that the protocol does not specify but allows implementations to compose with.
+
+Implementations exposing the behavioral hash to downstream consumers SHOULD document this composition property and SHOULD NOT present the behavioral hash alone as an identity claim.
+
+#### 9.3.8 Versioning
+
+The behavioral hash carries an independent version field `behavioral_hash_version` (see §14.1).
+
+The current version is `behavioral_hash_version = 1`, corresponding to the parameters in §9.3.2-§9.3.6. Any change to:
+- The selected axes (§9.3.2)
+- The bucket count or formula (§9.3.3)
+- The element encoding (§9.3.3)
+- The MinHash parameters (§9.3.4)
+- The set semantics or empty handling (§9.3.5)
+- The output format (§9.3.6)
+
+REQUIRES bumping `behavioral_hash_version`. Existing behavioral hashes at the old version remain interpretable; implementations MUST NOT silently recompute them under a new version.
+
+#### 9.3.9 Conformance
+
+A fingerprint-layer conformant implementation (§11.1) MAY compute and emit the behavioral hash alongside fingerprint emission. The behavioral hash is RECOMMENDED for implementations supporting cross-operator subject clustering or similarity matching.
+
+A trust-layer conformant implementation (§11.2) MAY use the behavioral hash as part of its claim emission or cross-verification logic (e.g. to detect "same subject seen by independent sources") but is not REQUIRED to.
+
 ---
 
 ## 10. Provenance
@@ -559,9 +697,10 @@ A **fingerprint-layer conformant BFP v0 implementation** MUST:
 
 A fingerprint-layer conformant implementation MAY:
 
-- Emit `(0.0, 0.0)` for the three v0-deferred axes (`activity_rhythm`, `linguistic_signature`, `network_signature`) without further computation.
+- Emit `(0.0, 0.0)` for any axis flagged DRAFT in §5 without further computation. As of v0.2.2 the DRAFT axes are: `account_hygiene`, `temporal_persistence`, `activity_rhythm`, `linguistic_signature`, `adversarial_indicators` (5 axes).
 - Implement additional similarity profiles beyond `bfp-cosine-default-v0`.
 - Add implementation-specific fields outside the `axes` and `provenance` objects, prefixed with `x_` (extension fields).
+- Compute and emit the behavioral hash specified in §9.3 alongside fingerprint emission (RECOMMENDED for implementations supporting cross-operator subject clustering).
 
 ### 11.2 Trust Layer Conformance
 
@@ -625,7 +764,7 @@ The normative content of §12.1 is the EXISTENCE of these tiers as a structure. 
 
 ## 14. Versioning
 
-This is v0.2.1. The versioning policy for `bfp_version` itself is:
+This is v0.2.2. The versioning policy for `bfp_version` itself is:
 
 - **0.x.y**: pre-stable. Breaking changes permitted between minor versions. Not for external interoperability claims.
 - **1.0.0**: first stable version. Breaking changes between major versions only.
@@ -1038,4 +1177,4 @@ The following items are intentionally deferred from v0.x. They are anchored here
 
 ---
 
-*End of BFP v0.2.1 public working draft.*
+*End of BFP v0.2.2 public working draft.*
