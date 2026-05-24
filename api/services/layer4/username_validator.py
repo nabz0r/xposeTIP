@@ -12,6 +12,14 @@ _TITLE_PATTERNS = (
     # `connection_quality` is shape-indistinguishable from legit name
     # variants like `nabil_ksontini` produced by variant_generator.py.
     "connection_quality",
+    # S192 Bug 9 Part A: form-label values scraped from "not found" /
+    # auth pages where the scraper saw a 200 OK and extracted <title>
+    # or a heading. Pre-existing rows are cleaned by S193 backfill.
+    "sign up", "sign in", "log in", "log out", "register",
+    "create account", "forgot password",
+    "404 not found", "page not found", "user not found",
+    "profile not found", "not available",
+    "click here", "learn more", "get started",
 )
 
 # S179: FQDN-shaped values tagged type='username' by domain-oriented

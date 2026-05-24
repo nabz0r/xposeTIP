@@ -652,9 +652,10 @@ def enrich_public_exposure(target_id, session: Session, scan_id=None) -> dict:
         from api.scrapers.sec_edgar_search import search_sec_edgar
 
         sec_results = search_sec_edgar(primary_name)
+        n_sec = len(sec_results) if sec_results else 0
+        logger.info("PASS2: SEC EDGAR invoked for '%s' → %d filings", primary_name, n_sec)
         if sec_results:
             results["legal"].extend(sec_results)
-            logger.info("PASS2: SEC EDGAR found %d filings", len(sec_results))
 
         results["scrapers_run"] += 1
         time.sleep(1.0)  # SEC fair access: 10 req/sec, 1s spacing is safe
@@ -668,9 +669,11 @@ def enrich_public_exposure(target_id, session: Session, scan_id=None) -> dict:
 
         ch_api_key = _get_companies_house_uk_api_key(session, target.workspace_id)
         ch_results = search_companies_house_uk(primary_name, api_key=ch_api_key)
+        n_ch = len(ch_results) if ch_results else 0
+        logger.info("PASS2: Companies House UK invoked for '%s' (key=%s) → %d officers",
+                    primary_name, 'set' if ch_api_key else 'absent', n_ch)
         if ch_results:
             results["legal"].extend(ch_results)
-            logger.info("PASS2: Companies House UK found %d officers", len(ch_results))
 
         results["scrapers_run"] += 1
         time.sleep(1.0)  # Companies House: 600 req/5min = 2/s; 1s spacing safe

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Outlet, NavLink, useNavigate, useLocation } from 'react-router-dom'
+import { Outlet, NavLink, useNavigate, useLocation, useSearchParams } from 'react-router-dom'
 import { LayoutDashboard, Crosshair, Settings, LogOut, Shield, ServerCog, Building2, ChevronDown, Plus, Menu, X, Globe, Briefcase, Layers } from 'lucide-react'
 import { useAuth } from '../lib/auth'
 import { getMe, getWorkspaces, switchWorkspace } from '../lib/api'
@@ -38,6 +38,8 @@ export default function Layout() {
   const [mobileOpen, setMobileOpen] = useState(false)
   const navigate = useNavigate()
   const location = useLocation()
+  const [searchParams] = useSearchParams()
+  const isAllMode = location.pathname.startsWith('/targets') && searchParams.get('all') === '1'
 
   useEffect(() => {
     getMe().then(data => {
@@ -125,13 +127,13 @@ export default function Layout() {
 
             {showWsSwitcher && (
               <div className="absolute left-0 right-0 top-full mt-1 bg-[#12121a] border border-[#1e1e2e] rounded-lg shadow-xl z-50 overflow-hidden">
-                {currentWs?.role === 'superadmin' && (
+                {(currentWs?.role === 'superadmin' || currentWs?.role === 'admin') && (
                   <button onClick={() => { setShowWsSwitcher(false); navigate('/targets?all=1') }}
                     className="w-full px-3 py-2.5 text-left text-sm hover:bg-white/5 flex items-center gap-2 border-b border-[#1e1e2e]">
                     <Layers className="w-4 h-4 text-[#00ff88] shrink-0" />
                     <div>
                       <div className="text-gray-300">All workspaces</div>
-                      <div className="text-[10px] text-gray-600 mt-0.5">superadmin view — all targets across workspaces</div>
+                      <div className="text-[10px] text-gray-600 mt-0.5">admin view — all targets across workspaces</div>
                     </div>
                   </button>
                 )}
@@ -166,27 +168,58 @@ export default function Layout() {
         )}
       </div>
 
+      {/* S192 Bug 11: ALL workspaces mode banner — Targets-only by design (S188).
+          Other nav items are disabled in this mode to signal scope; clicking them
+          would otherwise bounce back to the JWT workspace context which is confusing. */}
+      {isAllMode && !collapsed && (
+        <div className="mx-3 mb-2 px-3 py-2 bg-[#00ff88]/10 border border-[#00ff88]/30 rounded-lg flex items-center gap-2">
+          <Layers className="w-3.5 h-3.5 text-[#00ff88] shrink-0" />
+          <div className="flex-1">
+            <div className="text-[11px] font-mono text-[#00ff88] uppercase tracking-wider">All workspaces</div>
+            <div className="text-[10px] text-gray-500 mt-0.5">Targets view only</div>
+          </div>
+        </div>
+      )}
+
       <nav className="flex-1 px-3 space-y-1">
         {navItems
           .filter(item => !item.roles || item.roles.includes(currentWs?.role))
-          .map(({ to, icon: Icon, label }) => (
-          <NavLink
-            key={to}
-            to={to}
-            end={to === '/'}
-            title={collapsed ? label : undefined}
-            className={({ isActive }) =>
-              `flex items-center gap-3 ${collapsed ? 'justify-center' : ''} px-3 py-2.5 rounded-lg text-sm transition-colors ${
-                isActive
-                  ? 'bg-[#00ff88]/10 text-[#00ff88]'
-                  : 'text-gray-400 hover:text-white hover:bg-white/5'
-              }`
+          .map(({ to, icon: Icon, label }) => {
+            // S192 Bug 11: in ALL mode, disable nav items other than Targets
+            // (which is the only tab that respects ?all=1). Clicking would
+            // otherwise reset the user to their JWT workspace context.
+            const isDisabledInAllMode = isAllMode && to !== '/targets'
+            if (isDisabledInAllMode) {
+              return (
+                <div
+                  key={to}
+                  title={collapsed ? `${label} (disabled in ALL mode)` : 'Disabled in ALL workspaces mode'}
+                  className={`flex items-center gap-3 ${collapsed ? 'justify-center' : ''} px-3 py-2.5 rounded-lg text-sm text-gray-600 opacity-50 cursor-not-allowed select-none`}
+                >
+                  <Icon className="w-4 h-4 shrink-0" />
+                  {!collapsed && label}
+                </div>
+              )
             }
-          >
-            <Icon className="w-4 h-4 shrink-0" />
-            {!collapsed && label}
-          </NavLink>
-        ))}
+            return (
+              <NavLink
+                key={to}
+                to={to}
+                end={to === '/'}
+                title={collapsed ? label : undefined}
+                className={({ isActive }) =>
+                  `flex items-center gap-3 ${collapsed ? 'justify-center' : ''} px-3 py-2.5 rounded-lg text-sm transition-colors ${
+                    isActive
+                      ? 'bg-[#00ff88]/10 text-[#00ff88]'
+                      : 'text-gray-400 hover:text-white hover:bg-white/5'
+                  }`
+                }
+              >
+                <Icon className="w-4 h-4 shrink-0" />
+                {!collapsed && label}
+              </NavLink>
+            )
+          })}
       </nav>
       <div className="p-3 border-t border-[#1e1e2e]">
         {!collapsed && (

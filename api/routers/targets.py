@@ -177,7 +177,7 @@ async def list_all_targets(
     min_score: int | None = None,
     page: int = Query(1, ge=1),
     per_page: int = Query(20, ge=1, le=500),
-    role: str = Depends(require_role("superadmin")),
+    role: str = Depends(require_role("superadmin", "admin")),
     db: AsyncSession = Depends(get_db),
 ):
     """

@@ -1,5 +1,37 @@
 [
   {
+    "sha": "83592c4",
+    "date": "2026-05-24T13:52:23+02:00",
+    "type": "docs",
+    "scope": "S191",
+    "sprint": "S191",
+    "subject": "scan smoke v2 — 7 famous Crypto + S190 lessons applied (5/14 truncated, decisive evidence)"
+  },
+  {
+    "sha": "d3d03ab",
+    "date": "2026-05-24T12:28:26+02:00",
+    "type": "docs",
+    "scope": "S190",
+    "sprint": "S190",
+    "subject": "add worker log captures (renamed .log → .txt to escape gitignore)"
+  },
+  {
+    "sha": "68203ee",
+    "date": "2026-05-24T12:27:27+02:00",
+    "type": "docs",
+    "scope": "S190",
+    "sprint": "S190",
+    "subject": "scan smoke 2026-05-24 — Crypto org / S183-S189 cumulative validation"
+  },
+  {
+    "sha": "506a9c5",
+    "date": "2026-05-24T11:41:42+02:00",
+    "type": "docs",
+    "scope": "S189",
+    "sprint": "S189",
+    "subject": "drift closure post-S183/S185/S187/S188 + BFPStatus API-driven + v1.6.14"
+  },
+  {
     "sha": "915a165",
     "date": "2026-05-24T11:08:06+02:00",
     "type": "feat",

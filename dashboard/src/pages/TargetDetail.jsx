@@ -96,6 +96,20 @@ export default function TargetDetail() {
 
   useEffect(() => { load() }, [load])
 
+  // S192 Bug 8: re-fetch on tab visibility change so findings stay fresh
+  // when user returns to a TargetDetail page after the scan finished in
+  // the background (load() at mount only ran once, post-scan poll's
+  // re-fetch only fires if a scan was running when the page was mounted).
+  useEffect(() => {
+    const onVisible = () => {
+      if (document.visibilityState === 'visible') {
+        load()
+      }
+    }
+    document.addEventListener('visibilitychange', onVisible)
+    return () => document.removeEventListener('visibilitychange', onVisible)
+  }, [load])
+
   // Animate score
   useEffect(() => {
     if (target?.exposure_score == null) return

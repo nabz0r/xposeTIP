@@ -109,6 +109,11 @@ export default function ProfileHeader({ target, findings, animScore, profileData
     archive: 'Archive History',
     code_leak: 'Code Leaks',
     financial: 'Financial',
+    // S192 Bug 7a: backend categories that were rendered as snake_case strings
+    formal_records: 'Legal Records',     // S145 + S187 SEC EDGAR / Companies House
+    public_exposure: 'Public Exposure',  // GDELT / Google News / GNews
+    compliance: 'Sanctions / PEP',       // OpenSanctions / Interpol
+    corporate: 'Corporate Officer',      // OpenCorporates + Companies House UK
   }
 
   return (
