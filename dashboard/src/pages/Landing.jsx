@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../lib/auth'
 import { PHASES } from '../components/landing/constants'
 import HeroSection from '../components/landing/HeroSection'
+import InversionSection from '../components/landing/InversionSection'
 import ProblemSection from '../components/landing/ProblemSection'
 import FeaturesSection from '../components/landing/FeaturesSection'
 import PipelineSection from '../components/landing/PipelineSection'
@@ -124,6 +125,7 @@ export default function Landing() {
         onSubmit={handleQuickScan} quickResult={quickResult}
         pollCount={pollCount} phaseMsg={phaseMsg}
       />
+      <InversionSection />
       <ProblemSection />
       <FeaturesSection />
       <PipelineSection />
