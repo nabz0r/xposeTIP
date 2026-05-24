@@ -1,0 +1,107 @@
+==============================================================================
+=== S199 SMOKE — 9 fresh scans, multi-workspace, dispatch-gap fix verify ===
+==============================================================================
+
+--- [Crypto  ] chnmille@gmail.com (DEFAULT) ---
+  scan=035a24d8-0f5e-49d6-9855-0c21821fe13b  cascade=done/completed  dur=479s  findings=0
+  Findings from 29 new scrapers: S196_phone=0  S197_maigret=0  S198_tier_a=0
+  scraper_engine_attempts:        136 entries  status: {'no_data': 84, 'error_401': 3, 'success': 32, 'error_500': 1, 'no_input': 13, 'error_502': 1, 'error_999': 1, 'error_400': 1}
+  name_scraper_engine_attempts:   9 entries  status: {'no_data': 3, 'success': 4, 'error_403': 1, 'error_401': 1}
+  secondary_enricher_attempts:    0 entries  status: {}
+
+--- [Crypto  ] aleksei@sovietnation.net (DEFAULT) ---
+  scan=074e298f-3088-46c9-b6ba-6b0b52ee01c8  cascade=done/completed  dur=748s  findings=1
+  Findings from 29 new scrapers: S196_phone=0  S197_maigret=0  S198_tier_a=4
+  Per-scraper:
+    [S198] arxiv_author_search                    n=1
+    [S198] dblp_author_search                     n=1
+    [S198] orcid_public_search                    n=1
+    [S198] semantic_scholar_author_search         n=1
+  scraper_engine_attempts:        136 entries  status: {'no_data': 33, 'error_401': 3, 'success': 85, 'no_input': 13, 'error_502': 1, 'error_400': 1}
+  name_scraper_engine_attempts:   9 entries  status: {'no_data': 3, 'success': 4, 'error_403': 1, 'error_401': 1}
+  secondary_enricher_attempts:    0 entries  status: {}
+
+--- [Crypto  ] jpessa@gmail.com (DEFAULT) ---
+  scan=a4bc09ce-6f44-4b9e-a5d7-a66e39eabe18  cascade=done/completed  dur=561s  findings=0
+  Findings from 29 new scrapers: S196_phone=0  S197_maigret=0  S198_tier_a=0
+  scraper_engine_attempts:        136 entries  status: {'no_data': 69, 'error_401': 3, 'success': 47, 'error_500': 1, 'no_input': 13, 'error_502': 1, 'error_999': 1, 'error_400': 1}
+  name_scraper_engine_attempts:   9 entries  status: {'no_data': 4, 'success': 3, 'error_403': 1, 'error_401': 1}
+  secondary_enricher_attempts:    0 entries  status: {}
+
+--- [Dataminr] becki.bailey@dataminr.com (DEFAULT) ---
+  scan=c7ace8ed-691d-4cc4-b595-1cf6b711f479  cascade=done/completed  dur=864s  findings=0
+  Findings from 29 new scrapers: S196_phone=0  S197_maigret=0  S198_tier_a=0
+  scraper_engine_attempts:        136 entries  status: {'no_data': 81, 'error_401': 3, 'success': 34, 'error_500': 1, 'no_input': 13, 'error_502': 1, 'error_999': 1, 'error_400': 2}
+  name_scraper_engine_attempts:   9 entries  status: {'no_data': 4, 'success': 3, 'error_403': 1, 'error_401': 1}
+  secondary_enricher_attempts:    0 entries  status: {}
+
+--- [Dataminr] balaji.yelamanchili@dataminr.com (DEFAULT) ---
+  scan=6b790195-bfdf-40f2-a9e9-79872b22b79d  cascade=done/completed  dur=1034s  findings=1
+  Findings from 29 new scrapers: S196_phone=0  S197_maigret=0  S198_tier_a=0
+  scraper_engine_attempts:        136 entries  status: {'no_data': 79, 'error_401': 3, 'success': 35, 'error_500': 1, 'no_input': 13, 'error_502': 1, 'error_999': 1, 'error_400': 2, 'error_406': 1}
+  name_scraper_engine_attempts:   9 entries  status: {'no_data': 4, 'success': 3, 'error_403': 1, 'error_401': 1}
+  secondary_enricher_attempts:    0 entries  status: {}
+
+--- [Dataminr] rbasset@dataminr.com (DEFAULT) ---
+  scan=9f2887b3-9a86-4c23-8b64-729f62b13060  cascade=done/completed  dur=1134s  findings=36
+  Findings from 29 new scrapers: S196_phone=0  S197_maigret=2  S198_tier_a=4
+  Per-scraper:
+    [S198] alienvault_otx_domain                  n=1
+    [S198] arxiv_author_search                    n=1
+    [S198] dblp_author_search                     n=1
+    [S197] ifttt_profile                          n=1
+    [S197] paypal_profile                         n=1
+    [S198] semantic_scholar_author_search         n=1
+  scraper_engine_attempts:        136 entries  status: {'no_data': 69, 'error_401': 3, 'success': 46, 'error_500': 2, 'no_input': 13, 'error_502': 1, 'error_999': 1, 'error_400': 1}
+  name_scraper_engine_attempts:   9 entries  status: {'no_data': 4, 'success': 3, 'error_403': 1, 'error_401': 1}
+  secondary_enricher_attempts:    0 entries  status: {}
+
+--- [Friends ] dvirginijus0413@gmail.com (OVERRIDE) ---
+  scan=38947bdc-9bd6-482c-a298-a94a440625b2  cascade=done/completed  dur=1211s  findings=32
+  Findings from 29 new scrapers: S196_phone=0  S197_maigret=1  S198_tier_a=1
+  Per-scraper:
+    [S198] alienvault_otx_domain                  n=1
+    [S197] paypal_profile                         n=1
+  scraper_engine_attempts:        136 entries  status: {'no_data': 87, 'error_401': 3, 'success': 29, 'error_500': 1, 'no_input': 13, 'error_502': 1, 'error_999': 1, 'error_400': 1}
+  name_scraper_engine_attempts:   1 entries  status: {'no_name_input': 1}
+  secondary_enricher_attempts:    0 entries  status: {}
+
+--- [Friends ] anna.launay@gmail.com (OVERRIDE) ---
+  scan=6605dd13-33d9-4e5b-ab12-4e584c8625e4  cascade=done/completed  dur=1216s  findings=2
+  Findings from 29 new scrapers: S196_phone=0  S197_maigret=1  S198_tier_a=0
+  Per-scraper:
+    [S197] ifttt_profile                          n=1
+  scraper_engine_attempts:        136 entries  status: {'no_data': 81, 'error_401': 3, 'success': 33, 'error_500': 1, 'no_input': 13, 'error_502': 1, 'error_999': 1, 'error_400': 2, 'error_406': 1}
+  name_scraper_engine_attempts:   9 entries  status: {'no_data': 4, 'success': 3, 'error_403': 1, 'error_401': 1}
+  secondary_enricher_attempts:    0 entries  status: {}
+
+--- [Friends ] loupn24@msn.com (OVERRIDE) ---
+  scan=bce0f15b-d6a5-407a-abc4-1f022e62d183  cascade=done/completed  dur=1360s  findings=0
+  Findings from 29 new scrapers: S196_phone=0  S197_maigret=0  S198_tier_a=0
+  scraper_engine_attempts:        136 entries  status: {'no_data': 86, 'error_401': 3, 'success': 30, 'error_500': 1, 'no_input': 13, 'error_502': 1, 'error_999': 1, 'error_400': 1}
+  name_scraper_engine_attempts:   9 entries  status: {'no_data': 4, 'success': 3, 'error_403': 1, 'error_401': 1}
+  secondary_enricher_attempts:    0 entries  status: {}
+
+==============================================================================
+=== GRAND TOTALS ===
+==============================================================================
+  S196 phone findings (across 9 scans):       0
+  S197 Maigret findings (across 9 scans):     4
+  S198 Tier A findings (across 9 scans):      9
+
+  scraper_engine_attempts (total entries):      1224
+  name_scraper_engine_attempts (total entries): 73
+  secondary_enricher_attempts (total entries):  0
+
+=== PER-WORKSPACE TOTALS ===
+  Crypto     S196=0  S197=0  S198=4  total_new=4
+  Dataminr   S196=0  S197=2  S198=4  total_new=6
+  Friends    S196=0  S197=2  S198=1  total_new=3
+
+==============================================================================
+=== VERDICT ===
+==============================================================================
+PASS: S199 fix CONFIRMED.
+  scraper_engine dispatched on at least 1 scan (1224 total attempt log entries).
+  Combined findings from 29 new scrapers: 13
+  Pre-S199: this number would have been ZERO (PASS1 dispatch structurally missing).
