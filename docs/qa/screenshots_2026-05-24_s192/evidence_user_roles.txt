@@ -1,0 +1,17 @@
+Operator: nabil@xpose.dev (id=d674db38-73b3-4e73-a93e-3c1397fd3d2a)
+\nRoles across workspaces (15):
+  [BGL BNP Paribas          ] role=admin  ✓ ALL-entry eligible
+  [Crypto                   ] role=superadmin  ✓ ALL-entry eligible
+  [Dataminr                 ] role=admin  ✓ ALL-entry eligible
+  [Default                  ] role=superadmin  ✓ ALL-entry eligible
+  [Ferrero                  ] role=admin  ✓ ALL-entry eligible
+  [Friends                  ] role=admin  ✓ ALL-entry eligible
+  [ING Luxembourg           ] role=admin  ✓ ALL-entry eligible
+  [KPMG                     ] role=admin  ✓ ALL-entry eligible
+  [Maersk                   ] role=admin  ✓ ALL-entry eligible
+  [Nexus 2026               ] role=admin  ✓ ALL-entry eligible
+  [Quentin                  ] role=admin  ✓ ALL-entry eligible
+  [Threatconnect            ] role=admin  ✓ ALL-entry eligible
+  [Threatconnect CS         ] role=admin  ✓ ALL-entry eligible
+  [Threatconnect Devops     ] role=admin  ✓ ALL-entry eligible
+  [Threatconnect Support    ] role=admin  ✓ ALL-entry eligible

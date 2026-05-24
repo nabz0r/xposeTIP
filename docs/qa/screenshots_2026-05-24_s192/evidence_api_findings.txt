@@ -1,0 +1,17 @@
+Most recent scan: 027c3b4d-5db2-4d36-91a0-fd2f9a7b55e0
+Findings in most recent scan: 4
+Findings across ALL scans for target: 93
+\nMost-recent-scan matcher classification (mimics frontend):
+  crypto=2  phone=1
+Across-all-scans matcher classification:
+  crypto=9  phone=6
+\nSample crypto rows (across all scans):
+  scan=a341169a module=blockchain_info_btc       data.scraper=blockchain_info_btc created=2026-05-23 21:35:18.650358+00:00
+  scan=a341169a module=blockchain_info_btc       data.scraper=None created=2026-05-23 21:40:00.178455+00:00
+  scan=3a4dfac8 module=blockchain_info_btc       data.scraper=None created=2026-05-23 21:54:34.457118+00:00
+  scan=f281220a module=blockchain_info_btc       data.scraper=None created=2026-05-23 23:10:39.013554+00:00
+  scan=f281220a module=mempool_space_btc         data.scraper=None created=2026-05-23 23:10:39.013554+00:00
+  scan=1a17f496 module=blockchain_info_btc       data.scraper=None created=2026-05-23 23:36:35.668404+00:00
+  scan=1a17f496 module=mempool_space_btc         data.scraper=None created=2026-05-23 23:36:35.668404+00:00
+  scan=027c3b4d module=blockchain_info_btc       data.scraper=None created=2026-05-23 23:41:50.799903+00:00
+  scan=027c3b4d module=mempool_space_btc         data.scraper=None created=2026-05-23 23:41:50.799903+00:00

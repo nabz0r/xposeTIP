@@ -1,0 +1,16 @@
+S192 Bug 8 — visibilitychange refetch capture
+Page: /targets/2e5269ed-71d1-4e6a-91e1-e507c5e36694 (chnmille@gmail.com)
+Method: fetch() interception, baseline-then-toggle window.
+
+Baseline (2s passive observation, no visibility events):
+  0 requests
+
+After dispatching visibilitychange → visible (200ms delay then 2s observation):
+  5 requests fired (all consistent with load() execution):
+    /api/v1/targets/2e5269ed-71d1-4e6a-91e1-e507c5e36694
+    /api/v1/findings?target_id=2e5269ed-71d1-4e6a-91e1-e507c5e36694&per_page=200
+    /api/v1/scans?target_id=2e5269ed-71d1-4e6a-91e1-e507c5e36694
+    /api/v1/targets/2e5269ed-71d1-4e6a-91e1-e507c5e36694/profile
+    /api/v1/targets/2e5269ed-71d1-4e6a-91e1-e507c5e36694/fingerprint
+
+VERDICT: ✓ Bug 8 listener wired correctly. load() invoked on visibility=visible.

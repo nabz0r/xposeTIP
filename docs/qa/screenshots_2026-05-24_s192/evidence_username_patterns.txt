@@ -1,0 +1,34 @@
+Patterns present in _TITLE_PATTERNS:
+  'sign up': in_pattern_tuple=True
+  'sign in': in_pattern_tuple=True
+  'log in': in_pattern_tuple=True
+  'log out': in_pattern_tuple=True
+  'register': in_pattern_tuple=True
+  'create account': in_pattern_tuple=True
+  'forgot password': in_pattern_tuple=True
+  '404 not found': in_pattern_tuple=True
+  'page not found': in_pattern_tuple=True
+  'user not found': in_pattern_tuple=True
+  'profile not found': in_pattern_tuple=True
+  'not available': in_pattern_tuple=True
+  'click here': in_pattern_tuple=True
+  'learn more': in_pattern_tuple=True
+  'get started': in_pattern_tuple=True
+  'connection_quality': in_pattern_tuple=True
+
+is_valid_username() behavior:
+  ✓  'Sign Up'                       is_valid=False (expected=False)
+  ✓  'sign up'                       is_valid=False (expected=False)
+  ✓  'Log In'                        is_valid=False (expected=False)
+  ✓  'log in'                        is_valid=False (expected=False)
+  ✓  '404 Not Found'                 is_valid=False (expected=False)
+  ✓  'Page Not Found'                is_valid=False (expected=False)
+  ✓  'Click Here'                    is_valid=False (expected=False)
+  ✓  'Get Started'                   is_valid=False (expected=False)
+  ✓  'nabil_ksontini'                is_valid=True (expected=True)
+  ✓  'chnmille'                      is_valid=True (expected=True)
+  ✓  'vitalik'                       is_valid=True (expected=True)
+  ✓  'hayden.adams'                  is_valid=True (expected=True)
+  ✓  'Sam_Theis'                     is_valid=True (expected=True)
+  ✓  'nabz0r'                        is_valid=True (expected=True)
+  ✓  'connection_quality'            is_valid=False (expected=False)

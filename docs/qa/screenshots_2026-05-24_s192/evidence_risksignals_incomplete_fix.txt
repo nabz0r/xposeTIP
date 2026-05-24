@@ -1,0 +1,38 @@
+S192 INCOMPLETE FIX surfaced during Check 3:
+
+RiskSignalsBlock.jsx (lines 60-74) classifies findings with its OWN loop that
+still uses `scraper = f.data?.scraper` WITHOUT the new `getScraperName`
+fallback to `|| f.module`. The S192 fallback fix landed in findingFilters.js
+helpers (isPhoneSignal, isCryptoSignal) — but RiskSignalsBlock.jsx duplicates
+the classification logic with its own raw `f.data?.scraper` access.
+
+Result: same root-cause bug as pre-S192 in this component. Findings emitted by
+secondary_identifier_enricher (A1.6 path) with NULL data.scraper are STILL not
+classified into the Risk Signals columns.
+
+Additional issue in RiskSignalsBlock.jsx line 120:
+    const chain = data.scraper === 'blockchair_wallet' ? 'multi-chain' :
+                  data.scraper === 'chainabuse_lookup' ? 'reported' : 'BTC'
+                                  ^^^^^^^^^^^^^^^^^^
+The typo 'chainabuse_lookup' was corrected to 'chainabuse_check' in
+findingFilters.js but RiskSignalsBlock.jsx still has the old typo.
+
+EVIDENCE — gnienlnaha@yahoo.fr DB:
+  crypto_n (all-scans, matcher logic): 9
+  crypto_n (most-recent-scan):         2
+  RiskSignalsBlock UI Crypto column:   0 (column hidden via SignalColumn early-return)
+
+The Findings tab chip (Crypto=2) DOES work because the chip uses applyPreset →
+isCryptoSignal → getScraperName → falls back to f.module → matches
+'blockchain_info_btc' rows where data.scraper is NULL.
+
+PROPOSED FIX (S193 candidate, 2-line patch):
+  RiskSignalsBlock.jsx line 64:
+    -  const scraper = f.data?.scraper
+    +  const scraper = f.data?.scraper || f.module
+  RiskSignalsBlock.jsx line 120:
+    -  data.scraper === 'chainabuse_lookup' ? 'reported'
+    +  data.scraper === 'chainabuse_check' ? 'reported'
+
+OR (cleaner): refactor RiskSignalsBlock to use the exported isPhoneSignal /
+isCryptoSignal / isLegalSignal helpers directly.

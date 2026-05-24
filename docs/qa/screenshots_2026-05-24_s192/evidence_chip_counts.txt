@@ -1,0 +1,22 @@
+TARGET: gnienlnaha@yahoo.fr  (05ce9d2c-5abb-4db2-87f2-f5a9f2635fe5)
+crypto_n=9  legal_n=0  phone_n=6  total=93
+
+Per-scraper breakdown:
+  blockchain_info_btc            n=6
+  google_phone_dork              n=6
+  mempool_space_btc              n=3
+
+score_breakdown: {
+  "breach": 8,
+  "archive": 1,
+  "metadata": 20,
+  "financial": 1,
+  "geolocation": 0,
+  "intelligence": 5,
+  "people_search": 1,
+  "social_account": 10,
+  "domain_registration": 0
+}
+primary_name: None
+crypto_wallets: [{'chain': 'btc', 'address': '1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa'}]
+phones: ['+33612345678']

@@ -1,0 +1,51 @@
+
+=== gnienlnaha@yahoo.fr (9 crypto, 6 phone) ===
+{
+  "breach": 8,
+  "archive": 1,
+  "metadata": 20,
+  "financial": 1,
+  "geolocation": 0,
+  "intelligence": 5,
+  "people_search": 1,
+  "social_account": 10,
+  "domain_registration": 0
+}
+
+=== guillaume.a.perrin@gmail.com (84 legal) ===
+{
+  "breach": 8,
+  "archive": 0,
+  "identity": 0,
+  "metadata": 17,
+  "geolocation": 0,
+  "intelligence": 16,
+  "people_search": 1,
+  "social_account": 13,
+  "public_exposure": 20
+}
+
+=== chnmille@gmail.com (21 legal) ===
+{
+  "breach": 8,
+  "archive": 0,
+  "metadata": 13,
+  "geolocation": 0,
+  "people_search": 2,
+  "formal_records": 25,
+  "social_account": 12,
+  "public_exposure": 0
+}
+
+=== vitalik@ethereum.org (S192 log-validate target) ===
+{
+  "breach": 8,
+  "archive": 5,
+  "identity": 1,
+  "metadata": 14,
+  "code_leak": 1,
+  "geolocation": 0,
+  "intelligence": 7,
+  "people_search": 3,
+  "social_account": 36
+}
