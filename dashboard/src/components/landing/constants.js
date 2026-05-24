@@ -62,7 +62,7 @@ export const AUDIENCES = [
     desc: 'For individual professionals.',
     href: '/setup?plan=starter',
     cta: 'Join waitlist',
-    features: ['250 full scans / month', 'Full 170-source pipeline', 'Identity graph + personas', 'PDF identity reports'],
+    features: ['250 full scans / month', 'Full 174-source pipeline', 'Identity graph + personas', 'PDF identity reports'],
   },
   {
     label: 'Team',
