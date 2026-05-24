@@ -7,17 +7,22 @@ export default function ScraperBreakdown() {
         <h2 className="text-2xl font-bold mb-8 text-center font-['Instrument_Sans',sans-serif]">170 Intelligence Sources</h2>
         <div className="bg-[#0a0a0f] border border-[#1e1e2e] rounded-xl overflow-hidden">
           {[
-            { cat: 'Social', count: 70, color: '#3388ff', examples: 'Reddit, Steam, Telegram, Twitch, Pinterest, Strava, Snapchat, Threads, Bluesky, Last.fm, Issuu, Calendly, Blogger, PayPal, Gumroad, Speakerdeck, Wattpad, HackMD, OpenCollective, Steemit...' },
-            { cat: 'Metadata', count: 19, color: '#aa55ff', examples: 'DNS DMARC, WHOIS, Gravatar (x3), crt.sh, mailcheck, github_timezone, phone dorks (Google/DDG/Bing/Yandex), HackerNews Algolia...' },
-            { cat: 'People Search', count: 11, color: '#00ddcc', examples: 'WebMii, Google Scholar, Google Groups, npm, PyPI, Snapchat, Crunchbase...' },
-            { cat: 'Gaming', count: 10, color: '#ff8800', examples: 'Steam, Chess.com, Roblox, Lichess, Xbox, RuneScape, MyAnimeList, Anilist...' },
+            // S206-2 palette unify: 4 semantic colors mapped to BFPLayer S205 standards.
+            //   #00ff88 — primary identity signals (social/professional/people-search/identity-validators)
+            //   #3388ff — data flow / metadata / archival
+            //   #ff5588 — risk / exposure / leaks
+            //   #888    — context categories that don't fit cleanly (gaming presence, financial activity)
+            { cat: 'Social',          count: 70, color: '#00ff88', examples: 'Reddit, Steam, Telegram, Twitch, Pinterest, Strava, Snapchat, Threads, Bluesky, Last.fm, Issuu, Calendly, Blogger, PayPal, Gumroad, Speakerdeck, Wattpad, HackMD, OpenCollective, Steemit...' },
+            { cat: 'Metadata',        count: 19, color: '#3388ff', examples: 'DNS DMARC, WHOIS, Gravatar (x3), crt.sh, mailcheck, github_timezone, phone dorks (Google/DDG/Bing/Yandex), HackerNews Algolia...' },
+            { cat: 'People Search',   count: 11, color: '#00ff88', examples: 'WebMii, Google Scholar, Google Groups, npm, PyPI, Snapchat, Crunchbase...' },
+            { cat: 'Gaming',          count: 10, color: '#888',    examples: 'Steam, Chess.com, Roblox, Lichess, Xbox, RuneScape, MyAnimeList, Anilist...' },
             { cat: 'Public Exposure', count: 15, color: '#ff5588', examples: 'GDELT, GNews, RSS, OpenSanctions, Interpol, OpenCorporates, LBR, Courtlistener, BODACC, UK Gazette, arXiv, ORCID, DBLP, Semantic Scholar, AlienVault OTX' },
-            { cat: 'Breach', count: 9, color: '#ff2244', examples: 'LeakCheck, IntelX, EmailRep, HackerTarget, XposedOrNot, LeakLookup...' },
-            { cat: 'Archive', count: 9, color: '#ffcc00', examples: 'Wayback Machine — domain, count, profile, LinkedIn, Twitter, Instagram, Facebook, GitHub' },
-            { cat: 'Identity', count: 8, color: '#cc88ff', examples: 'Agify, Genderize, Nationalize, NumVerify, Veriphone, API Ninjas, AbstractAPI' },
-            { cat: 'Code Leak', count: 3, color: '#ff00ff', examples: 'GitHub Code Search (email), GitHub Code Search (username), GitHub Gists' },
-            { cat: 'Financial', count: 14, color: '#ffaa00', examples: 'Blockchain.info, Blockchair, ChainAbuse, Etherscan, BscScan, Polygonscan, Snowtrace, Arbiscan, Optimistic, Basescan, Tronscan, SolanaFM, Mempool BTC/LTC/DOGE' },
-            { cat: 'Social Account', count: 2, color: '#666688', examples: 'LinkedIn Profile, Proxycurl LinkedIn' },
+            { cat: 'Breach',          count: 9,  color: '#ff5588', examples: 'LeakCheck, IntelX, EmailRep, HackerTarget, XposedOrNot, LeakLookup...' },
+            { cat: 'Archive',         count: 9,  color: '#3388ff', examples: 'Wayback Machine — domain, count, profile, LinkedIn, Twitter, Instagram, Facebook, GitHub' },
+            { cat: 'Identity',        count: 8,  color: '#00ff88', examples: 'Agify, Genderize, Nationalize, NumVerify, Veriphone, API Ninjas, AbstractAPI' },
+            { cat: 'Code Leak',       count: 3,  color: '#ff5588', examples: 'GitHub Code Search (email), GitHub Code Search (username), GitHub Gists' },
+            { cat: 'Financial',       count: 14, color: '#888',    examples: 'Blockchain.info, Blockchair, ChainAbuse, Etherscan, BscScan, Polygonscan, Snowtrace, Arbiscan, Optimistic, Basescan, Tronscan, SolanaFM, Mempool BTC/LTC/DOGE' },
+            { cat: 'Social Account',  count: 2,  color: '#00ff88', examples: 'LinkedIn Profile, Proxycurl LinkedIn' },
           ].map(c => (
             <div key={c.cat} className="flex items-center gap-4 px-5 py-3 border-b border-[#1e1e2e] last:border-0">
               <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: c.color }} />
