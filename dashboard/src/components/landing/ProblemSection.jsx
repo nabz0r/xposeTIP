@@ -1,5 +1,4 @@
 import Section from '../shared/Section'
-import LiveCounter from './LiveCounter'
 
 export default function ProblemSection() {
   return (
@@ -35,7 +34,7 @@ export default function ProblemSection() {
             <div className="space-y-5">
               {[
                 { value: '1', label: 'email = 1 complete persona' },
-                { value: '9', label: 'behavioral dimensions — unique as DNA' },
+                { value: '11', label: 'behavioral dimensions — unique as DNA' },
                 { value: '∞', label: 'fingerprint persists when IP changes' },
                 { value: '1', label: 'human behind every indicator' },
                 { value: '3', label: 'concrete actions — not alerts' },
@@ -47,14 +46,6 @@ export default function ProblemSection() {
               ))}
             </div>
           </div>
-        </div>
-
-        {/* Breach counter below */}
-        <div className="mt-20 text-center">
-          <LiveCounter />
-          <p className="text-sm text-gray-600 mt-4 max-w-md mx-auto">
-            Every leaked record is a data point. Traditional TI counts them. xposeTIP connects them to a person.
-          </p>
         </div>
       </div>
     </Section>

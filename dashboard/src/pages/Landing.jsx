@@ -10,8 +10,6 @@ import MockPreview from '../components/landing/MockPreview'
 import PricingSection from '../components/landing/PricingSection'
 import TwoWaysSection from '../components/landing/TwoWaysSection'
 import TrustBar from '../components/landing/TrustBar'
-import TechStack from '../components/landing/TechStack'
-import FinalCTA from '../components/landing/FinalCTA'
 import PublicNav from '../components/landing/PublicNav'
 import PublicFooter from '../components/landing/PublicFooter'
 
@@ -135,8 +133,6 @@ export default function Landing() {
       <TwoWaysSection />
       <PricingSection />
       <TrustBar />
-      <TechStack />
-      <FinalCTA email={email} setEmail={setEmail} loading={loading} error={error} onSubmit={handleQuickScan} />
       <PublicFooter />
     </div>
   )
