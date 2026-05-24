@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
-import { Plus, Trash2, Search, Eye, Upload, Play, FileDown } from 'lucide-react'
-import { getTargets, createTarget, deleteTarget, bulkImportTargets, createScan } from '../lib/api'
+import { useNavigate, useSearchParams } from 'react-router-dom'
+import { Plus, Trash2, Search, Eye, Upload, Play, FileDown, Layers } from 'lucide-react'
+import { getTargets, getAllTargets, createTarget, deleteTarget, bulkImportTargets, createScan } from '../lib/api'
 import { fallbackSeed } from '../lib/avatar'
 import TargetQuickView from '../components/TargetQuickView'
 import GenerativeAvatar from '../components/GenerativeAvatar'
@@ -63,15 +63,28 @@ export default function Targets() {
   const [quickViewId, setQuickViewId] = useState(null)
   const [scanningIds, setScanningIds] = useState(new Set())
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
+  const isAllMode = searchParams.get('all') === '1'
 
   useEffect(() => {
     loadTargets()
-  }, [search])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [search, isAllMode])
+
+  useEffect(() => {
+    // S188: Adaptive polling — 3s if any target is scanning, 30s otherwise
+    const hasScanning = targets.some(t => t.status === 'scanning') || scanningIds.size > 0
+    const intervalMs = hasScanning ? 3000 : 30000
+    const interval = setInterval(loadTargets, intervalMs)
+    return () => clearInterval(interval)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [targets, scanningIds, search, isAllMode])
 
   async function loadTargets() {
     try {
       const searchParam = search ? `search=${encodeURIComponent(search)}&` : ''
-      const data = await getTargets(`${searchParam}per_page=100`)
+      const fetcher = isAllMode ? getAllTargets : getTargets
+      const data = await fetcher(`${searchParam}per_page=500`)
       setTargets(data.items || [])
       setTotal(data.total || 0)
     } catch {}
@@ -144,7 +157,14 @@ export default function Targets() {
   return (
     <div className="space-y-4 pb-8">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold">Targets <span className="text-sm text-gray-500 font-normal ml-2">{total}</span></h1>
+        <div className="flex items-center gap-2">
+          <h1 className="text-2xl font-bold">Targets <span className="text-sm text-gray-500 font-normal ml-2">{total}</span></h1>
+          {isAllMode && (
+            <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-[#00ff88]/10 border border-[#00ff88]/30 text-[10px] text-[#00ff88] font-mono uppercase">
+              <Layers className="w-3 h-3" /> all workspaces
+            </span>
+          )}
+        </div>
         <div className="flex gap-2">
           <button onClick={() => setShowBulk(true)} className="flex items-center gap-2 bg-[#12121a] border border-[#1e1e2e] text-gray-300 font-medium rounded-lg px-4 py-2 text-sm hover:border-[#00ff88]/50">
             <Upload className="w-4 h-4" /> Bulk Import
@@ -173,6 +193,7 @@ export default function Targets() {
           <thead>
             <tr className="text-xs text-gray-500 uppercase tracking-wider border-b border-[#1e1e2e]">
               <th className="text-left px-5 py-3">Target</th>
+              {isAllMode && <th className="text-left px-3 py-3">Workspace</th>}
               <th className="text-left px-3 py-3">Country</th>
               <th className="text-left px-3 py-3">Exposure</th>
               <th className="text-left px-3 py-3">Threat</th>
@@ -203,6 +224,14 @@ export default function Targets() {
                       </div>
                     </div>
                   </td>
+                  {isAllMode && (
+                    <td className="px-3 py-3 text-sm text-gray-400">
+                      <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded bg-[#1e1e2e] border border-[#2a2a3e]">
+                        <Layers className="w-3 h-3 text-[#00ff88]/60" />
+                        {t.workspace_name || '—'}
+                      </span>
+                    </td>
+                  )}
                   <td className="px-3 py-3 text-xs">
                     {t.country_code ? `${FLAG(t.country_code)} ${t.country_code}` : <span className="text-gray-600">-</span>}
                   </td>
@@ -260,7 +289,7 @@ export default function Targets() {
               )
             })}
             {targets.length === 0 && (
-              <tr><td colSpan={6} className="px-5 py-8 text-center text-gray-500">No targets found</td></tr>
+              <tr><td colSpan={isAllMode ? 7 : 6} className="px-5 py-8 text-center text-gray-500">No targets found</td></tr>
             )}
           </tbody>
         </table>

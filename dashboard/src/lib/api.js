@@ -63,6 +63,7 @@ export const getMe = () => request('/auth/me')
 
 // Targets
 export const getTargets = (params = '') => request(`/targets${params ? '?' + params : ''}`)
+export const getAllTargets = (params = '') => request(`/targets/all${params ? '?' + params : ''}`)
 export const createTarget = (data) => request('/targets', { method: 'POST', body: JSON.stringify(data) })
 export const getTarget = (id) => request(`/targets/${id}`)
 export const deleteTarget = (id) => request(`/targets/${id}?confirm=true`, { method: 'DELETE' })

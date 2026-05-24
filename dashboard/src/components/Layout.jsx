@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Outlet, NavLink, useNavigate, useLocation } from 'react-router-dom'
-import { LayoutDashboard, Crosshair, Settings, LogOut, Shield, ServerCog, Building2, ChevronDown, Plus, Menu, X, Globe, Briefcase } from 'lucide-react'
+import { LayoutDashboard, Crosshair, Settings, LogOut, Shield, ServerCog, Building2, ChevronDown, Plus, Menu, X, Globe, Briefcase, Layers } from 'lucide-react'
 import { useAuth } from '../lib/auth'
 import { getMe, getWorkspaces, switchWorkspace } from '../lib/api'
 import { planColor } from '../lib/planColors'
@@ -125,6 +125,16 @@ export default function Layout() {
 
             {showWsSwitcher && (
               <div className="absolute left-0 right-0 top-full mt-1 bg-[#12121a] border border-[#1e1e2e] rounded-lg shadow-xl z-50 overflow-hidden">
+                {currentWs?.role === 'superadmin' && (
+                  <button onClick={() => { setShowWsSwitcher(false); navigate('/targets?all=1') }}
+                    className="w-full px-3 py-2.5 text-left text-sm hover:bg-white/5 flex items-center gap-2 border-b border-[#1e1e2e]">
+                    <Layers className="w-4 h-4 text-[#00ff88] shrink-0" />
+                    <div>
+                      <div className="text-gray-300">All workspaces</div>
+                      <div className="text-[10px] text-gray-600 mt-0.5">superadmin view — all targets across workspaces</div>
+                    </div>
+                  </button>
+                )}
                 {workspaces.map(ws => (
                   <button key={ws.id} onClick={() => handleSwitch(ws.id)}
                     className="w-full px-3 py-2.5 text-left text-sm hover:bg-white/5 flex items-center justify-between">

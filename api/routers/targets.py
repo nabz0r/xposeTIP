@@ -5,7 +5,7 @@ from pydantic import BaseModel, EmailStr
 from sqlalchemy import func, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from api.auth.dependencies import get_current_user, get_current_workspace, get_current_role
+from api.auth.dependencies import get_current_user, get_current_workspace, get_current_role, require_role
 from api.database import get_db
 from api.models.finding import Finding
 from api.models.target import Target
@@ -168,6 +168,50 @@ async def bulk_import_targets(
 
     await db.commit()
     return {"created": len(created), "skipped": len(skipped), "skipped_emails": skipped}
+
+
+@router.get("/all")
+async def list_all_targets(
+    search: str | None = None,
+    target_status: str | None = Query(None, alias="status"),
+    min_score: int | None = None,
+    page: int = Query(1, ge=1),
+    per_page: int = Query(20, ge=1, le=500),
+    role: str = Depends(require_role("superadmin")),
+    db: AsyncSession = Depends(get_db),
+):
+    """
+    List targets across ALL workspaces (superadmin only).
+    Returns same shape as GET /targets but each item includes
+    workspace_id and workspace_name. Used by the admin "All workspaces"
+    selector option.
+    """
+    q = select(Target, Workspace.name.label("workspace_name")).join(
+        Workspace, Target.workspace_id == Workspace.id
+    )
+    if search:
+        q = q.where(Target.email.ilike(f"%{search}%"))
+    if target_status:
+        q = q.where(Target.status == target_status)
+    if min_score is not None:
+        q = q.where(Target.exposure_score >= min_score)
+    q = q.order_by(Target.created_at.desc())
+
+    count_q = select(func.count()).select_from(q.subquery())
+    total = await db.scalar(count_q)
+
+    q = q.offset((page - 1) * per_page).limit(per_page)
+    result = await db.execute(q)
+    rows = result.all()
+
+    items = []
+    for target, ws_name in rows:
+        d = _target_dict(target)
+        d["workspace_id"] = str(target.workspace_id)
+        d["workspace_name"] = ws_name
+        items.append(d)
+
+    return {"items": items, "total": total, "page": page, "per_page": per_page}
 
 
 @router.get("")
