@@ -881,9 +881,20 @@ def deep_indicator_scan(self, target_id: str, workspace_id: str,
 
 def _extract_cascade_indicators(target_id_str, workspace_id_str,
                                 source_type, source_value, session):
-    """Extract cross-type indicators from deep scan findings for cascade."""
+    """Extract cross-type indicators from deep scan findings for cascade.
+
+    Priority order (S211): email > username > phone > wallet > domain.
+    Total cap = 5. Each type-pass walks ALL deep findings before moving to next
+    priority — guarantees high-discrimination types (email, username) and
+    operator-unlocked types (phone, wallet — S208) get cap slots first.
+
+    Phone validation reuses secondary_identifiers._extract_phones (E164 via
+    phonenumbers lib, same discipline as A1.5 pass). Wallet validation reuses
+    _extract_wallets (BTC/ETH prefix + regex, same discipline as A1.5).
+    """
     from api.models.finding import Finding
     from api.models.identity import Identity
+    from api.services.secondary_identifiers import _extract_phones, _extract_wallets
 
     target_id = uuid.UUID(target_id_str) if isinstance(target_id_str, str) else target_id_str
     workspace_id = uuid.UUID(workspace_id_str) if isinstance(workspace_id_str, str) else workspace_id_str
@@ -909,35 +920,57 @@ def _extract_cascade_indicators(target_id_str, workspace_id_str,
     seen = set()
     source_key = (source_type, source_value.lower().strip())
 
-    for f in deep_findings:
-        data = f.data if isinstance(f.data, dict) else {}
-        extracted = data.get("extracted", data)
+    def _try_add(cascade_type: str, raw_val: str):
+        """Add (cascade_type, raw_val) to cascades if not source, not in DB, not seen."""
+        if not raw_val:
+            return
+        key = (cascade_type, raw_val.lower().strip())
+        if key == source_key or key in existing or key in seen:
+            return
+        seen.add(key)
+        cascades.append((cascade_type, raw_val))
 
+    # Pass 1 — emails (highest discrimination)
+    for f in deep_findings:
+        extracted = f.data.get("extracted", f.data)
         for field in ("email", "contact_email", "user_email"):
             val = extracted.get(field)
             if val and isinstance(val, str) and "@" in val:
-                key = ("email", val.lower().strip())
-                if key != source_key and key not in existing and key not in seen:
-                    seen.add(key)
-                    cascades.append(key)
+                _try_add("email", val.strip())
 
+    # Pass 2 — usernames
+    for f in deep_findings:
+        extracted = f.data.get("extracted", f.data)
         for field in ("twitter_username", "github_username", "username", "login"):
             val = extracted.get(field)
             if val and isinstance(val, str) and len(val) >= 2:
-                key = ("username", val.strip())
-                if key != source_key and key not in existing and key not in seen:
-                    seen.add(key)
-                    cascades.append(key)
+                _try_add("username", val.strip())
 
+    # Pass 3 — phones (S211, reuse A1.5 validation discipline)
+    try:
+        for e164 in _extract_phones(deep_findings):
+            _try_add("phone", e164)
+    except Exception:
+        logger.exception("cascade phone extraction failed")
+
+    # Pass 4 — wallets (S211, reuse A1.5 validation discipline)
+    try:
+        for wallet in _extract_wallets(deep_findings):
+            addr = wallet.get("address") if isinstance(wallet, dict) else None
+            if addr:
+                _try_add("crypto_wallet", addr)
+    except Exception:
+        logger.exception("cascade wallet extraction failed")
+
+    # Pass 5 — domains (lowest discrimination, last to fill cap)
+    for f in deep_findings:
+        extracted = f.data.get("extracted", f.data)
         for field in ("blog", "website", "website_url", "homepage"):
             val = extracted.get(field)
             if val and isinstance(val, str):
                 domain = val.replace("https://", "").replace("http://", "").split("/")[0].lower()
                 if domain and "." in domain and len(domain) >= 4:
-                    key = ("domain", domain)
-                    if key != source_key and key not in existing and key not in seen:
-                        seen.add(key)
-                        cascades.append(key)
+                    _try_add("domain", domain)
 
     return cascades[:5]
 
