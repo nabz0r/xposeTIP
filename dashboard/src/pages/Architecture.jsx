@@ -1,6 +1,7 @@
 import Section from '../components/shared/Section'
 import { StageCollect, StageGraph, StagePropagate, StageScore, StageIdentify, StageExpose, StageMeasure, StageLocate, StageCascade, StageSimilarity, StageDiscovery } from '../components/architecture/Stages'
 import ScraperBreakdown from '../components/architecture/ScraperBreakdown'
+import BFPLayer from '../components/architecture/BFPLayer'
 import DesignPrinciples from '../components/architecture/DesignPrinciples'
 import RoadmapSection from '../components/architecture/RoadmapSection'
 import ArchCTA from '../components/architecture/ArchCTA'
@@ -70,6 +71,8 @@ export default function Architecture() {
         <StageCascade />
         <StageSimilarity />
         <StageDiscovery />
+
+        <BFPLayer />
 
         <ScraperBreakdown />
         <DesignPrinciples />
