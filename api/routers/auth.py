@@ -149,6 +149,34 @@ async def register(body: RegisterRequest, db: AsyncSession = Depends(get_db)):
     )
 
 
+async def _resolve_login_workspace(db: AsyncSession, user: User) -> "UserWorkspace | None":
+    """S195 Bug 5 fix: resolve the workspace to issue a token for at login/refresh time.
+
+    Reads `user.last_active_workspace_id` first. If set, validates the user still has
+    a membership in that workspace (it could have been revoked since last session).
+    Falls back to the first available membership (current pre-S195 behavior) if:
+    - Column is NULL (existing users haven't exercised /switch-workspace yet)
+    - User no longer has a membership in their last-active workspace
+    """
+    if user.last_active_workspace_id is not None:
+        result = await db.execute(
+            select(UserWorkspace).where(
+                UserWorkspace.user_id == user.id,
+                UserWorkspace.workspace_id == user.last_active_workspace_id,
+            )
+        )
+        membership = result.scalar_one_or_none()
+        if membership is not None:
+            return membership
+        # Fall through to fallback if last_active membership is gone
+
+    # Fallback: first available membership (matches pre-S195 behavior).
+    result = await db.execute(
+        select(UserWorkspace).where(UserWorkspace.user_id == user.id).limit(1)
+    )
+    return result.scalar_one_or_none()
+
+
 @router.post("/login", response_model=TokenResponse)
 async def login(body: LoginRequest, db: AsyncSession = Depends(get_db)):
     result = await db.execute(select(User).where(User.email == body.email))
@@ -159,11 +187,9 @@ async def login(body: LoginRequest, db: AsyncSession = Depends(get_db)):
     user.last_login = datetime.now(timezone.utc)
     await db.flush()
 
-    # Get first workspace membership
-    result = await db.execute(
-        select(UserWorkspace).where(UserWorkspace.user_id == user.id).limit(1)
-    )
-    membership = result.scalar_one_or_none()
+    # S195: resolve workspace from user.last_active_workspace_id if set,
+    # else fall back to first membership (pre-S195 behavior).
+    membership = await _resolve_login_workspace(db, user)
     if not membership:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="No workspace access")
 
@@ -190,10 +216,9 @@ async def refresh(body: RefreshRequest, db: AsyncSession = Depends(get_db)):
     if not user or not user.is_active:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="User not found")
 
-    result = await db.execute(
-        select(UserWorkspace).where(UserWorkspace.user_id == user.id).limit(1)
-    )
-    membership = result.scalar_one_or_none()
+    # S195: resolve workspace from user.last_active_workspace_id if set,
+    # else fall back to first membership (pre-S195 behavior).
+    membership = await _resolve_login_workspace(db, user)
     if not membership:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="No workspace access")
 
@@ -247,6 +272,12 @@ async def switch_workspace(body: SwitchWorkspaceRequest, current_user: User = De
     membership = result.scalar_one_or_none()
     if not membership:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not a member of this workspace")
+
+    # S195 Bug 5 fix: persist this selection so /auth/refresh and the
+    # next /auth/login don't revert to the first-inserted membership.
+    current_user.last_active_workspace_id = workspace_id
+    await db.commit()
+
     return TokenResponse(
         access_token=create_access_token(current_user.id, workspace_id, membership.role),
         refresh_token=create_refresh_token(current_user.id),

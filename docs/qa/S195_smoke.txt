@@ -1,0 +1,18 @@
+=== S195 SMOKE — 2026-05-24T13:33:18Z ===
+Commit: efe92dc
+
+Reset last_active_workspace_id=NULL on nabil@xpose.dev to test fresh-migration state
+
+Step 1 login → workspace_id=1d6f7b40-b038-4403-a54b-c8a32c026f95 (initial fallback to .limit(1))
+
+Target switch: cdd7ada0-e538-4540-9340-8969ecfc6ad4 (Crypto)
+Step 2 switch → workspace_id=cdd7ada0-e538-4540-9340-8969ecfc6ad4  expected=cdd7ada0-e538-4540-9340-8969ecfc6ad4  PASS
+
+Step 3 refresh → workspace_id=cdd7ada0-e538-4540-9340-8969ecfc6ad4  expected=cdd7ada0-e538-4540-9340-8969ecfc6ad4  PASS - Bug 5 fix CONFIRMED
+
+Step 4 DB → last_active_workspace_id=cdd7ada0-e538-4540-9340-8969ecfc6ad4  expected=cdd7ada0-e538-4540-9340-8969ecfc6ad4  PASS
+
+Step 5 fresh login → workspace_id=cdd7ada0-e538-4540-9340-8969ecfc6ad4  expected=cdd7ada0-e538-4540-9340-8969ecfc6ad4  PASS - persistence across logins CONFIRMED
+
+=== VERDICT ===
+(eval):110: no matches found: *PASS*

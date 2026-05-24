@@ -21,6 +21,16 @@ class User(UUIDMixin, TimestampMixin, Base):
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
     last_login: Mapped[datetime | None] = mapped_column(TIMESTAMP(timezone=True))
 
+    # S195 Bug 5 fix: persist user's most recent workspace selection so
+    # /auth/refresh and /auth/login don't silently revert to the first-
+    # inserted membership. Updated by /switch-workspace; read by /login
+    # and /refresh. NULL = fallback to current `.limit(1)` behavior.
+    # ondelete=SET NULL handled at DB level via migration 025.
+    last_active_workspace_id: Mapped[uuid.UUID | None] = mapped_column(
+        ForeignKey("workspaces.id", ondelete="SET NULL"),
+        nullable=True,
+    )
+
     owned_workspaces = relationship("Workspace", back_populates="owner", foreign_keys="Workspace.owner_id")
     user_workspaces = relationship("UserWorkspace", back_populates="user", cascade="all, delete-orphan")
 
