@@ -140,7 +140,7 @@ export default function HeroSection({ email, setEmail, loading, error, onSubmit,
               alt="xposeTIP identity report — composite from real anonymized scans"
               className="rounded-xl border border-[#1e1e2e] shadow-2xl shadow-[#00ff88]/5 max-w-md w-full"
               loading="eager"
-              fetchPriority="high"
+              fetchpriority="high"
             />
             {/* Subtle ambient glow */}
             <div className="absolute -inset-4 bg-[#00ff88]/5 rounded-2xl blur-2xl -z-10" />
