@@ -2,7 +2,7 @@
 
 ## Overview
 
-xposeTIP has **27 active scanner modules** across 4 layers, **144 data-driven scrapers** (119 active by default)
+xposeTIP has **27 active scanner modules** across 4 layers, **164 data-driven scrapers** (139 active by default)
 across 11 categories, and **9 intelligence analyzers** that run post-scan.
 5 scanner modules are disabled placeholders (maigret, h8mail, ghunt, paste_monitor, databroker_check).
 
@@ -27,7 +27,7 @@ across 11 categories, and **9 intelligence analyzers** that run post-scan.
 | GitHub Deep | `github_deep` | Full profile, events, gists, alternate emails from commits |
 | Google Profile | `google_profile` | Gmail/Workspace detection, YouTube presence |
 | Username Hunter | `username_hunter` | Username permutations across Reddit, Steam, Keybase, GitLab |
-| Scraper Engine | `scraper_engine` | Runs all 119 active data-driven scrapers (144 defined, 25 disabled — see below) |
+| Scraper Engine | `scraper_engine` | Runs all 139 active data-driven scrapers (164 defined, 25 disabled — see below) |
 
 ### Layer 2 — Public Databases (12)
 
@@ -77,11 +77,11 @@ across 11 categories, and **9 intelligence analyzers** that run post-scan.
 | Timezone Analyzer | `timezone_analyzer.py` | Timezone inference from activity timestamps |
 | Username Correlator | `username_correlator.py` | Cross-platform username reuse detection |
 
-## Scraper Engine (144 scrapers across 11 categories)
+## Scraper Engine (164 scrapers across 11 categories)
 
 | Category | Count | Examples |
 |----------|-------|---------|
-| Social | 50 | Reddit, Steam, Telegram, Twitch, Pinterest, Strava, Snapchat, Threads, Bluesky, SoundCloud, Last.fm... |
+| Social | 70 | Reddit, Steam, Telegram, Twitch, Pinterest, Strava, Snapchat, Threads, Bluesky, SoundCloud, Last.fm, + S197 Maigret picks: Issuu, Weebly, Calendly, Blogger, Giphy, Instructables, PayPal, Gumroad, iStock, Ko-fi, Wikidot, ReverbNation, Codecademy, HackerNoon, Speakerdeck, Wattpad, IFTTT, HackMD, OpenCollective, Steemit... |
 | Metadata | 18 | DNS DMARC, crt.sh, Gravatar (x3), disposable check, mailcheck, disify, github_timezone, gcal_public, google_phone_dork, duckduckgo_phone_dork, bing_phone_dork, yandex_phone_dork... |
 | People Search | 11 | WebMii, Google Scholar, Google Groups, npm, PyPI, Snapchat, Crunchbase... |
 | Gaming | 10 | Steam, Chess.com, Roblox, Lichess, Xbox, RuneScape, MyAnimeList, Anilist, Speedrun, CodeWars |
