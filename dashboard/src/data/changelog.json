@@ -1,5 +1,21 @@
 [
   {
+    "sha": "767c46f",
+    "date": "2026-05-24T14:53:05+02:00",
+    "type": "docs",
+    "scope": "S192-smoke",
+    "sprint": null,
+    "subject": "visual validation of UI bugfix sweep — 8 checks (7 PASS + 1 incomplete fix surfaced)"
+  },
+  {
+    "sha": "6e52016",
+    "date": "2026-05-24T14:06:34+02:00",
+    "type": "fix",
+    "scope": "S192",
+    "sprint": "S192",
+    "subject": "UI bugfix sweep — 10 bugs across 7 files post-S191"
+  },
+  {
     "sha": "83592c4",
     "date": "2026-05-24T13:52:23+02:00",
     "type": "docs",

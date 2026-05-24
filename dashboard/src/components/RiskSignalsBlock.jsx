@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react'
 import { Phone, Wallet, Scale, ChevronRight } from 'lucide-react'
-import { PHONE_SCRAPERS, CRYPTO_SCRAPERS } from '../lib/findingFilters'
+import { isPhoneSignal, isCryptoSignal, isLegalSignal } from '../lib/findingFilters'
 
 const SEVERITY_COLORS = {
   critical: '#ff2244',
@@ -56,21 +56,17 @@ function SignalColumn({ icon: Icon, label, accent, findings, onViewAll, renderIt
 }
 
 export default function RiskSignalsBlock({ findings, onViewAll }) {
+  // S193: use exported helpers from findingFilters so the classification
+  // logic stays in a single source of truth. The helpers already apply the
+  // S192 `data.scraper || module` fallback for findings emitted by the
+  // A1.6 path (secondary_identifier_enricher) which leaves data.scraper null.
   const { phoneFindings, cryptoFindings, legalFindings } = useMemo(() => {
-    const phone = []
-    const crypto = []
-    const legal = []
-    for (const f of findings || []) {
-      const scraper = f.data?.scraper
-      if (scraper && PHONE_SCRAPERS.includes(scraper)) {
-        phone.push(f)
-      } else if (scraper && CRYPTO_SCRAPERS.includes(scraper)) {
-        crypto.push(f)
-      } else if (f.indicator_type === 'legal_record') {
-        legal.push(f)
-      }
+    const all = findings || []
+    return {
+      phoneFindings: all.filter(isPhoneSignal),
+      cryptoFindings: all.filter(isCryptoSignal),
+      legalFindings: all.filter(isLegalSignal),
     }
-    return { phoneFindings: phone, cryptoFindings: crypto, legalFindings: legal }
   }, [findings])
 
   const total = phoneFindings.length + cryptoFindings.length + legalFindings.length
@@ -116,8 +112,13 @@ export default function RiskSignalsBlock({ findings, onViewAll }) {
             const data = f.data || {}
             const address = f.indicator_value || data.address || ''
             const txCount = data.tx_count
-            const chain = data.scraper === 'blockchair_wallet' ? 'multi-chain' :
-                          data.scraper === 'chainabuse_lookup' ? 'reported' : 'BTC'
+            // S193: same `data.scraper || module` fallback pattern as
+            // findingFilters.getScraperName so the badge resolves correctly
+            // for findings from A1.6 path (data.scraper null). Also fixes
+            // the chainabuse typo carried over from pre-S192.
+            const scraperName = data.scraper || f.module
+            const chain = scraperName === 'blockchair_wallet' ? 'multi-chain' :
+                          scraperName === 'chainabuse_check' ? 'reported' : 'BTC'
             return (
               <div className="flex items-center justify-between gap-2">
                 <span className="font-mono truncate">{truncate(address, 16)}</span>

@@ -114,6 +114,10 @@ export default function ProfileHeader({ target, findings, animScore, profileData
     public_exposure: 'Public Exposure',  // GDELT / Google News / GNews
     compliance: 'Sanctions / PEP',       // OpenSanctions / Interpol
     corporate: 'Corporate Officer',      // OpenCorporates + Companies House UK
+    // S193 Bug 7a completion: categories observed in real target.score_breakdown
+    // (4/4 targets per S192 smoke evidence_score_breakdown.txt) but missing from the labels map.
+    people_search: 'People Search',           // sproxe / 411 / spokeo / etc.
+    domain_registration: 'Domain Registration', // rdap / crtsh / whois-related scrapers
   }
 
   return (
