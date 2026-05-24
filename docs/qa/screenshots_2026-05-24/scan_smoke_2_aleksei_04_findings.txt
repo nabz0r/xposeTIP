@@ -1,0 +1,103 @@
+=== Scan: 6dd2191c-0414-4841-8d16-5daf6ac6ee48 (done/completed) findings=110 ===
+    Started:   2026-05-24 10:00:10.879233+00:00
+    Completed: 2026-05-24 10:07:04.405948+00:00
+
+=== Findings by (module, indicator_type) ===
+  intelligence                        domain               n=9
+  dns_deep                            domain               n=6
+  username_hunter                     social_url           n=6
+  holehe                              email                n=3
+  intelligence                        -                    n=3
+  aboutme_check                       email                n=1
+  aboutme_profile                     username             n=1
+  agify                               first_name           n=1
+  anilist_profile                     username             n=1
+  bandcamp_profile                    username             n=1
+  behance_profile                     username             n=1
+  bluesky_profile                     username             n=1
+  chesscom_profile                    username             n=1
+  codeberg_profile                    username             n=1
+  codewars_profile                    username             n=1
+  devto_profile                       username             n=1
+  disify_email                        email                n=1
+  disposable_email_check              domain               n=1
+  disqus_profile                      username             n=1
+  dns_dmarc_check                     domain               n=1
+  dns_txt_saas                        domain               n=1
+  dockerhub_profile                   username             n=1
+  duolingo_profile                    username             n=1
+  emailrep_breaches                   email                n=1
+  email_validator                     email                n=1
+  email_validator                     domain               n=1
+  flickr_profile                      username             n=1
+  genderize                           first_name           n=1
+  github_email_search                 email                n=1
+  github_gists_user                   username             n=1
+  github_scraper                      username             n=1
+  github_timezone                     username             n=1
+  github_user_api                     username             n=1
+  gitlab_profile                      username             n=1
+  google_groups_search                email                n=1
+  google_scholar_search               email                n=1
+  gravatar                            email                n=1
+  gravatar_email_lookup               email                n=1
+  hackernews_profile                  username             n=1
+  hackertarget_hosts                  domain               n=1
+  hibp                                email                n=1
+  huggingface_profile                 username             n=1
+  imgur_profile                       username             n=1
+  intelligence                        behavioral_profile   n=1
+  intelligence                        username             n=1
+  intelx_public                       email                n=1
+  kaggle_profile                      username             n=1
+  keybase_profile                     username             n=1
+  lastfm_profile                      username             n=1
+  leakcheck_public                    email                n=1
+  letterboxd_profile                  username             n=1
+  lichess_profile                     username             n=1
+  linkedin_profile                    username             n=1
+  linktree_profile                    username             n=1
+  mailcheck_email                     email                n=1
+  mastodon_search                     username             n=1
+  medium_profile                      username             n=1
+  mixcloud_profile                    username             n=1
+  myanimelist_profile                 username             n=1
+  nationalize                         first_name           n=1
+  npm_maintainer                      username             n=1
+  packagist_profile                   username             n=1
+  pastebin_user                       username             n=1
+  pinterest_profile                   username             n=1
+  pypi_profile                        username             n=1
+  rdap_domain                         domain               n=1
+  reddit_profile                      username             n=1
+  replit_profile                      username             n=1
+  roblox_profile                      username             n=1
+  soundcloud_search                   username             n=1
+  speedrun_profile                    username             n=1
+  stackoverflow_search                username             n=1
+  steam_community_profile             username             n=1
+  steam_profile                       username             n=1
+  strava_profile                      username             n=1
+  telegram_profile                    username             n=1
+  threads_profile                     username             n=1
+  twitch_profile                      username             n=1
+  username_hunter                     email                n=1
+  viewdns_reverse_whois               email                n=1
+  vimeo_profile                       username             n=1
+  wayback_count                       domain               n=1
+  wayback_domain                      domain               n=1
+  wayback_facebook                    username             n=1
+  wayback_github                      username             n=1
+  wayback_linkedin_user               username             n=1
+  webmii_search                       email                n=1
+  xposedornot_scraper                 email                n=1
+
+=== S183/S187 NEW SCRAPER findings (0) ===
+  (none — innocent corpus)
+
+=== A1.6 secondary_enricher_attempts (0 entries) ===
+  (none — A1.6 skipped, no phones/wallets in profile)
+
+=== Wallet/phone extraction (profile_data) ===
+  phone_numbers:  []
+  crypto_wallets: []

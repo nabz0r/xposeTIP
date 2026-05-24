@@ -1,0 +1,64 @@
+=== Scan: 7e1953f1-85a9-4534-832a-de6f199590cf (done/completed) findings=57 ===
+    Started:   2026-05-24 09:52:07.707487+00:00
+    Completed: 2026-05-24 09:55:45.945927+00:00
+
+=== Findings by (module, indicator_type) ===
+  courtlistener_search                legal_record         n=19
+  dns_deep                            domain               n=6
+  google_news_rss                     media_mention        n=3
+  intelligence                        domain               n=3
+  username_hunter                     social_url           n=3
+  bodacc_search                       legal_record         n=2
+  holehe                              email                n=2
+  intelligence                        ip                   n=2
+  anilist_profile                     username             n=1
+  disify_email                        email                n=1
+  disposable_email_check              domain               n=1
+  dns_dmarc_check                     domain               n=1
+  dns_txt_saas                        domain               n=1
+  emailrep_breaches                   email                n=1
+  email_validator                     domain               n=1
+  email_validator                     email                n=1
+  geoip                               ip                   n=1
+  github_email_search                 email                n=1
+  gitlab_profile                      username             n=1
+  google_groups_search                email                n=1
+  google_profile                      email                n=1
+  hackertarget_hosts                  domain               n=1
+  hibp                                email                n=1
+  imgur_profile                       username             n=1
+  intelligence                        username             n=1
+  intelligence                        behavioral_profile   n=1
+  intelligence                        -                    n=1
+  intelx_public                       email                n=1
+  kaggle_profile                      username             n=1
+  keybase_profile                     username             n=1
+  leakcheck_public                    email                n=1
+  mailcheck_email                     email                n=1
+  medium_profile                      username             n=1
+  npm_maintainer                      username             n=1
+  pinterest_profile                   username             n=1
+  pypi_profile                        username             n=1
+  rdap_domain                         domain               n=1
+  reddit_profile                      username             n=1
+  replit_profile                      username             n=1
+  roblox_profile                      username             n=1
+  telegram_profile                    username             n=1
+  threads_profile                     username             n=1
+  twitch_profile                      username             n=1
+  username_hunter                     email                n=1
+  viewdns_reverse_whois               email                n=1
+  wayback_count                       domain               n=1
+  wayback_linkedin_user               username             n=1
+  webmii_search                       email                n=1
+  xposedornot_scraper                 email                n=1
+
+=== S183/S187 NEW SCRAPER findings (0) ===
+  (none — innocent corpus: no wallets/SEC-officer match for this email)
+
+=== A1.6 secondary_enricher_attempts (0 entries) ===
+  (none — no phones/crypto_wallets in profile_data → A1.6 skipped)
+
+=== Wallet/phone extraction (profile_data) ===
+  phone_numbers:  []
+  crypto_wallets: []
