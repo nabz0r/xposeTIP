@@ -44,7 +44,7 @@ export default function BFPArchitecture() {
             Business and operator experience. Cloud-native, multi-tenant, evolves with the product roadmap.
           </p>
           <ul className="space-y-2 text-sm text-gray-300">
-            <li className="flex items-start gap-2"><span className="text-gray-600 mt-1">·</span>Data collection (139 scrapers, 27 scanners)</li>
+            <li className="flex items-start gap-2"><span className="text-gray-600 mt-1">·</span>Data collection (170 scrapers, 27 scanners)</li>
             <li className="flex items-start gap-2"><span className="text-gray-600 mt-1">·</span>Identity graph + clustering + similarity</li>
             <li className="flex items-start gap-2"><span className="text-gray-600 mt-1">·</span>Operator dashboard + reporting</li>
             <li className="flex items-start gap-2"><span className="text-gray-600 mt-1">·</span>Play 1 / Play 2 / Play 3 delivery</li>

@@ -5,9 +5,9 @@
 Identity Threat Intelligence platform. Scans email → builds identity graph →
 PageRank/Markov confidence → clusters personas → pixel art avatar → remediation plan.
 
-## Current version: v1.6.14
+## Current version: v1.6.18
 
-188+ sprints. 139 scrapers (116 active, 23 disabled), 27 scanners, 9 intelligence analyzers, 11-axis fingerprint (S145 formal_records + S147 network_signature).
+200+ sprints. 170 scrapers (145 active, 25 disabled), 27 scanners, 9 intelligence analyzers, 11-axis fingerprint (S145 formal_records + S147 network_signature). Post-S199: scraper_engine added to DEFAULT_QUICK_MODULES — dispatch gap closed, every default scan now exercises the full data-driven scraper fleet in PASS1.
 DB-persisted similarity engine (post-S131): target_similarities table, 11-axis cosine, name-aware combined score (S146 — cosine × name_sim Jaccard), threshold 0.70, audit-grade first_detected preserved across recomputes.
 Cascade state machine (post-S134): scans.cascade_state column tracks gathering → computing → similarity → done (failed terminal).
 Scanners: 27 registered (SCANNER_REGISTRY) + 9 analyzers. 5 disabled placeholders (maigret, h8mail, ghunt, paste_monitor, databroker_check).
@@ -180,7 +180,7 @@ Surfaced in S185 validation: edits to `secondary_identifier_enricher.py` weren't
 - `api/discovery/quality_gate.py` — dedup discovery leads vs existing findings
 - `api/discovery/query_generator.py` — fingerprint-driven search query composition
 - `api/tasks/web_discovery.py` — Celery task for Phase C
-- `scripts/seed_scrapers.py` — 139 scraper definitions (116 default-enabled, 23 disabled)
+- `scripts/seed_scrapers.py` — 170 scraper definitions (145 default-enabled, 25 disabled)
 - `scripts/seed_modules.py` — 32 scanner modules (26 active + 5 disabled + 1 virtual)
 
 ### Frontend

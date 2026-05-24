@@ -13,7 +13,7 @@ export function StageCollect() {
             <h2 className="text-2xl font-bold mb-3 font-['Instrument_Sans',sans-serif]">Discover</h2>
             <p className="text-gray-400 mb-4">
               Every identity investigation starts with a single anchor: an email address.
-              xposeTIP scans <span className="text-white font-semibold">139 sources</span> in parallel —
+              xposeTIP scans <span className="text-white font-semibold">170 sources</span> in parallel —
               social networks, breach databases, archives, gaming platforms, developer registries, professional networks.
             </p>
             <p className="text-sm text-gray-500">
@@ -383,7 +383,7 @@ export function StageDiscovery() {
             <div className="text-6xl font-mono font-bold text-[#ffaa55]/15 mb-2">11</div>
             <h2 className="text-2xl font-bold mb-3 font-['Instrument_Sans',sans-serif]">Web Discovery</h2>
             <p className="text-gray-400 mb-4">
-              The 139 scrapers are predictable. The open web isn't.
+              The 170 scrapers are predictable. The open web isn't.
               Phase C — <span className="text-white font-semibold">adaptive web crawling</span> — fires when the operator triggers it.
             </p>
             <p className="text-sm text-gray-500 mb-3">

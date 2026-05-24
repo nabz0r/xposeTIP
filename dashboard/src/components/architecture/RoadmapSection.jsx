@@ -15,7 +15,7 @@ export default function RoadmapSection() {
               version: 'v1', date: 'Now — Investigation & Awareness', color: '#00ff88',
               items: [
                 { done: true, text: 'Email → complete identity report with behavioral fingerprint' },
-                { done: true, text: '139 OSINT sources across 11 categories (116 active / 23 pending validation)' },
+                { done: true, text: '170 OSINT sources across 11 categories (145 active / 25 pending validation)' },
                 { done: true, text: 'Personalized PageRank confidence propagation (damping=0.85, 20 iter)' },
                 { done: true, text: '11-axis behavioral radar — the identity\'s digital DNA' },
                 { done: true, text: 'Digital persona clustering with name resolution' },

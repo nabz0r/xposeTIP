@@ -10,7 +10,7 @@ and a remediation action. No black-box scoring. No unconsented scanning.
 In 1987, demoscene coders created art with 512KB of RAM that still inspires today.
 xpose follows this philosophy: maximum intelligence with minimum resources.
 
-139 scrapers, PageRank, Markov chains, behavioral profiling, a rules engine — all on a
+170 scrapers, PageRank, Markov chains, behavioral profiling, a rules engine — all on a
 single machine. No GPU clusters. No distributed databases. No managed cloud services
 required. 5 Docker containers. ~50 watts.
 
@@ -183,7 +183,7 @@ Flow:
 ## Phase C — Web Discovery (operator-triggered)
 
 Fingerprint-driven web reconnaissance. Explores the open web for leads
-not covered by the 120 fixed scrapers.
+not covered by the 170 fixed scrapers.
 
 Flow:
 1. Operator clicks "Launch Discovery" in Discovered tab

@@ -71,7 +71,7 @@ export default function TwoWaysSection() {
             <div className="space-y-2.5 mb-6 text-sm">
               {[
                 ['Free', '€0', '25 scans / month'],
-                ['Starter', '€49/mo', '250 full scans · 139 sources'],
+                ['Starter', '€49/mo', '250 full scans · 170 sources'],
                 ['Team', '€299/mo', '2 000 scans · 5 seats · API'],
                 ['Enterprise', 'From €2 500/mo', 'Multi-tenant · SSO · SLA'],
               ].map(([tier, price, scope]) => (
