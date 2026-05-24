@@ -1,0 +1,930 @@
+{
+  "version": "S143-v1",
+  "workspace": {
+    "slug": "dataminr",
+    "name": "Dataminr",
+    "id": "2ec3c06a-c3f4-4ccd-9838-ebfc647dc220"
+  },
+  "summary": {
+    "n_total": 9,
+    "n_with_fingerprint": 9,
+    "n_extractable": 9
+  },
+  "axes_normalized": {
+    "accounts": {
+      "n": 9,
+      "mean": 0.44066666666666665,
+      "stdev": 0.2367092097912542,
+      "min": 0.083,
+      "max": 0.833,
+      "p10": 0.083,
+      "p50": 0.46699999999999997,
+      "p90": 0.833,
+      "hist": [
+        1,
+        1,
+        0,
+        1,
+        2,
+        3,
+        0,
+        0,
+        1,
+        0
+      ],
+      "pct_zero": 0.0,
+      "pct_saturated": 0.0
+    },
+    "platforms": {
+      "n": 9,
+      "mean": 0.38222222222222224,
+      "stdev": 0.22526527571830607,
+      "min": 0.1,
+      "max": 0.8,
+      "p10": 0.1,
+      "p50": 0.34,
+      "p90": 0.8,
+      "hist": [
+        0,
+        2,
+        0,
+        4,
+        1,
+        0,
+        1,
+        0,
+        1,
+        0
+      ],
+      "pct_zero": 0.0,
+      "pct_saturated": 0.0
+    },
+    "username_reuse": {
+      "n": 9,
+      "mean": 0.28888888888888886,
+      "stdev": 0.23154073315749674,
+      "min": 0.1,
+      "max": 0.7,
+      "p10": 0.1,
+      "p50": 0.2,
+      "p90": 0.7,
+      "hist": [
+        0,
+        4,
+        2,
+        0,
+        1,
+        1,
+        1,
+        0,
+        0,
+        0
+      ],
+      "pct_zero": 0.0,
+      "pct_saturated": 0.0
+    },
+    "breaches": {
+      "n": 9,
+      "mean": 0.5111111111111111,
+      "stdev": 0.30184617127124724,
+      "min": 0.0,
+      "max": 0.8,
+      "p10": 0.0,
+      "p50": 0.6,
+      "p90": 0.8,
+      "hist": [
+        2,
+        0,
+        0,
+        0,
+        0,
+        5,
+        0,
+        0,
+        2,
+        0
+      ],
+      "pct_zero": 22.22222222222222,
+      "pct_saturated": 0.0
+    },
+    "geo_spread": {
+      "n": 9,
+      "mean": 0.5144444444444445,
+      "stdev": 0.14578332475896474,
+      "min": 0.41,
+      "max": 0.74,
+      "p10": 0.41,
+      "p50": 0.42000000000000004,
+      "p90": 0.74,
+      "hist": [
+        0,
+        0,
+        0,
+        0,
+        6,
+        0,
+        1,
+        2,
+        0,
+        0
+      ],
+      "pct_zero": 0.0,
+      "pct_saturated": 0.0
+    },
+    "data_leaked": {
+      "n": 9,
+      "mean": 0.07111111111111111,
+      "stdev": 0.14391355429948602,
+      "min": 0.0,
+      "max": 0.44,
+      "p10": 0.0,
+      "p50": 0.0,
+      "p90": 0.44000000000000006,
+      "hist": [
+        7,
+        1,
+        0,
+        0,
+        1,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "pct_zero": 55.55555555555556,
+      "pct_saturated": 0.0
+    },
+    "email_age": {
+      "n": 9,
+      "mean": 0.1611111111111111,
+      "stdev": 0.18754162500925256,
+      "min": 0.0,
+      "max": 0.425,
+      "p10": 0.0,
+      "p50": 0.10200000000000001,
+      "p90": 0.425,
+      "hist": [
+        4,
+        2,
+        0,
+        1,
+        2,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "pct_zero": 44.44444444444444,
+      "pct_saturated": 0.0
+    },
+    "security": {
+      "n": 9,
+      "mean": 0.0,
+      "stdev": 0.0,
+      "min": 0.0,
+      "max": 0.0,
+      "p10": 0.0,
+      "p50": 0.0,
+      "p90": 0.0,
+      "hist": [
+        9,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "pct_zero": 100.0,
+      "pct_saturated": 0.0
+    },
+    "public_exposure": {
+      "n": 9,
+      "mean": 0.027777777777777776,
+      "stdev": 0.08333333333333333,
+      "min": 0.0,
+      "max": 0.25,
+      "p10": 0.0,
+      "p50": 0.0,
+      "p90": 0.25,
+      "hist": [
+        8,
+        0,
+        1,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "pct_zero": 88.88888888888889,
+      "pct_saturated": 0.0
+    },
+    "formal_records": {
+      "n": 9,
+      "mean": 0.5333333333333333,
+      "stdev": 0.469041575982343,
+      "min": 0.0,
+      "max": 1.0,
+      "p10": 0.0,
+      "p50": 0.4,
+      "p90": 1.0,
+      "hist": [
+        3,
+        0,
+        0,
+        0,
+        2,
+        0,
+        0,
+        0,
+        0,
+        4
+      ],
+      "pct_zero": 33.333333333333336,
+      "pct_saturated": 44.44444444444444
+    },
+    "network_signature": {
+      "n": 9,
+      "mean": 0.8188888888888889,
+      "stdev": 0.011072990161248698,
+      "min": 0.807,
+      "max": 0.838,
+      "p10": 0.807,
+      "p50": 0.8160000000000001,
+      "p90": 0.8379999999999999,
+      "hist": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        9,
+        0
+      ],
+      "pct_zero": 0.0,
+      "pct_saturated": 0.0
+    }
+  },
+  "axes_raw": {
+    "accounts": {
+      "n": 9,
+      "mean": 26.444444444444443,
+      "stdev": 14.204850501775011,
+      "min": 5.0,
+      "max": 50.0,
+      "p10": 5.0,
+      "p50": 28.0,
+      "p90": 50.0,
+      "hist": [
+        1,
+        1,
+        0,
+        1,
+        2,
+        3,
+        0,
+        0,
+        1,
+        0
+      ],
+      "pct_at_max": 0.0
+    },
+    "platforms": {
+      "n": 9,
+      "mean": 19.11111111111111,
+      "stdev": 11.263263785915303,
+      "min": 5.0,
+      "max": 40.0,
+      "p10": 5.0,
+      "p50": 17.0,
+      "p90": 40.0,
+      "hist": [
+        0,
+        2,
+        0,
+        4,
+        1,
+        0,
+        1,
+        0,
+        1,
+        0
+      ],
+      "pct_at_max": 0.0
+    },
+    "username_reuse": {
+      "n": 9,
+      "mean": 2.888888888888889,
+      "stdev": 2.3154073315749675,
+      "min": 1.0,
+      "max": 7.0,
+      "p10": 1.0,
+      "p50": 2.0,
+      "p90": 7.0,
+      "hist": [
+        0,
+        4,
+        1,
+        1,
+        1,
+        0,
+        1,
+        1,
+        0,
+        0
+      ],
+      "pct_at_max": 0.0
+    },
+    "breaches": {
+      "n": 9,
+      "mean": 2.5555555555555554,
+      "stdev": 1.509230856356236,
+      "min": 0.0,
+      "max": 4.0,
+      "p10": 0.0,
+      "p50": 3.0,
+      "p90": 4.0,
+      "hist": [
+        2,
+        0,
+        0,
+        0,
+        0,
+        0,
+        5,
+        0,
+        2,
+        0
+      ],
+      "pct_at_max": 0.0
+    },
+    "geo_spread": {
+      "n": 9,
+      "mean": 2.572222222222222,
+      "stdev": 0.7289166237948236,
+      "min": 2.05,
+      "max": 3.6999999999999997,
+      "p10": 2.05,
+      "p50": 2.1,
+      "p90": 3.7,
+      "hist": [
+        0,
+        0,
+        0,
+        0,
+        6,
+        0,
+        1,
+        2,
+        0,
+        0
+      ],
+      "pct_at_max": 0.0
+    },
+    "data_leaked": {
+      "n": 9,
+      "mean": 1.7777777777777777,
+      "stdev": 3.5978388574871505,
+      "min": 0.0,
+      "max": 11.0,
+      "p10": 0.0,
+      "p50": 0.0,
+      "p90": 11.0,
+      "hist": [
+        7,
+        1,
+        0,
+        0,
+        1,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "pct_at_max": 0.0
+    },
+    "email_age": {
+      "n": 9,
+      "mean": 6.444444444444445,
+      "stdev": 7.501851623284599,
+      "min": 0.0,
+      "max": 17.0,
+      "p10": 0.0,
+      "p50": 4.1,
+      "p90": 17.0,
+      "hist": [
+        4,
+        2,
+        0,
+        1,
+        2,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "pct_at_max": 0.0
+    },
+    "security": {
+      "n": 9,
+      "mean": 0.0,
+      "stdev": 0.0,
+      "min": 0.0,
+      "max": 0.0,
+      "p10": 0.0,
+      "p50": 0.0,
+      "p90": 0.0,
+      "hist": [
+        9,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "pct_at_max": 0.0
+    },
+    "public_exposure": {
+      "n": 9,
+      "mean": 0.027777777777777776,
+      "stdev": 0.08333333333333333,
+      "min": 0.0,
+      "max": 0.25,
+      "p10": 0.0,
+      "p50": 0.0,
+      "p90": 0.25,
+      "hist": [
+        8,
+        0,
+        1,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "pct_at_max": 0.0
+    },
+    "formal_records": {
+      "n": 9,
+      "mean": 5.666666666666667,
+      "stdev": 7.158910531638177,
+      "min": 0.0,
+      "max": 19.0,
+      "p10": 0.0,
+      "p50": 2.0,
+      "p90": 19.0,
+      "hist": [
+        3,
+        0,
+        0,
+        0,
+        2,
+        0,
+        0,
+        0,
+        0,
+        4
+      ],
+      "pct_at_max": 44.44444444444444
+    },
+    "network_signature": {
+      "n": 9,
+      "mean": 0.8189444444444445,
+      "stdev": 0.011074871456490044,
+      "min": 0.8075,
+      "max": 0.8383,
+      "p10": 0.8074999999999999,
+      "p50": 0.8158999999999998,
+      "p90": 0.8383,
+      "hist": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        9,
+        0
+      ],
+      "pct_at_max": 0.0
+    }
+  },
+  "rich_targets": {
+    "3": 7,
+    "5": 7,
+    "7": 6,
+    "9": 2
+  },
+  "similarity": {
+    "total_pairs": 36,
+    "mean": 0.7975277777777778,
+    "stdev": 0.1319144086381363,
+    "above": {
+      "0.5": {
+        "count": 36,
+        "pct": 100.0
+      },
+      "0.6": {
+        "count": 32,
+        "pct": 88.88888888888889
+      },
+      "0.7": {
+        "count": 28,
+        "pct": 77.77777777777777
+      },
+      "0.8": {
+        "count": 20,
+        "pct": 55.55555555555556
+      },
+      "0.9": {
+        "count": 9,
+        "pct": 25.0
+      }
+    },
+    "hist": [
+      0,
+      0,
+      0,
+      0,
+      0,
+      4,
+      4,
+      8,
+      11,
+      9
+    ]
+  },
+  "top_pairs": [
+    {
+      "rank": 1,
+      "sim": 0.9986,
+      "a": {
+        "id": "7bc91ca1-7cba-41fa-ba14-7728770064f3",
+        "email": "info@dataminr.com"
+      },
+      "b": {
+        "id": "ab7c31e2-27c7-4250-8078-a30abcf9e4a2",
+        "email": "dsouza@dataminr.com"
+      },
+      "top_axes": [
+        "network_signature",
+        "geo_spread",
+        "platforms"
+      ]
+    },
+    {
+      "rank": 2,
+      "sim": 0.9981,
+      "a": {
+        "id": "3ffe6e0a-0110-4a93-bd5f-f0bf726981b5",
+        "email": "becki.bailey@dataminr.com"
+      },
+      "b": {
+        "id": "5f1ef9f7-3430-4761-bb78-41297a2d5d68",
+        "email": "regina.bonsu@dataminr.com"
+      },
+      "top_axes": [
+        "network_signature",
+        "username_reuse",
+        "breaches"
+      ]
+    },
+    {
+      "rank": 3,
+      "sim": 0.9723,
+      "a": {
+        "id": "f2b1edd9-d84b-4ed3-81b1-0472219f02cb",
+        "email": "tbailey@dataminr.com"
+      },
+      "b": {
+        "id": "10713caa-2d4b-44d8-b100-ca867de41759",
+        "email": "kpoulsen@dataminr.com"
+      },
+      "top_axes": [
+        "formal_records",
+        "network_signature",
+        "geo_spread"
+      ]
+    },
+    {
+      "rank": 4,
+      "sim": 0.9602,
+      "a": {
+        "id": "e026e3fd-12d6-4e1b-b9ea-1095005f46ad",
+        "email": "balaji.yelamanchili@dataminr.com"
+      },
+      "b": {
+        "id": "921d7c14-6e68-4525-9393-6b6da7219dfa",
+        "email": "wbenner@dataminr.com"
+      },
+      "top_axes": [
+        "formal_records",
+        "network_signature",
+        "breaches"
+      ]
+    },
+    {
+      "rank": 5,
+      "sim": 0.9532,
+      "a": {
+        "id": "921d7c14-6e68-4525-9393-6b6da7219dfa",
+        "email": "wbenner@dataminr.com"
+      },
+      "b": {
+        "id": "10713caa-2d4b-44d8-b100-ca867de41759",
+        "email": "kpoulsen@dataminr.com"
+      },
+      "top_axes": [
+        "formal_records",
+        "network_signature",
+        "breaches"
+      ]
+    },
+    {
+      "rank": 6,
+      "sim": 0.9434,
+      "a": {
+        "id": "e026e3fd-12d6-4e1b-b9ea-1095005f46ad",
+        "email": "balaji.yelamanchili@dataminr.com"
+      },
+      "b": {
+        "id": "10713caa-2d4b-44d8-b100-ca867de41759",
+        "email": "kpoulsen@dataminr.com"
+      },
+      "top_axes": [
+        "formal_records",
+        "network_signature",
+        "breaches"
+      ]
+    },
+    {
+      "rank": 7,
+      "sim": 0.9325,
+      "a": {
+        "id": "921d7c14-6e68-4525-9393-6b6da7219dfa",
+        "email": "wbenner@dataminr.com"
+      },
+      "b": {
+        "id": "f2b1edd9-d84b-4ed3-81b1-0472219f02cb",
+        "email": "tbailey@dataminr.com"
+      },
+      "top_axes": [
+        "formal_records",
+        "network_signature",
+        "breaches"
+      ]
+    },
+    {
+      "rank": 8,
+      "sim": 0.9134,
+      "a": {
+        "id": "e026e3fd-12d6-4e1b-b9ea-1095005f46ad",
+        "email": "balaji.yelamanchili@dataminr.com"
+      },
+      "b": {
+        "id": "f2b1edd9-d84b-4ed3-81b1-0472219f02cb",
+        "email": "tbailey@dataminr.com"
+      },
+      "top_axes": [
+        "formal_records",
+        "network_signature",
+        "breaches"
+      ]
+    },
+    {
+      "rank": 9,
+      "sim": 0.9093,
+      "a": {
+        "id": "e026e3fd-12d6-4e1b-b9ea-1095005f46ad",
+        "email": "balaji.yelamanchili@dataminr.com"
+      },
+      "b": {
+        "id": "5f1ef9f7-3430-4761-bb78-41297a2d5d68",
+        "email": "regina.bonsu@dataminr.com"
+      },
+      "top_axes": [
+        "network_signature",
+        "breaches",
+        "accounts"
+      ]
+    },
+    {
+      "rank": 10,
+      "sim": 0.8988,
+      "a": {
+        "id": "3ffe6e0a-0110-4a93-bd5f-f0bf726981b5",
+        "email": "becki.bailey@dataminr.com"
+      },
+      "b": {
+        "id": "e026e3fd-12d6-4e1b-b9ea-1095005f46ad",
+        "email": "balaji.yelamanchili@dataminr.com"
+      },
+      "top_axes": [
+        "network_signature",
+        "breaches",
+        "accounts"
+      ]
+    },
+    {
+      "rank": 11,
+      "sim": 0.8729,
+      "a": {
+        "id": "f2b1edd9-d84b-4ed3-81b1-0472219f02cb",
+        "email": "tbailey@dataminr.com"
+      },
+      "b": {
+        "id": "5f1ef9f7-3430-4761-bb78-41297a2d5d68",
+        "email": "regina.bonsu@dataminr.com"
+      },
+      "top_axes": [
+        "network_signature",
+        "breaches",
+        "accounts"
+      ]
+    },
+    {
+      "rank": 12,
+      "sim": 0.8671,
+      "a": {
+        "id": "5f1ef9f7-3430-4761-bb78-41297a2d5d68",
+        "email": "regina.bonsu@dataminr.com"
+      },
+      "b": {
+        "id": "10713caa-2d4b-44d8-b100-ca867de41759",
+        "email": "kpoulsen@dataminr.com"
+      },
+      "top_axes": [
+        "network_signature",
+        "breaches",
+        "accounts"
+      ]
+    },
+    {
+      "rank": 13,
+      "sim": 0.8606,
+      "a": {
+        "id": "921d7c14-6e68-4525-9393-6b6da7219dfa",
+        "email": "wbenner@dataminr.com"
+      },
+      "b": {
+        "id": "5f1ef9f7-3430-4761-bb78-41297a2d5d68",
+        "email": "regina.bonsu@dataminr.com"
+      },
+      "top_axes": [
+        "network_signature",
+        "breaches",
+        "geo_spread"
+      ]
+    },
+    {
+      "rank": 14,
+      "sim": 0.8571,
+      "a": {
+        "id": "3ffe6e0a-0110-4a93-bd5f-f0bf726981b5",
+        "email": "becki.bailey@dataminr.com"
+      },
+      "b": {
+        "id": "f2b1edd9-d84b-4ed3-81b1-0472219f02cb",
+        "email": "tbailey@dataminr.com"
+      },
+      "top_axes": [
+        "network_signature",
+        "breaches",
+        "accounts"
+      ]
+    },
+    {
+      "rank": 15,
+      "sim": 0.8491,
+      "a": {
+        "id": "3ffe6e0a-0110-4a93-bd5f-f0bf726981b5",
+        "email": "becki.bailey@dataminr.com"
+      },
+      "b": {
+        "id": "10713caa-2d4b-44d8-b100-ca867de41759",
+        "email": "kpoulsen@dataminr.com"
+      },
+      "top_axes": [
+        "network_signature",
+        "breaches",
+        "accounts"
+      ]
+    },
+    {
+      "rank": 16,
+      "sim": 0.8461,
+      "a": {
+        "id": "0db56541-8edc-490d-a915-6dd02ab9cde2",
+        "email": "rbasset@dataminr.com"
+      },
+      "b": {
+        "id": "5f1ef9f7-3430-4761-bb78-41297a2d5d68",
+        "email": "regina.bonsu@dataminr.com"
+      },
+      "top_axes": [
+        "network_signature",
+        "breaches",
+        "accounts"
+      ]
+    },
+    {
+      "rank": 17,
+      "sim": 0.8394,
+      "a": {
+        "id": "3ffe6e0a-0110-4a93-bd5f-f0bf726981b5",
+        "email": "becki.bailey@dataminr.com"
+      },
+      "b": {
+        "id": "921d7c14-6e68-4525-9393-6b6da7219dfa",
+        "email": "wbenner@dataminr.com"
+      },
+      "top_axes": [
+        "network_signature",
+        "breaches",
+        "geo_spread"
+      ]
+    },
+    {
+      "rank": 18,
+      "sim": 0.8353,
+      "a": {
+        "id": "0db56541-8edc-490d-a915-6dd02ab9cde2",
+        "email": "rbasset@dataminr.com"
+      },
+      "b": {
+        "id": "10713caa-2d4b-44d8-b100-ca867de41759",
+        "email": "kpoulsen@dataminr.com"
+      },
+      "top_axes": [
+        "network_signature",
+        "geo_spread",
+        "breaches"
+      ]
+    },
+    {
+      "rank": 19,
+      "sim": 0.8329,
+      "a": {
+        "id": "0db56541-8edc-490d-a915-6dd02ab9cde2",
+        "email": "rbasset@dataminr.com"
+      },
+      "b": {
+        "id": "f2b1edd9-d84b-4ed3-81b1-0472219f02cb",
+        "email": "tbailey@dataminr.com"
+      },
+      "top_axes": [
+        "network_signature",
+        "geo_spread",
+        "breaches"
+      ]
+    },
+    {
+      "rank": 20,
+      "sim": 0.8256,
+      "a": {
+        "id": "3ffe6e0a-0110-4a93-bd5f-f0bf726981b5",
+        "email": "becki.bailey@dataminr.com"
+      },
+      "b": {
+        "id": "0db56541-8edc-490d-a915-6dd02ab9cde2",
+        "email": "rbasset@dataminr.com"
+      },
+      "top_axes": [
+        "network_signature",
+        "breaches",
+        "accounts"
+      ]
+    }
+  ],
+  "observations": [
+    "starved: `security` is zero for 100.0% of fingerprints \u2014 data plumbing or AXIS_MAX too high",
+    "starved: `public_exposure` is zero for 88.9% of fingerprints \u2014 data plumbing or AXIS_MAX too high",
+    "saturation: `formal_records` is 44.4% saturated \u2014 AXIS_MAX[`formal_records_raw`]=5 likely too low",
+    "saturation cause confirmed: `formal_records` raw \u2265 AXIS_MAX (=5) in 44.4% of fingerprints",
+    "similarity threshold sanity: 77.78% of pairs \u2265 0.7 \u2192 threshold likely too low",
+    "calibration thin: only 6 targets have \u22657/9 axes populated (>0.1) \u2014 consider growing the corpus before tuning weights"
+  ],
+  "generated_at_utc": "2026-05-21 21:02 UTC"
+}
