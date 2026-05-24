@@ -1,0 +1,34 @@
+=== Reseed result ===
+DB scrapers: total=164 enabled=139 disabled=25
+Seeded: 164 scraper definitions (25 created from S196+S197, 139 updated, 0 dup skipped)
+
+=== Most recent scan c38796e9-36fd-4eeb-a23e-e5cf3412730d ===
+cascade=done/completed  dur=344s  findings_count=9
+
+=== S196 phone findings in this scan (3/5 scrapers produced findings) ===
+  + bing_phone_dork           findings=2
+  + duckduckgo_phone_dork     findings=2
+  + yandex_phone_dork         findings=2
+
+=== A1.6 dispatch trace on S196 phone scrapers (3 dispatches) ===
+  bing_phone_dork::+33612345678                                -> success
+  duckduckgo_phone_dork::+33612345678                          -> success
+  yandex_phone_dork::+33612345678                              -> success
+
+=== S197 username findings in this scan (2/20 scrapers produced findings) ===
+  + hackernoon_profile                  findings=1
+  + paypal_profile                      findings=1
+  (18 of 20 dispatched in PASS1 returned no-match for synthetic username gnienlnaha — expected behavior)
+
+=== S197 username findings cumulative on this target (2/20 ever produced findings) ===
+  + hackernoon_profile                  findings=1
+  + paypal_profile                      findings=1
+
+=== Verdict ===
+S196: 3/3 newly-active phone dorks dispatched via A1.6 with status=success.
+      api_ninjas + abstractapi correctly skipped (enabled=False, awaiting API keys).
+S197: 20/20 Maigret scrapers dispatched in PASS1 via scraper_scanner.
+      2/20 produced positive hits (hackernoon, paypal) — proves dispatch + signature work.
+      18/20 returned no-match — correct behavior for synthetic test username.
+Pipeline impact: A1.6 secondary_enricher_attempts now includes 3 new phone dorks.
+                 PASS1 username dispatch expanded 74 -> 94 (+27% scraper depth).
