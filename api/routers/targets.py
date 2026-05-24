@@ -11,6 +11,7 @@ from api.models.finding import Finding
 from api.models.target import Target
 from api.models.user import User
 from api.models.workspace import Workspace
+from api.services.layer4.username_expander import SCANNABLE_INDICATOR_TYPES  # S210
 
 router = APIRouter()
 
@@ -554,9 +555,7 @@ async def scan_indicator(
     indicator_type = body.get("type", "").strip()
     indicator_value = body.get("value", "").strip()
 
-    ALLOWED_TYPES = {"username", "email", "domain", "name", "fullname",
-                     "media_mention", "sanctions_match", "corporate_officer", "pep_match",
-                     "phone", "crypto_wallet", "first_name"}
+    ALLOWED_TYPES = SCANNABLE_INDICATOR_TYPES  # S210: single-source from username_expander module
 
     if indicator_type not in ALLOWED_TYPES:
         raise HTTPException(status_code=400, detail=f"Unsupported indicator type: {indicator_type}")

@@ -36,7 +36,7 @@ class _SafeFormatDict(dict):
 # Config
 MAX_USERNAMES = 5         # S208: 3→5 — covers more discovered handles per target
 MIN_PLATFORMS = 2         # Username must appear on 2+ platforms
-MAX_SCRAPERS = 92         # S208: 50→92 — covers all currently-active username scrapers
+MAX_SCRAPERS = 96         # S210: 92→96 — covers all 96 active username scrapers post-S209 tranche 2
 RATE_LIMIT_DELAY = 0.5    # Seconds between calls
 TOTAL_TIMEOUT = 180       # S208: 120→180 — accommodate 5×92 dispatch budget
 HTTP_TIMEOUT = 12         # Per-request timeout
@@ -558,6 +558,26 @@ INDICATOR_MAX_SCRAPERS = {
     "crypto_wallet": 20,    # S208: covers 15 active crypto scrapers + headroom
 }
 
+# --- S210: Single-source canonical mapping. _map_indicator_to_input_types() reads this,
+# api/routers/targets.py ALLOWED_TYPES imports SCANNABLE_INDICATOR_TYPES,
+# GET /scrapers/scannable-types serves SCANNABLE_INDICATOR_TYPES to frontend. ---
+_INDICATOR_TO_INPUT_MAP = {
+    "username": ["username"],
+    "email": ["email"],
+    "domain": ["domain"],
+    "name": ["name", "fullname", "first_name"],
+    "fullname": ["name", "fullname", "first_name"],
+    "first_name": ["first_name"],
+    "phone": ["phone"],
+    "crypto_wallet": ["crypto_wallet"],
+    "media_mention": ["name", "fullname"],
+    "sanctions_match": ["name", "fullname"],
+    "corporate_officer": ["name", "fullname"],
+    "pep_match": ["name", "fullname"],
+}
+
+SCANNABLE_INDICATOR_TYPES = frozenset(_INDICATOR_TO_INPUT_MAP.keys())
+
 
 def scan_single_username(target_id, workspace_id, session: Session,
                          username: str, scan_id=None, email=None) -> dict:
@@ -683,22 +703,8 @@ def scan_single_indicator(target_id, workspace_id, session: Session,
 
 
 def _map_indicator_to_input_types(indicator_type: str) -> list:
-    """Map a finding indicator_type to scraper input_type(s)."""
-    mapping = {
-        "username": ["username"],
-        "email": ["email"],
-        "domain": ["domain"],
-        "name": ["name", "fullname", "first_name"],
-        "fullname": ["name", "fullname", "first_name"],
-        "first_name": ["first_name"],       # S208
-        "phone": ["phone"],                 # S208
-        "crypto_wallet": ["crypto_wallet"], # S208
-        "media_mention": ["name", "fullname"],
-        "sanctions_match": ["name", "fullname"],
-        "corporate_officer": ["name", "fullname"],
-        "pep_match": ["name", "fullname"],
-    }
-    return mapping.get(indicator_type, [])
+    """Map a finding indicator_type to scraper input_type(s). Source: _INDICATOR_TO_INPUT_MAP."""
+    return _INDICATOR_TO_INPUT_MAP.get(indicator_type, [])
 
 
 def _load_scrapers_by_types(session: Session, input_types: list) -> list:

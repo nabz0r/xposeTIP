@@ -1,6 +1,6 @@
-import React, { Fragment, useState } from 'react'
+import React, { Fragment, useState, useEffect } from 'react'
 import { ChevronDown, ChevronRight, ExternalLink, Shield, Globe, Search, Loader2, Phone, Wallet, Scale } from 'lucide-react'
-import { scanIndicator } from '../../lib/api'
+import { scanIndicator, getScannableTypes } from '../../lib/api'
 import { isPhoneSignal, isCryptoSignal, isLegalSignal } from '../../lib/findingFilters'
 import ProvenanceCard from '../../components/ProvenanceCard'
 
@@ -214,12 +214,21 @@ function FindingDataCard({ finding }) {
   return null
 }
 
-const SCANNABLE_TYPES = new Set(['username', 'email', 'domain', 'name', 'fullname',
-    'media_mention', 'sanctions_match', 'corporate_officer', 'pep_match',
-    'phone', 'crypto_wallet', 'first_name'])  // S208
+// S210: SCANNABLE_TYPES no longer hardcoded here — fetched from
+// GET /api/v1/scrapers/scannable-types at FindingsTab mount, cached module-level
+// in api.js getScannableTypes(). Single-source from
+// api/services/layer4/username_expander.py SCANNABLE_INDICATOR_TYPES frozenset.
 
 export default function FindingsTab({ target, findings, filteredFindings, expanded, setExpanded, sevFilter, setSevFilter, modFilter, setModFilter, statusFilter, setStatusFilter, presetFilter, setPresetFilter, findingsLimit, setFindingsLimit, uniqueModules, load, patchFinding, targetId, onRefresh }) {
   const [scanningIndicator, setScanningIndicator] = useState(null)
+  // S210: scannable types fetched at mount (cached module-level in api.js)
+  const [scannableTypes, setScannableTypes] = useState(new Set(['username', 'email', 'domain']))
+
+  useEffect(() => {
+    let cancelled = false
+    getScannableTypes().then(s => { if (!cancelled) setScannableTypes(s) })
+    return () => { cancelled = true }
+  }, [])
 
   async function handleDeepScan(e, finding) {
     e.stopPropagation()
@@ -420,10 +429,10 @@ export default function FindingsTab({ target, findings, filteredFindings, expand
                         {/* S124 — Provenance card (source link is rendered inside) */}
                         <ProvenanceCard finding={f} />
 
-                        {(f.indicator_value || (f.indicator_type && SCANNABLE_TYPES.has(f.indicator_type))) && (
+                        {(f.indicator_value || (f.indicator_type && scannableTypes.has(f.indicator_type))) && (
                           <div className="flex items-center gap-4 text-xs text-gray-400">
                             {f.indicator_value && <span><span className="text-gray-500">Indicator:</span> <span className="font-mono">{f.indicator_value}</span></span>}
-                            {f.indicator_value && f.indicator_type && SCANNABLE_TYPES.has(f.indicator_type) && (
+                            {f.indicator_value && f.indicator_type && scannableTypes.has(f.indicator_type) && (
                               <button
                                 onClick={(e) => handleDeepScan(e, f)}
                                 disabled={!!scanningIndicator}

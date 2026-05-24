@@ -91,6 +91,21 @@ export const scanIndicator = (targetId, type, value) =>
     body: JSON.stringify({ type, value }),
   })
 
+// S210: Cached scannable types — fetched once per session, served from module-level cache
+let _scannableTypesCache = null;
+export const getScannableTypes = async () => {
+  if (_scannableTypesCache) return _scannableTypesCache;
+  try {
+    const res = await request('/scrapers/scannable-types');
+    _scannableTypesCache = new Set(res.types || []);
+    return _scannableTypesCache;
+  } catch (err) {
+    console.error('getScannableTypes failed, using fallback:', err);
+    // Fallback minimal Set so Deep Scan buttons still render on common types
+    return new Set(['username', 'email', 'domain']);
+  }
+};
+
 // Scans
 export const createScan = (data) => request('/scans', { method: 'POST', body: JSON.stringify(data) })
 export const getScans = (params = '') => request(`/scans${params ? '?' + params : ''}`)

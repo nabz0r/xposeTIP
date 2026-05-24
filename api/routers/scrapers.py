@@ -95,6 +95,20 @@ async def list_scrapers(
     }
 
 
+@router.get("/scannable-types")
+async def list_scannable_types(
+    user: User = Depends(get_current_user),
+):
+    """S210: Single-source list of indicator types operators can Deep-Scan.
+
+    Authoritative source: api.services.layer4.username_expander.SCANNABLE_INDICATOR_TYPES.
+    Frontend FindingsTab fetches this at mount and caches module-level.
+    Workspace-agnostic (mapping is platform-global) — no get_current_workspace dep.
+    """
+    from api.services.layer4.username_expander import SCANNABLE_INDICATOR_TYPES
+    return {"types": sorted(SCANNABLE_INDICATOR_TYPES)}
+
+
 @router.get("/{scraper_id}")
 async def get_scraper(
     scraper_id: uuid.UUID,
