@@ -34,11 +34,11 @@ class _SafeFormatDict(dict):
 
 
 # Config
-MAX_USERNAMES = 3
+MAX_USERNAMES = 5         # S208: 3→5 — covers more discovered handles per target
 MIN_PLATFORMS = 2         # Username must appear on 2+ platforms
-MAX_SCRAPERS = 50         # Cap scrapers per username
+MAX_SCRAPERS = 92         # S208: 50→92 — covers all currently-active username scrapers
 RATE_LIMIT_DELAY = 0.5    # Seconds between calls
-TOTAL_TIMEOUT = 120       # Total expansion budget in seconds
+TOTAL_TIMEOUT = 180       # S208: 120→180 — accommodate 5×92 dispatch budget
 HTTP_TIMEOUT = 12         # Per-request timeout
 
 USER_AGENT = (
@@ -533,7 +533,7 @@ def _get_health():
 
 # --- Config overrides for deep scan ---
 DEEP_TOTAL_TIMEOUT = 300   # 5 min budget (operator-triggered, can afford more)
-DEEP_MAX_SCRAPERS = 80     # More scrapers than auto Pass 1.5 (which caps at 50)
+DEEP_MAX_SCRAPERS = 100    # S208: 80→100 — operator-triggered, covers all 92 active + headroom
 DEEP_RATE_LIMIT_DELAY = 0.3  # Slightly faster (operator chose this, not auto)
 
 # --- Config for generic deep scan ---
@@ -544,14 +544,18 @@ INDICATOR_TIMEOUT = {
     "name": 180,
     "fullname": 180,
     "first_name": 180,
+    "phone": 120,           # S208: phone scrapers (8 active) — API + 4 search dorks, fast
+    "crypto_wallet": 180,   # S208: crypto scrapers (15 active) — chain explorers can be slow
 }
 INDICATOR_MAX_SCRAPERS = {
-    "username": 80,
+    "username": 100,        # S208: 80→100 — matches DEEP_MAX_SCRAPERS bump
     "email": 30,
     "domain": 15,
     "name": 15,
     "fullname": 15,
     "first_name": 15,
+    "phone": 10,            # S208: covers 8 active phone scrapers + headroom
+    "crypto_wallet": 20,    # S208: covers 15 active crypto scrapers + headroom
 }
 
 
@@ -686,6 +690,9 @@ def _map_indicator_to_input_types(indicator_type: str) -> list:
         "domain": ["domain"],
         "name": ["name", "fullname", "first_name"],
         "fullname": ["name", "fullname", "first_name"],
+        "first_name": ["first_name"],       # S208
+        "phone": ["phone"],                 # S208
+        "crypto_wallet": ["crypto_wallet"], # S208
         "media_mention": ["name", "fullname"],
         "sanctions_match": ["name", "fullname"],
         "corporate_officer": ["name", "fullname"],
@@ -718,6 +725,10 @@ def _build_format_kwargs(indicator_type: str, value: str, email: str = None) -> 
         "fullname_encoded": value.replace(" ", "+"),
         "name": value,
         "email_md5": hashlib.md5(value.encode()).hexdigest(),
+        # S208: phone + crypto placeholders (match scraper_engine.py:65-68 canonical form)
+        "phone": "",
+        "phone_clean": "",
+        "crypto_address": "",
     })
 
     if indicator_type == "email":
@@ -735,6 +746,15 @@ def _build_format_kwargs(indicator_type: str, value: str, email: str = None) -> 
         base["last_name"] = parts[-1] if len(parts) > 1 else ""
         base["fullname"] = value
         base["fullname_encoded"] = value.replace(" ", "+")
+
+    # S208
+    if indicator_type == "phone":
+        base["phone"] = value
+        base["phone_clean"] = value.replace("+", "")
+
+    # S208
+    if indicator_type == "crypto_wallet":
+        base["crypto_address"] = value
 
     return base
 

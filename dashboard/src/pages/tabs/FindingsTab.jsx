@@ -215,7 +215,8 @@ function FindingDataCard({ finding }) {
 }
 
 const SCANNABLE_TYPES = new Set(['username', 'email', 'domain', 'name', 'fullname',
-    'media_mention', 'sanctions_match', 'corporate_officer', 'pep_match'])
+    'media_mention', 'sanctions_match', 'corporate_officer', 'pep_match',
+    'phone', 'crypto_wallet', 'first_name'])  // S208
 
 export default function FindingsTab({ target, findings, filteredFindings, expanded, setExpanded, sevFilter, setSevFilter, modFilter, setModFilter, statusFilter, setStatusFilter, presetFilter, setPresetFilter, findingsLimit, setFindingsLimit, uniqueModules, load, patchFinding, targetId, onRefresh }) {
   const [scanningIndicator, setScanningIndicator] = useState(null)

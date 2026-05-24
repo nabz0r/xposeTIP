@@ -555,7 +555,8 @@ async def scan_indicator(
     indicator_value = body.get("value", "").strip()
 
     ALLOWED_TYPES = {"username", "email", "domain", "name", "fullname",
-                     "media_mention", "sanctions_match", "corporate_officer", "pep_match"}
+                     "media_mention", "sanctions_match", "corporate_officer", "pep_match",
+                     "phone", "crypto_wallet", "first_name"}
 
     if indicator_type not in ALLOWED_TYPES:
         raise HTTPException(status_code=400, detail=f"Unsupported indicator type: {indicator_type}")
