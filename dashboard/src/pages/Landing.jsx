@@ -6,10 +6,8 @@ import HeroSection from '../components/landing/HeroSection'
 import ProblemSection from '../components/landing/ProblemSection'
 import FeaturesSection from '../components/landing/FeaturesSection'
 import PipelineSection from '../components/landing/PipelineSection'
-import MockPreview from '../components/landing/MockPreview'
 import PricingSection from '../components/landing/PricingSection'
 import TwoWaysSection from '../components/landing/TwoWaysSection'
-import TrustBar from '../components/landing/TrustBar'
 import PublicNav from '../components/landing/PublicNav'
 import PublicFooter from '../components/landing/PublicFooter'
 
@@ -129,10 +127,8 @@ export default function Landing() {
       <ProblemSection />
       <FeaturesSection />
       <PipelineSection />
-      <MockPreview />
       <TwoWaysSection />
       <PricingSection />
-      <TrustBar />
       <PublicFooter />
     </div>
   )

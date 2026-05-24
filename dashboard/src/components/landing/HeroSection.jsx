@@ -1,7 +1,7 @@
 import { Radar } from 'lucide-react'
 import GenerativeAvatar from '../GenerativeAvatar'
 import ScanForm from './ScanForm'
-import { DEMO_AVATARS, DEFAULT_SEED_PROPS, scoreColor, sevColor, hashEmail } from './constants'
+import { scoreColor, sevColor, hashEmail } from './constants'
 
 export default function HeroSection({ email, setEmail, loading, error, onSubmit, quickResult, pollCount, phaseMsg }) {
   return (
@@ -28,28 +28,21 @@ export default function HeroSection({ email, setEmail, loading, error, onSubmit,
               <span className="text-gray-500">It's the person behind it.</span>
             </h1>
 
-            <p className="text-gray-400 text-lg mb-4 max-w-lg leading-relaxed">
-              The internet treats identity as a record. Stored, siloed, lost.
-              Every app reinvents login. Every breach proves the model is broken.
-            </p>
-            <p className="text-gray-300 text-lg mb-6 max-w-lg leading-relaxed">
-              xposeTIP treats identity as a layer.<br />
-              <span className="text-white font-semibold">Behavioral. Persistent. Foundational.</span>
+            <p className="text-gray-300 text-lg mb-8 max-w-lg leading-relaxed">
+              xposeTIP treats identity as a layer.{' '}
+              <span className="text-white font-semibold">Behavioral. Persistent. Foundational.</span>{' '}
+              Type your email below — see what the internet knows about you.
             </p>
 
             <div className="flex flex-wrap gap-3 text-[11px] font-mono text-gray-500 mb-8">
-              <span className="bg-[#1e1e2e] px-2.5 py-1 rounded-full">Identity layer · alpha</span>
-              <span className="bg-[#1e1e2e] px-2.5 py-1 rounded-full">11-axis behavioral fingerprint</span>
               <span className="bg-[#1e1e2e] px-2.5 py-1 rounded-full">170 OSINT sources</span>
+              <span className="bg-[#1e1e2e] px-2.5 py-1 rounded-full">11-axis behavioral fingerprint</span>
+              <span className="bg-[#1e1e2e] px-2.5 py-1 rounded-full">🇱🇺 Made in Luxembourg</span>
             </div>
 
             <div className="mb-8">
               <ScanForm email={email} setEmail={setEmail} loading={loading} error={error} onSubmit={onSubmit} />
             </div>
-
-            <p className="text-sm text-gray-600">
-              One email in. A complete persona out. The person — not the IP — at the center of every query.
-            </p>
 
             {/* Loading with phase messages */}
             {loading && !quickResult && (
@@ -140,20 +133,17 @@ export default function HeroSection({ email, setEmail, loading, error, onSubmit,
             )}
           </div>
 
-          {/* Right — Ambient avatar grid (3x3) */}
-          <div className="hidden lg:grid grid-cols-3 gap-2 opacity-40">
-            {DEMO_AVATARS.map((demo, i) => (
-              <div key={i} style={{
-                animation: `float ${3 + (i % 3) * 0.7}s ease-in-out infinite`,
-                animationDelay: `${i * 0.3}s`,
-              }}>
-                <GenerativeAvatar
-                  seed={{ email_hash: demo.email_hash, ...DEFAULT_SEED_PROPS }}
-                  size={48}
-                  score={demo.score}
-                />
-              </div>
-            ))}
+          {/* Right — Composite identity report screenshot (anonymized, real shape) */}
+          <div className="hidden lg:block relative">
+            <img
+              src="/hero/identity-report-composite.webp"
+              alt="xposeTIP identity report — composite from real anonymized scans"
+              className="rounded-xl border border-[#1e1e2e] shadow-2xl shadow-[#00ff88]/5 max-w-md w-full"
+              loading="eager"
+              fetchPriority="high"
+            />
+            {/* Subtle ambient glow */}
+            <div className="absolute -inset-4 bg-[#00ff88]/5 rounded-2xl blur-2xl -z-10" />
           </div>
         </div>
 
