@@ -647,6 +647,37 @@ def enrich_public_exposure(target_id, session: Session, scan_id=None) -> dict:
         logger.warning("PASS2: UK Gazette failed: %s", e)
         results["errors"].append(f"uk_gazette_search: {str(e)[:100]}")
 
+    # 5e. SEC EDGAR (US securities filings — insider transactions, beneficial ownership)
+    try:
+        from api.scrapers.sec_edgar_search import search_sec_edgar
+
+        sec_results = search_sec_edgar(primary_name)
+        if sec_results:
+            results["legal"].extend(sec_results)
+            logger.info("PASS2: SEC EDGAR found %d filings", len(sec_results))
+
+        results["scrapers_run"] += 1
+        time.sleep(1.0)  # SEC fair access: 10 req/sec, 1s spacing is safe
+    except Exception as e:
+        logger.warning("PASS2: SEC EDGAR failed: %s", e)
+        results["errors"].append(f"sec_edgar_search: {str(e)[:100]}")
+
+    # 5f. Companies House UK (UK officer search — directors, PSCs)
+    try:
+        from api.scrapers.companies_house_uk import search_companies_house_uk
+
+        ch_api_key = _get_companies_house_uk_api_key(session, target.workspace_id)
+        ch_results = search_companies_house_uk(primary_name, api_key=ch_api_key)
+        if ch_results:
+            results["legal"].extend(ch_results)
+            logger.info("PASS2: Companies House UK found %d officers", len(ch_results))
+
+        results["scrapers_run"] += 1
+        time.sleep(1.0)  # Companies House: 600 req/5min = 2/s; 1s spacing safe
+    except Exception as e:
+        logger.warning("PASS2: Companies House UK failed: %s", e)
+        results["errors"].append(f"companies_house_uk: {str(e)[:100]}")
+
     # === CORPORATE LAYER ===
 
     # 6. OpenCorporates
@@ -1026,6 +1057,31 @@ def _get_courtlistener_api_key(session: Session, workspace_id) -> str | None:
         settings = ws.settings or {}
         for store in ("custom_api_keys", "api_keys"):
             entry = settings.get(store, {}).get("courtlistener_api_key")
+            if entry and isinstance(entry, dict) and entry.get("encrypted"):
+                try:
+                    from api.routers.settings import _get_fernet
+                    return _get_fernet().decrypt(entry["encrypted"].encode()).decode()
+                except Exception:
+                    return None
+            elif entry and isinstance(entry, str):
+                return entry
+    except Exception:
+        pass
+    return None
+
+
+def _get_companies_house_uk_api_key(session: Session, workspace_id) -> str | None:
+    """Retrieve Companies House UK API key from workspace settings (S187)."""
+    try:
+        from api.models.workspace import Workspace
+        ws = session.execute(
+            select(Workspace).where(Workspace.id == workspace_id)
+        ).scalar_one_or_none()
+        if not ws:
+            return None
+        settings = ws.settings or {}
+        for store in ("custom_api_keys", "api_keys"):
+            entry = settings.get(store, {}).get("companies_house_uk_api_key")
             if entry and isinstance(entry, dict) and entry.get("encrypted"):
                 try:
                     from api.routers.settings import _get_fernet
