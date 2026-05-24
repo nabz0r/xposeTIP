@@ -111,7 +111,7 @@ async def quick_scan(request_body: dict):
     except Exception:
         pass
 
-    QUICK_MODULES = ["email_validator", "dns_deep", "holehe", "gravatar", "geoip"]
+    QUICK_MODULES = ["email_validator", "dns_deep", "holehe", "gravatar", "geoip", "scraper_engine"]  # S199 — dispatches all enabled data-driven scrapers
 
     async with async_session() as db:
         # Get or create public workspace
