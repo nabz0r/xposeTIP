@@ -1,5 +1,5 @@
 import Section from '../components/shared/Section'
-import { StageCollect, StageGraph, StagePropagate, StageScore, StageIdentify, StageExpose, StageMeasure, StageLocate, StageCascade, StageSimilarity, StageDiscovery } from '../components/architecture/Stages'
+import Stages from '../components/architecture/Stages'
 import ScraperBreakdown from '../components/architecture/ScraperBreakdown'
 import BFPLayer from '../components/architecture/BFPLayer'
 import DesignPrinciples from '../components/architecture/DesignPrinciples'
@@ -60,17 +60,7 @@ export default function Architecture() {
           </div>
         </Section>
 
-        <StageCollect />
-        <StageGraph />
-        <StagePropagate />
-        <StageScore />
-        <StageIdentify demoSeed={demoSeed} />
-        <StageExpose />
-        <StageMeasure />
-        <StageLocate />
-        <StageCascade />
-        <StageSimilarity />
-        <StageDiscovery />
+        <Stages demoSeed={demoSeed} />
 
         <BFPLayer />
 
