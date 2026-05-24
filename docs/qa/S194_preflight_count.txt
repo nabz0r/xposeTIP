@@ -1,0 +1,11 @@
+Rows matching filter: 36
+Safety cap: 500
+Status: OK - proceed
+
+Sample (top 20 by frequency):
+  threads_profile                | connection_quality                                 | n=20
+  replit_profile                 | Sign Up                                            | n=16
+
+Per-module distribution (2 distinct modules):
+  threads_profile                n=20
+  replit_profile                 n=16
