@@ -1,0 +1,15 @@
+=== Famous targets present: 7 of 7 ===
+  [Crypto] vitalik@ethereum.org
+    id=24a778e6-4d17-461c-95cc-e1e0c3fd361f  name=None+None  wallets=0
+  [Crypto] hal.finney@gmail.com
+    id=89b519ed-49e8-4a8d-a08a-c08225435329  name=None+None  wallets=0
+  [Crypto] hayden@uniswap.org
+    id=9ea63d4c-5843-43da-8f37-a52e09feae0d  name=None+None  wallets=0
+  [Crypto] stani@aave.com
+    id=78bad7d0-aa08-4c87-82df-7b1d93c658ca  name=None+None  wallets=0
+  [Crypto] jesse@coinbase.com
+    id=f4387421-bdbb-492c-ae5d-62fd701bf1ce  name=None+None  wallets=0
+  [Crypto] mike@beeple-crap.com
+    id=282bf185-f7da-4bc1-a87e-7c7e396b5619  name=None+None  wallets=0
+  [Crypto] andre@yearn.finance
+    id=ce697290-e1da-439b-bcf8-4c2c1135e503  name=None+None  wallets=0

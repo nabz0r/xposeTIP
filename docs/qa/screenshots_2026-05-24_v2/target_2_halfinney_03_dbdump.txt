@@ -1,0 +1,6 @@
+hal.finney: scan=b8b4a407-bee3-434e-bd39-e7d96e476002 done/completed dur=242s findings=96
+S187: NONE
+S183: NONE
+A1.6: 0 attempts
+primary_name=Hal Finney wallets=[] phones=[]
+Top modules: [('username_hunter', 26), ('intelligence', 19), ('courtlistener_search', 11), ('dns_deep', 6), ('google_news_rss', 4)]

@@ -1,0 +1,17 @@
+S188 adaptive polling capture
+Page: /targets list, during in-flight scan of vitalik@ethereum.org
+Captured: 2026-05-24T10:40 UTC, 12-second observation window
+
+window.fetch interception captured 3 requests to /api/v1/targets in 12s:
+  intervals_ms: [3910, 3877]  → average 3.9s cadence
+
+VERDICT: ✓ Adaptive polling fires at ~4s cadence (spec target was 3s, observed
+slightly longer due to fetch-completion + network-RTT delay before next
+setInterval tick fires). Decisively NOT the 30s idle cadence.
+
+Raw URLs:
+  /api/v1/targets?per_page=500  (t=1779619217577)
+  /api/v1/targets?per_page=500  (t=1779619221487)
+  /api/v1/targets?per_page=500  (t=1779619225364)
+
+S188 ACTIVE: confirmed.

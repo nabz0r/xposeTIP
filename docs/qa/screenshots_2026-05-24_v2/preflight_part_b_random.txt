@@ -1,0 +1,10 @@
+Random pool size: 373
+
+Picked 7 random (seed=42):
+  [Crypto] solar@heliacal.net  (id=426df127-17e5-417e-a360-211cdece7001)
+  [Friends] booking.lxb@gmail.com  (id=bbd28a36-99f1-4cb5-a838-4617633057a0)
+  [Crypto] aleksei@sovietnation.net  (id=f3635b22-144a-4059-87e7-9ab213996710)
+  [Friends] guillaume.a.perrin@gmail.com  (id=a5bfd465-5f30-47bd-aba0-89119bc93685)
+  [Quentin] gaetanbouilliez@hotmail.com  (id=ca1b1d5f-0c06-4256-8030-30ac64629f6f)
+  [Crypto] extrin@gmail.com  (id=687cb8d6-b7c5-45ad-9d34-3c7cd6071883)
+  [Crypto] chnmille@gmail.com  (id=2e5269ed-71d1-4e6a-91e1-e507c5e36694)

@@ -1,0 +1,194 @@
+xpose-worker  | [2026-05-24 10:46:29,126: INFO/MainProcess] Task api.tasks.scan_orchestrator.finalize_scan[c6747a4d-3a7d-4ec6-820a-304ee6560429] received
+xpose-worker  | [2026-05-24 10:46:29,163: DEBUG/ForkPoolWorker-2] cascade_state[0595c310-c293-4b83-b4c0-f9e1b633f768] -> gathering
+xpose-worker  | [2026-05-24 10:46:29,262: INFO/ForkPoolWorker-2] A1.5: no phone/crypto patterns matched in 93 findings for target 24a778e6-4d17-461c-95cc-e1e0c3fd361f
+xpose-worker  | [2026-05-24 10:46:29,271: INFO/ForkPoolWorker-2] A1.6: skipped — target 24a778e6-4d17-461c-95cc-e1e0c3fd361f has no phones/crypto_wallets in profile_data
+xpose-worker  | [2026-05-24 10:48:41,761: DEBUG/ForkPoolWorker-2] connect_tcp.started host='api.opensanctions.org' port=443 local_address=None timeout=15 socket_options=None
+xpose-worker  | [2026-05-24 10:48:41,840: DEBUG/ForkPoolWorker-2] start_tls.started ssl_context=<ssl.SSLContext object at 0x7f3e5de5da50> server_hostname='api.opensanctions.org' timeout=15
+xpose-worker  | [2026-05-24 10:48:41,902: INFO/ForkPoolWorker-2] HTTP Request: POST https://api.opensanctions.org/match/default "HTTP/1.1 401 Unauthorized"
+xpose-worker  | [2026-05-24 10:48:41,911: DEBUG/ForkPoolWorker-2] SCRAPER_DEBUG opensanctions_search: status=401, found=False, reason=not_2xx, content_len=33, preview={"detail":"No API key provided."}
+xpose-worker  | [2026-05-24 10:48:41,913: DEBUG/ForkPoolWorker-2] connect_tcp.started host='ws-public.interpol.int' port=443 local_address=None timeout=15 socket_options=None
+xpose-worker  | [2026-05-24 10:48:41,992: DEBUG/ForkPoolWorker-2] start_tls.started ssl_context=<ssl.SSLContext object at 0x7f3e5de5da50> server_hostname='ws-public.interpol.int' timeout=15
+xpose-worker  | [2026-05-24 10:48:42,033: INFO/ForkPoolWorker-2] HTTP Request: GET https://ws-public.interpol.int/notices/v1/red "HTTP/1.1 403 Forbidden"
+xpose-worker  | [2026-05-24 10:48:42,042: DEBUG/ForkPoolWorker-2] SCRAPER_DEBUG interpol_red_notices: status=403, found=False, reason=blocked_403, content_len=402, preview=<HTML><HEAD> <TITLE>Access Denied</TITLE> </HEAD><BODY> <H1>Access Denied</H1>   You don't have permission to access "http&#58;&#47;&#47;ws&#45;public&#46;interpol&#46;int&#47;notices&#47;v1&#47;red" on this server.<P> Reference&#32;&#35;18&#46;d2b31402&#46;1779619722&#46;2d8e4518 <P>https&#58;&#47;
+xpose-worker  | [2026-05-24 10:48:42,072: INFO/ForkPoolWorker-2] PASS2: Running public exposure enrichment for 'Vitaly Romaniv' (target 24a778e6-4d17-461c-95cc-e1e0c3fd361f)
+xpose-worker  | [2026-05-24 10:48:42,074: INFO/ForkPoolWorker-2] PASS2: Search languages for 'Vitaly Romaniv': ['en']
+xpose-worker  | [2026-05-24 10:48:42,075: INFO/ForkPoolWorker-2] PASS2: Search context for 'Vitaly Romaniv': ethereum Moscow
+xpose-worker  | [2026-05-24 10:49:02,431: DEBUG/ForkPoolWorker-2] OpenSanctions: Skipping — disabled after 401 (Redis flag)
+xpose-worker  | [2026-05-24 10:49:03,942: DEBUG/ForkPoolWorker-2] Interpol: Skipping — disabled after 403 (Redis flag)
+xpose-worker  | [2026-05-24 10:49:05,963: DEBUG/ForkPoolWorker-2] Starting new HTTPS connection (1): www.courtlistener.com:443
+xpose-worker  | [2026-05-24 10:49:10,663: DEBUG/ForkPoolWorker-2] https://www.courtlistener.com:443 "GET /api/rest/v4/search/?type=r&party_name=Vitaly+Romaniv HTTP/1.1" 200 71
+xpose-worker  | [2026-05-24 10:49:10,666: DEBUG/ForkPoolWorker-2] Courtlistener: no matches for 'Vitaly Romaniv'
+xpose-worker  | [2026-05-24 10:49:12,178: DEBUG/ForkPoolWorker-2] Starting new HTTPS connection (1): bodacc-datadila.opendatasoft.com:443
+xpose-worker  | [2026-05-24 10:49:12,448: DEBUG/ForkPoolWorker-2] https://bodacc-datadila.opendatasoft.com:443 "GET /api/records/1.0/search/?dataset=annonces-commerciales&q=Vitaly+Romaniv&rows=25&sort=-dateparution HTTP/1.1" 200 None
+xpose-worker  | [2026-05-24 10:49:12,451: DEBUG/ForkPoolWorker-2] BODACC: no matches for 'Vitaly Romaniv'
+xpose-worker  | [2026-05-24 10:49:27,859: DEBUG/ForkPoolWorker-2] Companies House UK: no api_key, skipping
+xpose-worker  | [2026-05-24 10:49:28,868: DEBUG/ForkPoolWorker-2] Starting new HTTPS connection (1): api.opencorporates.com:443
+xpose-worker  | [2026-05-24 10:49:28,990: DEBUG/ForkPoolWorker-2] https://api.opencorporates.com:443 "GET /v0.4/officers/search?q=Vitaly+Romaniv&per_page=10 HTTP/1.1" 401 83
+xpose-worker  | [2026-05-24 10:49:28,992: WARNING/ForkPoolWorker-2] OpenCorporates: Invalid API key (401), trying anonymous
+xpose-worker  | [2026-05-24 10:49:28,995: DEBUG/ForkPoolWorker-2] Starting new HTTPS connection (1): api.opencorporates.com:443
+xpose-worker  | [2026-05-24 10:49:29,092: DEBUG/ForkPoolWorker-2] https://api.opencorporates.com:443 "GET /v0.4/officers/search?q=Vitaly+Romaniv&per_page=10 HTTP/1.1" 401 83
+xpose-worker  | [2026-05-24 10:49:29,096: WARNING/ForkPoolWorker-2] OpenCorporates: HTTP 401 for 'Vitaly Romaniv'
+xpose-worker  | [2026-05-24 10:49:31,104: DEBUG/ForkPoolWorker-2] PASS2: LBR skipped — target not Luxembourg-connected
+xpose-worker  | [2026-05-24 10:49:31,107: INFO/ForkPoolWorker-2] PASS2 complete for 'Vitaly Romaniv': 0 media, 0 sanctions, 0 corporate, 0 legal, 0 errors
+xpose-worker  | [2026-05-24 10:49:31,108: INFO/ForkPoolWorker-2] PIPELINE[24a778e6-4d17-461c-95cc-e1e0c3fd361f]: pass2 done
+xpose-worker  | [2026-05-24 10:49:31,123: DEBUG/ForkPoolWorker-2] cascade_state[0595c310-c293-4b83-b4c0-f9e1b633f768] -> computing
+xpose-worker  | [2026-05-24 10:49:37,843: DEBUG/ForkPoolWorker-2] cascade_state[0595c310-c293-4b83-b4c0-f9e1b633f768] -> similarity
+xpose-worker  | [2026-05-24 10:49:37,856: DEBUG/ForkPoolWorker-2] cascade_state[0595c310-c293-4b83-b4c0-f9e1b633f768] -> done
+xpose-worker  | [2026-05-24 10:49:37,861: INFO/ForkPoolWorker-2] Task api.tasks.scan_orchestrator.finalize_scan[c6747a4d-3a7d-4ec6-820a-304ee6560429] succeeded in 188.75422118097777s: None
+xpose-worker  | [2026-05-24 10:56:14,007: INFO/MainProcess] Task api.tasks.scan_orchestrator.finalize_scan[3a2f70e0-eb06-41b6-acc3-876969884e0c] received
+xpose-worker  | [2026-05-24 10:56:14,032: DEBUG/ForkPoolWorker-2] cascade_state[b8b4a407-bee3-434e-bd39-e7d96e476002] -> gathering
+xpose-worker  | [2026-05-24 10:56:14,180: INFO/ForkPoolWorker-2] A1.5: no phone/crypto patterns matched in 77 findings for target 89b519ed-49e8-4a8d-a08a-c08225435329
+xpose-worker  | [2026-05-24 10:56:14,184: INFO/ForkPoolWorker-2] A1.6: skipped — target 89b519ed-49e8-4a8d-a08a-c08225435329 has no phones/crypto_wallets in profile_data
+xpose-worker  | [2026-05-24 10:58:19,176: DEBUG/ForkPoolWorker-2] connect_tcp.started host='api.opensanctions.org' port=443 local_address=None timeout=15 socket_options=None
+xpose-worker  | [2026-05-24 10:58:19,268: DEBUG/ForkPoolWorker-2] start_tls.started ssl_context=<ssl.SSLContext object at 0x7f3e5dcf4a50> server_hostname='api.opensanctions.org' timeout=15
+xpose-worker  | [2026-05-24 10:58:19,325: INFO/ForkPoolWorker-2] HTTP Request: POST https://api.opensanctions.org/match/default "HTTP/1.1 401 Unauthorized"
+xpose-worker  | [2026-05-24 10:58:19,339: DEBUG/ForkPoolWorker-2] SCRAPER_DEBUG opensanctions_search: status=401, found=False, reason=not_2xx, content_len=33, preview={"detail":"No API key provided."}
+xpose-worker  | [2026-05-24 10:58:19,341: DEBUG/ForkPoolWorker-2] connect_tcp.started host='ws-public.interpol.int' port=443 local_address=None timeout=15 socket_options=None
+xpose-worker  | [2026-05-24 10:58:19,401: DEBUG/ForkPoolWorker-2] start_tls.started ssl_context=<ssl.SSLContext object at 0x7f3e5dcf4a50> server_hostname='ws-public.interpol.int' timeout=15
+xpose-worker  | [2026-05-24 10:58:19,466: INFO/ForkPoolWorker-2] HTTP Request: GET https://ws-public.interpol.int/notices/v1/red "HTTP/1.1 403 Forbidden"
+xpose-worker  | [2026-05-24 10:58:19,485: DEBUG/ForkPoolWorker-2] SCRAPER_DEBUG interpol_red_notices: status=403, found=False, reason=blocked_403, content_len=402, preview=<HTML><HEAD> <TITLE>Access Denied</TITLE> </HEAD><BODY> <H1>Access Denied</H1>   You don't have permission to access "http&#58;&#47;&#47;ws&#45;public&#46;interpol&#46;int&#47;notices&#47;v1&#47;red" on this server.<P> Reference&#32;&#35;18&#46;d2b31402&#46;1779620299&#46;2da22394 <P>https&#58;&#47;
+xpose-worker  | [2026-05-24 10:58:19,515: INFO/ForkPoolWorker-2] PASS2: Running public exposure enrichment for 'Hal Finney' (target 89b519ed-49e8-4a8d-a08a-c08225435329)
+xpose-worker  | [2026-05-24 10:58:19,518: INFO/ForkPoolWorker-2] PASS2: Search languages for 'Hal Finney': ['en']
+xpose-worker  | [2026-05-24 10:58:46,565: INFO/ForkPoolWorker-2] PASS2: Google News RSS found 5 articles (lang=en)
+xpose-worker  | [2026-05-24 10:58:49,573: DEBUG/ForkPoolWorker-2] Starting new HTTPS connection (1): api.opensanctions.org:443
+xpose-worker  | [2026-05-24 10:58:49,679: DEBUG/ForkPoolWorker-2] https://api.opensanctions.org:443 "POST /match/default HTTP/1.1" 401 33
+xpose-worker  | [2026-05-24 10:58:49,682: WARNING/ForkPoolWorker-2] OpenSanctions: 401 Unauthorized — API key required. Configure 'opensanctions_api_key' in Settings → API Keys. Get a free key at https://www.opensanctions.org/api/
+xpose-worker  | [2026-05-24 10:58:49,688: WARNING/ForkPoolWorker-2] OpenSanctions disabled for 3600s after 401
+xpose-worker  | [2026-05-24 10:58:51,198: DEBUG/ForkPoolWorker-2] Starting new HTTPS connection (1): ws-public.interpol.int:443
+xpose-worker  | [2026-05-24 10:58:51,336: DEBUG/ForkPoolWorker-2] https://ws-public.interpol.int:443 "GET /notices/v1/red?forename=Hal&name=Finney&resultPerPage=5 HTTP/1.1" 403 407
+xpose-worker  | [2026-05-24 10:58:51,340: WARNING/ForkPoolWorker-2] Interpol: 403 Forbidden — may be geo-restricted. Skipping.
+xpose-worker  | [2026-05-24 10:58:51,346: WARNING/ForkPoolWorker-2] Interpol disabled for 3600s after 403
+xpose-worker  | [2026-05-24 10:58:53,368: DEBUG/ForkPoolWorker-2] Starting new HTTPS connection (1): www.courtlistener.com:443
+xpose-worker  | [2026-05-24 10:58:55,908: DEBUG/ForkPoolWorker-2] https://www.courtlistener.com:443 "GET /api/rest/v4/search/?type=r&party_name=Hal+Finney HTTP/1.1" 200 None
+xpose-worker  | [2026-05-24 10:58:56,547: INFO/ForkPoolWorker-2] Courtlistener: found 11 legal records for 'Hal Finney' (from 12 results)
+xpose-worker  | [2026-05-24 10:58:56,554: INFO/ForkPoolWorker-2] PASS2: Courtlistener found 11 legal records
+xpose-worker  | [2026-05-24 10:58:58,062: DEBUG/ForkPoolWorker-2] Starting new HTTPS connection (1): bodacc-datadila.opendatasoft.com:443
+xpose-worker  | [2026-05-24 10:58:58,525: DEBUG/ForkPoolWorker-2] https://bodacc-datadila.opendatasoft.com:443 "GET /api/records/1.0/search/?dataset=annonces-commerciales&q=Hal+Finney&rows=25&sort=-dateparution HTTP/1.1" 200 None
+xpose-worker  | [2026-05-24 10:58:58,528: DEBUG/ForkPoolWorker-2] BODACC: no matches for 'Hal Finney'
+xpose-worker  | [2026-05-24 10:59:13,181: DEBUG/ForkPoolWorker-2] Companies House UK: no api_key, skipping
+xpose-worker  | [2026-05-24 10:59:14,188: DEBUG/ForkPoolWorker-2] Starting new HTTPS connection (1): api.opencorporates.com:443
+xpose-worker  | [2026-05-24 10:59:14,396: DEBUG/ForkPoolWorker-2] https://api.opencorporates.com:443 "GET /v0.4/officers/search?q=Hal+Finney&per_page=10 HTTP/1.1" 401 83
+xpose-worker  | [2026-05-24 10:59:14,398: WARNING/ForkPoolWorker-2] OpenCorporates: Invalid API key (401), trying anonymous
+xpose-worker  | [2026-05-24 10:59:14,401: DEBUG/ForkPoolWorker-2] Starting new HTTPS connection (1): api.opencorporates.com:443
+xpose-worker  | [2026-05-24 10:59:14,583: DEBUG/ForkPoolWorker-2] https://api.opencorporates.com:443 "GET /v0.4/officers/search?q=Hal+Finney&per_page=10 HTTP/1.1" 401 83
+xpose-worker  | [2026-05-24 10:59:14,590: WARNING/ForkPoolWorker-2] OpenCorporates: HTTP 401 for 'Hal Finney'
+xpose-worker  | [2026-05-24 10:59:16,603: DEBUG/ForkPoolWorker-2] PASS2: LBR skipped — target not Luxembourg-connected
+xpose-worker  | [2026-05-24 10:59:16,627: INFO/ForkPoolWorker-2] PASS2: Stored 15 findings (flushed)
+xpose-worker  | [2026-05-24 10:59:16,680: INFO/ForkPoolWorker-2] PASS2: 4 new graph edges created, 0 reused (idempotent rescan)
+xpose-worker  | [2026-05-24 10:59:16,683: INFO/ForkPoolWorker-2] PASS2 complete for 'Hal Finney': 4 media, 0 sanctions, 0 corporate, 11 legal, 0 errors
+xpose-worker  | [2026-05-24 10:59:16,697: INFO/ForkPoolWorker-2] PIPELINE[89b519ed-49e8-4a8d-a08a-c08225435329]: pass2 done
+xpose-worker  | [2026-05-24 10:59:16,711: DEBUG/ForkPoolWorker-2] cascade_state[b8b4a407-bee3-434e-bd39-e7d96e476002] -> computing
+xpose-worker  | [2026-05-24 10:59:53,109: DEBUG/ForkPoolWorker-2] cascade_state[b8b4a407-bee3-434e-bd39-e7d96e476002] -> similarity
+xpose-worker  | [2026-05-24 10:59:53,145: DEBUG/ForkPoolWorker-2] cascade_state[b8b4a407-bee3-434e-bd39-e7d96e476002] -> done
+xpose-worker  | [2026-05-24 10:59:53,155: INFO/ForkPoolWorker-2] Task api.tasks.scan_orchestrator.finalize_scan[3a2f70e0-eb06-41b6-acc3-876969884e0c] succeeded in 219.16564061801182s: None
+xpose-worker  | [2026-05-24 11:08:47,492: INFO/MainProcess] Task api.tasks.scan_orchestrator.finalize_scan[a978fd89-ae11-499a-8967-3844926fd675] received
+xpose-worker  | [2026-05-24 11:08:47,578: DEBUG/ForkPoolWorker-6] cascade_state[19665fde-040e-4907-9392-b36ccf751f0f] -> gathering
+xpose-worker  | [2026-05-24 11:08:47,886: INFO/ForkPoolWorker-6] A1.5: no phone/crypto patterns matched in 98 findings for target 9ea63d4c-5843-43da-8f37-a52e09feae0d
+xpose-worker  | [2026-05-24 11:08:47,902: INFO/ForkPoolWorker-6] A1.6: skipped — target 9ea63d4c-5843-43da-8f37-a52e09feae0d has no phones/crypto_wallets in profile_data
+xpose-worker  | [2026-05-24 11:10:53,614: DEBUG/ForkPoolWorker-6] connect_tcp.started host='api.opensanctions.org' port=443 local_address=None timeout=15 socket_options=None
+xpose-worker  | [2026-05-24 11:10:53,731: DEBUG/ForkPoolWorker-6] start_tls.started ssl_context=<ssl.SSLContext object at 0x7f3e5d7b80d0> server_hostname='api.opensanctions.org' timeout=15
+xpose-worker  | [2026-05-24 11:10:53,795: INFO/ForkPoolWorker-6] HTTP Request: POST https://api.opensanctions.org/match/default "HTTP/1.1 401 Unauthorized"
+xpose-worker  | [2026-05-24 11:10:53,810: DEBUG/ForkPoolWorker-6] SCRAPER_DEBUG opensanctions_search: status=401, found=False, reason=not_2xx, content_len=33, preview={"detail":"No API key provided."}
+xpose-worker  | [2026-05-24 11:10:53,813: DEBUG/ForkPoolWorker-6] connect_tcp.started host='ws-public.interpol.int' port=443 local_address=None timeout=15 socket_options=None
+xpose-worker  | [2026-05-24 11:10:53,889: DEBUG/ForkPoolWorker-6] start_tls.started ssl_context=<ssl.SSLContext object at 0x7f3e5d7b80d0> server_hostname='ws-public.interpol.int' timeout=15
+xpose-worker  | [2026-05-24 11:10:53,943: INFO/ForkPoolWorker-6] HTTP Request: GET https://ws-public.interpol.int/notices/v1/red "HTTP/1.1 403 Forbidden"
+xpose-worker  | [2026-05-24 11:10:53,961: DEBUG/ForkPoolWorker-6] SCRAPER_DEBUG interpol_red_notices: status=403, found=False, reason=blocked_403, content_len=402, preview=<HTML><HEAD> <TITLE>Access Denied</TITLE> </HEAD><BODY> <H1>Access Denied</H1>   You don't have permission to access "http&#58;&#47;&#47;ws&#45;public&#46;interpol&#46;int&#47;notices&#47;v1&#47;red" on this server.<P> Reference&#32;&#35;18&#46;d2b31402&#46;1779621053&#46;2dbba611 <P>https&#58;&#47;
+xpose-worker  | [2026-05-24 11:10:54,000: INFO/ForkPoolWorker-6] PASS2: Running public exposure enrichment for 'Hayden Justhayden' (target 9ea63d4c-5843-43da-8f37-a52e09feae0d)
+xpose-worker  | [2026-05-24 11:10:54,002: INFO/ForkPoolWorker-6] PASS2: Search languages for 'Hayden Justhayden': ['en']
+xpose-worker  | [2026-05-24 11:10:54,006: INFO/ForkPoolWorker-6] PASS2: Search context for 'Hayden Justhayden': uniswap London
+xpose-worker  | [2026-05-24 11:11:13,426: DEBUG/ForkPoolWorker-6] OpenSanctions: Skipping — disabled after 401 (Redis flag)
+xpose-worker  | [2026-05-24 11:11:14,937: DEBUG/ForkPoolWorker-6] Interpol: Skipping — disabled after 403 (Redis flag)
+xpose-worker  | [2026-05-24 11:11:16,966: DEBUG/ForkPoolWorker-6] Starting new HTTPS connection (1): www.courtlistener.com:443
+xpose-worker  | [2026-05-24 11:11:18,606: DEBUG/ForkPoolWorker-6] https://www.courtlistener.com:443 "GET /api/rest/v4/search/?type=r&party_name=Hayden+Justhayden HTTP/1.1" 200 71
+xpose-worker  | [2026-05-24 11:11:18,618: DEBUG/ForkPoolWorker-6] Courtlistener: no matches for 'Hayden Justhayden'
+xpose-worker  | [2026-05-24 11:11:20,149: DEBUG/ForkPoolWorker-6] Starting new HTTPS connection (1): bodacc-datadila.opendatasoft.com:443
+xpose-worker  | [2026-05-24 11:11:20,516: DEBUG/ForkPoolWorker-6] https://bodacc-datadila.opendatasoft.com:443 "GET /api/records/1.0/search/?dataset=annonces-commerciales&q=Hayden+Justhayden&rows=25&sort=-dateparution HTTP/1.1" 200 None
+xpose-worker  | [2026-05-24 11:11:20,529: DEBUG/ForkPoolWorker-6] BODACC: no matches for 'Hayden Justhayden'
+xpose-worker  | [2026-05-24 11:11:35,996: DEBUG/ForkPoolWorker-6] Companies House UK: no api_key, skipping
+xpose-worker  | [2026-05-24 11:11:37,027: DEBUG/ForkPoolWorker-6] Starting new HTTPS connection (1): api.opencorporates.com:443
+xpose-worker  | [2026-05-24 11:11:37,280: DEBUG/ForkPoolWorker-6] https://api.opencorporates.com:443 "GET /v0.4/officers/search?q=Hayden+Justhayden&per_page=10 HTTP/1.1" 401 83
+xpose-worker  | [2026-05-24 11:11:37,285: WARNING/ForkPoolWorker-6] OpenCorporates: Invalid API key (401), trying anonymous
+xpose-worker  | [2026-05-24 11:11:37,291: DEBUG/ForkPoolWorker-6] Starting new HTTPS connection (1): api.opencorporates.com:443
+xpose-worker  | [2026-05-24 11:11:37,476: DEBUG/ForkPoolWorker-6] https://api.opencorporates.com:443 "GET /v0.4/officers/search?q=Hayden+Justhayden&per_page=10 HTTP/1.1" 401 83
+xpose-worker  | [2026-05-24 11:11:37,484: WARNING/ForkPoolWorker-6] OpenCorporates: HTTP 401 for 'Hayden Justhayden'
+xpose-worker  | [2026-05-24 11:11:39,502: DEBUG/ForkPoolWorker-6] PASS2: LBR skipped — target not Luxembourg-connected
+xpose-worker  | [2026-05-24 11:11:39,506: INFO/ForkPoolWorker-6] PASS2 complete for 'Hayden Justhayden': 0 media, 0 sanctions, 0 corporate, 0 legal, 0 errors
+xpose-worker  | [2026-05-24 11:11:39,507: INFO/ForkPoolWorker-6] PIPELINE[9ea63d4c-5843-43da-8f37-a52e09feae0d]: pass2 done
+xpose-worker  | [2026-05-24 11:11:39,526: DEBUG/ForkPoolWorker-6] cascade_state[19665fde-040e-4907-9392-b36ccf751f0f] -> computing
+xpose-worker  | [2026-05-24 11:11:44,247: DEBUG/ForkPoolWorker-6] cascade_state[19665fde-040e-4907-9392-b36ccf751f0f] -> similarity
+xpose-worker  | [2026-05-24 11:11:44,260: DEBUG/ForkPoolWorker-6] cascade_state[19665fde-040e-4907-9392-b36ccf751f0f] -> done
+xpose-worker  | [2026-05-24 11:11:44,265: INFO/ForkPoolWorker-6] Task api.tasks.scan_orchestrator.finalize_scan[a978fd89-ae11-499a-8967-3844926fd675] succeeded in 176.79035166703397s: None
+xpose-worker  | [2026-05-24 11:31:31,185: INFO/MainProcess] Task api.tasks.scan_orchestrator.finalize_scan[7117d72d-511e-42fc-a6ea-451039658408] received
+xpose-worker  | [2026-05-24 11:31:31,253: DEBUG/ForkPoolWorker-6] cascade_state[eb1ce809-61d8-4405-a321-956a3a963f2e] -> gathering
+xpose-worker  | [2026-05-24 11:31:31,474: INFO/ForkPoolWorker-6] A1.5: no phone/crypto patterns matched in 90 findings for target 78bad7d0-aa08-4c87-82df-7b1d93c658ca
+xpose-worker  | [2026-05-24 11:31:31,483: INFO/ForkPoolWorker-6] A1.6: skipped — target 78bad7d0-aa08-4c87-82df-7b1d93c658ca has no phones/crypto_wallets in profile_data
+xpose-worker  | [2026-05-24 11:33:34,762: DEBUG/ForkPoolWorker-6] connect_tcp.started host='api.opensanctions.org' port=443 local_address=None timeout=15 socket_options=None
+xpose-worker  | [2026-05-24 11:33:34,832: DEBUG/ForkPoolWorker-6] start_tls.started ssl_context=<ssl.SSLContext object at 0x7f3e5d7c5d50> server_hostname='api.opensanctions.org' timeout=15
+xpose-worker  | [2026-05-24 11:33:34,887: INFO/ForkPoolWorker-6] HTTP Request: POST https://api.opensanctions.org/match/default "HTTP/1.1 401 Unauthorized"
+xpose-worker  | [2026-05-24 11:33:34,898: DEBUG/ForkPoolWorker-6] SCRAPER_DEBUG opensanctions_search: status=401, found=False, reason=not_2xx, content_len=33, preview={"detail":"No API key provided."}
+xpose-worker  | [2026-05-24 11:33:34,900: DEBUG/ForkPoolWorker-6] connect_tcp.started host='ws-public.interpol.int' port=443 local_address=None timeout=15 socket_options=None
+xpose-worker  | [2026-05-24 11:33:34,962: DEBUG/ForkPoolWorker-6] start_tls.started ssl_context=<ssl.SSLContext object at 0x7f3e5d7c5d50> server_hostname='ws-public.interpol.int' timeout=15
+xpose-worker  | [2026-05-24 11:33:35,008: INFO/ForkPoolWorker-6] HTTP Request: GET https://ws-public.interpol.int/notices/v1/red "HTTP/1.1 403 Forbidden"
+xpose-worker  | [2026-05-24 11:33:35,017: DEBUG/ForkPoolWorker-6] SCRAPER_DEBUG interpol_red_notices: status=403, found=False, reason=blocked_403, content_len=402, preview=<HTML><HEAD> <TITLE>Access Denied</TITLE> </HEAD><BODY> <H1>Access Denied</H1>   You don't have permission to access "http&#58;&#47;&#47;ws&#45;public&#46;interpol&#46;int&#47;notices&#47;v1&#47;red" on this server.<P> Reference&#32;&#35;18&#46;d2b31402&#46;1779622414&#46;2dde9a96 <P>https&#58;&#47;
+xpose-worker  | [2026-05-24 11:33:35,034: INFO/ForkPoolWorker-6] PASS2: Running public exposure enrichment for 'Stani Heinemann' (target 78bad7d0-aa08-4c87-82df-7b1d93c658ca)
+xpose-worker  | [2026-05-24 11:33:35,035: INFO/ForkPoolWorker-6] PASS2: Search languages for 'Stani Heinemann': ['en']
+xpose-worker  | [2026-05-24 11:33:35,036: INFO/ForkPoolWorker-6] PASS2: Search context for 'Stani Heinemann': aave
+xpose-worker  | [2026-05-24 11:34:05,466: DEBUG/ForkPoolWorker-6] OpenSanctions: Skipping — disabled after 401 (Redis flag)
+xpose-worker  | [2026-05-24 11:34:06,974: DEBUG/ForkPoolWorker-6] Interpol: Skipping — disabled after 403 (Redis flag)
+xpose-worker  | [2026-05-24 11:34:08,988: DEBUG/ForkPoolWorker-6] Starting new HTTPS connection (1): www.courtlistener.com:443
+xpose-worker  | [2026-05-24 11:34:10,371: DEBUG/ForkPoolWorker-6] https://www.courtlistener.com:443 "GET /api/rest/v4/search/?type=r&party_name=Stani+Heinemann HTTP/1.1" 200 71
+xpose-worker  | [2026-05-24 11:34:10,375: DEBUG/ForkPoolWorker-6] Courtlistener: no matches for 'Stani Heinemann'
+xpose-worker  | [2026-05-24 11:34:11,888: DEBUG/ForkPoolWorker-6] Starting new HTTPS connection (1): bodacc-datadila.opendatasoft.com:443
+xpose-worker  | [2026-05-24 11:34:12,277: DEBUG/ForkPoolWorker-6] https://bodacc-datadila.opendatasoft.com:443 "GET /api/records/1.0/search/?dataset=annonces-commerciales&q=Stani+Heinemann&rows=25&sort=-dateparution HTTP/1.1" 200 None
+xpose-worker  | [2026-05-24 11:34:12,283: DEBUG/ForkPoolWorker-6] BODACC: no matches for 'Stani Heinemann'
+xpose-worker  | [2026-05-24 11:34:27,970: DEBUG/ForkPoolWorker-6] Companies House UK: no api_key, skipping
+xpose-worker  | [2026-05-24 11:34:28,982: DEBUG/ForkPoolWorker-6] Starting new HTTPS connection (1): api.opencorporates.com:443
+xpose-worker  | [2026-05-24 11:34:29,130: DEBUG/ForkPoolWorker-6] https://api.opencorporates.com:443 "GET /v0.4/officers/search?q=Stani+Heinemann&per_page=10 HTTP/1.1" 401 83
+xpose-worker  | [2026-05-24 11:34:29,133: WARNING/ForkPoolWorker-6] OpenCorporates: Invalid API key (401), trying anonymous
+xpose-worker  | [2026-05-24 11:34:29,137: DEBUG/ForkPoolWorker-6] Starting new HTTPS connection (1): api.opencorporates.com:443
+xpose-worker  | [2026-05-24 11:34:29,270: DEBUG/ForkPoolWorker-6] https://api.opencorporates.com:443 "GET /v0.4/officers/search?q=Stani+Heinemann&per_page=10 HTTP/1.1" 401 83
+xpose-worker  | [2026-05-24 11:34:29,275: WARNING/ForkPoolWorker-6] OpenCorporates: HTTP 401 for 'Stani Heinemann'
+xpose-worker  | [2026-05-24 11:34:31,286: DEBUG/ForkPoolWorker-6] PASS2: LBR skipped — target not Luxembourg-connected
+xpose-worker  | [2026-05-24 11:34:31,290: INFO/ForkPoolWorker-6] PASS2 complete for 'Stani Heinemann': 0 media, 0 sanctions, 0 corporate, 0 legal, 0 errors
+xpose-worker  | [2026-05-24 11:34:31,293: INFO/ForkPoolWorker-6] PIPELINE[78bad7d0-aa08-4c87-82df-7b1d93c658ca]: pass2 done
+xpose-worker  | [2026-05-24 11:34:31,309: DEBUG/ForkPoolWorker-6] cascade_state[eb1ce809-61d8-4405-a321-956a3a963f2e] -> computing
+xpose-worker  | [2026-05-24 11:34:56,232: DEBUG/ForkPoolWorker-6] cascade_state[eb1ce809-61d8-4405-a321-956a3a963f2e] -> similarity
+xpose-worker  | [2026-05-24 11:34:56,259: DEBUG/ForkPoolWorker-6] cascade_state[eb1ce809-61d8-4405-a321-956a3a963f2e] -> done
+xpose-worker  | [2026-05-24 11:34:56,270: INFO/ForkPoolWorker-6] Task api.tasks.scan_orchestrator.finalize_scan[7117d72d-511e-42fc-a6ea-451039658408] succeeded in 205.07769303099485s: None
+xpose-worker  | [2026-05-24 11:44:40,750: INFO/MainProcess] Task api.tasks.scan_orchestrator.finalize_scan[0d501e05-58e4-49d3-861c-7c57c342320c] received
+xpose-worker  | [2026-05-24 11:44:40,816: DEBUG/ForkPoolWorker-7] cascade_state[d7281792-cfb2-4307-bb0d-00492380a6be] -> gathering
+xpose-worker  | [2026-05-24 11:44:41,161: INFO/ForkPoolWorker-7] A1.5: no phone/crypto patterns matched in 91 findings for target f4387421-bdbb-492c-ae5d-62fd701bf1ce
+xpose-worker  | [2026-05-24 11:44:41,223: INFO/ForkPoolWorker-7] A1.6: skipped — target f4387421-bdbb-492c-ae5d-62fd701bf1ce has no phones/crypto_wallets in profile_data
+xpose-worker  | [2026-05-24 11:46:53,859: DEBUG/ForkPoolWorker-7] connect_tcp.started host='api.opensanctions.org' port=443 local_address=None timeout=15 socket_options=None
+xpose-worker  | [2026-05-24 11:46:53,944: DEBUG/ForkPoolWorker-7] start_tls.started ssl_context=<ssl.SSLContext object at 0x7f3e5e516750> server_hostname='api.opensanctions.org' timeout=15
+xpose-worker  | [2026-05-24 11:46:54,006: INFO/ForkPoolWorker-7] HTTP Request: POST https://api.opensanctions.org/match/default "HTTP/1.1 401 Unauthorized"
+xpose-worker  | [2026-05-24 11:46:54,023: DEBUG/ForkPoolWorker-7] SCRAPER_DEBUG opensanctions_search: status=401, found=False, reason=not_2xx, content_len=33, preview={"detail":"No API key provided."}
+xpose-worker  | [2026-05-24 11:46:54,027: DEBUG/ForkPoolWorker-7] connect_tcp.started host='ws-public.interpol.int' port=443 local_address=None timeout=15 socket_options=None
+xpose-worker  | [2026-05-24 11:46:54,089: DEBUG/ForkPoolWorker-7] start_tls.started ssl_context=<ssl.SSLContext object at 0x7f3e5e516750> server_hostname='ws-public.interpol.int' timeout=15
+xpose-worker  | [2026-05-24 11:46:54,184: INFO/ForkPoolWorker-7] HTTP Request: GET https://ws-public.interpol.int/notices/v1/red "HTTP/1.1 403 Forbidden"
+xpose-worker  | [2026-05-24 11:46:54,199: DEBUG/ForkPoolWorker-7] SCRAPER_DEBUG interpol_red_notices: status=403, found=False, reason=blocked_403, content_len=402, preview=<HTML><HEAD> <TITLE>Access Denied</TITLE> </HEAD><BODY> <H1>Access Denied</H1>   You don't have permission to access "http&#58;&#47;&#47;ws&#45;public&#46;interpol&#46;int&#47;notices&#47;v1&#47;red" on this server.<P> Reference&#32;&#35;18&#46;d2b31402&#46;1779623214&#46;2df337c3 <P>https&#58;&#47;
+xpose-worker  | [2026-05-24 11:46:54,238: INFO/ForkPoolWorker-7] PASS2: Running public exposure enrichment for 'Jesse J. Anderson' (target f4387421-bdbb-492c-ae5d-62fd701bf1ce)
+xpose-worker  | [2026-05-24 11:46:54,242: INFO/ForkPoolWorker-7] PASS2: Search languages for 'Jesse J. Anderson': ['en']
+xpose-worker  | [2026-05-24 11:46:54,245: INFO/ForkPoolWorker-7] PASS2: Search context for 'Jesse J. Anderson': coinbase Chicago
+xpose-worker  | [2026-05-24 11:47:44,319: DEBUG/ForkPoolWorker-7] OpenSanctions: Skipping — disabled after 401 (Redis flag)
+xpose-worker  | [2026-05-24 11:47:45,829: DEBUG/ForkPoolWorker-7] Interpol: Skipping — disabled after 403 (Redis flag)
+xpose-worker  | [2026-05-24 11:47:47,842: DEBUG/ForkPoolWorker-7] Starting new HTTPS connection (1): www.courtlistener.com:443
+xpose-worker  | [2026-05-24 11:47:51,155: DEBUG/ForkPoolWorker-7] https://www.courtlistener.com:443 "GET /api/rest/v4/search/?type=r&party_name=Jesse+J.+Anderson HTTP/1.1" 200 None
+xpose-worker  | [2026-05-24 11:47:51,598: INFO/ForkPoolWorker-7] Courtlistener: found 0 legal records for 'Jesse J. Anderson' (from 20 results)
+xpose-worker  | [2026-05-24 11:47:53,115: DEBUG/ForkPoolWorker-7] Starting new HTTPS connection (1): bodacc-datadila.opendatasoft.com:443
+xpose-worker  | [2026-05-24 11:47:53,456: DEBUG/ForkPoolWorker-7] https://bodacc-datadila.opendatasoft.com:443 "GET /api/records/1.0/search/?dataset=annonces-commerciales&q=Jesse+J.+Anderson&rows=25&sort=-dateparution HTTP/1.1" 200 None
+xpose-worker  | [2026-05-24 11:47:53,459: DEBUG/ForkPoolWorker-7] BODACC: no matches for 'Jesse J. Anderson'
+xpose-worker  | [2026-05-24 11:48:09,745: DEBUG/ForkPoolWorker-7] Companies House UK: no api_key, skipping
+xpose-worker  | [2026-05-24 11:48:10,758: DEBUG/ForkPoolWorker-7] Starting new HTTPS connection (1): api.opencorporates.com:443
+xpose-worker  | [2026-05-24 11:48:10,901: DEBUG/ForkPoolWorker-7] https://api.opencorporates.com:443 "GET /v0.4/officers/search?q=Jesse+J.+Anderson&per_page=10 HTTP/1.1" 401 83
+xpose-worker  | [2026-05-24 11:48:10,904: WARNING/ForkPoolWorker-7] OpenCorporates: Invalid API key (401), trying anonymous
+xpose-worker  | [2026-05-24 11:48:10,907: DEBUG/ForkPoolWorker-7] Starting new HTTPS connection (1): api.opencorporates.com:443
+xpose-worker  | [2026-05-24 11:48:11,006: DEBUG/ForkPoolWorker-7] https://api.opencorporates.com:443 "GET /v0.4/officers/search?q=Jesse+J.+Anderson&per_page=10 HTTP/1.1" 401 83
+xpose-worker  | [2026-05-24 11:48:11,010: WARNING/ForkPoolWorker-7] OpenCorporates: HTTP 401 for 'Jesse J. Anderson'
+xpose-worker  | [2026-05-24 11:48:13,033: DEBUG/ForkPoolWorker-7] PASS2: LBR skipped — target not Luxembourg-connected
+xpose-worker  | [2026-05-24 11:48:13,035: INFO/ForkPoolWorker-7] PASS2 complete for 'Jesse J. Anderson': 0 media, 0 sanctions, 0 corporate, 0 legal, 0 errors
+xpose-worker  | [2026-05-24 11:48:13,037: INFO/ForkPoolWorker-7] PIPELINE[f4387421-bdbb-492c-ae5d-62fd701bf1ce]: pass2 done
+xpose-worker  | [2026-05-24 11:48:13,045: DEBUG/ForkPoolWorker-7] cascade_state[d7281792-cfb2-4307-bb0d-00492380a6be] -> computing
+xpose-worker  | [2026-05-24 11:48:16,085: DEBUG/ForkPoolWorker-7] cascade_state[d7281792-cfb2-4307-bb0d-00492380a6be] -> similarity
+xpose-worker  | [2026-05-24 11:48:16,096: DEBUG/ForkPoolWorker-7] cascade_state[d7281792-cfb2-4307-bb0d-00492380a6be] -> done
+xpose-worker  | [2026-05-24 11:48:16,100: INFO/ForkPoolWorker-7] Task api.tasks.scan_orchestrator.finalize_scan[0d501e05-58e4-49d3-861c-7c57c342320c] succeeded in 215.34515792899765s: None

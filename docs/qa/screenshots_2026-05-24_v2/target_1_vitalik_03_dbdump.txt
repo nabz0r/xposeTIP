@@ -1,0 +1,100 @@
+=== vitalik@ethereum.org — Scan 0595c310-c293-4b83-b4c0-f9e1b633f768 ===
+State: done/completed  Pass-A duration: 415s
+
+=== Modules (83) ===
+  aboutme_check                       n=1
+  aboutme_profile                     n=1
+  agify                               n=1
+  anilist_profile                     n=1
+  bandcamp_profile                    n=1
+  bluesky_profile                     n=1
+  buymeacoffee_profile                n=1
+  chesscom_profile                    n=1
+  devto_profile                       n=1
+  disify_email                        n=1
+  disposable_email_check              n=1
+  disqus_profile                      n=1
+  dns_deep                            n=6
+  dns_dmarc_check                     n=1
+  dns_txt_saas                        n=1
+  dockerhub_profile                   n=1
+  duolingo_profile                    n=1
+  emailrep_breaches                   n=1
+  email_validator                     n=2
+  flickr_profile                      n=1
+  genderize                           n=1
+  geoip                               n=1
+  github_email_search                 n=1
+  github_gists_user                   n=1
+  github_scraper                      n=1
+  github_timezone                     n=1
+  github_user_api                     n=1
+  gitlab_profile                      n=1
+  google_groups_search                n=1
+  google_profile                      n=1
+  google_scholar_search               n=1
+  gravatar_scraper                    n=1
+  hackertarget_hosts                  n=1
+  hibp                                n=1
+  holehe                              n=1
+  huggingface_profile                 n=1
+  imgur_profile                       n=1
+  intelligence                        n=9
+  intelx_public                       n=1
+  kaggle_profile                      n=1
+  keybase_profile                     n=1
+  lastfm_profile                      n=1
+  leakcheck_public                    n=1
+  letterboxd_profile                  n=1
+  lichess_profile                     n=1
+  linkedin_profile                    n=1
+  linktree_profile                    n=1
+  mailcheck_email                     n=1
+  mastodon_search                     n=1
+  medium_profile                      n=1
+  mixcloud_profile                    n=1
+  nationalize                         n=1
+  npm_maintainer                      n=1
+  packagist_profile                   n=1
+  pastebin_user                       n=1
+  pinterest_profile                   n=1
+  pypi_profile                        n=1
+  rdap_domain                         n=1
+  reddit_profile                      n=1
+  replit_profile                      n=1
+  roblox_profile                      n=1
+  runescape_profile                   n=1
+  soundcloud_search                   n=1
+  speedrun_profile                    n=1
+  stackoverflow_search                n=1
+  steam_community_profile             n=1
+  steam_profile                       n=1
+  strava_profile                      n=1
+  telegram_profile                    n=1
+  threads_profile                     n=1
+  twitch_profile                      n=1
+  username_hunter                     n=6
+  viewdns_reverse_whois               n=1
+  vimeo_profile                       n=1
+  wayback_count                       n=1
+  wayback_domain                      n=1
+  wayback_github                      n=1
+  wayback_linkedin                    n=1
+  wayback_linkedin_user               n=1
+  wayback_profile                     n=1
+  wayback_twitter                     n=1
+  webmii_search                       n=1
+  xposedornot_scraper                 n=1
+
+=== S187 presence ===
+  ⚠ neither sec_edgar_search nor companies_house_uk emitted findings
+
+=== S183 crypto presence ===
+  · no crypto findings (target wallets empty?)
+
+=== A1.6 dispatch: empty (no wallets/phones)
+
+=== Post-scan profile_data ===
+  primary_name:   Vitaly Romaniv
+  phones:         []
+  crypto_wallets: []
