@@ -38,13 +38,13 @@ _STATS_TTL_SECONDS = 300.0
 # alongside the version field is the contract that keeps the public /bfp page
 # in sync with the deployed code.
 _PLATFORM_INVENTORY = {
-    "scrapers_count": 164,
-    "scrapers_active": 139,
+    "scrapers_count": 170,
+    "scrapers_active": 145,
     "scrapers_disabled": 25,
     "scanners_count": 27,
     "analyzers_count": 9,
     "axes_count": 11,
-    "version": "v1.6.16",
+    "version": "v1.6.17",
 }
 
 # /recent_anchors cache (S173) — single cache slot always holding the top 100,
