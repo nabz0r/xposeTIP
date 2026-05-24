@@ -33,6 +33,20 @@ router = APIRouter()
 _STATS_CACHE: dict = {"data": None, "ts": 0.0}
 _STATS_TTL_SECONDS = 300.0
 
+# Platform inventory (S189) — constants that change per release, sourced from
+# seed_scrapers.py + seed_modules.py + fingerprint_engine.py. Bumping these
+# alongside the version field is the contract that keeps the public /bfp page
+# in sync with the deployed code.
+_PLATFORM_INVENTORY = {
+    "scrapers_count": 139,
+    "scrapers_active": 116,
+    "scrapers_disabled": 23,
+    "scanners_count": 27,
+    "analyzers_count": 9,
+    "axes_count": 11,
+    "version": "v1.6.14",
+}
+
 # /recent_anchors cache (S173) — single cache slot always holding the top 100,
 # slice for the requested limit. Avoids per-limit cache fragmentation.
 _RECENT_CACHE: dict = {"data": None, "ts": 0.0}
@@ -42,14 +56,10 @@ _RECENT_CACHE_SIZE = 100  # always cache 100 rows, slice for requested limit
 
 @router.get("/stats")
 async def bfp_public_stats(db: AsyncSession = Depends(get_db)):
-    """Platform-wide BFP substrate aggregate counts. PUBLIC — no auth.
+    """Platform-wide BFP substrate aggregate counts + platform inventory. PUBLIC — no auth.
 
-    Returns:
-        {
-            "behavioral_hashes_computed": int,
-            "trust_claims_logged": int,
-            "merkle_roots_committed": int
-        }
+    Returns live BFP substrate counts (DB-queried) merged with platform inventory
+    constants (release-pinned): scrapers/scanners/analyzers/axes/version.
 
     Cached 300s per worker. No PII, no per-workspace data.
     """
@@ -69,6 +79,7 @@ async def bfp_public_stats(db: AsyncSession = Depends(get_db)):
         "behavioral_hashes_computed": int(behavioral_hashes or 0),
         "trust_claims_logged": int(trust_claims or 0),
         "merkle_roots_committed": int(merkle_roots or 0),
+        **_PLATFORM_INVENTORY,
     }
     _STATS_CACHE["data"] = data
     _STATS_CACHE["ts"] = now

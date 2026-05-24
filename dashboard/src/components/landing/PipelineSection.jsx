@@ -16,7 +16,7 @@ export default function PipelineSection() {
             <div className="text-5xl font-mono font-bold text-[#00ff88]/15 mb-4">01</div>
             <h3 className="text-lg font-semibold mb-3 text-[#00ff88]">Discover</h3>
             <p className="text-sm text-gray-400 leading-relaxed mb-3">
-              Scan 127 sources in parallel for accounts, breaches, usernames, archives, and metadata.
+              Scan 139 sources in parallel for accounts, breaches, usernames, archives, and metadata.
             </p>
             <p className="text-xs text-gray-600">
               Social networks, dev platforms, gaming, breach databases, people search engines — everything tied to that email.
@@ -41,7 +41,7 @@ export default function PipelineSection() {
             <div className="text-5xl font-mono font-bold text-[#ff2244]/15 mb-4">03</div>
             <h3 className="text-lg font-semibold mb-3 text-[#ff2244]">Identify</h3>
             <p className="text-sm text-gray-400 leading-relaxed mb-3">
-              Build a 9-axis behavioral fingerprint, cluster digital personas, and generate a concrete remediation plan. Every finding is sourced and timestamped — provenance is auditable per-indicator.
+              Build an 11-axis behavioral fingerprint, cluster digital personas, and generate a concrete remediation plan. Every finding is sourced and timestamped — provenance is auditable per-indicator.
             </p>
             <p className="text-xs text-gray-600">
               And when a second identity in your workspace matches the same fingerprint pattern, the system flags it — automatically.

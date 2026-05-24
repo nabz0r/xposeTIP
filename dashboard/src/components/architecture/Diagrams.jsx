@@ -252,7 +252,7 @@ export function SimilarityDiagram() {
       <text x={cx} y={cy + 1} textAnchor="middle" dominantBaseline="middle"
         fill="#cc88ff" fontSize="14" fontFamily="monospace" fontWeight="bold">id</text>
       <text x="200" y="255" textAnchor="middle" fill="#888"
-        fontSize="10" fontFamily="monospace">cosine 9-axis · threshold 0.70 · first_detected preserved</text>
+        fontSize="10" fontFamily="monospace">cosine 11-axis · threshold 0.70 · first_detected preserved</text>
     </svg>
   )
 }

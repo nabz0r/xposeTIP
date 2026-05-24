@@ -1,5 +1,397 @@
 [
   {
+    "sha": "915a165",
+    "date": "2026-05-24T11:08:06+02:00",
+    "type": "feat",
+    "scope": "S188",
+    "sprint": "S188",
+    "subject": "all-workspaces admin view + Targets adaptive refresh"
+  },
+  {
+    "sha": "940c922",
+    "date": "2026-05-24T02:17:39+02:00",
+    "type": "feat",
+    "scope": "S187",
+    "sprint": "S187",
+    "subject": "legal expansion P0 — SEC EDGAR + Companies House UK"
+  },
+  {
+    "sha": "22626ca",
+    "date": "2026-05-24T01:57:03+02:00",
+    "type": "docs",
+    "scope": null,
+    "sprint": null,
+    "subject": "add worker-restart note to deploy sequence"
+  },
+  {
+    "sha": "de5095d",
+    "date": "2026-05-24T01:30:14+02:00",
+    "type": "feat",
+    "scope": "S185",
+    "sprint": "S185",
+    "subject": "crypto chain-shape dispatch gate at A1.6"
+  },
+  {
+    "sha": "d2379d2",
+    "date": "2026-05-24T00:49:48+02:00",
+    "type": "feat",
+    "scope": "S183",
+    "sprint": "S183",
+    "subject": "crypto scraper catalog expansion — 3→15 entries"
+  },
+  {
+    "sha": "79d0e56",
+    "date": "2026-05-24T00:23:35+02:00",
+    "type": "docs",
+    "scope": "S181",
+    "sprint": "S181",
+    "subject": "sync — S178 through S180-L backfill"
+  },
+  {
+    "sha": "f674058",
+    "date": "2026-05-24T00:17:07+02:00",
+    "type": "fix",
+    "scope": "S180-L",
+    "sprint": null,
+    "subject": "wrong API import in BFPSubstrateBlock — request is not exported"
+  },
+  {
+    "sha": "976df57",
+    "date": "2026-05-24T00:05:53+02:00",
+    "type": "feat",
+    "scope": "S180-L",
+    "sprint": null,
+    "subject": "BFP substrate per-target UI exposure"
+  },
+  {
+    "sha": "79cc2a2",
+    "date": "2026-05-23T23:56:19+02:00",
+    "type": "feat",
+    "scope": "S180-G",
+    "sprint": null,
+    "subject": "A1.5/A1.6 pipeline observability"
+  },
+  {
+    "sha": "6ca131c",
+    "date": "2026-05-23T22:34:08+02:00",
+    "type": "feat",
+    "scope": "S179",
+    "sprint": "S179",
+    "subject": "identities-table junk cleanup — validator overhaul + backfill"
+  },
+  {
+    "sha": "e331c00",
+    "date": "2026-05-23T19:25:02+02:00",
+    "type": "feat",
+    "scope": "S178",
+    "sprint": "S178",
+    "subject": "username taxonomy visibility — surface intelligence findings"
+  },
+  {
+    "sha": "2709062",
+    "date": "2026-05-23T18:30:58+02:00",
+    "type": "docs",
+    "scope": "S177",
+    "sprint": "S177",
+    "subject": "BFP_SPEC Session 2 sub-C — §13 PQC stack — End of Session 2"
+  },
+  {
+    "sha": "3b545e0",
+    "date": "2026-05-23T18:19:22+02:00",
+    "type": "docs",
+    "scope": "S176",
+    "sprint": "S176",
+    "subject": "BFP_SPEC Session 2 sub-B — axis status flags + behavioral hash spec"
+  },
+  {
+    "sha": "9ba644c",
+    "date": "2026-05-23T18:03:23+02:00",
+    "type": "docs",
+    "scope": "S175",
+    "sprint": "S175",
+    "subject": "BFP_SPEC Session 2 sub-A — trust-layer formalization"
+  },
+  {
+    "sha": "eedda53",
+    "date": "2026-05-23T17:44:38+02:00",
+    "type": "docs",
+    "scope": "S174",
+    "sprint": "S174",
+    "subject": "PRE-S169 PQC library evaluation — pqc_choices_v0.md"
+  },
+  {
+    "sha": "5ae735c",
+    "date": "2026-05-23T17:07:43+02:00",
+    "type": "feat",
+    "scope": "S173",
+    "sprint": "S173",
+    "subject": "/bfp live trust log widget + SSE zombie cleanup"
+  },
+  {
+    "sha": "dddce58",
+    "date": "2026-05-23T16:50:10+02:00",
+    "type": "feat",
+    "scope": "S172",
+    "sprint": "S172",
+    "subject": "live Merkle rebuild Celery beat — bfp:events channel"
+  },
+  {
+    "sha": "bf39b29",
+    "date": "2026-05-23T16:36:42+02:00",
+    "type": "chore",
+    "scope": null,
+    "sprint": null,
+    "subject": "bump PublicFooter version v1.2.0 → v1.6.2"
+  },
+  {
+    "sha": "8d8e3e5",
+    "date": "2026-05-23T16:35:27+02:00",
+    "type": "feat",
+    "scope": "S171",
+    "sprint": "S171",
+    "subject": "/bfp Status section live counts — public stats endpoint"
+  },
+  {
+    "sha": "586c9da",
+    "date": "2026-05-23T15:38:38+02:00",
+    "type": "docs",
+    "scope": "S170",
+    "sprint": "S170",
+    "subject": "commit BFP_SPEC_v0.md v0.2.0 — Phase 1 trust layer formal specification"
+  },
+  {
+    "sha": "57f17ad",
+    "date": "2026-05-23T15:11:43+02:00",
+    "type": "docs",
+    "scope": "S169",
+    "sprint": "S169",
+    "subject": "bump version v1.5.0 → v1.6.0 + sprint entries"
+  },
+  {
+    "sha": "35ff76a",
+    "date": "2026-05-23T15:10:42+02:00",
+    "type": "feat",
+    "scope": "S169",
+    "sprint": "S169",
+    "subject": "Merkle root over bfp_claims — tamper-evident trust log"
+  },
+  {
+    "sha": "e3057d1",
+    "date": "2026-05-23T14:52:54+02:00",
+    "type": "feat",
+    "scope": "S167",
+    "sprint": "S167",
+    "subject": "bfp_claims append-only trust log — Phase 1 core scaffolding"
+  },
+  {
+    "sha": "eba7697",
+    "date": "2026-05-23T01:42:55+02:00",
+    "type": "feat",
+    "scope": "S168",
+    "sprint": "S168",
+    "subject": "cross-verification formalization — stored trust signal for BFP claim layer"
+  },
+  {
+    "sha": "fb98afd",
+    "date": "2026-05-23T01:05:39+02:00",
+    "type": "feat",
+    "scope": "S166",
+    "sprint": "S166",
+    "subject": "bfp_behavioral_hash_v1 — locality-sensitive clustering hash (Phase 1 MVP)"
+  },
+  {
+    "sha": "feec472",
+    "date": "2026-05-23T00:26:00+02:00",
+    "type": "other",
+    "scope": null,
+    "sprint": "S165",
+    "subject": "diag(S165): BFP invariance diagnostic — per-axis stability measurement"
+  },
+  {
+    "sha": "fb0c248",
+    "date": "2026-05-23T00:11:35+02:00",
+    "type": "docs",
+    "scope": "S164",
+    "sprint": "S164",
+    "subject": "BFP pre-implementation audit — forensic baseline"
+  },
+  {
+    "sha": "b529cd6",
+    "date": "2026-05-22T23:58:12+02:00",
+    "type": "feat",
+    "scope": "S163",
+    "sprint": "S163",
+    "subject": "BFP page Status section + Hero Inversion visual"
+  },
+  {
+    "sha": "9e37aaf",
+    "date": "2026-05-22T23:49:29+02:00",
+    "type": "feat",
+    "scope": "S162",
+    "sprint": "S162",
+    "subject": "BFP page Subject Layer + Ethics sections"
+  },
+  {
+    "sha": "873a093",
+    "date": "2026-05-22T23:37:26+02:00",
+    "type": "feat",
+    "scope": "S161",
+    "sprint": "S161",
+    "subject": "BFP page Architecture + Cryptography sections"
+  },
+  {
+    "sha": "e7d0225",
+    "date": "2026-05-22T23:20:51+02:00",
+    "type": "feat",
+    "scope": "S160",
+    "sprint": "S160",
+    "subject": "BFP public page MVP — foundation + roadmap"
+  },
+  {
+    "sha": "56a3783",
+    "date": "2026-05-22T22:16:02+02:00",
+    "type": "fix",
+    "scope": "S159b",
+    "sprint": "S159b",
+    "subject": "npm_maintainer + dev.to cosmetic chip fixes — UsernameTab + PlatformIcon"
+  },
+  {
+    "sha": "804b33f",
+    "date": "2026-05-22T22:07:23+02:00",
+    "type": "other",
+    "scope": null,
+    "sprint": "S159",
+    "subject": "qa(S159): verify username taxonomy fix in UI — PASS"
+  },
+  {
+    "sha": "80acd69",
+    "date": "2026-05-22T21:19:19+02:00",
+    "type": "feat",
+    "scope": "S159",
+    "sprint": "S159",
+    "subject": "username taxonomy correction — backend writer fix + DB backfill + frontend defense"
+  },
+  {
+    "sha": "282424f",
+    "date": "2026-05-22T20:33:56+02:00",
+    "type": "other",
+    "scope": null,
+    "sprint": "S158",
+    "subject": "qa(S158): re-verify dict-vs-string fix — PASS"
+  },
+  {
+    "sha": "3a13640",
+    "date": "2026-05-22T20:27:26+02:00",
+    "type": "fix",
+    "scope": "S158",
+    "sprint": "S158",
+    "subject": "module_progress dict-vs-string defensive handling"
+  },
+  {
+    "sha": "cb4d1e1",
+    "date": "2026-05-22T20:16:39+02:00",
+    "type": "other",
+    "scope": null,
+    "sprint": "S157",
+    "subject": "qa(S157): UX refonte smoke — PASS WITH NOTES"
+  },
+  {
+    "sha": "3e57517",
+    "date": "2026-05-22T19:58:38+02:00",
+    "type": "feat",
+    "scope": "S157",
+    "sprint": "S157",
+    "subject": "TargetDetail tab consolidation — 13 → 5 with sub-pill nav"
+  },
+  {
+    "sha": "964b3a8",
+    "date": "2026-05-22T19:17:23+02:00",
+    "type": "docs",
+    "scope": "S156",
+    "sprint": "S156",
+    "subject": "closure sweep S142-S154 + v1.3.0 stamp"
+  },
+  {
+    "sha": "a7c308b",
+    "date": "2026-05-22T19:10:01+02:00",
+    "type": "test",
+    "scope": "S155",
+    "sprint": "S155",
+    "subject": "synthetic test for S150 _create_pe_graph_edges idempotency"
+  },
+  {
+    "sha": "1f7ade4",
+    "date": "2026-05-22T18:53:50+02:00",
+    "type": "fix",
+    "scope": "S154",
+    "sprint": "S154",
+    "subject": "workspace-aware refresh bundle + Redis close + system_stats scoping"
+  },
+  {
+    "sha": "e2befba",
+    "date": "2026-05-22T17:33:39+02:00",
+    "type": "fix",
+    "scope": "S153",
+    "sprint": "S153",
+    "subject": "cancel race condition — chord child task revoke + finalize_scan guard"
+  },
+  {
+    "sha": "05299a1",
+    "date": "2026-05-22T17:00:46+02:00",
+    "type": "chore",
+    "scope": "qa",
+    "sprint": "S148",
+    "subject": "smoke S148-S152 multi-layer validation — May 22 2026"
+  },
+  {
+    "sha": "662ad18",
+    "date": "2026-05-22T16:27:30+02:00",
+    "type": "docs",
+    "scope": "qa",
+    "sprint": "S149",
+    "subject": "archive S149 playwright smoke artifacts"
+  },
+  {
+    "sha": "ed6d269",
+    "date": "2026-05-22T16:24:09+02:00",
+    "type": "feat",
+    "scope": "S152",
+    "sprint": "S152",
+    "subject": "Live Scans cross-orgs admin tab + System stale-data fix bundle"
+  },
+  {
+    "sha": "6112faf",
+    "date": "2026-05-22T16:01:52+02:00",
+    "type": "fix",
+    "scope": "S150",
+    "sprint": "S150",
+    "subject": "uq_identity rollback on rescan — get-or-create in _create_pe_graph_edges (BUG B1)"
+  },
+  {
+    "sha": "4ae31ff",
+    "date": "2026-05-22T15:14:53+02:00",
+    "type": "fix",
+    "scope": "S149",
+    "sprint": "S149",
+    "subject": "polling cascade orphelin — unify in-progress predicate (BUG B2)"
+  },
+  {
+    "sha": "dc0475a",
+    "date": "2026-05-22T14:42:51+02:00",
+    "type": "fix",
+    "scope": "S148",
+    "sprint": "S148",
+    "subject": "lost-task fragility — acks_late on launch_scan + beat watchdog"
+  },
+  {
+    "sha": "af81c14",
+    "date": "2026-05-21T17:34:45+02:00",
+    "type": "feat",
+    "scope": "S147",
+    "sprint": "S147",
+    "subject": "network_signature 11th axis — spectral entropy of identity graph (BFP P3 step 2)"
+  },
+  {
     "sha": "7b4d907",
     "date": "2026-05-21T17:16:33+02:00",
     "type": "feat",

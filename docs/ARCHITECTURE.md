@@ -10,7 +10,7 @@ and a remediation action. No black-box scoring. No unconsented scanning.
 In 1987, demoscene coders created art with 512KB of RAM that still inspires today.
 xpose follows this philosophy: maximum intelligence with minimum resources.
 
-127 scrapers, PageRank, Markov chains, behavioral profiling, a rules engine — all on a
+139 scrapers, PageRank, Markov chains, behavioral profiling, a rules engine — all on a
 single machine. No GPU clusters. No distributed databases. No managed cloud services
 required. 5 Docker containers. ~50 watts.
 
@@ -145,7 +145,7 @@ sequenceDiagram
 9. Identity enrichment (re-query Genderize/Agify/Nationalize with discovered name)
 10. Cluster personas (graph-based with SequenceMatcher fallback)
 11. Intelligence pipeline (7 analyzers: risk, breach, domain, behavioral, network, code_leak, behavioral_profiler)
-12. Compute fingerprint (9-axis radar, eigenvalues, avatar_seed, timeline_events)
+12. Compute fingerprint (11-axis radar, eigenvalues, avatar_seed, timeline_events)
 13. Store life_timeline in profile_data
 
 ## Code Leak Detection
@@ -271,8 +271,8 @@ Graph weighting: `0.5 + node_conf × 0.5` (50% at zero confidence → 100% at fu
 
 ## Digital Fingerprint
 
-9-axis radar: accounts, platforms, username_reuse, breaches, geo_spread,
-data_leaked, email_age, security, public_exposure.
+11-axis radar: accounts, platforms, username_reuse, breaches, geo_spread,
+data_leaked, email_age, security, public_exposure, formal_records, network_signature.
 Eigenvalue computation from identity graph adjacency matrix.
 Avatar seed: deterministic params for GenerativeAvatar.
 Fingerprint hash: SHA256 of sorted axis values.

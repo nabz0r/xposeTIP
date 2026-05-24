@@ -1,8 +1,7 @@
 import { useEffect, useState } from 'react'
 
-// 3 protocol constants — stable across releases.
-const STATIC_STATS = [
-  { label: 'Fingerprint axes', value: '11' },
+// Truly static protocol constants — never change per release.
+const STATIC_PROTOCOL_CONSTS = [
   { label: 'License', value: 'AGPL-3.0' },
   { label: 'Crypto suite', value: 'NIST 2024 PQC' },
 ]
@@ -14,11 +13,21 @@ function formatN(n) {
   return n.toLocaleString()
 }
 
+function formatS(s) {
+  if (s === null || s === undefined) return '—'
+  return s
+}
+
 export default function BFPStatus() {
   const [live, setLive] = useState({
     behavioral_hashes_computed: null,
     trust_claims_logged: null,
     merkle_roots_committed: null,
+    scrapers_count: null,
+    scrapers_active: null,
+    scanners_count: null,
+    axes_count: null,
+    version: null,
   })
 
   useEffect(() => {
@@ -33,11 +42,19 @@ export default function BFPStatus() {
     return () => ctrl.abort()
   }, [])
 
+  const activeScrapers = live.scrapers_active !== null && live.scrapers_count !== null
+    ? `${live.scrapers_active} of ${live.scrapers_count}`
+    : '—'
+
   const stats = [
+    { label: 'Version',                    value: formatS(live.version) },
     { label: 'Behavioral hashes computed', value: formatN(live.behavioral_hashes_computed) },
     { label: 'Trust claims logged',        value: formatN(live.trust_claims_logged) },
     { label: 'Merkle roots committed',     value: formatN(live.merkle_roots_committed) },
-    ...STATIC_STATS,
+    { label: 'Active scrapers',            value: activeScrapers },
+    { label: 'Scanner modules',            value: formatN(live.scanners_count) },
+    { label: 'Fingerprint axes',           value: formatN(live.axes_count) },
+    ...STATIC_PROTOCOL_CONSTS,
   ]
 
   return (

@@ -43,7 +43,7 @@ export const EXPOSURES = [
   { icon: Users, title: 'Digital Footprint Discovery', desc: 'Identify accounts across 35+ social platforms, dev tools, gaming sites. Detect username reuse and cross-platform linkage.' },
   { icon: KeyRound, title: 'Breach & Leak Intelligence', desc: 'Check exposure in data breaches, leaked credentials, and paste sites. Timeline of when data was compromised.' },
   { icon: Newspaper, title: 'Public Exposure Intelligence', desc: 'Automated news monitoring across global media. Sanctions & PEP screening via 40+ watchlists. Corporate directorship tracking.' },
-  { icon: Fingerprint, title: '9-Axis Behavioral Radar', desc: 'Unique digital fingerprint across 9 dimensions: accounts, platforms, email age, breaches, username reuse, data leaked, geo spread, security posture, and public exposure.' },
+  { icon: Fingerprint, title: '11-Axis Behavioral Radar', desc: 'Unique digital fingerprint across 11 dimensions: accounts, platforms, email age, breaches, username reuse, data leaked, geo spread, security posture, public exposure, formal records, and network signature.' },
   { icon: Share2, title: 'Identity Graph & Personas', desc: 'PageRank-based confidence propagation. Automatic persona clustering. Name resolution with operator override.' },
   { icon: ShieldCheck, title: 'Compliance Ready', desc: 'Sanctions screening (OFAC, EU, UN, Interpol). PEP detection. Corporate officer identification. Built for KYC/AML workflows.' },
 ]
@@ -55,14 +55,14 @@ export const AUDIENCES = [
     price: '€0 forever',
     href: '/setup',
     cta: 'Start free',
-    features: ['25 quick scans / month', 'Basic exposure check', '9-axis fingerprint preview', 'Single identifier'],
+    features: ['25 quick scans / month', 'Basic exposure check', '11-axis fingerprint preview', 'Single identifier'],
   },
   {
     label: 'Starter',
     desc: 'For individual professionals.',
     href: '/setup?plan=starter',
     cta: 'Join waitlist',
-    features: ['250 full scans / month', 'Full 127-source pipeline', 'Identity graph + personas', 'PDF identity reports'],
+    features: ['250 full scans / month', 'Full 139-source pipeline', 'Identity graph + personas', 'PDF identity reports'],
   },
   {
     label: 'Team',

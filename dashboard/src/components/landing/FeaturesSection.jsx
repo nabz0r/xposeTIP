@@ -49,7 +49,7 @@ export default function FeaturesSection() {
                 <Fingerprint className="w-6 h-6 text-[#ff8800]" />
               </div>
               <div>
-                <div className="text-2xl font-mono font-bold text-white">9</div>
+                <div className="text-2xl font-mono font-bold text-white">11</div>
                 <div className="text-xs text-gray-500">behavioral dimensions</div>
               </div>
             </div>

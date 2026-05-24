@@ -13,7 +13,7 @@ export function StageCollect() {
             <h2 className="text-2xl font-bold mb-3 font-['Instrument_Sans',sans-serif]">Discover</h2>
             <p className="text-gray-400 mb-4">
               Every identity investigation starts with a single anchor: an email address.
-              xposeTIP scans <span className="text-white font-semibold">127 sources</span> in parallel —
+              xposeTIP scans <span className="text-white font-semibold">139 sources</span> in parallel —
               social networks, breach databases, archives, gaming platforms, developer registries, professional networks.
             </p>
             <p className="text-sm text-gray-500">
@@ -140,7 +140,7 @@ export function StageIdentify({ demoSeed }) {
             <div className="text-6xl font-mono font-bold text-[#ff2244]/15 mb-2">05</div>
             <h2 className="text-2xl font-bold mb-3 font-['Instrument_Sans',sans-serif]">Identify</h2>
             <p className="text-gray-400 mb-4">
-              Every identity gets a <span className="text-white font-semibold">digital DNA</span> — a 9-axis behavioral fingerprint
+              Every identity gets a <span className="text-white font-semibold">digital DNA</span> — an 11-axis behavioral fingerprint
               that's unique, persistent, and impossible to fake. Unlike an IP address, this fingerprint
               doesn't change when the person moves to a new server.
             </p>
@@ -239,7 +239,7 @@ export function StageMeasure() {
         <div className="text-6xl font-mono font-bold text-[#aa55ff]/15 mb-2 text-center">07</div>
         <h2 className="text-2xl font-bold mb-4 text-center font-['Instrument_Sans',sans-serif]">Fingerprint</h2>
         <p className="text-gray-400 text-center mb-4 max-w-xl mx-auto">
-          The 9-axis behavioral radar is the identity's <span className="text-white font-semibold">digital DNA</span>.
+          The 11-axis behavioral radar is the identity's <span className="text-white font-semibold">digital DNA</span>.
           Each axis independently measures a dimension of the person's online presence.
           Unlike an IP, this fingerprint persists.
         </p>
@@ -349,7 +349,7 @@ export function StageSimilarity() {
             <div className="text-6xl font-mono font-bold text-[#cc88ff]/15 mb-2">10</div>
             <h2 className="text-2xl font-bold mb-3 font-['Instrument_Sans',sans-serif]">Similarity</h2>
             <p className="text-gray-400 mb-4">
-              Every scan triggers a <span className="text-white font-semibold">9-axis cosine similarity recompute</span> against every
+              Every scan triggers an <span className="text-white font-semibold">11-axis cosine similarity recompute</span> against every
               other identity in the workspace.
             </p>
             <p className="text-sm text-gray-500 mb-3">
@@ -383,7 +383,7 @@ export function StageDiscovery() {
             <div className="text-6xl font-mono font-bold text-[#ffaa55]/15 mb-2">11</div>
             <h2 className="text-2xl font-bold mb-3 font-['Instrument_Sans',sans-serif]">Web Discovery</h2>
             <p className="text-gray-400 mb-4">
-              The 127 scrapers are predictable. The open web isn't.
+              The 139 scrapers are predictable. The open web isn't.
               Phase C — <span className="text-white font-semibold">adaptive web crawling</span> — fires when the operator triggers it.
             </p>
             <p className="text-sm text-gray-500 mb-3">

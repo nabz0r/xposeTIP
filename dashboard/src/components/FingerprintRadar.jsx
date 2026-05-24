@@ -15,8 +15,8 @@ const ALL_AXIS_LABELS = [
 ]
 
 // Dynamic: return only the axes actually present in the fingerprint.
-// Handles 8-axis (pre-S110 hypothetical), 9-axis (pre-S145), 10-axis (post-S145)
-// transparently — no future-axis edits to this file needed.
+// Handles 8-axis (pre-S110 hypothetical), 9-axis (pre-S145), 10-axis (post-S145),
+// 11-axis (post-S147) transparently — no future-axis edits to this file needed.
 function getAxisLabels(axes) {
   if (!axes) return ALL_AXIS_LABELS.slice(0, 8)
   return ALL_AXIS_LABELS.filter(a => Object.prototype.hasOwnProperty.call(axes, a.key))

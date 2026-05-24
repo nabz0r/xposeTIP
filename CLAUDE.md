@@ -5,12 +5,12 @@
 Identity Threat Intelligence platform. Scans email → builds identity graph →
 PageRank/Markov confidence → clusters personas → pixel art avatar → remediation plan.
 
-## Current version: v1.6.13
+## Current version: v1.6.14
 
-178+ sprints. 127 scrapers (110 active, 17 disabled placeholders), 27 scanners, 9 intelligence analyzers, 11-axis fingerprint (S145 formal_records + S147 network_signature).
+188+ sprints. 139 scrapers (116 active, 23 disabled), 27 scanners, 9 intelligence analyzers, 11-axis fingerprint (S145 formal_records + S147 network_signature).
 DB-persisted similarity engine (post-S131): target_similarities table, 11-axis cosine, name-aware combined score (S146 — cosine × name_sim Jaccard), threshold 0.70, audit-grade first_detected preserved across recomputes.
 Cascade state machine (post-S134): scans.cascade_state column tracks gathering → computing → similarity → done (failed terminal).
-Scanners: 26 registered (SCANNER_REGISTRY) + 9 analyzers. 5 disabled placeholders (maigret, h8mail, ghunt, paste_monitor, databroker_check).
+Scanners: 27 registered (SCANNER_REGISTRY) + 9 analyzers. 5 disabled placeholders (maigret, h8mail, ghunt, paste_monitor, databroker_check).
 Two-phase pipeline: Phase A (gather: cross-verify → A1.5 phone/crypto extraction → A1.6 secondary enrichment → Pass 1.5 → early profile → Pass 2 → A3.5 sequential name_scraper_engine dispatch post-name-resolution)
 → Phase B (compute: graph → PageRank → score → profile → personas → intelligence → fingerprint).
 Deep Scan triggers cascade (discovered emails/usernames/domains → chain-scanned, depth=1, max=5).
@@ -180,7 +180,7 @@ Surfaced in S185 validation: edits to `secondary_identifier_enricher.py` weren't
 - `api/discovery/quality_gate.py` — dedup discovery leads vs existing findings
 - `api/discovery/query_generator.py` — fingerprint-driven search query composition
 - `api/tasks/web_discovery.py` — Celery task for Phase C
-- `scripts/seed_scrapers.py` — 127 scraper definitions (110 default-enabled, 17 disabled)
+- `scripts/seed_scrapers.py` — 139 scraper definitions (116 default-enabled, 23 disabled)
 - `scripts/seed_modules.py` — 32 scanner modules (26 active + 5 disabled + 1 virtual)
 
 ### Frontend

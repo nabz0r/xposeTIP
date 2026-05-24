@@ -22,7 +22,7 @@ This script is dual-purpose by design. The same product narrative works for Play
 
 **Action** : type a real, pre-seeded email into the scan form on the landing page. Click **Scan**.
 
-> "127 OSINT sources fire in parallel — social platforms, breach databases, code leak indexes, archive.org, DNS/email metadata, public exposure (news, sanctions, corporate registries, court records in US, France, UK). Pass 1.5 expands usernames found into 70-something more platforms. Pass 2 enriches by resolved name against sanctions, PEP, corporate officer records. Total elapsed: under two minutes."
+> "139 OSINT sources fire in parallel — social platforms, breach databases, code leak indexes, archive.org, DNS/email metadata, public exposure (news, sanctions, corporate registries, court records in US, France, UK). Pass 1.5 expands usernames found into 70-something more platforms. Pass 2 enriches by resolved name against sanctions, PEP, corporate officer records. Total elapsed: under two minutes."
 
 **While scanning** : narrate one of the module badges that updates ("HIBP returned a breach... Sherlock found 14 platforms... OpenSanctions clean...").
 
@@ -77,7 +77,7 @@ Click **Export PDF** :
 
 **Play 2 — Self-serve SaaS**
 
-> "Or you run it yourself. Free tier — 25 scans a month, basic exposure check. Starter €49 — 250 full scans, 127-source pipeline, identity graph, PDF reports. Team €299 — 2 000 scans, 5 seats, API access for your SIEM/SOAR. Enterprise from €2 500 — multi-tenant, SSO, audit log, SLA, custom scrapers. The core engine is open source — AGPL-3.0 — you can audit every line."
+> "Or you run it yourself. Free tier — 25 scans a month, basic exposure check. Starter €49 — 250 full scans, 139-source pipeline, identity graph, PDF reports. Team €299 — 2 000 scans, 5 seats, API access for your SIEM/SOAR. Enterprise from €2 500 — multi-tenant, SSO, audit log, SLA, custom scrapers. The core engine is open source — AGPL-3.0 — you can audit every line."
 
 ---
 
@@ -109,7 +109,7 @@ Pick the close based on the room:
 | Plan | Price | Scans/mo | Seats | Key Features |
 |---|---|---|---|---|
 | Free | €0 | 25 | 1 | Basic exposure scan, single identifier, fingerprint preview |
-| Starter | €49/mo | 250 | 1 | Full 127-source pipeline, identity graph + personas, PDF reports |
+| Starter | €49/mo | 250 | 1 | Full 139-source pipeline, identity graph + personas, PDF reports |
 | Team | €299/mo | 2 000 | 5 | API access (SIEM/SOAR), multi-workspace, shared targets |
 | Enterprise | From €2 500/mo | Custom | Unlimited | Multi-tenant + SSO, audit log + SLA, custom scrapers, managed APIs |
 
@@ -121,11 +121,11 @@ Migration to usage-based pricing planned for v2 (per-scan/per-API-call), 12–18
 
 | Metric | Value |
 |---|---|
-| Data-driven scrapers | 127 (110 active, 17 disabled placeholders) |
+| Data-driven scrapers | 139 (116 active, 23 disabled) |
 | Scraper categories | 11 |
-| Scanner modules | 26 (5 disabled placeholders) |
+| Scanner modules | 27 |
 | Intelligence analyzers | 9 |
-| Fingerprint axes | 9 |
+| Fingerprint axes | 11 |
 | Scan time (median) | ~90 seconds |
 | Breach databases | HIBP + XposedOrNot + LeakCheck + IntelX + LeakLookup + paste sites |
 | Confidence model | PageRank (damping=0.85, 20 iterations) |

@@ -32,12 +32,12 @@ export default function Architecture() {
             </p>
             <div className="flex flex-wrap items-center justify-center gap-x-8 gap-y-3 pt-8 border-t border-[#1e1e2e]">
               <div className="flex items-baseline gap-1.5">
-                <span className="text-[#00ff88] font-mono font-bold text-xl">127</span>
+                <span className="text-[#00ff88] font-mono font-bold text-xl">139</span>
                 <span className="text-xs text-gray-500 font-mono">sources</span>
               </div>
               <span className="text-gray-700">·</span>
               <div className="flex items-baseline gap-1.5">
-                <span className="text-[#00ff88] font-mono font-bold text-xl">9</span>
+                <span className="text-[#00ff88] font-mono font-bold text-xl">11</span>
                 <span className="text-xs text-gray-500 font-mono">axes</span>
               </div>
               <span className="text-gray-700">·</span>
