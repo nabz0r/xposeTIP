@@ -1,0 +1,16 @@
+nabil@xpose.dev|bgl-bnp-paribas|BGL BNP Paribas|superadmin
+nabil@xpose.dev|crypto|Crypto|superadmin
+nabil@xpose.dev|dataminr|Dataminr|superadmin
+nabil@xpose.dev|default|Default|superadmin
+nabil@xpose.dev|ferrero|Ferrero|superadmin
+nabil@xpose.dev|friends|Friends|superadmin
+nabil@xpose.dev|ing-luxembourg|ING Luxembourg|superadmin
+nabil@xpose.dev|kpmg|KPMG|superadmin
+nabil@xpose.dev|lessentiel|Lessentiel|superadmin
+nabil@xpose.dev|maersk|Maersk|superadmin
+nabil@xpose.dev|nexus-2026|Nexus 2026|superadmin
+nabil@xpose.dev|quentin|Quentin|superadmin
+nabil@xpose.dev|threatconnect|Threatconnect|superadmin
+nabil@xpose.dev|threatconnect-cs|Threatconnect CS|superadmin
+nabil@xpose.dev|threatconnect-devops|Threatconnect Devops|superadmin
+nabil@xpose.dev|threatconnect-support|Threatconnect Support|superadmin
