@@ -1,0 +1,9 @@
+S213 audit complete.
+  Total username findings: 4750
+  Workspaces touched: 16
+  Targets touched: 228
+  Modules emitting username findings: 91
+  Validator-fail: 45 (0.9%)
+  Low-trust (unverified + cross_verified=0): 444 (9.3%)
+  name_scraper_engine total: 0 | validator-fail: 0
+  Output: docs/qa/S213_username_audit_20260525T111659Z

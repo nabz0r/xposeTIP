@@ -1,0 +1,7 @@
+INFO  [alembic.runtime.migration] Context impl PostgresqlImpl.
+INFO  [alembic.runtime.migration] Will assume transactional DDL.
+INFO  [alembic.runtime.migration] Running upgrade 026 -> 027, S215 — Relabel scope-drift username findings to domain.
+INFO  [alembic.runtime.migration] S215 migration 027: rdap_domain has 46 username rows queued for relabel
+INFO  [alembic.runtime.migration] S215 migration 027: wayback_domain has 31 username rows queued for relabel
+INFO  [alembic.runtime.migration] S215 migration 027: total relabel candidates = 77
+INFO  [alembic.runtime.migration] S215 migration 027: relabeled 77 rows from indicator_type='username' to 'domain'

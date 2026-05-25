@@ -318,6 +318,7 @@ DEFAULT_SCRAPERS = [
         "category": "metadata",
         "url_template": "https://securitytrails.com/domain/{domain}/dns",
         "input_type": "domain",
+        "identity_type": "domain",  # S215
         "input_transform": "email_to_domain",
         "method": "GET",
         "success_indicator": "<title>.*DNS.*SecurityTrails",
@@ -409,6 +410,7 @@ DEFAULT_SCRAPERS = [
         "category": "archive",
         "url_template": "https://web.archive.org/cdx/search/cdx?url={domain}&output=json&limit=1&fl=timestamp,original,statuscode&collapse=timestamp:6",
         "input_type": "domain",
+        "identity_type": "domain",  # S215
         "input_transform": "email_to_domain",
         "method": "GET",
         "success_indicator": "\\[\\[",
@@ -2512,6 +2514,7 @@ DEFAULT_SCRAPERS = [
         "category": "metadata",
         "url_template": "https://rdap.org/domain/{domain}",
         "input_type": "domain",
+        "identity_type": "domain",  # S215
         "input_transform": "email_to_domain",
         "method": "GET",
         "headers": {"Accept": "application/json"},
@@ -3488,6 +3491,7 @@ DEFAULT_SCRAPERS = [
         "category": "public_exposure",
         "url_template": "https://otx.alienvault.com/api/v1/indicators/domain/{domain}/general",
         "input_type": "domain",
+        "identity_type": "domain",  # S215
         "method": "GET",
         "success_indicator": "\"pulse_info\"",
         "not_found_indicators": ["\"error\"", "\"detail\":\"Not found.\""],

@@ -1,0 +1,4 @@
+alienvault_otx_domain     input_type=domain     identity_type=domain     [OK]
+rdap_domain               input_type=domain     identity_type=domain     [OK]
+securitytrails_ping       input_type=domain     identity_type=domain     [OK]
+wayback_domain            input_type=domain     identity_type=domain     [OK]
