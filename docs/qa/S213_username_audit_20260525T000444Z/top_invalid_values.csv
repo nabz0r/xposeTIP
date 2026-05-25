@@ -1,0 +1,101 @@
+indicator_value,validator_reason,occurrence_count,distinct_targets,distinct_modules
+,empty_or_too_long,2435,185,39
+Telegram – a new era of messaging,too_many_spaces,139,139,1
+Sign Up,title_pattern,62,62,1
+gmail.com,fqdn_tld,16,16,1
+guillaume.a.perrin,multi_dot_handle,13,1,13
+aymen.zerni.nss,multi_dot_handle,12,1,12
+threatconnect.com,fqdn_tld,11,8,2
+dataminr.com,fqdn_tld,10,5,2
+ferrero.com,fqdn_tld,9,5,2
+connection_quality,title_pattern,7,7,1
+ ,no_alnum,5,5,1
+hotmail.fr,fqdn_tld,4,2,2
+paperjam.lu,fqdn_tld,3,3,1
+ing.lu,fqdn_tld,3,3,1
+Fernando D. Ramirez F.,too_many_spaces,2,1,2
+ocsial.com,fqdn_tld,2,1,2
+florencehoffmann.net,fqdn_tld,2,1,2
+yahoo.fr,fqdn_tld,2,1,2
+outlook.fr,fqdn_tld,2,2,1
+protonmail.com,fqdn_tld,2,1,2
+luxinnovation.lu,fqdn_tld,2,2,1
+thedots.lu,fqdn_tld,2,2,1
+Akim Khalilov on about.me,too_many_spaces,1,1,1
+Vitina Mary Dsouza on about.me,too_many_spaces,1,1,1
+Reves D’or on about.me,too_many_spaces,1,1,1
+Stanimir Zhelev on about.me,too_many_spaces,1,1,1
+Hayden Meserve on about.me,too_many_spaces,1,1,1
+Vitalik Bk on about.me,too_many_spaces,1,1,1
+Aleksei Mustafin on about.me,too_many_spaces,1,1,1
+John Wood on about.me,too_many_spaces,1,1,1
+Arthur Freydin on about.me,too_many_spaces,1,1,1
+about me on about.me,too_many_spaces,1,1,1
+Tom Bailey on about.me,too_many_spaces,1,1,1
+Lee Popa on about.me,too_many_spaces,1,1,1
+peter Slevin on about.me,too_many_spaces,1,1,1
+Brandon H on about.me,too_many_spaces,1,1,1
+William Moore on about.me,too_many_spaces,1,1,1
+Andre de la Cruz on about.me,too_many_spaces,1,1,1
+Josh Jacobs on about.me,too_many_spaces,1,1,1
+Lisa Meyer on about.me,too_many_spaces,1,1,1
+Matthew Hamilton on about.me,too_many_spaces,1,1,1
+Sachin Jadhav on about.me,too_many_spaces,1,1,1
+Akim&#39;s collection | Bandcamp,too_many_spaces,1,1,1
+Numinijax&#39;s collection | Bandcamp,too_many_spaces,1,1,1
+slev&#39;s collection | Bandcamp,too_many_spaces,1,1,1
+reves&#39; collection | Bandcamp,too_many_spaces,1,1,1
+Razberry Razorblade&#39;s collection | Bandcamp,empty_or_too_long,1,1,1
+stani&#39;s collection | Bandcamp,too_many_spaces,1,1,1
+Hayden McGovern&#39;s collection | Bandcamp,empty_or_too_long,1,1,1
+Vitalik&#39;s collection | Bandcamp,too_many_spaces,1,1,1
+alekseika&#39;s collection | Bandcamp,too_many_spaces,1,1,1
+Arthur Castro&#39;s collection | Bandcamp,empty_or_too_long,1,1,1
+Taichiro Hashimoto&#39;s collection | Bandcamp,empty_or_too_long,1,1,1
+kpoulsen&#39;s collection | Bandcamp,too_many_spaces,1,1,1
+MoBlack&#39;s collection | Bandcamp,too_many_spaces,1,1,1
+seb57&#39;s collection | Bandcamp,too_many_spaces,1,1,1
+tbailey&#39;s collection | Bandcamp,too_many_spaces,1,1,1
+jjacobs&#39; collection | Bandcamp,too_many_spaces,1,1,1
+mbrash&#39;s collection | Bandcamp,too_many_spaces,1,1,1
+mhamilton&#39;s collection | Bandcamp,too_many_spaces,1,1,1
+dsouza.bsky.social,multi_dot_handle,1,1,1
+jesse.bsky.social,multi_dot_handle,1,1,1
+vitalik.bsky.social,multi_dot_handle,1,1,1
+aleksei.bsky.social,multi_dot_handle,1,1,1
+hbrandon.bsky.social,multi_dot_handle,1,1,1
+seb57.bsky.social,multi_dot_handle,1,1,1
+pimknaff.bsky.social,multi_dot_handle,1,1,1
+tbailey.bsky.social,multi_dot_handle,1,1,1
+asalcedo.bsky.social,multi_dot_handle,1,1,1
+slevin.bsky.social,multi_dot_handle,1,1,1
+adelacruz.bsky.social,multi_dot_handle,1,1,1
+ewray.bsky.social,multi_dot_handle,1,1,1
+mhamilton.bsky.social,multi_dot_handle,1,1,1
+sjadhav.bsky.social,multi_dot_handle,1,1,1
+stheis.bsky.social,multi_dot_handle,1,1,1
+Martín Estanislao Escalante Leiva,too_many_spaces,1,1,1
+Alvaro de la cruz,too_many_spaces,1,1,1
+Subhashis (@slevin),paren_pattern,1,1,1
+David Souza (@dsouza),paren_pattern,1,1,1
+Hayden Foote (@hayden),paren_pattern,1,1,1
+Arthur Kirkosa (@arthur),paren_pattern,1,1,1
+Andreas Beder (@info),paren_pattern,1,1,1
+Johny Jacobs (@jjacobs),paren_pattern,1,1,1
+Antonio Salcedo (@asalcedo),paren_pattern,1,1,1
+Matthew Hamilton (@mhamilton),paren_pattern,1,1,1
+Allen de la Cruz,too_many_spaces,1,1,1
+jean.claude.knebeler,multi_dot_handle,1,1,1
+josee.lyne.denis,multi_dot_handle,1,1,1
+Fernando D. Ramirez Figueroa,too_many_spaces,1,1,1
+Diego Souza - Sketch,too_many_spaces,1,1,1
+Jesse E. - Intuitive,too_many_spaces,1,1,1
+Hayden Sutherland - Ideal Interface Ltd,too_many_spaces,1,1,1
+"Vitaly Kuznetsov, CFA - Self-employed",too_many_spaces,1,1,1
+Aleksei Pisarev - Playrix,too_many_spaces,1,1,1
+Deyvi Tineo - iFit,too_many_spaces,1,1,1
+Arthur DeWaal - Croonwolter&amp;dros,too_many_spaces,1,1,1
+Maureen Black - Kids in Transition,too_many_spaces,1,1,1
+Kamel Amroune - The Dots Luxembourg,too_many_spaces,1,1,1
+Monty Hamilton - Focus HQ,too_many_spaces,1,1,1
+Antonio DeLaCruz - Digital Ally Inc.,too_many_spaces,1,1,1
