@@ -4,6 +4,7 @@ import { Radar, CheckCircle, AlertTriangle, XCircle, ArrowRightLeft, FileDown } 
 import { getTarget, getFindings, getScans, createScan, getModules, getScan, getGraph, patchFinding, getTargetSources, getAccounts, startOAuth, auditAccount, disconnectAccount, getFingerprint, getFingerprintHistory, getTargetProfile, cancelScan, getWorkspaces, moveTarget, getScraperProgress } from '../lib/api'
 import { applyPreset } from '../lib/findingFilters'
 import { normalizeModuleStatus } from '../lib/moduleProgress'
+import PixelCat, { phaseFromScan } from '../components/PixelCat'
 import IdentityGraph from '../components/IdentityGraph'
 import LocationMap from '../components/LocationMap'
 import ProfileHeader from '../components/ProfileHeader'
@@ -390,8 +391,18 @@ export default function TargetDetail() {
                 </button>
               </div>
             </div>
-            <div className="h-1.5 bg-[#0a0a0f] rounded-full overflow-hidden mb-3">
-              <div className="h-full rounded-full bg-[#00ff88] transition-all duration-500" style={{ width: `${pct}%` }} />
+            <div className="relative h-5 bg-[#0a0a0f] rounded-full mb-3">
+              <div className="absolute inset-0 h-full rounded-full bg-[#00ff88] transition-all duration-500" style={{ width: `${pct}%` }} />
+              <div
+                className="absolute top-1/2 -translate-y-1/2 transition-all duration-500 z-10 pointer-events-auto"
+                style={{ left: `calc(${Math.min(pct, 98)}% - 14px)` }}
+              >
+                <PixelCat
+                  seed={target.fingerprint_avatar_seed}
+                  pose={phaseFromScan(runningScan, scraperProgress)}
+                  size={28}
+                />
+              </div>
             </div>
             {scraperProgress && normalizeModuleStatus(progress.scraper_engine) === 'running' && (
               <div className="flex items-center gap-2 mb-2 text-xs text-gray-500">
