@@ -3,6 +3,7 @@ import Stages from '../components/architecture/Stages'
 import ScraperBreakdown from '../components/architecture/ScraperBreakdown'
 import HeroDiagram from '../components/architecture/HeroDiagram'
 import BFPLayer from '../components/architecture/BFPLayer'
+import VisualizationLayer from '../components/architecture/VisualizationLayer'
 import DesignPrinciples from '../components/architecture/DesignPrinciples'
 import RoadmapSection from '../components/architecture/RoadmapSection'
 import ArchCTA from '../components/architecture/ArchCTA'
@@ -70,6 +71,8 @@ export default function Architecture() {
         <Stages demoSeed={demoSeed} />
 
         <BFPLayer />
+
+        <VisualizationLayer />
 
         <ScraperBreakdown />
         <DesignPrinciples />

@@ -4,7 +4,9 @@
 // viewBox 0 0 600 400 across all 8 diagrams. fontSize ≥11. strokeWidth 1.5.
 // All elements wrapped in motion.* with whileInView once-only.
 
+import { useMemo } from 'react'
 import { motion } from 'framer-motion'
+import { useWorldData, createProjection, createPathGenerator, projectPoint } from '../../lib/geo'
 
 // Shared motion presets to keep sequencing consistent across diagrams
 const fadeIn = (delay = 0, dur = 0.5) => ({
@@ -215,43 +217,86 @@ export function ScoreDiagram() {
 
 // =====================================================================
 export function GeoMapDiagram() {
-  // Self-reported pins (#00ff88) vs mail server pins (#888 neutral).
+  // S226: Real TopoJSON 110m via D3 Natural Earth (matches Stage 08 prose
+  // and WorkspaceGeoMap.jsx in production). Pins: 2 self-reported (green
+  // pulse) + 1 mail server (neutral dim). Same narrative as before, real geo.
+  const { data: world } = useWorldData()
+  const projection = useMemo(() => createProjection(), [])
+  const pathGen = useMemo(() => createPathGenerator(projection), [projection])
+
+  const pins = [
+    { iso: 'LU', lat: 49.61,  lng: 6.13,    color: '#00ff88', label: 'LU',  size: 8, type: 'self' },
+    { iso: 'DE', lat: 52.52,  lng: 13.405,  color: '#00ff88', label: 'DE',  size: 7, type: 'self' },
+    { iso: 'US', lat: 37.77,  lng: -122.42, color: '#888',    label: 'SFO', size: 6, type: 'server' },
+  ]
+
+  const projectedPins = pins.map(p => {
+    const xy = projectPoint(projection, p.lat, p.lng)
+    return xy ? { ...p, x: xy[0], y: xy[1] } : null
+  }).filter(Boolean)
+
   return (
-    <svg viewBox="0 0 600 400" className="w-full max-w-md mx-auto h-auto" xmlns="http://www.w3.org/2000/svg">
-      {/* Continent blobs */}
-      <motion.g {...fadeIn(0, 0.6)}>
-        <ellipse cx="180" cy="160" rx="90"  ry="70" fill="#1e1e2e" stroke="#888" strokeWidth="1.5" opacity="0.5" />
-        <ellipse cx="420" cy="150" rx="115" ry="85" fill="#1e1e2e" stroke="#888" strokeWidth="1.5" opacity="0.5" />
-        <ellipse cx="450" cy="290" rx="60"  ry="45" fill="#1e1e2e" stroke="#888" strokeWidth="1.5" opacity="0.5" />
-      </motion.g>
+    <svg viewBox="0 0 960 480" className="w-full max-w-md mx-auto h-auto" xmlns="http://www.w3.org/2000/svg">
+      {/* Real countries — render only after world data loads (module-cached after first fetch) */}
+      {world && (
+        <motion.g
+          initial={{ opacity: 0 }}
+          whileInView={{ opacity: 1 }}
+          viewport={{ once: true, amount: 0.3 }}
+          transition={{ duration: 0.8 }}
+        >
+          {world.features.map((f) => (
+            <path
+              key={f.id || f.properties?.name}
+              d={pathGen(f)}
+              fill="#1e1e2e"
+              stroke="#888"
+              strokeWidth="0.5"
+              opacity="0.4"
+            />
+          ))}
+        </motion.g>
+      )}
 
-      {/* Self-reported pins (active green, pulsing) */}
-      <motion.g {...popIn(0.6, 0.5)}>
-        <circle cx="250" cy="130" r="8" fill="#00ff88" opacity="0.85">
-          <animate attributeName="r" values="8;11;8" dur="2s" repeatCount="indefinite" />
-        </circle>
-        <text x="250" y="115" textAnchor="middle" fill="#00ff88" fontSize="11" fontFamily="monospace">LU</text>
-      </motion.g>
+      {/* Self-reported pins (green, pulsing) + server pin (neutral) */}
+      {projectedPins.map((p, i) => (
+        <motion.g
+          key={p.iso}
+          initial={{ scale: 0, opacity: 0 }}
+          whileInView={{ scale: 1, opacity: 1 }}
+          viewport={{ once: true, amount: 0.3 }}
+          transition={{ delay: 0.6 + i * 0.2, duration: 0.5 }}
+        >
+          <circle cx={p.x} cy={p.y} r={p.size} fill={p.color} opacity={p.type === 'self' ? 0.85 : 0.6}>
+            {p.type === 'self' && (
+              <animate attributeName="r" values={`${p.size};${p.size + 3};${p.size}`} dur={`${2 + i * 0.5}s`} repeatCount="indefinite" />
+            )}
+          </circle>
+          <text
+            x={p.x}
+            y={p.y - p.size - 6}
+            textAnchor="middle"
+            fill={p.color}
+            fontSize="11"
+            fontFamily="monospace"
+            opacity={p.type === 'server' ? 0.6 : 1}
+          >
+            {p.label}
+          </text>
+        </motion.g>
+      ))}
 
-      <motion.g {...popIn(0.8, 0.5)}>
-        <circle cx="245" cy="155" r="7" fill="#00ff88" opacity="0.7">
-          <animate attributeName="r" values="7;10;7" dur="2.5s" repeatCount="indefinite" />
-        </circle>
-        <text x="245" y="178" textAnchor="middle" fill="#00ff88" fontSize="11" fontFamily="monospace">DE</text>
-      </motion.g>
-
-      {/* Mail server pin (neutral, dim) */}
-      <motion.g {...popIn(1.0, 0.5)}>
-        <circle cx="140" cy="170" r="6" fill="#888" opacity="0.6" />
-        <text x="140" y="155" textAnchor="middle" fill="#888" fontSize="11" fontFamily="monospace" opacity="0.6">SFO</text>
-      </motion.g>
-
-      {/* Legend */}
-      <motion.g {...fadeIn(1.4, 0.4)}>
-        <circle cx="40" cy="370" r="6" fill="#00ff88" />
-        <text x="55" y="374" fill="#aaa" fontSize="11" fontFamily="monospace">Self-reported (person)</text>
-        <circle cx="280" cy="370" r="6" fill="#888" opacity="0.6" />
-        <text x="295" y="374" fill="#888" fontSize="11" fontFamily="monospace">Mail server (network)</text>
+      {/* Legend — bottom anchored on the 960×480 viewBox */}
+      <motion.g
+        initial={{ opacity: 0 }}
+        whileInView={{ opacity: 1 }}
+        viewport={{ once: true, amount: 0.3 }}
+        transition={{ delay: 1.4, duration: 0.4 }}
+      >
+        <circle cx="60" cy="460" r="6" fill="#00ff88" />
+        <text x="75" y="464" fill="#aaa" fontSize="11" fontFamily="monospace">Self-reported (person)</text>
+        <circle cx="320" cy="460" r="6" fill="#888" opacity="0.6" />
+        <text x="335" y="464" fill="#888" fontSize="11" fontFamily="monospace">Mail server (network)</text>
       </motion.g>
     </svg>
   )
