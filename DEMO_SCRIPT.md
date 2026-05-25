@@ -39,7 +39,8 @@ Walk the Overview tab:
 1. **Score** : "Exposure 73, threat 41. Exposure is digital footprint size — high here. Threat is breach severity weighted by credential leaks. The ratio tells you what kind of problem you have."
 2. **11-axis behavioral radar** : "This is the persistent signature. Accounts, platforms, username reuse, breach history, geographic spread, data leak volume, email age, security posture, public exposure, formal records (legal filings), and network signature (identity-graph topology entropy). The shape persists across scans even when individual indicators rotate."
 3. **Generative pixel art avatar** : "Deterministic from the identity graph eigenvalues. Same data, same avatar — when data shifts, the avatar evolves. 5.4 billion combinations, zero GPU, zero external API."
-4. **Risk Signals block** (if visible) : "Phone numbers extracted from breach data. Crypto wallets cross-referenced against scam flags. Legal record matches in US federal court, French BODACC, UK Gazette. All actionable in one block."
+4. **PixelCat companion** : "And this little cat — yes, really. Same identity seed drives the silhouette: fur color, eyes, collar. Then the behavioral fingerprint hash drives the details: pattern, accessory, expression. 920K combinations per target. *Watch this:* navigate to another scan in the same workspace [click into another target]. **Different cat.** Now click a third target [click]. **Same cat as the first.** That's not a coincidence — that's the behavioral cluster. The protocol caught that these two targets share a behavioral signature. We surface it as a row: 'Behavioral cluster · N peers'. Click it [click], see who else clusters with this person."
+5. **Risk Signals block** (if visible) : "Phone numbers extracted from breach data. Crypto wallets cross-referenced against scam flags. Legal record matches in US federal court, French BODACC, UK Gazette. All actionable in one block."
 
 ---
 
@@ -145,6 +146,7 @@ Migration to usage-based pricing planned for v2 (per-scan/per-API-call), 12–18
 - [ ] Chrome fullscreen, dark mode
 - [ ] Stable internet (scanners hit external APIs)
 - [ ] Have `contact@redbird.co.com` and the consulting tier sheet ready in a side window for follow-up
+- [ ] Workspace has 2+ targets with matching behavioral_hash prefix (= same cat). Open both pre-call to confirm. If empty, run a quick scan on a 2nd email from the same corporate domain to seed a cluster.
 
 ## Fallback plan
 

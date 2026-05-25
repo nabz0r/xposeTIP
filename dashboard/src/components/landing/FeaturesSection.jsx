@@ -1,5 +1,6 @@
 import Section from '../shared/Section'
 import { AtSign, Users, Fingerprint, Phone, Wallet, Scale } from 'lucide-react'
+import PixelCat from '../PixelCat'
 
 export default function FeaturesSection() {
   return (
@@ -91,6 +92,34 @@ export default function FeaturesSection() {
             <p>
               <span className="text-[#aa66ff] font-semibold">And when you scan a second person who looks like the first,</span> the system tells you — automatically.
             </p>
+
+            {/* S227 — visual proof of behavioral cluster */}
+            <div className="bg-[#0a0a0f] border border-[#1e1e2e] rounded-lg px-6 py-5 my-4">
+              <div className="flex items-center justify-center gap-6">
+                <PixelCat
+                  seed={{ email_hash: 7831, hue: 142, num_points: 4, rotation: 213 }}
+                  behavioralHash="f9a5400a00000000abcdef1234567890fedcba0987654321"
+                  pose="idle"
+                  size={56}
+                  animated={false}
+                />
+                <div className="text-2xl text-gray-600 font-mono">=</div>
+                <PixelCat
+                  seed={{ email_hash: 7831, hue: 142, num_points: 4, rotation: 213 }}
+                  behavioralHash="f9a5400a00000000abcdef1234567890fedcba0987654321"
+                  pose="idle"
+                  size={56}
+                  animated={false}
+                />
+              </div>
+              <p className="text-center text-xs font-mono text-[#aa66ff] mt-3">
+                same cat = same behavioral cluster
+              </p>
+              <p className="text-center text-[11px] text-gray-500 mt-1">
+                BFP K=3 clustering · made observable
+              </p>
+            </div>
+
             <p className="text-gray-500 text-base border-t border-[#1e1e2e] pt-6">
               From noise to signal. From IOC to identity.
             </p>
