@@ -619,6 +619,23 @@ Byte order: the native little-endian representation of `uint64` values, concaten
 
 The behavioral hash is a **clustering primitive, not a uniqueness identifier**.
 
+#### 9.3.7.1 Derived visualizations (informative)
+
+Implementations MAY derive visual identity renderings from the behavioral
+hash (e.g., the PixelCat companion in the xposeTIP reference implementation
+maps the first 16 hex chars onto a 4-axis detail layer — pattern, accessory,
+marking, expression). Such visualizations **inherit the K=3 clustering
+property by design**: two subjects with the same hash prefix produce the
+same visual rendering.
+
+This is a protocol feature, not an implementation artifact. The visual
+collision surfaces the behavioral cluster the protocol identified. A
+conformant implementation supporting visual rendering SHOULD provide a
+way for operators to observe the cluster (e.g., a peer-listing endpoint
+keyed on the same hash prefix, like xposeTIP's
+`/api/v1/targets/{id}/behavioral-twins`) to make the clustering signal
+legible rather than puzzling.
+
 Entropy budget: the three selected axes collectively contain approximately 28 bits of Shannon entropy across the protocol's defined `[0.0, 1.0]` × 20-bucket discretization. With K=3 axes, the address space is effectively 6.68 bits ≈ 103 distinct cell combinations. At population scale (e.g. 4.5 × 10^9 subjects), this means tens of millions of subjects per cell. The behavioral hash by itself CANNOT establish unique identity.
 
 Uniqueness arises from COMPOSITION:
