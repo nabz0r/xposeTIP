@@ -838,6 +838,61 @@ _QUICK_REJECT_NAMES = {
 }
 
 
+@router.get("/{target_id}/behavioral-twins")
+async def get_behavioral_twins(
+    target_id: uuid.UUID,
+    limit: int = Query(10, ge=1, le=50),
+    workspace_id: uuid.UUID = Depends(get_current_workspace),
+    user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """Return workspace targets sharing this target's PixelCat detail layer.
+
+    Two targets are "behavioral twins" when the first 16 hex chars of their
+    bfp_behavioral_hash_v1 match — that's the slice that drives the PixelCat
+    pattern + accessory + marking + expression in deriveBehavioralDetails().
+
+    By design (BFP entropy lock, K=3 clustering), small-N workspaces will
+    routinely show 2-4 twins per cluster. The endpoint surfaces this as a
+    feature, not a bug — the cluster IS the behavioral signal.
+
+    Empty result (no hash, or no twins) → {prefix: null, count: 0, peers: []}.
+    Frontend hides the UI block when count == 0.
+
+    Uses the existing index on bfp_behavioral_hash_v1 via prefix LIKE.
+    """
+    target = await _get_target(db, target_id, workspace_id)
+    hash_full = target.bfp_behavioral_hash_v1
+
+    if not hash_full or len(hash_full) < 16:
+        return {"prefix": None, "count": 0, "peers": []}
+
+    prefix = hash_full[:16]
+    rows = (await db.execute(
+        select(Target.id, Target.email, Target.display_name)
+        .where(
+            Target.workspace_id == workspace_id,
+            Target.id != target_id,
+            Target.bfp_behavioral_hash_v1.like(f"{prefix}%"),
+        )
+        .order_by(Target.email)
+        .limit(limit)
+    )).all()
+
+    return {
+        "prefix": prefix,
+        "count": len(rows),
+        "peers": [
+            {
+                "target_id": str(r[0]),
+                "email": r[1],
+                "display_name": r[2],
+            }
+            for r in rows
+        ],
+    }
+
+
 def _target_dict(t: Target) -> dict:
     fp = (t.profile_data or {}).get("fingerprint") if t.profile_data else None
     profile = t.profile_data or {}

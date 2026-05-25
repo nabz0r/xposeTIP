@@ -5,6 +5,7 @@ import { getTarget, getFindings, getScans, createScan, getModules, getScan, getG
 import { applyPreset } from '../lib/findingFilters'
 import { normalizeModuleStatus } from '../lib/moduleProgress'
 import PixelCat, { phaseFromScan } from '../components/PixelCat'
+import BehavioralCluster from '../components/BehavioralCluster'
 import IdentityGraph from '../components/IdentityGraph'
 import LocationMap from '../components/LocationMap'
 import ProfileHeader from '../components/ProfileHeader'
@@ -341,6 +342,13 @@ export default function TargetDetail() {
           </button>
         </div>
       </div>
+
+      {/* S222b — Behavioral cluster nudge. Hidden when no twins. */}
+      <BehavioralCluster
+        targetId={target.id}
+        targetSeed={target.fingerprint_avatar_seed}
+        targetBehavioralHash={target.bfp_behavioral_hash}
+      />
 
       {/* Live scan progress — S134 extended to include cascade window, S149 unified predicate */}
       {scans.some(isScanInProgress) && (() => {

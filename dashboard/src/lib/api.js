@@ -75,6 +75,8 @@ export const getFingerprintHistory = (id) => request(`/targets/${id}/fingerprint
 export const compareFingerprints = (id, withId) => request(`/targets/${id}/fingerprint/compare?with=${withId}`)
 export const getSimilarTargets = (id, { limit = 5, minSimilarity = 0.7 } = {}) =>
   request(`/targets/${id}/similar?limit=${limit}&min_similarity=${minSimilarity}`)
+export const getBehavioralTwins = (id, { limit = 10 } = {}) =>
+  request(`/targets/${id}/behavioral-twins?limit=${limit}`)
 export const getTargetBFP = (id) => request(`/targets/${id}/bfp`)
 export const updateTargetCountry = (targetId, countryCode) => request(`/targets/${targetId}/country`, { method: 'PATCH', body: JSON.stringify({ country_code: countryCode }) })
 export const updateTargetIdentity = (targetId, firstName, lastName) => request(`/targets/${targetId}/identity`, { method: 'PATCH', body: JSON.stringify({ first_name: firstName, last_name: lastName }) })
