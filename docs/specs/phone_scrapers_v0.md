@@ -37,7 +37,10 @@ sprint.** The §0.1 LOCKED short-list is the input to S217+.
 | 2 | `veriphone_phone`       | A validator | free API key (≤5 min)      | 1000/month                | `phone` (carrier, line_type, country) | S217 |
 | 3 | `api_ninjas_phone`      | A validator | free API key (≤5 min)      | 50000/month (per-day cap) | `phone` (carrier, location, valid)    | S217 |
 | 4 | `abstractapi_phone`     | A validator | free API key (≤5 min)      | 250/month                 | `phone` (carrier, line_type, country) | S217 |
-| 5 | `google_phonebook_dork` | E dork      | none                       | unlimited (rate-limited)  | `phone` (mention URLs)       | S218 |
+
+> `google_phonebook_dork` was LOCKED in v0 of this doc; S218 live-eval
+> proved the PhoneBook operator is DEAD (Google removed ~2021). Cell
+> §2.15 flipped to DEAD, §3 score 4 → 0, REJECTED. See §7.1.
 
 WhatsApp / Telegram / Viber URL-trick presence checks **deliberately NOT
 locked**. They scored ≥4 on raw viability but RGPD posture is HIGH and the
@@ -427,21 +430,27 @@ Each cell uses the standard 9-field structure (mirrors `pqc_choices_v0.md`):
 - **2026 status**: DEGRADED — Viber's market share has declined; coverage
   is patchy in 2026 outside specific EE / SE Asia regions
 
-### 2.15 google_phonebook_dork (NEW candidate)
+### 2.15 google_phonebook_dork — DEPRECATED (S218 empirical re-eval)
 
 - **Type**: dork-generator (search-engine query crafting)
-- **Endpoint**: `https://www.google.com/search?q={phone}+OR+%22{phone}%22+OR+%22{phone_clean}%22&pb=r`
+- **Endpoint (DEAD)**: `https://www.google.com/search?q=...&pb=r`
 - **Auth**: none
-- **Free quota**: unlimited (Google rate-limits via captchas after sustained volume)
-- **Output fields**: search-result URLs containing the phone number
-  (mentions in directories, contact pages, classifieds, social profiles)
-- **Indicator_type produced**: `phone` (URL mentions, low confidence)
-- **Bot-detection / scraping difficulty**: medium (Google's standard
-  rate-limit + occasional captcha; existing `google_phone_dork` already
-  handles)
-- **RGPD posture (informational)**: LOW — same posture as existing email
-  dorks; aggregating public web mentions is recital 49 tenable
-- **2026 status**: ACTIVE
+- **Free quota**: N/A
+- **Output fields**: NONE (the `pb=r` query parameter is preserved in URL
+  parsing but produces no PhoneBook-specific UI block in 2026 SERP).
+- **Indicator_type produced**: N/A
+- **Bot-detection / scraping difficulty**: N/A
+- **RGPD posture (informational)**: N/A
+- **2026 status**: **DEAD** — Google removed the PhoneBook search operator
+  around 2021 (searchengineland historical record; Gary Illyes Twitter
+  confirmation). Live test 2026-05-25 by operator confirmed: `curl ?pb=r`
+  returns identical SERP to plain query, no phonebook block in HTML.
+  S216 §2.15 LOCKED this pick as "2026 status: ACTIVE" without live
+  validation — pattern S209 (Maigret tranche 2 hypothesis-vs-reality gap).
+  Honest acceptance: marginal value = 0, the existing `google_phone_dork`
+  already covers `q="{phone_clean}"` query-by-citation, which is exactly
+  what `pb=r` falls back to. **Removed from S216 §0.1 LOCKED list. S218
+  unlocked as rescan validation sprint instead of phonebook seed.**
 
 ### 2.16 intelx_telephone_tool (NEW candidate)
 
@@ -488,7 +497,7 @@ Threshold for **REJECTED**: score ≤ 1.
 | 2.12 | wa_me_existence_check | 1 | 1 | 1 | 0 | 0 | **3** | Backlog conditional (operator sign-off only) |
 | 2.13 | t_me_existence_check | 1 | 1 | 1 | 0 | 0 | **3** | Backlog conditional (operator sign-off only) |
 | 2.14 | viber_existence_check | 1 | 1 | 1 | 0 | 0 | **3** | Backlog conditional (operator sign-off only) |
-| 2.15 | google_phonebook_dork | 1 | 1 | 0 | 1 | 1 | **4** | LOCKED (new dork variant) |
+| 2.15 | google_phonebook_dork | 0 | 0 | 0 | **0** | 0 | **0** | REJECTED (S218 empirical: PhoneBook operator dead since 2021) |
 | 2.16 | intelx_telephone_tool | 1 | 1 | 0 | 1 | 1 | **4** | Backlog (low quality vs paid API) |
 
 **LOCKED short-list** (mechanically derived from score ≥ 4, with §0.1 §0.2
@@ -497,8 +506,7 @@ filter for "actually useful in EU corpus"):
 2. veriphone_phone (5)
 3. api_ninjas_phone (5)
 4. abstractapi_phone (5)
-5. google_phonebook_dork (4 — added for qualitative breadth alongside
-   the carrier-metadata validators)
+<!-- 5. google_phonebook_dork removed per S218 — see §2.15 + §7.1 -->
 
 Sources scoring 5 but **deferred from MVP** with reasons:
 - `ovh_telecom_lookup` — FR landline only, low yield in mixed-corpus tests
@@ -581,8 +589,32 @@ total.
 
 ---
 
+## 7. Re-evaluation log
+
+Document subsequent empirical re-evals of LOCKED picks per S216 §0.4 intent.
+
+### 7.1 S218 (2026-05-25) — `google_phonebook_dork` DEAD
+
+- **Trigger**: pre-S218 spec audit, live curl from operator Mac.
+- **Test**: `curl ?pb=r&btnG=Search+PhoneBook` → 1 grep hit, identified as
+  URL-self-reference in HTML chrome, not a structured PhoneBook result
+  block. If the feature were live, the count would be 5-20+ hits across
+  distinct DOM nodes (telephone-icon class, local-results wrapper,
+  phonebook-listing items).
+- **Decision**: DEPRECATED. §2.15 flipped to status DEAD. Removed from
+  §0.1 LOCKED. §3 score 4 → 0.
+- **Generalizable lesson**: R&D cells claiming `2026 status: ACTIVE`
+  without live validation are a known failure mode (S209 Maigret tranche
+  2 precedent — 13% pass rate vs 80-90% expectation). Future R&D MUST
+  live-test before LOCKING dork / scrape candidates.
+
+---
+
 ## Changelog
 
 - **v0** (S216, 2026-05-25) — initial draft. LOCKED 5 MVP picks (4
   validators re-enabled + new Google PhoneBook dork). RGPD posture
   matrix per category. Implementation effort estimate scopes S217-S218.
+- **v0.1** (S218, 2026-05-25) — `google_phonebook_dork` DEPRECATED per
+  empirical live-curl test. LOCKED count 5 → 4. §2.15 / §3 / §0.1
+  updated. NEW §7 re-evaluation log appended.

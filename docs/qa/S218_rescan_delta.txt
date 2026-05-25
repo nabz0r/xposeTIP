@@ -1,0 +1,12 @@
+module                     pre post  delta
+---------------------------------------------
+abstractapi_phone            0    0     0
+api_ninjas_phone             1    2 +    1
+bing_phone_dork              2    2     0
+duckduckgo_phone_dork        2    2     0
+google_phone_dork            7    7     0
+numverify_phone              0    0     0
+veriphone_phone              0    0     0
+yandex_phone_dork            2    2     0
+---------------------------------------------
+TOTAL                       14   15 +    1
