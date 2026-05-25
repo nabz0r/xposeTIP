@@ -31,6 +31,7 @@ from api.models.target import Target
 from api.models.workspace import Workspace
 from api.services.layer4.username_validator import (
     is_valid_username,
+    is_looks_like_full_name,  # S230 — promoted from this script
     _TITLE_PATTERNS,
     _DOMAIN_TLD_RE,
 )
@@ -73,10 +74,8 @@ def _classify_invalid_reason(value: str) -> str:
 # S229 — Advanced pattern classifier (runs only on validator-PASS rows).
 # Surfaces patterns prod is_valid_username misses or cannot disambiguate
 # without manual triage. NO DB writes, NO behavior change to prod validator.
+# S230 — looks_like_full_name promoted to username_validator.py; imported above.
 
-_LOOKS_LIKE_NAME_RE = re.compile(r"^[A-Za-zÀ-ÿ\-'.]+(\s[A-Za-zÀ-ÿ\-'.]+){1,2}$")
-_TITLE_CASE_TOKEN_RE = re.compile(r"^[A-ZÀ-Ý][a-zà-ÿ\-']+$")
-_LOWER_TOKEN_RE = re.compile(r"^[a-zà-ÿ\-']+$")
 _SINGLE_DOT_HANDLE_RE = re.compile(r"^[a-z0-9]+\.[a-z0-9]+$")
 _KNOWN_TLD_SUFFIX_RE = re.compile(
     r"\.(com|org|net|io|co|app|info|biz|me|tv|eu|us|ca|au|"
@@ -89,29 +88,15 @@ def _classify_advanced_pattern(value: str) -> str:
     """Tag prod-validator-PASS values with extra patterns missed by is_valid_username.
 
     Returns one of:
-      - "looks_like_full_name"  : 1-2 spaces, each token alpha-only,
-                                  Title Case or all-lower, length 5-40
+      - "looks_like_full_name"  : delegates to is_looks_like_full_name() (S230)
       - "single_dot_ambiguous"  : single dot, shape word.word, suffix NOT
                                   in known-TLD allow-list
       - "none"                  : passes prod validator + no advanced pattern matches
-
-    Why these two:
-      - looks_like_full_name catches the "Jon Marlow" class S228 surfaced from
-        dockerhub_profile. Prod is_valid_username accepts it (1 space < 3-space
-        gate). This is the class that needs scope-drift relabel
-        (username -> name) per S215 pattern, NOT delete.
-      - single_dot_ambiguous catches values like `josephine.lespierre` (likely
-        valid handle) AND values like `acme.tech` (likely missed-TLD domain).
-        Cannot disambiguate automatically — flag for manual triage in S230.
     """
     if not value:
         return "none"
-    if _LOOKS_LIKE_NAME_RE.match(value):
-        tokens = value.split()
-        all_title = all(_TITLE_CASE_TOKEN_RE.match(t) for t in tokens)
-        all_lower = all(_LOWER_TOKEN_RE.match(t) for t in tokens)
-        if (all_title or all_lower) and 5 <= len(value) <= 40:
-            return "looks_like_full_name"
+    if is_looks_like_full_name(value):
+        return "looks_like_full_name"
     if "." in value and value.count(".") == 1:
         if _SINGLE_DOT_HANDLE_RE.match(value) and not _KNOWN_TLD_SUFFIX_RE.search(value):
             return "single_dot_ambiguous"

@@ -1,0 +1,28 @@
+INFO  [alembic.runtime.migration] Context impl PostgresqlImpl.
+INFO  [alembic.runtime.migration] Will assume transactional DDL.
+INFO  [alembic.runtime.migration] Running upgrade 027 -> 028, S230 — Relabel name-shaped username findings to indicator_type='name'.
+INFO  [alembic.runtime.migration] S230 migration 028: medium_profile has 34 looks_like_full_name rows queued
+INFO  [alembic.runtime.migration] S230 migration 028: gitlab_profile has 33 looks_like_full_name rows queued
+INFO  [alembic.runtime.migration] S230 migration 028: snapchat_profile has 29 looks_like_full_name rows queued
+INFO  [alembic.runtime.migration] S230 migration 028: chesscom_profile has 16 looks_like_full_name rows queued
+INFO  [alembic.runtime.migration] S230 migration 028: github_scraper has 13 looks_like_full_name rows queued
+INFO  [alembic.runtime.migration] S230 migration 028: flickr_profile has 13 looks_like_full_name rows queued
+INFO  [alembic.runtime.migration] S230 migration 028: mastodon_search has 13 looks_like_full_name rows queued
+INFO  [alembic.runtime.migration] S230 migration 028: replit_profile has 12 looks_like_full_name rows queued
+INFO  [alembic.runtime.migration] S230 migration 028: vimeo_profile has 12 looks_like_full_name rows queued
+INFO  [alembic.runtime.migration] S230 migration 028: github_user_api has 12 looks_like_full_name rows queued
+INFO  [alembic.runtime.migration] S230 migration 028: telegram_profile has 11 looks_like_full_name rows queued
+INFO  [alembic.runtime.migration] S230 migration 028: keybase_profile has 9 looks_like_full_name rows queued
+INFO  [alembic.runtime.migration] S230 migration 028: devto_profile has 7 looks_like_full_name rows queued
+INFO  [alembic.runtime.migration] S230 migration 028: huggingface_profile has 7 looks_like_full_name rows queued
+INFO  [alembic.runtime.migration] S230 migration 028: buymeacoffee_profile has 6 looks_like_full_name rows queued
+INFO  [alembic.runtime.migration] S230 migration 028: dockerhub_profile has 6 looks_like_full_name rows queued
+INFO  [alembic.runtime.migration] S230 migration 028: stackoverflow_search has 5 looks_like_full_name rows queued
+INFO  [alembic.runtime.migration] S230 migration 028: roblox_profile has 4 looks_like_full_name rows queued
+INFO  [alembic.runtime.migration] S230 migration 028: bluesky_profile has 3 looks_like_full_name rows queued
+INFO  [alembic.runtime.migration] S230 migration 028: codeberg_profile has 1 looks_like_full_name rows queued
+INFO  [alembic.runtime.migration] S230 migration 028: threads_profile has 1 looks_like_full_name rows queued
+INFO  [alembic.runtime.migration] S230 migration 028: mixcloud_profile has 1 looks_like_full_name rows queued
+INFO  [alembic.runtime.migration] S230 migration 028: gravatar_scraper has 1 looks_like_full_name rows queued
+INFO  [alembic.runtime.migration] S230 migration 028: total relabel candidates = 249
+INFO  [alembic.runtime.migration] S230 migration 028: relabeled 249 rows from indicator_type='username' to 'name'

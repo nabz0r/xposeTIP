@@ -1,0 +1,21 @@
+Pre-flight: 249 relabel candidates across 23 modules
+  medium_profile: 34
+  gitlab_profile: 33
+  snapchat_profile: 29
+  chesscom_profile: 16
+  github_scraper: 13
+  flickr_profile: 13
+  mastodon_search: 13
+  replit_profile: 12
+  vimeo_profile: 12
+  github_user_api: 12
+  telegram_profile: 11
+  keybase_profile: 9
+  devto_profile: 7
+  huggingface_profile: 7
+  buymeacoffee_profile: 6
+  dockerhub_profile: 6
+  stackoverflow_search: 5
+  roblox_profile: 4
+  bluesky_profile: 3
+  codeberg_profile: 1

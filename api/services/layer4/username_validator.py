@@ -75,3 +75,36 @@ def is_valid_username(value: str) -> bool:
     if "(" in value or ")" in value:
         return False
     return True
+
+
+# S230 — name-shape detector for migration 028 + future audits.
+# NOT called by is_valid_username() — that would require sample-validation
+# (S230b deferred). Standalone classifier promoted from
+# scripts/audit_username_findings.py for prod-code reuse.
+
+_LOOKS_LIKE_NAME_RE = re.compile(r"^[A-Za-zÀ-ÿ\-'.]+(\s[A-Za-zÀ-ÿ\-'.]+){1,2}$")
+_TITLE_CASE_TOKEN_RE = re.compile(r"^[A-ZÀ-Ý][a-zà-ÿ\-']+$")
+_LOWER_TOKEN_RE = re.compile(r"^[a-zà-ÿ\-']+$")
+
+
+def is_looks_like_full_name(value: str) -> bool:
+    """Return True if value matches a 'Firstname Lastname' or 'firstname lastname' shape.
+
+    Criteria:
+      - 1 or 2 spaces (total 2-3 tokens)
+      - Each token alpha-only (Unicode latin range, hyphens/apostrophes allowed)
+      - All tokens Title Case OR all tokens all-lower (no MiXeD case)
+      - Total length 5..40
+
+    Catches the 'Jon Marlow', 'Akim Reinhardt', 'kevin poulsen' class that
+    prod is_valid_username() accepts (1-2 spaces < 3-space gate). Used by
+    migration 028 to filter historical scope-drift; NOT called at write-time.
+    """
+    if not value or not (5 <= len(value) <= 40):
+        return False
+    if not _LOOKS_LIKE_NAME_RE.match(value):
+        return False
+    tokens = value.split()
+    all_title = all(_TITLE_CASE_TOKEN_RE.match(t) for t in tokens)
+    all_lower = all(_LOWER_TOKEN_RE.match(t) for t in tokens)
+    return all_title or all_lower

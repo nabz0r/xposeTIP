@@ -122,7 +122,7 @@ class NameScraperScanner(BaseScanner):
                     title=title,
                     description=f"Name match for {name_input!r} on {scraper.display_name or scraper.name}",
                     url=result.get("url"),
-                    indicator_type=scraper.input_type,
+                    indicator_type="name",  # S230 — input WAS a name; scraper.input_type is the technical input shape, not the semantic type
                     indicator_value=name_input,
                     data={
                         "scraper": scraper.name,
