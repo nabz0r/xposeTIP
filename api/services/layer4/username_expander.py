@@ -10,6 +10,7 @@ Runs in the sync Celery worker context (httpx.Client, not AsyncClient).
 import hashlib
 import json
 import logging
+import os
 import re
 import time
 import uuid
@@ -735,6 +736,14 @@ def _build_format_kwargs(indicator_type: str, value: str, email: str = None) -> 
         "phone": "",
         "phone_clean": "",
         "crypto_address": "",
+        # S217: env-var substitution for scraper API keys, same set as
+        # scraper_engine.py:fmt_kwargs (the async path). Both deep-scan
+        # (_execute_scraper_generic via username_expander) AND A1.6 dispatch
+        # (scraper_engine.execute) need the same keys available.
+        "API_NINJAS_KEY": os.environ.get("API_NINJAS_KEY", ""),
+        "VERIPHONE_API_KEY": os.environ.get("VERIPHONE_API_KEY", ""),
+        "NUMVERIFY_API_KEY": os.environ.get("NUMVERIFY_API_KEY", ""),
+        "ABSTRACTAPI_PHONE_KEY": os.environ.get("ABSTRACTAPI_PHONE_KEY", ""),
     })
 
     if indicator_type == "email":

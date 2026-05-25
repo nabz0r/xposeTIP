@@ -1,0 +1,17 @@
+xpose-worker  | [2026-05-25 12:24:42,417: INFO/MainProcess] Task api.tasks.scan_orchestrator.deep_indicator_scan[b590dfb1-a28b-447c-81c9-f760c0ac7c38] received
+xpose-worker  | [2026-05-25 12:24:43,605: DEBUG/ForkPoolWorker-4] connect_tcp.started host='apilayer.net' port=80 local_address=None timeout=12 socket_options=None
+xpose-worker  | [2026-05-25 12:24:43,841: INFO/ForkPoolWorker-4] HTTP Request: GET http://apilayer.net/api/validate?access_key=jEgPfTz0IC7yogtflzax7KoE5cdDfxqr&number=+33612345678 "HTTP/1.0 200 OK"
+xpose-worker  | [2026-05-25 12:24:46,569: DEBUG/ForkPoolWorker-4] connect_tcp.started host='api.veriphone.io' port=443 local_address=None timeout=12 socket_options=None
+xpose-worker  | [2026-05-25 12:24:46,618: DEBUG/ForkPoolWorker-4] start_tls.started ssl_context=<ssl.SSLContext object at 0x7f6bcd8357d0> server_hostname='api.veriphone.io' timeout=12
+xpose-worker  | [2026-05-25 12:24:46,745: INFO/ForkPoolWorker-4] HTTP Request: GET https://api.veriphone.io/v2/verify?phone=+33612345678&key=8BEA9968D782423AA42E452B56F1A610 "HTTP/1.1 200 OK"
+xpose-worker  | [2026-05-25 12:24:46,767: DEBUG/ForkPoolWorker-4] Flush failed for veriphone_phone:+33612345678, likely duplicate
+xpose-worker  | [2026-05-25 12:24:47,069: DEBUG/ForkPoolWorker-4] connect_tcp.started host='api.api-ninjas.com' port=443 local_address=None timeout=12 socket_options=None
+xpose-worker  | [2026-05-25 12:24:47,155: DEBUG/ForkPoolWorker-4] start_tls.started ssl_context=<ssl.SSLContext object at 0x7f6bcd8357d0> server_hostname='api.api-ninjas.com' timeout=12
+xpose-worker  | [2026-05-25 12:24:47,363: INFO/ForkPoolWorker-4] HTTP Request: GET https://api.api-ninjas.com/v1/validatephone?number=+33612345678&X-Api-Key=LLf6yPbcFOuU89xEmu5rOwZIa3NoWiulHgy6ykfG "HTTP/1.1 200 OK"
+xpose-worker  | [2026-05-25 12:24:47,687: DEBUG/ForkPoolWorker-4] connect_tcp.started host='phonevalidation.abstractapi.com' port=443 local_address=None timeout=12 socket_options=None
+xpose-worker  | [2026-05-25 12:24:47,840: DEBUG/ForkPoolWorker-4] start_tls.started ssl_context=<ssl.SSLContext object at 0x7f6bcd8357d0> server_hostname='phonevalidation.abstractapi.com' timeout=12
+xpose-worker  | [2026-05-25 12:24:48,141: INFO/ForkPoolWorker-4] HTTP Request: GET https://phonevalidation.abstractapi.com/v1/?api_key=db1e43b319694a95b3128a5a91885bf7&phone=33612345678 "HTTP/1.1 401 Unauthorized"
+xpose-worker  | [2026-05-25 12:24:48,560: INFO/ForkPoolWorker-4] Deep phone scan '+33612345678' created 4 findings — full re-finalize
+xpose-worker  | [2026-05-25 12:24:50,686: INFO/ForkPoolWorker-4] Task api.tasks.scan_orchestrator.deep_indicator_scan[b590dfb1-a28b-447c-81c9-f760c0ac7c38] succeeded in 8.267163025040645s: {'indicator_type': 'phone', 'indicator_value': '+33612345678', 'scrapers_run': 8, 'findings_created': 4, 'identities_created': 4, 'errors': []}
+api_ninjas_phone|1|2026-05-25 12:24:47.373795+00
+api_ninjas_phone|2026-05-25 12:24:47.373795+00|API Ninjas: {carrier} ({line_type}) — France

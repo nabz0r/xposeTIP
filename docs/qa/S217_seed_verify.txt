@@ -1,0 +1,4 @@
+abstractapi_phone         enabled=True identity_type=phone [OK]
+api_ninjas_phone          enabled=True identity_type=phone [OK]
+numverify_phone           enabled=True identity_type=phone [OK]
+veriphone_phone           enabled=True identity_type=phone [OK]

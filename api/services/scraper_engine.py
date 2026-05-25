@@ -2,6 +2,7 @@ import asyncio
 import hashlib
 import json
 import logging
+import os
 import re
 import time as _time
 
@@ -79,9 +80,32 @@ class ScraperEngine:
                 phone=phone,
                 phone_clean=phone_clean,
                 crypto_address=crypto_address,
+                # S217: env-var substitution for scraper API keys.
+                # url_template placeholders like {API_NINJAS_KEY} are resolved
+                # at format-time from the container environment (loaded from .env
+                # via docker-compose env_file).
+                API_NINJAS_KEY=os.environ.get("API_NINJAS_KEY", ""),
+                VERIPHONE_API_KEY=os.environ.get("VERIPHONE_API_KEY", ""),
+                NUMVERIFY_API_KEY=os.environ.get("NUMVERIFY_API_KEY", ""),
+                ABSTRACTAPI_PHONE_KEY=os.environ.get("ABSTRACTAPI_PHONE_KEY", ""),
             )
 
             url = scraper["url_template"].format(**fmt_kwargs)
+
+            # S217: guard against seeded `placeholder` strings reaching remote.
+            # A scraper config that ships with `=placeholder` in its url_template
+            # and isn't paired with a matching env-var rotation lands here.
+            # Empty env vars (missing .env) produce URLs with `=` followed by
+            # nothing — that's NOT caught here (it's a different failure mode,
+            # surfaces as auth-rejected 401/403 from the remote).
+            if "placeholder" in url.lower():
+                logger.warning(
+                    "S217 placeholder-guard: scraper %s url_template contains literal "
+                    "'placeholder' after substitution — likely missing env-var rotation. "
+                    "Skipping dispatch to avoid sending unauth requests.",
+                    scraper.get("name", "<unknown>"),
+                )
+                return {"found": False, "status_code": None, "url": url, "extracted": {}}
 
             headers = {**dict(self.client.headers), **(scraper.get("headers") or {})}
 

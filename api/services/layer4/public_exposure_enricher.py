@@ -357,31 +357,20 @@ def _increment_gnews_usage(count: int = 1):
 
 
 def _get_gnews_api_key(session: Session, workspace_id) -> str | None:
-    """Retrieve GNews API key from workspace settings."""
-    try:
-        from api.models.workspace import Workspace
-        ws = session.execute(
-            select(Workspace).where(Workspace.id == workspace_id)
-        ).scalar_one_or_none()
-        if not ws:
-            return None
+    """Retrieve GNews API key.
 
-        settings = ws.settings or {}
-        # Check custom_api_keys first, then api_keys
-        for store in ("custom_api_keys", "api_keys"):
-            entry = settings.get(store, {}).get("gnews_api_key")
-            if entry and isinstance(entry, dict) and entry.get("encrypted"):
-                try:
-                    from api.routers.settings import _get_fernet
-                    return _get_fernet().decrypt(entry["encrypted"].encode()).decode()
-                except Exception:
-                    logger.warning("PASS2: Failed to decrypt GNews API key")
-                    return None
-            elif entry and isinstance(entry, str):
-                return entry
+    S217 refactor: delegate to canonical `get_workspace_api_key()` helper which
+    walks workspace → primary workspace → env var (3-tier fallback). Previously
+    this function was workspace-only, so `.env` entries were invisible to the
+    pipeline — operators had to enter the key via Settings UI even though it
+    sat in `.env`.
+    """
+    from api.routers.settings import get_workspace_api_key
+    try:
+        return get_workspace_api_key(workspace_id, "gnews_api_key", session)
     except Exception:
         logger.debug("PASS2: Could not retrieve GNews API key")
-    return None
+        return None
 
 
 def should_run_gnews(gdelt_results_count: int) -> bool:
@@ -1049,28 +1038,16 @@ def _get_opensanctions_api_key(session: Session, workspace_id) -> str | None:
 
 
 def _get_courtlistener_api_key(session: Session, workspace_id) -> str | None:
-    """Retrieve Courtlistener API token from workspace settings."""
+    """Retrieve Courtlistener API token.
+
+    S217 refactor: delegate to canonical `get_workspace_api_key()` (3-tier
+    fallback workspace → primary → env). See `_get_gnews_api_key` for context.
+    """
+    from api.routers.settings import get_workspace_api_key
     try:
-        from api.models.workspace import Workspace
-        ws = session.execute(
-            select(Workspace).where(Workspace.id == workspace_id)
-        ).scalar_one_or_none()
-        if not ws:
-            return None
-        settings = ws.settings or {}
-        for store in ("custom_api_keys", "api_keys"):
-            entry = settings.get(store, {}).get("courtlistener_api_key")
-            if entry and isinstance(entry, dict) and entry.get("encrypted"):
-                try:
-                    from api.routers.settings import _get_fernet
-                    return _get_fernet().decrypt(entry["encrypted"].encode()).decode()
-                except Exception:
-                    return None
-            elif entry and isinstance(entry, str):
-                return entry
+        return get_workspace_api_key(workspace_id, "courtlistener_api_key", session)
     except Exception:
-        pass
-    return None
+        return None
 
 
 def _get_companies_house_uk_api_key(session: Session, workspace_id) -> str | None:
