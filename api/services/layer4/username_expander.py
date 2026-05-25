@@ -94,15 +94,52 @@ def expand_usernames(target_id, workspace_id, session: Session,
 
         health = _get_health()
 
+        # S231 — Pass 1.5 visibility: 1 entry per username (covers the cross-product
+        # with all MAX_SCRAPERS scrapers run for that username). Lazy import to
+        # avoid circular module load (scan_orchestrator imports celery_app at top).
+        from api.tasks.scan_orchestrator import _record_deep_dispatch, _now_iso
+
+        active_dispatch_id = None
+        active_username = None
+        active_started_at = None
+        active_findings_at_start = 0
+
         try:
             with session.no_autoflush:
                 for uinfo in usernames:
                     username = uinfo["value"]
+                    # S231 — open dispatch entry for this username
+                    active_dispatch_id = str(uuid.uuid4())
+                    active_username = username
+                    active_started_at = _now_iso()
+                    active_findings_at_start = result["findings_created"]
+                    _record_deep_dispatch(scan_id, active_dispatch_id, {
+                        "indicator_type": "username",
+                        "indicator_value": username,
+                        "source": "auto_pass15",
+                        "status": "running",
+                        "started_at": active_started_at,
+                        "completed_at": None,
+                        "findings_created": 0,
+                    }, session)
+
                     for scraper in scrapers[:MAX_SCRAPERS]:
                         # Budget check
                         if time.time() - t0 > TOTAL_TIMEOUT:
                             logger.warning("Pass 1.5: Timeout reached after %ds", TOTAL_TIMEOUT)
                             result["errors"].append("timeout")
+                            # S231 — mark in-flight dispatch as failed (timeout) before return
+                            if active_dispatch_id:
+                                _record_deep_dispatch(scan_id, active_dispatch_id, {
+                                    "indicator_type": "username",
+                                    "indicator_value": active_username,
+                                    "source": "auto_pass15",
+                                    "status": "failed",
+                                    "started_at": active_started_at,
+                                    "completed_at": _now_iso(),
+                                    "findings_created": result["findings_created"] - active_findings_at_start,
+                                    "error": "timeout",
+                                }, session)
                             return result
 
                         # Skip if we already have a finding for this scraper+username
@@ -135,6 +172,18 @@ def expand_usernames(target_id, workspace_id, session: Session,
                                 session.rollback()
                             except Exception:
                                 pass
+
+                    # S231 — close this username's dispatch entry on normal completion
+                    _record_deep_dispatch(scan_id, active_dispatch_id, {
+                        "indicator_type": "username",
+                        "indicator_value": username,
+                        "source": "auto_pass15",
+                        "status": "completed",
+                        "started_at": active_started_at,
+                        "completed_at": _now_iso(),
+                        "findings_created": result["findings_created"] - active_findings_at_start,
+                    }, session)
+                    active_dispatch_id = None
         finally:
             client.close()
 
@@ -597,6 +646,10 @@ def scan_single_indicator(target_id, workspace_id, session: Session,
 
     Generic version of scan_single_username. Loads scrapers by input_type,
     executes them against indicator_value, stores findings tagged pass="deep".
+
+    S231 note: deep_dispatches visibility recording is done by the caller
+    (deep_indicator_scan Celery task in scan_orchestrator.py), NOT here,
+    to keep this function reusable without forcing module_progress writes.
     """
     t0 = time.time()
     result = {

@@ -383,10 +383,33 @@ async def list_live_scans(
     items = []
     for scan, target_email, target_profile_data, target_behavioral_hash, workspace_name in rows.all():
         progress = scan.module_progress or {}
-        modules_total = len(progress)
+
+        # S231 — deep_dispatches aggregates (sub-key of module_progress, NOT a module).
+        # MUST be excluded from modules_total/done so the progress bar isn't skewed.
+        deep = progress.get("deep_dispatches", {}) if isinstance(progress, dict) else {}
+        deep_total = len(deep) if isinstance(deep, dict) else 0
+        deep_active = sum(
+            1 for v in deep.values()
+            if isinstance(v, dict) and v.get("status") == "running"
+        ) if isinstance(deep, dict) else 0
+        deep_completed = sum(
+            1 for v in deep.values()
+            if isinstance(v, dict) and v.get("status") == "completed"
+        ) if isinstance(deep, dict) else 0
+        deep_failed = sum(
+            1 for v in deep.values()
+            if isinstance(v, dict) and v.get("status") == "failed"
+        ) if isinstance(deep, dict) else 0
+        deep_latest = sorted(
+            [v for v in (deep.values() if isinstance(deep, dict) else []) if isinstance(v, dict)],
+            key=lambda v: v.get("started_at") or "",
+            reverse=True,
+        )[:5]
+
+        modules_total = sum(1 for k in progress if k != "deep_dispatches")
         modules_done = sum(
-            1 for v in progress.values()
-            if v in ("completed", "failed", "skipped")
+            1 for k, v in progress.items()
+            if k != "deep_dispatches" and v in ("completed", "failed", "skipped")
         )
 
         # Age in seconds — prefer started_at, fall back to created_at for queued scans
@@ -417,6 +440,12 @@ async def list_live_scans(
             "age_seconds": age_seconds,
             "fingerprint_avatar_seed": avatar_seed,
             "bfp_behavioral_hash": target_behavioral_hash,  # S221
+            # S231 — deep dispatches aggregates (zero impact if none recorded)
+            "deep_total": deep_total,
+            "deep_active": deep_active,
+            "deep_completed": deep_completed,
+            "deep_failed": deep_failed,
+            "deep_latest": deep_latest,
         })
 
     return {"items": items, "total": len(items)}

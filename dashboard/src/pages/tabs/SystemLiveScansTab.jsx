@@ -170,6 +170,26 @@ export default function SystemLiveScansTab() {
                         </div>
                         <span className="font-mono text-xs text-gray-500">{pct}%</span>
                       </div>
+                      {/* S231 — deep dispatches indicator */}
+                      {scan.deep_total > 0 && (
+                        <div
+                          className="mt-1 font-mono text-[10px] text-gray-400"
+                          title={
+                            scan.deep_latest && scan.deep_latest.length
+                              ? scan.deep_latest.map(d =>
+                                  `[${d.source}] ${d.indicator_type}:${d.indicator_value} (${d.status}${d.findings_created ? `, ${d.findings_created} findings` : ''})`
+                                ).join('\n')
+                              : ''
+                          }
+                        >
+                          <span className="text-[#00ff88]">+{scan.deep_active}</span>
+                          <span className="text-[#666] mx-0.5">/</span>
+                          <span>{scan.deep_total} deep</span>
+                          {scan.deep_failed > 0 && (
+                            <span className="text-[#ff5588] ml-1">({scan.deep_failed} failed)</span>
+                          )}
+                        </div>
+                      )}
                     </td>
                     <td className="px-4 py-3 text-right font-mono text-xs text-gray-400">
                       {formatAge(scan.age_seconds)}

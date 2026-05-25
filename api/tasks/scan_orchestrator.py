@@ -1,15 +1,75 @@
+import json
 import logging
 import uuid
 from collections import defaultdict
 from datetime import datetime, timezone
 
 from celery import chord
-from sqlalchemy import select
+from sqlalchemy import select, text
 
 from api.tasks import celery_app
 from api.tasks.utils import get_sync_session
 
 logger = logging.getLogger(__name__)
+
+
+def _now_iso() -> str:
+    """S231 — UTC ISO timestamp helper for deep_dispatches entries."""
+    return datetime.now(timezone.utc).isoformat()
+
+
+def _record_deep_dispatch(scan_id, dispatch_id: str, payload: dict, session) -> None:
+    """S231 — Atomically write a deep_dispatches entry on parent scan's module_progress.
+
+    Uses nested PostgreSQL jsonb_set: inner call bootstraps the 'deep_dispatches'
+    sub-object if missing (using current value if present, else empty); outer call
+    writes the per-dispatch UUID key. This avoids the gotcha that jsonb_set returns
+    target unchanged when an intermediate path element doesn't exist.
+
+    Each dispatch owns its key by UUID — concurrent writers from multiple Celery
+    deep tasks against the same parent scan (cascade cap 5 -> up to 5 simultaneous
+    writes) don't collide, because Postgres serializes row updates and each call
+    operates on a different inner key.
+
+    Path: module_progress.deep_dispatches.{dispatch_id} = payload
+
+    No-op if scan_id is None (operator deep scan on target with no prior scan).
+    Errors are logged but swallowed — visibility is best-effort and MUST NOT
+    break scan execution.
+    """
+    if scan_id is None:
+        return
+    try:
+        session.execute(
+            text("""
+                UPDATE scans
+                SET module_progress = jsonb_set(
+                    jsonb_set(
+                        COALESCE(module_progress, '{}'::jsonb),
+                        ARRAY['deep_dispatches'],
+                        COALESCE(module_progress->'deep_dispatches', '{}'::jsonb),
+                        true
+                    ),
+                    ARRAY['deep_dispatches', :dispatch_id],
+                    CAST(:payload AS jsonb),
+                    true
+                )
+                WHERE id = :scan_id
+            """),
+            {
+                "scan_id": str(scan_id),
+                "dispatch_id": dispatch_id,
+                "payload": json.dumps(payload),
+            },
+        )
+        session.commit()
+    except Exception:
+        logger.exception("S231: failed to record deep dispatch %s on scan %s",
+                         dispatch_id, scan_id)
+        try:
+            session.rollback()
+        except Exception:
+            pass
 
 
 def _build_graph_context(target_id, workspace_id, session):
@@ -797,8 +857,25 @@ def deep_username_scan(self, target_id: str, workspace_id: str, username: str, s
     """
     from api.services.layer4.username_expander import scan_single_username
 
+    # S231 — visibility recording
+    dispatch_id = str(uuid.uuid4())
+    started_at = _now_iso()
+    base_payload = {
+        "indicator_type": "username",
+        "indicator_value": username,
+        "source": "deep_operator",
+        "started_at": started_at,
+    }
+
     session = get_sync_session()
     try:
+        _record_deep_dispatch(scan_id, dispatch_id, {
+            **base_payload,
+            "status": "running",
+            "completed_at": None,
+            "findings_created": 0,
+        }, session)
+
         result = scan_single_username(
             uuid.UUID(target_id),
             uuid.UUID(workspace_id),
@@ -815,9 +892,22 @@ def deep_username_scan(self, target_id: str, workspace_id: str, username: str, s
         else:
             logger.info("Deep scan '%s' — no new findings for target %s", username, target_id)
 
+        _record_deep_dispatch(scan_id, dispatch_id, {
+            **base_payload,
+            "status": "completed",
+            "completed_at": _now_iso(),
+            "findings_created": result.get("findings_created", 0),
+        }, session)
+
         return result
 
     except Exception:
+        _record_deep_dispatch(scan_id, dispatch_id, {
+            **base_payload,
+            "status": "failed",
+            "completed_at": _now_iso(),
+            "findings_created": 0,
+        }, session)
         logger.exception("deep_username_scan task failed for '%s' target %s", username, target_id)
         raise
     finally:
@@ -835,8 +925,28 @@ def deep_indicator_scan(self, target_id: str, workspace_id: str,
     """
     from api.services.layer4.username_expander import scan_single_indicator
 
+    # S231 — visibility recording. Source distinguishes operator-triggered
+    # entry point (_cascade_depth == 0 from router) vs auto-cascade re-entry
+    # (_cascade_depth > 0 from _extract_cascade_indicators).
+    dispatch_id = str(uuid.uuid4())
+    started_at = _now_iso()
+    source = "deep_cascade" if _cascade_depth > 0 else "deep_operator"
+    base_payload = {
+        "indicator_type": indicator_type,
+        "indicator_value": indicator_value,
+        "source": source,
+        "started_at": started_at,
+    }
+
     session = get_sync_session()
     try:
+        _record_deep_dispatch(scan_id, dispatch_id, {
+            **base_payload,
+            "status": "running",
+            "completed_at": None,
+            "findings_created": 0,
+        }, session)
+
         result = scan_single_indicator(
             uuid.UUID(target_id),
             uuid.UUID(workspace_id),
@@ -870,9 +980,22 @@ def deep_indicator_scan(self, target_id: str, workspace_id: str,
         else:
             logger.info("Deep %s scan '%s' — no new findings", indicator_type, indicator_value)
 
+        _record_deep_dispatch(scan_id, dispatch_id, {
+            **base_payload,
+            "status": "completed",
+            "completed_at": _now_iso(),
+            "findings_created": result.get("findings_created", 0),
+        }, session)
+
         return result
 
     except Exception:
+        _record_deep_dispatch(scan_id, dispatch_id, {
+            **base_payload,
+            "status": "failed",
+            "completed_at": _now_iso(),
+            "findings_created": 0,
+        }, session)
         logger.exception("deep_indicator_scan failed for %s '%s'", indicator_type, indicator_value)
         raise
     finally:
