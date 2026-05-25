@@ -1,0 +1,38 @@
+indicator_value,validator_reason,occurrence_count,distinct_targets,distinct_modules
+guillaume.a.perrin,multi_dot_handle,13,1,13
+aymen.zerni.nss,multi_dot_handle,12,1,12
+Sign Up,title_pattern,12,12,1
+Telegram – a new era of messaging,too_many_spaces,10,10,1
+Fernando D. Ramirez F.,too_many_spaces,2,1,2
+connection_quality,title_pattern,2,2,1
+Arthur Freydin on about.me,too_many_spaces,1,1,1
+André Nünninghoff on about.me,too_many_spaces,1,1,1
+Arthur Castro&#39;s collection | Bandcamp,empty_or_too_long,1,1,1
+Andre Benson&#39;s collection | Bandcamp,too_many_spaces,1,1,1
+andre.bsky.social,multi_dot_handle,1,1,1
+André is creating scrut.ch,too_many_spaces,1,1,1
+Arthur Kirkosa (@arthur),paren_pattern,1,1,1
+Andre Levi (@andre),paren_pattern,1,1,1
+jean.claude.knebeler,multi_dot_handle,1,1,1
+josee.lyne.denis,multi_dot_handle,1,1,1
+Arthur DeWaal - Croonwolter&amp;dros,too_many_spaces,1,1,1
+Andre Fredericks - Sanlam Studios,too_many_spaces,1,1,1
+arthur | Instagram | Linktree,too_many_spaces,1,1,1
+andre | Linktree,pipe_in_title,1,1,1
+Zahrazhr (Siti Zahrah Zahrah),too_many_spaces,1,1,1
+Arthur 💬 is still typing,too_many_spaces,1,1,1
+konstantin.notman@ocsial.com,multi_dot_handle,1,1,1
+renata.ruzgaite@gmail.com,multi_dot_handle,1,1,1
+camelia.belab@gmail.com,multi_dot_handle,1,1,1
+abed.belaid@gmail.com,multi_dot_handle,1,1,1
+guillaume.a.perrin@gmail.com,multi_dot_handle,1,1,1
+quentin.jouanny@gmail.com,multi_dot_handle,1,1,1
+jacques.launay@gmail.com,multi_dot_handle,1,1,1
+anna.launay@gmail.com,multi_dot_handle,1,1,1
+giovanni.ferrero@ferrero.com,multi_dot_handle,1,1,1
+sasha.baillie@luxinnovation.lu,multi_dot_handle,1,1,1
+chuang.grace@gmail.com,multi_dot_handle,1,1,1
+carlo.thelen@cc.lu,multi_dot_handle,1,1,1
+kamel.amroune@thedots.lu,multi_dot_handle,1,1,1
+mickael.tabart@kpmg.lu,multi_dot_handle,1,1,1
+benjamin.lavault@kpmg.lu,multi_dot_handle,1,1,1

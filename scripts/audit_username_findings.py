@@ -70,6 +70,54 @@ def _classify_invalid_reason(value: str) -> str:
     return "none"
 
 
+# S229 — Advanced pattern classifier (runs only on validator-PASS rows).
+# Surfaces patterns prod is_valid_username misses or cannot disambiguate
+# without manual triage. NO DB writes, NO behavior change to prod validator.
+
+_LOOKS_LIKE_NAME_RE = re.compile(r"^[A-Za-zÀ-ÿ\-'.]+(\s[A-Za-zÀ-ÿ\-'.]+){1,2}$")
+_TITLE_CASE_TOKEN_RE = re.compile(r"^[A-ZÀ-Ý][a-zà-ÿ\-']+$")
+_LOWER_TOKEN_RE = re.compile(r"^[a-zà-ÿ\-']+$")
+_SINGLE_DOT_HANDLE_RE = re.compile(r"^[a-z0-9]+\.[a-z0-9]+$")
+_KNOWN_TLD_SUFFIX_RE = re.compile(
+    r"\.(com|org|net|io|co|app|info|biz|me|tv|eu|us|ca|au|"
+    r"lu|fr|de|uk|nl|be|ch|it|es|gov|edu|mil|ai|dev|xyz)$",
+    re.IGNORECASE,
+)
+
+
+def _classify_advanced_pattern(value: str) -> str:
+    """Tag prod-validator-PASS values with extra patterns missed by is_valid_username.
+
+    Returns one of:
+      - "looks_like_full_name"  : 1-2 spaces, each token alpha-only,
+                                  Title Case or all-lower, length 5-40
+      - "single_dot_ambiguous"  : single dot, shape word.word, suffix NOT
+                                  in known-TLD allow-list
+      - "none"                  : passes prod validator + no advanced pattern matches
+
+    Why these two:
+      - looks_like_full_name catches the "Jon Marlow" class S228 surfaced from
+        dockerhub_profile. Prod is_valid_username accepts it (1 space < 3-space
+        gate). This is the class that needs scope-drift relabel
+        (username -> name) per S215 pattern, NOT delete.
+      - single_dot_ambiguous catches values like `josephine.lespierre` (likely
+        valid handle) AND values like `acme.tech` (likely missed-TLD domain).
+        Cannot disambiguate automatically — flag for manual triage in S230.
+    """
+    if not value:
+        return "none"
+    if _LOOKS_LIKE_NAME_RE.match(value):
+        tokens = value.split()
+        all_title = all(_TITLE_CASE_TOKEN_RE.match(t) for t in tokens)
+        all_lower = all(_LOWER_TOKEN_RE.match(t) for t in tokens)
+        if (all_title or all_lower) and 5 <= len(value) <= 40:
+            return "looks_like_full_name"
+    if "." in value and value.count(".") == 1:
+        if _SINGLE_DOT_HANDLE_RE.match(value) and not _KNOWN_TLD_SUFFIX_RE.search(value):
+            return "single_dot_ambiguous"
+    return "none"
+
+
 def _source_kind(finding: Finding) -> str:
     """`scraper_engine` if data is a dict containing a 'scraper' key, else `direct`."""
     data = finding.data
@@ -92,10 +140,12 @@ CSV_COLUMNS = [
     "validator_pass", "validator_reason",
     "verified", "cross_verified", "cross_verified_sources_count",
     "source_url", "first_seen", "last_seen", "created_at",
+    "advanced_pattern",  # NEW — S229 (appended to preserve existing column order)
 ]
 
 
-def _row_dict(finding, target_email, workspace_slug, validator_pass, validator_reason, source_kind):
+def _row_dict(finding, target_email, workspace_slug, validator_pass,
+              validator_reason, source_kind, advanced_pattern="none"):
     sources = finding.cross_verification_sources or []
     return {
         "finding_id": str(finding.id),
@@ -115,6 +165,7 @@ def _row_dict(finding, target_email, workspace_slug, validator_pass, validator_r
         "first_seen": _isoformat(finding.first_seen),
         "last_seen": _isoformat(finding.last_seen),
         "created_at": _isoformat(finding.created_at),
+        "advanced_pattern": advanced_pattern,
     }
 
 
@@ -141,6 +192,7 @@ def parse_args() -> argparse.Namespace:
                    help="Cap rows-per-module CSV at N (full-table CSVs always include all rows)")
     p.add_argument("--out-dir", default=None, help="Output directory")
     p.add_argument("--dry-run", action="store_true", help="Print stats only, write nothing")
+    p.add_argument("--sprint", default="S229", help="Sprint tag for output dir prefix (default S229)")
     return p.parse_args()
 
 
@@ -148,7 +200,7 @@ def main():
     args = parse_args()
 
     ts = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
-    out_dir = args.out_dir or os.path.join("docs", "qa", f"S213_username_audit_{ts}")
+    out_dir = args.out_dir or os.path.join("docs", "qa", f"{args.sprint}_username_audit_{ts}")
 
     if not args.dry_run:
         # Default uses timestamp so collision is non-existent. Custom --out-dir
@@ -203,9 +255,12 @@ def main():
             validator_pass = is_valid_username(value)
             validator_reason = _classify_invalid_reason(value) if not validator_pass else "none"
             source_kind = _source_kind(finding)
+            # S229 — run advanced classifier only on prod-validator-PASS rows
+            advanced_pattern = _classify_advanced_pattern(value) if validator_pass else "none"
 
             row = _row_dict(finding, target_email, workspace_slug,
-                            validator_pass, validator_reason, source_kind)
+                            validator_pass, validator_reason, source_kind,
+                            advanced_pattern=advanced_pattern)
             all_rows.append(row)
 
             # Aggregates
@@ -292,6 +347,39 @@ def main():
             safe = re.sub(r"[^a-zA-Z0-9_-]", "_", mod) or "_unknown"
             _write_csv(os.path.join(out_dir, "by_module", f"{safe}.csv"), sliced)
 
+        # S229 — Extended pattern slices on validator-PASS rows
+        flagged_full_name_rows = [r for r in all_rows if r["advanced_pattern"] == "looks_like_full_name"]
+        flagged_single_dot_rows = [r for r in all_rows if r["advanced_pattern"] == "single_dot_ambiguous"]
+        if flagged_full_name_rows:
+            _write_csv(os.path.join(out_dir, "flagged_looks_like_full_name.csv"), flagged_full_name_rows)
+        if flagged_single_dot_rows:
+            _write_csv(os.path.join(out_dir, "flagged_single_dot_ambiguous.csv"), flagged_single_dot_rows)
+
+        # Per-module advanced-pattern ranking (denominator = validator-PASS only)
+        mod_advanced: Counter = Counter()
+        mod_total_pass: Counter = Counter()
+        for r in all_rows:
+            if r["validator_pass"] == "true":
+                mod_total_pass[r["module"]] += 1
+                if r["advanced_pattern"] != "none":
+                    mod_advanced[r["module"]] += 1
+        mod_rank_rows = [
+            {
+                "module": m,
+                "validator_pass_count": mod_total_pass[m],
+                "advanced_pattern_count": mod_advanced[m],
+                "advanced_rate_pct": round(100.0 * mod_advanced[m] / mod_total_pass[m], 1),
+            }
+            for m in mod_total_pass if mod_advanced[m] > 0
+        ]
+        mod_rank_rows.sort(key=lambda r: (-r["advanced_rate_pct"], -r["advanced_pattern_count"]))
+        if mod_rank_rows:
+            _write_csv(
+                os.path.join(out_dir, "by_module_advanced.csv"),
+                mod_rank_rows,
+                columns=["module", "validator_pass_count", "advanced_pattern_count", "advanced_rate_pct"],
+            )
+
         # === summary.md ===
         md_lines: list[str] = []
         md_lines.append("# S213 — Username Findings Audit")
@@ -366,6 +454,32 @@ def main():
         else:
             md_lines.append("_(no name_scraper_engine username findings present)_")
         md_lines.append("")
+
+        # S229 — Advanced patterns section on validator-PASS rows
+        md_lines.append("## S229 — Advanced patterns on validator-PASS rows")
+        md_lines.append("")
+        total_pass = sum(1 for r in all_rows if r["validator_pass"] == "true")
+        adv_full_name = sum(1 for r in all_rows if r["advanced_pattern"] == "looks_like_full_name")
+        adv_single_dot = sum(1 for r in all_rows if r["advanced_pattern"] == "single_dot_ambiguous")
+        md_lines.append(f"- Total validator-PASS: **{total_pass:,}**")
+        md_lines.append(f"- `looks_like_full_name`: **{adv_full_name}** "
+                        f"({pct(adv_full_name, total_pass):.1f}%)")
+        md_lines.append(f"- `single_dot_ambiguous`: **{adv_single_dot}** "
+                        f"({pct(adv_single_dot, total_pass):.1f}%)")
+        md_lines.append("")
+        if mod_rank_rows:
+            md_lines.append("### Top modules by advanced-pattern rate (validator-PASS denominator)")
+            md_lines.append("")
+            adv_table = [
+                (f"`{r['module']}`", r["validator_pass_count"],
+                 r["advanced_pattern_count"], f"{r['advanced_rate_pct']}%")
+                for r in mod_rank_rows[:15]
+            ]
+            md_lines.append(_markdown_table(
+                ["module", "pass count", "advanced count", "advanced rate %"],
+                adv_table,
+            ))
+            md_lines.append("")
 
         with open(os.path.join(out_dir, "summary.md"), "w", encoding="utf-8") as f:
             f.write("\n".join(md_lines))

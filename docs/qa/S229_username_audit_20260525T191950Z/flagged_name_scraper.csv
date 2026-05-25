@@ -1,0 +1,1 @@
+finding_id,scan_id,target_id,target_email,workspace_slug,module,source_kind,indicator_value,validator_pass,validator_reason,verified,cross_verified,cross_verified_sources_count,source_url,first_seen,last_seen,created_at,advanced_pattern
