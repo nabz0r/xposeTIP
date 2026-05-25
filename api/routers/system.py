@@ -362,7 +362,7 @@ async def list_live_scans(
     from sqlalchemy import and_, or_
 
     rows = await db.execute(
-        select(Scan, Target.email, Target.profile_data, Workspace.name)
+        select(Scan, Target.email, Target.profile_data, Target.bfp_behavioral_hash_v1, Workspace.name)
         .join(Target, Scan.target_id == Target.id, isouter=True)
         .join(Workspace, Scan.workspace_id == Workspace.id, isouter=True)
         .where(
@@ -381,7 +381,7 @@ async def list_live_scans(
 
     now = datetime.now(timezone.utc)
     items = []
-    for scan, target_email, target_profile_data, workspace_name in rows.all():
+    for scan, target_email, target_profile_data, target_behavioral_hash, workspace_name in rows.all():
         progress = scan.module_progress or {}
         modules_total = len(progress)
         modules_done = sum(
@@ -416,6 +416,7 @@ async def list_live_scans(
             "created_at": scan.created_at.isoformat() if scan.created_at else None,
             "age_seconds": age_seconds,
             "fingerprint_avatar_seed": avatar_seed,
+            "bfp_behavioral_hash": target_behavioral_hash,  # S221
         })
 
     return {"items": items, "total": len(items)}

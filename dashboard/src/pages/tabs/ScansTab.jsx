@@ -14,7 +14,7 @@ const SCAN_TIMES = {
   reverse_image: '~15s', google_audit: '~10s', microsoft_audit: '~10s',
 }
 
-export default function ScansTab({ scans, modules, load, showScanModal, setShowScanModal, selectedModules, setSelectedModules, scanning, handleScan, targetSeed }) {
+export default function ScansTab({ scans, modules, load, showScanModal, setShowScanModal, selectedModules, setSelectedModules, scanning, handleScan, targetSeed, targetBehavioralHash }) {
   const implementedModules = modules.filter(m => m.enabled && m.implemented)
   const layers = [...new Set(implementedModules.map(m => m.layer))].sort()
 
@@ -39,6 +39,7 @@ export default function ScansTab({ scans, modules, load, showScanModal, setShowS
                 <div className="flex items-center gap-3">
                   <PixelCat
                     seed={targetSeed}
+                    behavioralHash={targetBehavioralHash}
                     pose={phaseFromScan(scan, null)}
                     size={24}
                     animated={false}

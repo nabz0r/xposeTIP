@@ -399,6 +399,7 @@ export default function TargetDetail() {
               >
                 <PixelCat
                   seed={target.fingerprint_avatar_seed}
+                  behavioralHash={target.bfp_behavioral_hash}
                   pose={phaseFromScan(runningScan, scraperProgress)}
                   size={28}
                 />
@@ -536,6 +537,7 @@ export default function TargetDetail() {
           selectedModules={selectedModules} setSelectedModules={setSelectedModules}
           scanning={scanning} handleScan={handleScan}
           targetSeed={target.fingerprint_avatar_seed}
+          targetBehavioralHash={target.bfp_behavioral_hash}
         />
       )}
 
@@ -556,6 +558,7 @@ export default function TargetDetail() {
           selectedModules={selectedModules} setSelectedModules={setSelectedModules}
           scanning={scanning} handleScan={handleScan}
           targetSeed={target.fingerprint_avatar_seed}
+          targetBehavioralHash={target.bfp_behavioral_hash}
         />
       )}
     </div>

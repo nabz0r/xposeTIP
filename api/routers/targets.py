@@ -899,6 +899,7 @@ def _target_dict(t: Target) -> dict:
         "fingerprint_risk": fp.get("risk_level") if fp else None,
         "fingerprint_avatar_seed": (fp.get("avatar_seed") if fp else None) or _email_only_avatar_seed(t.email),
         "fingerprint_axes": (fp.get("axes") if fp else None) or DEFAULT_FP_AXES,
+        "bfp_behavioral_hash": t.bfp_behavioral_hash_v1,  # S221: powers PixelCat behavioral detail layer
         "location_data": best_location,
         "location_label": profile.get("location", ""),
         "geo_locations": profile.get("geo_locations", []),

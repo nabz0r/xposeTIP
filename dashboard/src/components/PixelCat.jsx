@@ -9,7 +9,7 @@
  */
 
 import React, { useState, useEffect, useRef, useMemo } from 'react'
-import { deriveCatTraits } from '../lib/catSeed'
+import { deriveCatTraits, deriveBehavioralDetails } from '../lib/catSeed'
 
 const KONAMI = ['ArrowUp','ArrowUp','ArrowDown','ArrowDown','ArrowLeft','ArrowRight','ArrowLeft','ArrowRight','b','a']
 
@@ -292,16 +292,144 @@ export function phaseFromScan(scan, scraperProgress) {
   return 'idle'
 }
 
+// ─────────────────────────────────────────────────────────────
+// S221 detail-layer overlays
+// Rendered AFTER the base pose rects, BEFORE pose extras.
+// Pose-agnostic only — pose-aware overlays (tuxedo, mitten) deferred.
+// ─────────────────────────────────────────────────────────────
+
+function PatternOverlay({ pattern, px, fur, belly }) {
+  if (pattern === 'solid') return null
+  if (pattern === 'tabby') {
+    const stripe = darken(fur, 30)
+    return (
+      <g>
+        <rect x={4 * px} y={9.3 * px} width={8 * px} height={px * 0.4} fill={stripe}/>
+        <rect x={4 * px} y={10.3 * px} width={8 * px} height={px * 0.4} fill={stripe}/>
+        <rect x={4 * px} y={11.3 * px} width={8 * px} height={px * 0.4} fill={stripe}/>
+      </g>
+    )
+  }
+  if (pattern === 'spots') {
+    const spot = darken(fur, 35)
+    return (
+      <g>
+        <rect x={4 * px} y={9 * px} width={px} height={px} fill={spot}/>
+        <rect x={9 * px} y={9 * px} width={px} height={px} fill={spot}/>
+        <rect x={6 * px} y={10 * px} width={px} height={px} fill={spot}/>
+        <rect x={11 * px} y={10 * px} width={px} height={px} fill={spot}/>
+        <rect x={5 * px} y={11 * px} width={px} height={px} fill={spot}/>
+        <rect x={10 * px} y={11 * px} width={px} height={px} fill={spot}/>
+      </g>
+    )
+  }
+  if (pattern === 'bicolor') {
+    return <rect x={8 * px} y={3 * px} width={6 * px} height={10 * px} fill="#f0f0e8" opacity="0.6"/>
+  }
+  if (pattern === 'calico') {
+    return (
+      <g>
+        <rect x={3 * px} y={3 * px} width={4 * px} height={3 * px} fill="#f0e6c8" opacity="0.55"/>
+        <rect x={9 * px} y={9 * px} width={3 * px} height={3 * px} fill="#d4a070" opacity="0.55"/>
+      </g>
+    )
+  }
+  if (pattern === 'ticked') {
+    const tick = darken(fur, 20)
+    return (
+      <g>
+        {[3, 5, 7, 9, 11].flatMap((c) => [9, 10, 11].map((r) => (
+          <rect key={`${c}-${r}`} x={c * px + px * 0.3} y={r * px + px * 0.3} width={px * 0.4} height={px * 0.4} fill={tick}/>
+        )))}
+      </g>
+    )
+  }
+  return null
+}
+
+function MarkingOverlay({ marking, px, fur, eye }) {
+  if (marking === 'none') return null
+  if (marking === 'mask') {
+    return <rect x={2 * px} y={4.6 * px} width={12 * px} height={px * 0.8} fill="#0a0a0f" opacity="0.55"/>
+  }
+  if (marking === 'blaze') {
+    return <rect x={7 * px} y={2 * px} width={2 * px} height={5 * px} fill="#f0f0e8" opacity="0.7"/>
+  }
+  if (marking === 'whiskers') {
+    return (
+      <g stroke="#f0f0e8" strokeWidth={px * 0.2} opacity="0.7">
+        <line x1={2 * px} y1={7 * px} x2={5 * px} y2={7 * px}/>
+        <line x1={2 * px} y1={7.5 * px} x2={5 * px} y2={7.5 * px}/>
+        <line x1={11 * px} y1={7 * px} x2={14 * px} y2={7 * px}/>
+        <line x1={11 * px} y1={7.5 * px} x2={14 * px} y2={7.5 * px}/>
+      </g>
+    )
+  }
+  if (marking === 'nose_spot') {
+    return <rect x={6 * px} y={6 * px} width={4 * px} height={2 * px} fill="#f0e6c8" opacity="0.5"/>
+  }
+  return null
+}
+
+function AccessoryOverlay({ accessory, px, collar }) {
+  if (accessory === 'none') return null
+  if (accessory === 'glasses') {
+    return (
+      <g fill="none" stroke="#0a0a0f" strokeWidth={px * 0.35}>
+        <rect x={4 * px} y={4.5 * px} width={3 * px} height={2 * px}/>
+        <rect x={9 * px} y={4.5 * px} width={3 * px} height={2 * px}/>
+        <line x1={7 * px} y1={5.5 * px} x2={9 * px} y2={5.5 * px}/>
+      </g>
+    )
+  }
+  if (accessory === 'bowtie') {
+    return (
+      <g fill={collar}>
+        <polygon points={`${6 * px},${9 * px} ${8 * px},${9.5 * px} ${6 * px},${10 * px}`}/>
+        <polygon points={`${10 * px},${9 * px} ${8 * px},${9.5 * px} ${10 * px},${10 * px}`}/>
+        <rect x={7.6 * px} y={9.3 * px} width={px * 0.8} height={px * 0.5} fill="#0a0a0f"/>
+      </g>
+    )
+  }
+  if (accessory === 'scarf') {
+    return <rect x={3 * px} y={8.5 * px} width={10 * px} height={1.5 * px} fill={collar}/>
+  }
+  if (accessory === 'badge') {
+    return (
+      <g>
+        <circle cx={11 * px} cy={10 * px} r={px * 0.6} fill="#ffcc00"/>
+        <text x={11 * px} y={10.3 * px} fontSize={px * 0.8} fill="#0a0a0f" textAnchor="middle">!</text>
+      </g>
+    )
+  }
+  return null
+}
+
+// Tiny color helper — darken a hex by N%
+function darken(hex, pct) {
+  const h = hex.replace('#', '')
+  const r = parseInt(h.slice(0, 2), 16)
+  const g = parseInt(h.slice(2, 4), 16)
+  const b = parseInt(h.slice(4, 6), 16)
+  const f = (n) => Math.max(0, Math.min(255, Math.floor(n * (100 - pct) / 100)))
+  return `#${f(r).toString(16).padStart(2, '0')}${f(g).toString(16).padStart(2, '0')}${f(b).toString(16).padStart(2, '0')}`
+}
+
 export default function PixelCat({
   seed,
   pose = 'idle',
   size = 64,
   animated = true,
   onClick,
+  behavioralHash = null,
 }) {
   const traits = useMemo(() => deriveCatTraits(seed), [seed])
+  const details = useMemo(() => deriveBehavioralDetails(behavioralHash), [behavioralHash])
   const [tailFrame, setTailFrame] = useState(0)
-  const [expression, setExpression] = useState(0)
+  // S221: baseline expression is behavioral-derived; hover still cycles on top
+  const expressionBaseline = { chill: 0, alert: 1, curious: 2, sleepy: 3 }[details.expression] ?? 0
+  const [expressionDelta, setExpressionDelta] = useState(0)
+  const expression = (expressionBaseline + expressionDelta) % 4
   const [moonwalk, setMoonwalk] = useState(false)
   const [meow, setMeow] = useState(false)
   const konamiBuf = useRef([])
@@ -347,8 +475,8 @@ export default function PixelCat({
   const px = size / 16
   const colorFor = (kind) => {
     if (kind === 'eye') {
-      // 3 expressions: normal, half, narrow — cycle on hover
-      if (expression === 2) return traits.fur  // closed (matches fur)
+      // 4 expressions: chill(0)=open, alert(1)=wider, curious(2)=narrow, sleepy(3)=closed-line
+      if (expression === 3) return traits.fur  // sleepy → eye blends into fur
       return traits.eye
     }
     if (kind === 'belly') return traits.belly
@@ -393,7 +521,7 @@ export default function PixelCat({
                   width={w * px}
                   height={h * px}
                   fill={colorFor(kind)}
-                  onMouseEnter={() => setExpression((e) => (e + 1) % 3)}
+                  onMouseEnter={() => setExpressionDelta((d) => (d + 1) % 4)}
                 />
               )
             }
@@ -409,6 +537,9 @@ export default function PixelCat({
             )
           })}
         </g>
+        <PatternOverlay pattern={details.pattern} px={px} fur={traits.fur} belly={traits.belly}/>
+        <MarkingOverlay marking={details.marking} px={px} fur={traits.fur} eye={traits.eye}/>
+        <AccessoryOverlay accessory={details.accessory} px={px} collar={traits.collar}/>
         {poseSpec.extras && poseSpec.extras({ px, fur: traits.fur })}
       </svg>
       {meow && (

@@ -144,6 +144,7 @@ export default function SystemLiveScansTab() {
                       <div className="flex items-center gap-2">
                         <PixelCat
                           seed={scan.fingerprint_avatar_seed}
+                          behavioralHash={scan.bfp_behavioral_hash}
                           pose={phaseFromScan(scan, null)}
                           size={20}
                           animated={false}
