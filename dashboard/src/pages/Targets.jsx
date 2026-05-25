@@ -1,6 +1,6 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useMemo } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
-import { Plus, Trash2, Search, Eye, Upload, Play, FileDown, Layers } from 'lucide-react'
+import { Plus, Trash2, Search, Eye, Upload, Play, FileDown, Layers, ChevronUp, ChevronDown, ChevronsUpDown } from 'lucide-react'
 import { getTargets, getAllTargets, createTarget, deleteTarget, bulkImportTargets, createScan } from '../lib/api'
 import { fallbackSeed } from '../lib/avatar'
 import TargetQuickView from '../components/TargetQuickView'
@@ -65,6 +65,47 @@ export default function Targets() {
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
   const isAllMode = searchParams.get('all') === '1'
+
+  // S225 — client-side column sort, 3-state cycle (null → desc → asc → null)
+  const [sort, setSort] = useState({ column: null, direction: null })
+
+  const toggleSort = (column) => {
+    setSort((prev) => {
+      if (prev.column !== column) return { column, direction: 'desc' }
+      if (prev.direction === 'desc')  return { column, direction: 'asc'  }
+      return { column: null, direction: null }
+    })
+  }
+
+  const sortedTargets = useMemo(() => {
+    if (!sort.column) return targets
+    const accessor = {
+      email:    (t) => (t.primary_name || t.display_name || t.email || '').toLowerCase(),
+      workspace:(t) => (t.workspace_name || '').toLowerCase(),
+      country:  (t) => (t.country_code || '').toLowerCase(),
+      exposure: (t) => t.exposure_score,
+      threat:   (t) => t.threat_score,
+      last_scan:(t) => t.last_scanned ? new Date(t.last_scanned).getTime() : null,
+    }[sort.column]
+    if (!accessor) return targets
+    const dir = sort.direction === 'asc' ? 1 : -1
+    return [...targets].sort((a, b) => {
+      const va = accessor(a), vb = accessor(b)
+      // Nulls always sink to the bottom regardless of direction
+      if (va == null && vb == null) return 0
+      if (va == null) return 1
+      if (vb == null) return -1
+      if (va < vb) return -1 * dir
+      if (va > vb) return  1 * dir
+      return 0
+    })
+  }, [targets, sort])
+
+  const SortIcon = ({ column }) => {
+    if (sort.column !== column) return <ChevronsUpDown className="w-3 h-3 inline opacity-30 ml-1" />
+    if (sort.direction === 'desc') return <ChevronDown className="w-3 h-3 inline ml-1" />
+    return <ChevronUp className="w-3 h-3 inline ml-1" />
+  }
 
   useEffect(() => {
     loadTargets()
@@ -191,18 +232,32 @@ export default function Targets() {
       <div className="bg-[#12121a] border border-[#1e1e2e] rounded-xl overflow-x-hidden overflow-y-auto max-h-[calc(100vh-240px)]">
         <table className="w-full text-sm">
           <thead>
-            <tr className="text-xs text-gray-500 uppercase tracking-wider border-b border-[#1e1e2e]">
-              <th className="text-left px-5 py-3">Target</th>
-              {isAllMode && <th className="text-left px-3 py-3">Workspace</th>}
-              <th className="text-left px-3 py-3">Country</th>
-              <th className="text-left px-3 py-3">Exposure</th>
-              <th className="text-left px-3 py-3">Threat</th>
-              <th className="text-left px-3 py-3">Last Scan</th>
+            <tr className="text-xs text-gray-500 uppercase tracking-wider border-b border-[#1e1e2e] select-none">
+              <th onClick={() => toggleSort('email')} className="text-left px-5 py-3 cursor-pointer hover:text-gray-300 transition-colors">
+                Target <SortIcon column="email" />
+              </th>
+              {isAllMode && (
+                <th onClick={() => toggleSort('workspace')} className="text-left px-3 py-3 cursor-pointer hover:text-gray-300 transition-colors">
+                  Workspace <SortIcon column="workspace" />
+                </th>
+              )}
+              <th onClick={() => toggleSort('country')} className="text-left px-3 py-3 cursor-pointer hover:text-gray-300 transition-colors">
+                Country <SortIcon column="country" />
+              </th>
+              <th onClick={() => toggleSort('exposure')} className="text-left px-3 py-3 cursor-pointer hover:text-gray-300 transition-colors">
+                Exposure <SortIcon column="exposure" />
+              </th>
+              <th onClick={() => toggleSort('threat')} className="text-left px-3 py-3 cursor-pointer hover:text-gray-300 transition-colors">
+                Threat <SortIcon column="threat" />
+              </th>
+              <th onClick={() => toggleSort('last_scan')} className="text-left px-3 py-3 cursor-pointer hover:text-gray-300 transition-colors">
+                Last Scan <SortIcon column="last_scan" />
+              </th>
               <th className="text-left px-3 py-3"></th>
             </tr>
           </thead>
           <tbody>
-            {targets.map((t, i) => {
+            {sortedTargets.map((t, i) => {
               const name = t.primary_name || t.display_name || ''
               const isScanning = t.status === 'scanning' || scanningIds.has(t.id)
               return (
