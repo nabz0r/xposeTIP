@@ -1,0 +1,9 @@
+name                      category     enabled  identity_type  key_status
+bing_phone_dork           metadata     True     NULL           ready
+duckduckgo_phone_dork     metadata     True     NULL           ready
+google_phone_dork         metadata     True     NULL           ready
+yandex_phone_dork         metadata     True     NULL           ready
+abstractapi_phone         identity     False    NULL           placeholder_key
+api_ninjas_phone          identity     False    NULL           ready
+numverify_phone           identity     False    NULL           placeholder_key
+veriphone_phone           identity     False    NULL           placeholder_key
