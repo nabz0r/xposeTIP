@@ -1,0 +1,7 @@
+INFO  [alembic.runtime.migration] Context impl PostgresqlImpl.
+INFO  [alembic.runtime.migration] Will assume transactional DDL.
+INFO  [alembic.runtime.migration] Running upgrade 025 -> 026, S214 — Delete safe-bucket junk username findings.
+INFO  [alembic.runtime.migration] S214 migration 026: 3262 candidate findings in trust bucket (unverified + cross_verified=0 + indicator_type='username')
+INFO  [alembic.runtime.migration] S214 migration 026: 2818 candidates fail current validator -> targeted for deletion
+INFO  [alembic.runtime.migration] S214 migration 026: deleted 527 dependent identity rows
+INFO  [alembic.runtime.migration] S214 migration 026: deleted 2818 junk username findings

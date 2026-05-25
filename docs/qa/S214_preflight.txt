@@ -1,0 +1,6 @@
+S214 preflight:
+  trust-bucket candidates: 3262
+  validator-fail (delete target): 2818
+  S213 baseline: 2820
+  drift: -2
+  dependent identities: 527
