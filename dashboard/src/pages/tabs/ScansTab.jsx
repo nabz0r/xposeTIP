@@ -2,6 +2,7 @@ import React from 'react'
 import { Radar, Lock, CheckCircle, XCircle } from 'lucide-react'
 import { getLogs, cancelScan } from '../../lib/api'
 import { normalizeModuleStatus, formatModuleStatus } from '../../lib/moduleProgress'
+import PixelCat, { phaseFromScan } from '../../components/PixelCat'
 
 const SCAN_TIMES = {
   email_validator: '~5s', holehe: '~2min', hibp: '~5s', sherlock: '~60s',
@@ -13,7 +14,7 @@ const SCAN_TIMES = {
   reverse_image: '~15s', google_audit: '~10s', microsoft_audit: '~10s',
 }
 
-export default function ScansTab({ scans, modules, load, showScanModal, setShowScanModal, selectedModules, setSelectedModules, scanning, handleScan }) {
+export default function ScansTab({ scans, modules, load, showScanModal, setShowScanModal, selectedModules, setSelectedModules, scanning, handleScan, targetSeed }) {
   const implementedModules = modules.filter(m => m.enabled && m.implemented)
   const layers = [...new Set(implementedModules.map(m => m.layer))].sort()
 
@@ -36,6 +37,12 @@ export default function ScansTab({ scans, modules, load, showScanModal, setShowS
             <div key={scan.id} className="bg-[#12121a] border border-[#1e1e2e] rounded-xl p-4">
               <div className="flex items-center justify-between mb-3">
                 <div className="flex items-center gap-3">
+                  <PixelCat
+                    seed={targetSeed}
+                    pose={phaseFromScan(scan, null)}
+                    size={24}
+                    animated={false}
+                  />
                   <span className="inline-flex items-center gap-1.5 text-xs font-medium px-2 py-0.5 rounded-full"
                     style={{ backgroundColor: scanStatusColor + '26', color: scanStatusColor }}>
                     {scan.status}

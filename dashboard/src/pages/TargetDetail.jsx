@@ -535,6 +535,7 @@ export default function TargetDetail() {
           showScanModal={showScanModal} setShowScanModal={setShowScanModal}
           selectedModules={selectedModules} setSelectedModules={setSelectedModules}
           scanning={scanning} handleScan={handleScan}
+          targetSeed={target.fingerprint_avatar_seed}
         />
       )}
 
@@ -554,6 +555,7 @@ export default function TargetDetail() {
           showScanModal={showScanModal} setShowScanModal={setShowScanModal}
           selectedModules={selectedModules} setSelectedModules={setSelectedModules}
           scanning={scanning} handleScan={handleScan}
+          targetSeed={target.fingerprint_avatar_seed}
         />
       )}
     </div>

@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from 'react'
 import { RefreshCw, XCircle, Radar, AlertCircle } from 'lucide-react'
 import { useAuth } from '../../lib/auth'
 import { getLiveScans, superadminCancelScan } from '../../lib/api'
+import PixelCat, { phaseFromScan } from '../../components/PixelCat'
 
 export default function SystemLiveScansTab() {
   const { refreshKey } = useAuth()
@@ -139,7 +140,17 @@ export default function SystemLiveScansTab() {
                 return (
                   <tr key={scan.id} className={`border-t border-[#1e1e2e] ${i % 2 === 1 ? 'bg-white/[0.02]' : ''}`}>
                     <td className="px-4 py-3 text-xs text-gray-300 truncate max-w-[140px]">{scan.workspace_name}</td>
-                    <td className="px-4 py-3 font-mono text-xs text-gray-300 truncate max-w-[220px]">{scan.target_email}</td>
+                    <td className="px-4 py-3 font-mono text-xs text-gray-300 max-w-[260px]">
+                      <div className="flex items-center gap-2">
+                        <PixelCat
+                          seed={scan.fingerprint_avatar_seed}
+                          pose={phaseFromScan(scan, null)}
+                          size={20}
+                          animated={false}
+                        />
+                        <span className="truncate">{scan.target_email}</span>
+                      </div>
+                    </td>
                     <td className="px-4 py-3">
                       <span className="inline-flex items-center gap-1.5 text-xs font-medium px-2 py-0.5 rounded-full"
                         style={{ backgroundColor: c + '26', color: c }}>

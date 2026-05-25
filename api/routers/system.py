@@ -13,6 +13,7 @@ from api.models.finding import Finding
 from api.models.identity import Identity
 from api.models.module import Module
 from api.models.scan import Scan
+from api.routers.targets import _email_only_avatar_seed  # S220
 from api.models.target import Target
 from api.models.user import User, UserWorkspace
 from api.models.workspace import Workspace
@@ -361,7 +362,7 @@ async def list_live_scans(
     from sqlalchemy import and_, or_
 
     rows = await db.execute(
-        select(Scan, Target.email, Workspace.name)
+        select(Scan, Target.email, Target.profile_data, Workspace.name)
         .join(Target, Scan.target_id == Target.id, isouter=True)
         .join(Workspace, Scan.workspace_id == Workspace.id, isouter=True)
         .where(
@@ -380,7 +381,7 @@ async def list_live_scans(
 
     now = datetime.now(timezone.utc)
     items = []
-    for scan, target_email, workspace_name in rows.all():
+    for scan, target_email, target_profile_data, workspace_name in rows.all():
         progress = scan.module_progress or {}
         modules_total = len(progress)
         modules_done = sum(
@@ -391,6 +392,14 @@ async def list_live_scans(
         # Age in seconds — prefer started_at, fall back to created_at for queued scans
         anchor = scan.started_at or scan.created_at
         age_seconds = int((now - anchor).total_seconds()) if anchor else None
+
+        # S220: Canonical avatar seed: prefer the computed fingerprint seed
+        # (post-scan), fall back to MD5-derived email seed for unscanned/
+        # data-starved targets. Mirrors api/routers/targets.py:900 so the cat
+        # is visually identical to the one rendered on TargetDetail for this
+        # same target.
+        fp = (target_profile_data or {}).get("fingerprint") if target_profile_data else None
+        avatar_seed = (fp.get("avatar_seed") if fp else None) or _email_only_avatar_seed(target_email or "")
 
         items.append({
             "id": str(scan.id),
@@ -406,6 +415,7 @@ async def list_live_scans(
             "started_at": scan.started_at.isoformat() if scan.started_at else None,
             "created_at": scan.created_at.isoformat() if scan.created_at else None,
             "age_seconds": age_seconds,
+            "fingerprint_avatar_seed": avatar_seed,
         })
 
     return {"items": items, "total": len(items)}
