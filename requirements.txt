@@ -30,3 +30,4 @@ trafilatura
 pdfplumber
 phonenumbers>=8.13
 datasketch>=1.6,<2.0
+lingua-language-detector>=2.0,<3.0

@@ -1157,6 +1157,14 @@ def aggregate_profile(target_id, workspace_id, session: Session, graph_context=N
         logger.debug("Geo consistency analysis failed: %s", e)
         profile["geo_consistency"] = None
 
+    # --- S237 language detection from free-text findings ---
+    try:
+        from api.services.layer4.analyzers.language_analyzer import analyze_languages
+        profile["languages"] = analyze_languages(findings)
+    except Exception as e:
+        logger.debug("Language analysis failed: %s", e)
+        profile["languages"] = None
+
     # --- Email status synthesis ---
     try:
         profile["email_status"] = _synthesize_email_status(findings, target_id, session)

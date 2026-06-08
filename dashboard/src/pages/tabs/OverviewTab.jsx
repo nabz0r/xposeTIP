@@ -202,6 +202,41 @@ export default function OverviewTab({ target, findings, profile, fingerprint, fp
         </div>
       )}
 
+      {/* S237 — Detected languages (from user-authored free text) */}
+      {profile?.languages && profile.languages.languages?.length > 0 && (
+        <div className="bg-[#12121a] border border-[#1e1e2e] rounded-xl p-4">
+          <div className="flex items-center gap-2">
+            <Globe className="w-4 h-4 text-[#3388ff]" />
+            <span className="text-xs font-semibold uppercase tracking-wider text-gray-500">Languages</span>
+            <span
+              className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-[#1e1e2e] text-gray-400 border border-dashed border-[#1e1e2e]"
+              title={`Detected from ${profile.languages.sample_chars} chars of user-authored text (bio / description / about).`}
+            >
+              Inferred
+            </span>
+          </div>
+          <div className="flex flex-wrap items-center gap-2 mt-2 text-xs">
+            {profile.languages.languages.map((l) => (
+              <span
+                key={l.code}
+                className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded font-mono ${
+                  l.code === profile.languages.primary
+                    ? 'bg-[#3388ff]/15 text-[#3388ff] border border-[#3388ff]/30'
+                    : 'bg-[#1e1e2e] text-gray-300 border border-[#1e1e2e]'
+                }`}
+                title={`${l.name} · ${Math.round(l.confidence * 100)}% confidence`}
+              >
+                <span className="uppercase">{l.code}</span>
+                <span className="opacity-70">{Math.round(l.confidence * 100)}%</span>
+              </span>
+            ))}
+            {profile.languages.reliable === false && (
+              <span className="text-[11px] text-gray-500">(low confidence — short text)</span>
+            )}
+          </div>
+        </div>
+      )}
+
       {/* Geographic Intelligence */}
       {profile?.geo_consistency && profile.geo_consistency.primary_country && (
         <div className="bg-[#12121a] border border-[#1e1e2e] rounded-xl p-4">
