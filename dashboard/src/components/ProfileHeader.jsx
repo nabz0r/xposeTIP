@@ -1,11 +1,23 @@
-import { useEffect, useState } from 'react'
-import { Globe, MapPin, Building2, Github, ExternalLink, Shield, AlertTriangle, Link2 } from 'lucide-react'
+import { useEffect, useRef, useState } from 'react'
+import { Globe, MapPin, Building2, Github, ExternalLink, Shield, AlertTriangle, Link2, Check, RefreshCw } from 'lucide-react'
 import { getTargetProfile, getFingerprint } from '../lib/api'
 import { fallbackSeed } from '../lib/avatar'
 import FingerprintRadar from './FingerprintRadar'
 import GenerativeAvatar from './GenerativeAvatar'
 import CountrySelector from './target/CountrySelector'
 import IdentityEditor from './target/IdentityEditor'
+
+// S232 — consent router is mounted at FastAPI root (not /api/v1) because the
+// callback path must equal the Google-Authorized redirect URI verbatim.
+// Vite proxies `/consent` to the backend (vite.config.js).
+async function consentFetch(path, options = {}) {
+  const token = localStorage.getItem('xpose_token')
+  const headers = { 'Content-Type': 'application/json', ...options.headers }
+  if (token) headers['Authorization'] = `Bearer ${token}`
+  const res = await fetch(path, { ...options, headers })
+  if (!res.ok) throw new Error(`consent ${res.status}`)
+  return res.status === 204 ? null : res.json()
+}
 const scoreColor = (score) => {
   if (score == null) return '#666688'
   if (score >= 61) return '#ff2244'
@@ -24,14 +36,75 @@ export default function ProfileHeader({ target, findings, animScore, profileData
   const [fingerprint, setFingerprint] = useState(null)
   const profile = profileData || localProfile
 
+  // S232 — SSO consent verification
+  const [consent, setConsent] = useState(null)
+  const [consentBusy, setConsentBusy] = useState(false)
+  const [consentError, setConsentError] = useState(null)
+  const consentPollRef = useRef(null)
+
+  const fetchConsentStatus = (id) =>
+    consentFetch(`/consent/${id}/status`).catch(() => null)
+
   useEffect(() => {
     if (target?.id) {
       if (!profileData) {
         getTargetProfile(target.id).then(setLocalProfile).catch(() => setLocalProfile(null))
       }
       getFingerprint(target.id).then(setFingerprint).catch(() => setFingerprint(null))
+      fetchConsentStatus(target.id).then(setConsent)
+    }
+    return () => {
+      if (consentPollRef.current) {
+        clearInterval(consentPollRef.current)
+        consentPollRef.current = null
+      }
     }
   }, [target?.id, target?.last_scanned, profileData])
+
+  const startConsentPolling = (id) => {
+    if (consentPollRef.current) clearInterval(consentPollRef.current)
+    let attempts = 0
+    consentPollRef.current = setInterval(async () => {
+      attempts += 1
+      const next = await fetchConsentStatus(id)
+      if (next?.verified) {
+        setConsent(next)
+        clearInterval(consentPollRef.current)
+        consentPollRef.current = null
+      } else if (attempts >= 24) {
+        clearInterval(consentPollRef.current)
+        consentPollRef.current = null
+      }
+    }, 2500)
+  }
+
+  const handleRequestConsent = async () => {
+    if (!target?.id || consentBusy) return
+    setConsentBusy(true)
+    setConsentError(null)
+    try {
+      const res = await consentFetch('/consent/oauth/start', {
+        method: 'POST',
+        body: JSON.stringify({ target_id: target.id }),
+      })
+      if (res?.auth_url) {
+        window.open(res.auth_url, '_blank')
+        startConsentPolling(target.id)
+      } else {
+        setConsentError('No auth URL returned')
+      }
+    } catch (e) {
+      setConsentError('Failed to start consent flow')
+    } finally {
+      setConsentBusy(false)
+    }
+  }
+
+  const handleConsentRecheck = async () => {
+    if (!target?.id) return
+    const next = await fetchConsentStatus(target.id)
+    setConsent(next)
+  }
 
   // Fallback to findings-based extraction if profile not available
   const p = profile || {}
@@ -243,13 +316,55 @@ export default function ProfileHeader({ target, findings, animScore, profileData
                   </div>
                 )}
               </div>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 flex-wrap">
                 <p className="text-sm font-mono text-gray-400">{target.email}</p>
                 <CountrySelector
                   targetId={target.id}
                   currentCode={target.country_code}
                   onUpdate={(code) => onTargetUpdate?.({ ...target, country_code: code })}
                 />
+                {/* S232 — SSO consent verification (subject-attested green flag) */}
+                {consent?.verified ? (
+                  <span
+                    className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-mono bg-[#00ff88]/10 text-[#00ff88] border border-[#00ff88]/30"
+                    title={consent.verified_at ? `Verified ${new Date(consent.verified_at).toLocaleString()}` : 'Verified'}
+                  >
+                    <Check className="w-3 h-3" />
+                    Consent verified
+                    {consent.provider && (
+                      <span className="text-[#00ff88]/70">· {consent.provider}</span>
+                    )}
+                    {consent.verified_at && (
+                      <span className="text-[#00ff88]/70">· {new Date(consent.verified_at).toLocaleDateString()}</span>
+                    )}
+                  </span>
+                ) : (
+                  <>
+                    <button
+                      type="button"
+                      onClick={handleRequestConsent}
+                      disabled={consentBusy}
+                      className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-mono bg-[#1e1e2e] text-gray-300 hover:bg-[#2a2a3e] border border-[#1e1e2e] hover:border-[#3388ff]/40 transition-colors disabled:opacity-50"
+                      title="Open SSO consent flow in a new tab. Subject signs in with Google; we verify the email matches and record an append-only consent claim."
+                    >
+                      {consentBusy ? 'Opening…' : 'Request SSO consent'}
+                    </button>
+                    {consentPollRef.current && (
+                      <button
+                        type="button"
+                        onClick={handleConsentRecheck}
+                        className="inline-flex items-center gap-1 text-[11px] text-[#3388ff] hover:underline"
+                        title="Re-check consent status"
+                      >
+                        <RefreshCw className="w-3 h-3" />
+                        Recheck
+                      </button>
+                    )}
+                  </>
+                )}
+                {consentError && (
+                  <span className="text-[11px] text-red-400">{consentError}</span>
+                )}
               </div>
               {/* Email Status Banner */}
               {profileData?.email_status && (

@@ -6,7 +6,7 @@ from sqlalchemy import text
 
 from api.config import settings
 from api.database import engine
-from api.routers import auth, targets, scans, findings, modules, graph, system, settings as settings_router, workspaces, accounts, scrapers, report, consulting, bfp
+from api.routers import auth, targets, scans, findings, modules, graph, system, settings as settings_router, workspaces, accounts, scrapers, report, consulting, bfp, consent
 
 
 @asynccontextmanager
@@ -73,6 +73,10 @@ app.include_router(scrapers.router, prefix="/api/v1/scrapers", tags=["scrapers"]
 app.include_router(report.router, prefix="/api/v1", tags=["report"])
 app.include_router(consulting.router, prefix="/api/v1/consulting", tags=["consulting"])
 app.include_router(bfp.router, prefix="/api/v1/bfp", tags=["bfp"])
+# S232 — consent router intentionally mounted at FastAPI root (no /api/v1
+# prefix). Path `/consent/oauth/callback` must equal the Authorized redirect
+# URI registered in Google Cloud console verbatim.
+app.include_router(consent.router, tags=["consent"])
 
 
 @app.post("/api/v1/scan/quick")

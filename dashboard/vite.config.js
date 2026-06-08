@@ -11,6 +11,12 @@ export default defineConfig({
         target: 'http://localhost:8000',
         changeOrigin: true,
       },
+      // S232 — consent router lives at FastAPI root (matches Google's
+      // Authorized redirect URI verbatim, so it cannot share /api/v1).
+      '/consent': {
+        target: 'http://localhost:8000',
+        changeOrigin: true,
+      },
     },
   },
 })
