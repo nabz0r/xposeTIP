@@ -118,6 +118,15 @@ export default function ProfileHeader({ target, findings, animScore, profileData
   const avatarUrl = p.primary_avatar || target.avatar_url || null
   const bio = p.bio || ''
   const location = p.location || ''
+  // S233 — derived country signal (Layer-4 geo_consistency analyzer).
+  // Surfaced only when operator has NOT set `target.country_code`; never
+  // auto-writes the operator field.
+  const geo = p.geo_consistency || null
+  const inferredCC = geo?.primary_country || null
+  const flagEmoji = (cc) =>
+    cc && cc.length === 2
+      ? cc.toUpperCase().replace(/./g, (c) => String.fromCodePoint(127397 + c.charCodeAt(0)))
+      : ''
   const company = p.company || ''
   const title = p.title || ''
   const website = p.website || ''
@@ -323,6 +332,23 @@ export default function ProfileHeader({ target, findings, animScore, profileData
                   currentCode={target.country_code}
                   onUpdate={(code) => onTargetUpdate?.({ ...target, country_code: code })}
                 />
+                {/* S233 — inferred country (Layer-4 geo_consistency). Renders only
+                    when operator has NOT set country_code; dashed border + literal
+                    "inferred" so it's never confused with a confirmed value. */}
+                {!target.country_code && inferredCC && (
+                  <span
+                    title={geo.verdict || 'Inferred from geo signals'}
+                    className={`inline-flex items-center gap-1 text-[11px] px-2 py-0.5 rounded-full border border-dashed ${
+                      geo.consistency_score >= 0.8 ? 'border-[#00ff88]/40 text-[#00ff88]' :
+                      geo.consistency_score >= 0.5 ? 'border-[#ffcc00]/40 text-[#ffcc00]' :
+                      'border-[#ff8800]/40 text-[#ff8800]'
+                    }`}
+                  >
+                    <span>{flagEmoji(inferredCC)}</span>
+                    <span>{geo.primary_country_name || inferredCC}</span>
+                    <span className="opacity-70">{Math.round((geo.consistency_score || 0) * 100)}% inferred</span>
+                  </span>
+                )}
                 {/* S232 — SSO consent verification (subject-attested green flag) */}
                 {consent?.verified ? (
                   <span
