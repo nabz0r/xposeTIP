@@ -9,6 +9,7 @@ import LifeTimeline from '../../components/LifeTimeline'
 import RiskSignalsBlock from '../../components/RiskSignalsBlock'
 import SimilarityBlock from '../../components/SimilarityBlock'
 import BFPSubstrateBlock from '../../components/bfp/BFPSubstrateBlock'
+import ActivityRhythm from '../../components/ActivityRhythm'
 
 const severityColors = {
   critical: '#ff2244', high: '#ff8800', medium: '#ffcc00', low: '#3388ff', info: '#666688',
@@ -196,6 +197,8 @@ export default function OverviewTab({ target, findings, profile, fingerprint, fp
             <span className="text-gray-600">|</span>
             <span>{profile.timezone.sample_count} timestamps analyzed</span>
           </div>
+          {/* S235 — radial 24h activity-rhythm clock (self-gates on sample_count >= 5) */}
+          <ActivityRhythm timezone={profile.timezone} />
         </div>
       )}
 
