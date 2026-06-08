@@ -570,6 +570,14 @@ def _synthesize_email_status(findings, target_id, session) -> dict:
         "noreply", "no-reply", "postmaster", "webmaster", "abuse", "security",
         "help", "office", "mail", "newsletter", "billing", "accounts",
     }
+    # S236 — mainstream consumer providers can never be classified disposable,
+    # regardless of what emailrep/hunter report.
+    _FREE_MAJOR = {
+        "gmail.com", "googlemail.com", "outlook.com", "hotmail.com", "live.com", "msn.com",
+        "yahoo.com", "ymail.com", "icloud.com", "me.com", "mac.com", "proton.me",
+        "protonmail.com", "pm.me", "gmx.com", "gmx.net", "gmx.de", "aol.com", "zoho.com",
+        "mail.com", "yandex.com", "yandex.ru", "fastmail.com", "tutanota.com", "tuta.io",
+    }
 
     ev = next((f for f in findings if f.module == "email_validator" and f.data), None)
     fmt_invalid = ev is not None and ev.data.get("format_valid") is False
@@ -577,24 +585,32 @@ def _synthesize_email_status(findings, target_id, session) -> dict:
         f.module == "email_validator" and f.data and f.data.get("has_dns")
         for f in findings
     )
-    disposable = any(f.data and f.data.get("disposable") for f in findings if f.data)
 
-    # Resolve local part — try email_validator.data first (no DB hit),
-    # then fall back to a Target lookup. Role-based check degrades to
-    # False if neither is available (no false positives).
-    local_part = ""
+    # Resolve the full address — try email_validator.data first (no DB hit),
+    # then fall back to a Target lookup. Local part used for role-based check;
+    # domain used for disposable allow-list. Both degrade to "" if neither
+    # source has the address (no false positives).
+    resolved_email = ""
     if ev and ev.data.get("email"):
-        local_part = str(ev.data["email"]).split("@", 1)[0].lower()
+        resolved_email = str(ev.data["email"]).strip().lower()
     else:
         try:
             tgt = session.execute(
                 select(Target.email).where(Target.id == target_id)
             ).scalar_one_or_none()
             if tgt:
-                local_part = str(tgt).split("@", 1)[0].lower()
+                resolved_email = str(tgt).strip().lower()
         except Exception:
             pass
+    local_part, _, email_domain = resolved_email.partition("@")
     role_based = local_part in ROLE_PARTS
+
+    # S236 — strict-True (kills the `"False"`-string landmine) AND major-provider
+    # guard (kills emailrep/hunter false positives on mainstream domains).
+    disposable = (
+        email_domain not in _FREE_MAJOR
+        and any(f.data.get("disposable") is True for f in findings if isinstance(f.data, dict))
+    )
 
     existence_evidence = (
         status["breach_count"] > 0
