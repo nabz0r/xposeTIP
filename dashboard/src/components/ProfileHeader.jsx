@@ -392,16 +392,27 @@ export default function ProfileHeader({ target, findings, animScore, profileData
                   <span className="text-[11px] text-red-400">{consentError}</span>
                 )}
               </div>
-              {/* Email Status Banner */}
+              {/* Email Status Banner — S234 4-state taxonomy
+                  (true / false / risky / unknown), falls back to legacy
+                  `deliverable` boolean for older cached payloads. */}
               {profileData?.email_status && (
                 <div className="flex items-center gap-1.5 text-[11px] mt-1">
-                  {profileData.email_status.suspicious
-                    ? <span className="text-red-400">&#9888;&#65039; Suspicious</span>
-                    : profileData.email_status.deliverable === true
-                      ? <span className="text-[#00ff88]">&#9989; Deliverable</span>
-                      : profileData.email_status.deliverable === false
-                        ? <span className="text-red-400">&#10060; Undeliverable</span>
-                        : <span className="text-cyan-400">&#128231; DNS valid</span>}
+                  {profileData.email_status.status === 'true'
+                    ? <span className="text-[#00ff88]" title={profileData.email_status.status_reason || ''}>&#9989; Deliverable</span>
+                    : profileData.email_status.status === 'false'
+                      ? <span className="text-red-400" title={profileData.email_status.status_reason || ''}>&#10060; Undeliverable</span>
+                      : profileData.email_status.status === 'risky'
+                        ? <span className="text-amber-400" title={profileData.email_status.status_reason || ''}>&#9888;&#65039; Risky</span>
+                        : profileData.email_status.status === 'unknown'
+                          ? <span className="text-cyan-400" title={profileData.email_status.status_reason || ''}>&#9675; Unverified</span>
+                          /* Legacy fallback when `status` is absent (older cached payload) */
+                          : profileData.email_status.suspicious
+                            ? <span className="text-red-400">&#9888;&#65039; Suspicious</span>
+                            : profileData.email_status.deliverable === true
+                              ? <span className="text-[#00ff88]">&#9989; Deliverable</span>
+                              : profileData.email_status.deliverable === false
+                                ? <span className="text-red-400">&#10060; Undeliverable</span>
+                                : <span className="text-cyan-400">&#128231; DNS valid</span>}
                   {profileData.email_status.provider && (
                     <><span className="text-gray-600">&middot;</span><span className="text-gray-300">{profileData.email_status.provider}</span></>
                   )}

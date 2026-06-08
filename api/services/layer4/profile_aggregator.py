@@ -513,11 +513,11 @@ def _synthesize_email_status(findings, target_id, session) -> dict:
         status["last_seen"] = d.get("last_seen")
         status["source"] = "emailrep"
 
-    # Priority 2: email_validator DNS
-    if status["deliverable"] is None:
-        ev = next((f for f in findings if f.module == "email_validator" and f.data), None)
-        if ev and (ev.data.get("has_dns") or ev.data.get("format_valid")):
-            status["deliverable"] = True
+    # S234 — keep emailrep's `deliverable` separate from the synthesized
+    # field; the final taxonomy below decides what `deliverable` becomes.
+    em_deliverable = status["deliverable"]
+    em_suspicious = status["suspicious"]
+    em_rep = status["reputation"]
 
     # Provider detection from MX/DNS
     for f in findings:
@@ -560,6 +560,72 @@ def _synthesize_email_status(findings, target_id, session) -> dict:
                 status["first_seen"] = dates[0]
             if not status["last_seen"]:
                 status["last_seen"] = dates[-1]
+
+    # ───── S234 — 4-state deliverability taxonomy ─────────────────────────
+    # Replaces the old "MX → True" overclaim. Buckets the email as one of
+    # {true, false, risky, unknown} based on signals already collected.
+    # `deliverable` is kept (derived) for back-compat with older consumers.
+    ROLE_PARTS = {
+        "info", "admin", "support", "contact", "sales", "hello", "team",
+        "noreply", "no-reply", "postmaster", "webmaster", "abuse", "security",
+        "help", "office", "mail", "newsletter", "billing", "accounts",
+    }
+
+    ev = next((f for f in findings if f.module == "email_validator" and f.data), None)
+    fmt_invalid = ev is not None and ev.data.get("format_valid") is False
+    has_mx = any(
+        f.module == "email_validator" and f.data and f.data.get("has_dns")
+        for f in findings
+    )
+    disposable = any(f.data and f.data.get("disposable") for f in findings if f.data)
+
+    # Resolve local part — try email_validator.data first (no DB hit),
+    # then fall back to a Target lookup. Role-based check degrades to
+    # False if neither is available (no false positives).
+    local_part = ""
+    if ev and ev.data.get("email"):
+        local_part = str(ev.data["email"]).split("@", 1)[0].lower()
+    else:
+        try:
+            tgt = session.execute(
+                select(Target.email).where(Target.id == target_id)
+            ).scalar_one_or_none()
+            if tgt:
+                local_part = str(tgt).split("@", 1)[0].lower()
+        except Exception:
+            pass
+    role_based = local_part in ROLE_PARTS
+
+    existence_evidence = (
+        status["breach_count"] > 0
+        or status["credentials_leaked"]
+        or em_deliverable is True
+        or em_rep == "high"
+    )
+
+    if fmt_invalid or (ev is not None and not has_mx and em_deliverable is not True):
+        st, reason = "false", ("invalid format" if fmt_invalid else "domain has no MX")
+    elif em_deliverable is False:
+        st, reason = "false", "provider reports undeliverable"
+    elif disposable or em_suspicious or role_based or em_rep == "low":
+        st, reason = "risky", (
+            "disposable provider" if disposable else
+            "flagged suspicious" if em_suspicious else
+            "role-based address" if role_based else
+            "low reputation"
+        )
+    elif existence_evidence:
+        st, reason = "true", (
+            "found in breaches" if status["breach_count"] > 0 else
+            "provider confirms delivery" if em_deliverable is True else
+            "high reputation"
+        )
+    else:
+        st, reason = "unknown", "domain accepts mail; mailbox not confirmed"
+
+    status["status"] = st
+    status["status_reason"] = reason
+    status["deliverable"] = True if st == "true" else False if st == "false" else None
 
     return status
 

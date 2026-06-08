@@ -77,8 +77,11 @@ function DeepScanActivity({ findings }) {
 export default function OverviewTab({ target, findings, profile, fingerprint, fpHistory, sourcesData, socialFindings, breachFindings, geoFindings, riskAssessment, remediations, criticalCount, setActiveTab, setShowScanModal, onRiskSignalViewAll }) {
   return (
     <div className="space-y-4">
-      {/* Email deliverability banner — only show for genuinely bad emails */}
-      {profile?.email_status && typeof profile.email_status === 'object' && profile.email_status.deliverable === false && (
+      {/* Email deliverability banner — S234: fire ONLY on the explicit
+          'false' bucket (genuinely undeliverable). 'unknown' / 'risky' must
+          not be labelled "non-existent". Legacy `deliverable === false`
+          kept as a fallback for older cached payloads with no `status`. */}
+      {profile?.email_status && typeof profile.email_status === 'object' && (profile.email_status.status === 'false' || (!profile.email_status.status && profile.email_status.deliverable === false)) && (
         <div className="bg-[#332800] border border-[#665500] rounded-xl p-4 flex items-center gap-3">
           <AlertTriangle className="w-5 h-5 text-[#ffcc00] shrink-0" />
           <div>
