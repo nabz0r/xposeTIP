@@ -216,22 +216,41 @@ export default function OverviewTab({ target, findings, profile, fingerprint, fp
             </span>
           </div>
           <div className="flex flex-wrap items-center gap-2 mt-2 text-xs">
-            {profile.languages.languages.map((l) => (
-              <span
-                key={l.code}
-                className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded font-mono ${
-                  l.code === profile.languages.primary
-                    ? 'bg-[#3388ff]/15 text-[#3388ff] border border-[#3388ff]/30'
-                    : 'bg-[#1e1e2e] text-gray-300 border border-[#1e1e2e]'
-                }`}
-                title={`${l.name} · ${Math.round(l.confidence * 100)}% confidence`}
-              >
-                <span className="uppercase">{l.code}</span>
-                <span className="opacity-70">{Math.round(l.confidence * 100)}%</span>
+            {profile.languages.languages.map((l) => {
+              // S238 — unverified-source results are rendered without confident
+              // primary styling and without a confident percentage. The signal
+              // is shown, but visually demoted so handle-collision noise is
+              // never displayed as a 100% claim.
+              const verified = profile.languages.verified_source !== false
+              const isPrimary = l.code === profile.languages.primary
+              const cls = verified && isPrimary
+                ? 'bg-[#3388ff]/15 text-[#3388ff] border border-[#3388ff]/30'
+                : 'bg-[#1e1e2e] text-gray-300 border border-[#1e1e2e] border-dashed'
+              return (
+                <span
+                  key={l.code}
+                  className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded font-mono ${cls}`}
+                  title={
+                    verified
+                      ? `${l.name} · ${Math.round(l.confidence * 100)}% confidence (cross-verified source)`
+                      : `${l.name} — inferred from cross-platform text that is NOT cross-verified to the email owner. Treat as a weak hint, not a confirmed language.`
+                  }
+                >
+                  <span className="uppercase">{l.code}</span>
+                  {verified && (
+                    <span className="opacity-70">{Math.round(l.confidence * 100)}%</span>
+                  )}
+                </span>
+              )
+            })}
+            {profile.languages.verified_source === false ? (
+              <span className="text-[11px] text-gray-500">
+                · unverified source (cross-platform)
               </span>
-            ))}
-            {profile.languages.reliable === false && (
-              <span className="text-[11px] text-gray-500">(low confidence — short text)</span>
+            ) : (
+              profile.languages.reliable === false && (
+                <span className="text-[11px] text-gray-500">(low confidence — short text)</span>
+              )
             )}
           </div>
         </div>
