@@ -160,12 +160,30 @@ export default function InversionSection() {
             Everyone knows who you are.<br />
             <span className="text-[#00ff88]">Except you.</span>
           </motion.h2>
+
+          {/* S251 — shock-stat: quantifies the asymmetry's human cost.
+              Sourced (ITRC 2024), one number only, never FUD. Sequenced
+              after the headline and before the answer line. */}
+          <motion.div
+            className="max-w-lg mx-auto mb-6"
+            initial={{ opacity: 0, y: 12 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, amount: 0.3 }}
+            transition={{ duration: 0.6, delay: 0.2 }}
+          >
+            <p className="text-xl md:text-2xl text-gray-300 leading-snug">
+              Nearly <span className="text-[#ff5588] font-bold">half</span> of identity-theft
+              victims who sought help were still unresolved a year later.
+            </p>
+            <p className="text-xs text-gray-600 mt-2 font-mono">— Identity Theft Resource Center, 2024</p>
+          </motion.div>
+
           <motion.p
             className="text-lg text-gray-400 max-w-lg mx-auto"
             initial={{ opacity: 0 }}
             whileInView={{ opacity: 1 }}
             viewport={{ once: true, amount: 0.3 }}
-            transition={{ duration: 0.6, delay: 0.3 }}
+            transition={{ duration: 0.6, delay: 0.45 }}
           >
             BFP returns this knowledge to you.
           </motion.p>
