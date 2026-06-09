@@ -31,7 +31,7 @@ from datetime import datetime, timezone
 import httpx
 import redis as r
 from fastapi import APIRouter, Depends, HTTPException
-from fastapi.responses import HTMLResponse
+from fastapi.responses import HTMLResponse, RedirectResponse
 from pydantic import BaseModel
 from sqlalchemy import select
 from sqlalchemy.dialects.postgresql import insert as pg_insert
@@ -58,6 +58,11 @@ GOOGLE_USERINFO_URL = "https://www.googleapis.com/oauth2/v2/userinfo"
 CONSENT_SCOPES = "openid email profile"
 STATE_TTL = 600
 CLAIM_TYPE = "consent_sso"
+# S253 — Subject Portal: token TTL + base URL of the SPA the subject is
+# redirected to. The token rides in the URL fragment (#t=...) so it never
+# hits the network as a query param (referer/log-safe).
+PORTAL_TTL = 1800  # 30 min
+PORTAL_BASE_URL = os.getenv("PORTAL_BASE_URL", "http://localhost:5173")
 # Backend-owned redirect URI. Used by BOTH start (auth_url) and callback
 # (token exchange) so they ALWAYS match — Google rejects mismatches. Must
 # EXACTLY equal an Authorized redirect URI in the Google Cloud console.
@@ -274,9 +279,86 @@ async def callback(code: str | None = None, state: str | None = None, db: AsyncS
     await db.execute(stmt)
     await db.commit()
 
-    return _html(
-        "✓ Consentement enregistré. Vous pouvez fermer cet onglet."
+    # S253 — Subject Portal handoff. The subject has just proven control
+    # of the email; mint a short-lived opaque token bound to (workspace,
+    # target), then redirect their browser to the SPA portal with the
+    # token in the URL fragment. The fragment never reaches the server,
+    # so the token stays out of access logs / referer headers.
+    portal_token = uuid.uuid4().hex
+    rc = _redis_client()
+    try:
+        rc.setex(
+            f"portal:token:{portal_token}",
+            PORTAL_TTL,
+            f"{workspace_id}:{target_uuid}",
+        )
+    finally:
+        rc.close()
+    return RedirectResponse(
+        url=f"{PORTAL_BASE_URL}/portal#t={portal_token}",
+        status_code=302,
     )
+
+
+@router.get("/consent/portal/profile")
+async def portal_profile(t: str | None = None, db: AsyncSession = Depends(get_db)):
+    """S253 — Token-gated read-only profile for the Subject Portal.
+
+    Unauthenticated by design: the token (minted only after the email-match
+    gate in the OAuth callback) IS the auth. Validates the token in Redis
+    and returns a subject-facing DTO over the same profile data the
+    operator-authed `/targets/{id}/profile` builds — minus operator-only
+    fields. STRICTLY read-only; no mutation surface.
+    """
+    if not t:
+        raise HTTPException(status_code=401, detail="missing token")
+
+    rc = _redis_client()
+    try:
+        raw = rc.get(f"portal:token:{t}")
+    finally:
+        rc.close()
+    if not raw:
+        raise HTTPException(status_code=401, detail="token expired or invalid")
+
+    try:
+        workspace_id_str, target_id_str = raw.decode().split(":", 1)
+        workspace_id = uuid.UUID(workspace_id_str)
+        target_uuid = uuid.UUID(target_id_str)
+    except Exception:
+        raise HTTPException(status_code=401, detail="malformed token binding")
+
+    target = (
+        await db.execute(
+            select(Target).where(
+                Target.id == target_uuid, Target.workspace_id == workspace_id
+            )
+        )
+    ).scalar_one_or_none()
+    if not target:
+        # Don't leak whether the target existed under a different workspace.
+        raise HTTPException(status_code=404, detail="profile unavailable")
+
+    profile = dict(target.profile_data or {})
+    # Mirror the operator profile builder's enrichment, but expose only
+    # subject-appropriate fields. Operator-only flags (user_first_name,
+    # user_last_name, cascade_state, internal status, workspace ids) are
+    # NOT exposed.
+    profile["email"] = target.email
+    profile["exposure_score"] = target.exposure_score
+    profile["threat_score"] = target.threat_score
+    profile["country_code"] = target.country_code
+    profile["last_scanned"] = (
+        target.last_scanned.isoformat() if target.last_scanned else None
+    )
+    profile["first_scanned"] = (
+        target.first_scanned.isoformat() if target.first_scanned else None
+    )
+    if not profile.get("primary_name"):
+        profile["primary_name"] = target.display_name
+    if not profile.get("primary_avatar"):
+        profile["primary_avatar"] = target.avatar_url
+    return profile
 
 
 @router.get("/consent/{target_id}/status")

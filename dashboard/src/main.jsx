@@ -19,6 +19,7 @@ import Manifesto from './pages/Manifesto'
 import BFP from './pages/BFP'
 import Compare from './pages/Compare'
 import Demo from './pages/Demo'
+import Portal from './pages/Portal'
 import Changelog from './pages/Changelog'
 import Consulting from './pages/Consulting'
 import { AuthProvider, useAuth } from './lib/auth'
@@ -42,6 +43,7 @@ function App() {
           <Route path="/bfp" element={<BFP />} />
           <Route path="/compare" element={<Compare />} />
           <Route path="/demo" element={<Demo />} />
+          <Route path="/portal" element={<Portal />} />
           <Route path="/changelog" element={<Changelog />} />
           <Route path="/login" element={<Login />} />
           <Route path="/setup" element={<Setup />} />
