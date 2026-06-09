@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { ShieldCheck, MapPin, Globe, Mail, AlertTriangle } from 'lucide-react'
+import { ShieldCheck, MapPin, Globe, Mail, AlertTriangle, Download } from 'lucide-react'
 import FingerprintRadar from '../components/FingerprintRadar'
 
 // S253 — Subject Portal. Public route. The token rides in the URL fragment
@@ -108,6 +108,30 @@ function ExpiredCard({ title, body }) {
   )
 }
 
+// S255 — RGPD art.20 data-portability export. Serialises the exact DTO
+// the subject sees (already scrubbed of operator-only fields by S253) into
+// a structured, machine-readable JSON file. No new endpoint, no fresh
+// network call — the subject downloads what's already in their view.
+function downloadData(profile) {
+  const payload = {
+    export_metadata: {
+      exported_at: new Date().toISOString(),
+      source: 'xposeTIP',
+      format: 'RGPD art.20 — data portability',
+    },
+    profile,
+  }
+  const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' })
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  a.href = url
+  a.download = `my-xposetip-data-${new Date().toISOString().slice(0, 10)}.json`
+  document.body.appendChild(a)
+  a.click()
+  a.remove()
+  URL.revokeObjectURL(url)
+}
+
 function ProfileView({ profile }) {
   const p = profile || {}
   const name = p.primary_name || (p.email || '').split('@')[0]
@@ -155,6 +179,23 @@ function ProfileView({ profile }) {
             <div className="text-3xl font-mono font-bold text-[#ff8800]">{p.exposure_score}</div>
           </div>
         )}
+      </div>
+
+      {/* S255 — Data portability (RGPD art.20). Downloads the same DTO
+          already in state — no extra fetch, no operator fields. */}
+      <div className="flex items-center gap-3 mb-4 px-1">
+        <button
+          type="button"
+          onClick={() => downloadData(profile)}
+          className="inline-flex items-center gap-2 px-3 py-1.5 rounded-md text-[11px] font-mono bg-[#1e1e2e] text-[#00ff88] border border-[#00ff88]/40 hover:bg-[#00ff88]/10 transition-colors"
+          title="Save a structured JSON copy of everything shown above. RGPD art.20 — data portability."
+        >
+          <Download className="w-3.5 h-3.5" />
+          Download my data
+        </button>
+        <p className="text-[11px] text-gray-500">
+          Everything we hold about you, in a portable file. It's yours.
+        </p>
       </div>
 
       {/* Two columns: radar + signals */}
