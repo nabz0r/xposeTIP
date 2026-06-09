@@ -92,6 +92,43 @@ export default function Manifesto() {
           </p>
         </section>
 
+        {/* S252 — Diagnosis: three sourced stats that prove why the layer
+            must exist and be sovereign to its subject. Sits between Hero
+            (the thesis) and Foundation (the development). (B) only. */}
+        <section className="reveal opacity-0 translate-y-8 transition-all duration-700 mb-32">
+          <div className="text-center mb-10">
+            <div className="text-xs font-mono uppercase tracking-wider text-[#00ff88]/70 mb-3">
+              The Diagnosis
+            </div>
+            <h2 className="text-2xl md:text-3xl font-bold font-['Instrument_Sans',sans-serif]">
+              Three numbers. One conclusion.
+            </h2>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-4xl mx-auto mb-10">
+            <Stat
+              value="88%"
+              label="of web-app attacks use stolen credentials · Verizon DBIR 2025"
+              color="#ff5588"
+            />
+            <Stat
+              value="80–90%"
+              label="of enterprise data is collected, stored — never used · Gartner"
+              color="#3388ff"
+            />
+            <Stat
+              value="48%"
+              label="of assisted identity-theft victims still unresolved a year later · ITRC 2024"
+              color="#ff5588"
+            />
+          </div>
+
+          <p className="text-center text-base md:text-lg text-gray-400 max-w-2xl mx-auto leading-relaxed">
+            The credential failed. The collection is wasteful. The subject pays — and is the last to know.
+            That's why identity has to be a layer — and that layer has to be sovereign to its subject.
+          </p>
+        </section>
+
         {/* Foundation — the identity-layer thesis */}
         <section className="mb-32">
           <div className="reveal opacity-0 translate-y-8 transition-all duration-700">
