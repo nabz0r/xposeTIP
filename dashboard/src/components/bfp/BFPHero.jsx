@@ -6,7 +6,7 @@ export default function BFPHero() {
       <div className="max-w-3xl mx-auto px-6 text-center">
         <div className="inline-flex items-center gap-2 text-xs font-mono text-[#00ff88]/70 mb-6">
           <span className="w-1.5 h-1.5 bg-[#00ff88] rounded-full animate-pulse" />
-          Behavioral Fingerprint Protocol · Draft v0
+          Behavioral Fingerprint Protocol · Draft v0.2
         </div>
 
         <BFPInversionVisual />

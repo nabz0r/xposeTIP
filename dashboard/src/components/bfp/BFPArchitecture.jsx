@@ -1,25 +1,83 @@
+import { useState } from 'react'
+import { motion, AnimatePresence } from 'framer-motion'
+
+// S242 — Each entry carries the trust + threat model that drives the
+// crossfading block below the parallels row. BFP is the resting state
+// (default + on mouse-leave), so its content matches the prior static block.
 const PARALLELS = [
-  { name: 'DNS', what: 'Resolves domains' },
-  { name: 'Certificate Transparency', what: 'Verifies TLS certificates' },
-  { name: 'MISP', what: 'Shares malware indicators' },
-  { name: 'BFP', what: 'Resolves identities', accent: true },
-]
-
-const TRUST_PROPERTIES = [
-  'Evidence-based consensus (≥ N independent scrapers converge)',
-  'Append-only log of claims (Certificate Transparency-style)',
-  'No proof-of-work — energy-light by design',
-  'Audit trail traceable to each source',
-]
-
-const THREAT_PROPERTIES = [
-  'Conservative-by-design — absorbs unknown future threats',
-  'Threat model emerges from supply-chain position',
-  'Post-quantum cryptography from day one (NIST 2024)',
-  'Multi-source convergence resists single-source poisoning',
+  {
+    name: 'DNS', what: 'Resolves domains',
+    trustTitle: 'Hierarchical delegation',
+    trust: [
+      'Root → TLD → authoritative chain of delegation',
+      'DNSSEC signs records — verifiable chain of trust',
+      'No single owner — distributed authority',
+      'Resolvers cache with TTLs; billions of queries/day',
+    ],
+    threatTitle: 'Spoofing & poisoning',
+    threat: [
+      'Cache poisoning injects forged records',
+      'On-path spoofing of unsigned answers',
+      'DNSSEC validation mitigates',
+      'Redundant resolvers limit single points of failure',
+    ],
+  },
+  {
+    name: 'Certificate Transparency', what: 'Verifies TLS certs',
+    trustTitle: 'Public append-only logs',
+    trust: [
+      'Every issued certificate logged publicly',
+      'Multiple independent log operators',
+      'Merkle inclusion + consistency proofs',
+      'Browsers require SCTs to trust a cert',
+    ],
+    threatTitle: 'Misissuance detection',
+    threat: [
+      'Rogue / misissued certificates',
+      'Detected by public monitors, not prevented',
+      'Gossip protocols cross-check logs',
+      'Auditable by anyone, after the fact',
+    ],
+  },
+  {
+    name: 'MISP', what: 'Shares threat indicators',
+    trustTitle: 'Federated communities',
+    trust: [
+      'Trust groups exchange structured indicators',
+      'Source attribution on every indicator',
+      'Taxonomies + confidence levels',
+      'No central authority — peer federation',
+    ],
+    threatTitle: 'Indicator poisoning',
+    threat: [
+      'False or stale indicators degrade trust',
+      'Oversharing leaks sensitive context',
+      'Sightings + confidence scoring filter noise',
+      'Distribution levels scope what is shared',
+    ],
+  },
+  {
+    name: 'BFP', what: 'Resolves identities', accent: true,
+    trustTitle: 'Certificate Transparency-like',
+    trust: [
+      'Evidence-based consensus (≥ N independent scrapers converge)',
+      'Append-only log of claims (Certificate Transparency-style)',
+      'No proof-of-work — energy-light by design',
+      'Audit trail traceable to each source',
+    ],
+    threatTitle: 'Conservative-by-design',
+    threat: [
+      'Conservative-by-design — absorbs unknown future threats',
+      'Threat model emerges from supply-chain position',
+      'Post-quantum cryptography from day one (NIST 2024)',
+      'Multi-source convergence resists single-source poisoning',
+    ],
+  },
 ]
 
 export default function BFPArchitecture() {
+  const [active, setActive] = useState(PARALLELS.length - 1) // BFP is the resting state
+  const ap = PARALLELS[active]
   return (
     <div className="max-w-5xl mx-auto px-6">
       <div className="text-center mb-16">
@@ -68,15 +126,22 @@ export default function BFPArchitecture() {
         </div>
       </div>
 
-      {/* Parallels row */}
-      <div className="mb-12">
+      {/* S242 — Parallels row drives the Trust/Threat block via hover/focus.
+          Resting state = BFP; mouse-leave snaps back to BFP. */}
+      <div onMouseLeave={() => setActive(PARALLELS.length - 1)}>
         <div className="text-xs font-mono text-gray-500 uppercase tracking-wider mb-4 text-center">Infrastructure parallels</div>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-          {PARALLELS.map((p) => (
-            <div
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
+          {PARALLELS.map((p, i) => (
+            <button
               key={p.name}
-              className={`p-4 bg-[#13131c] border rounded-lg text-center transition-colors ${
-                p.accent ? 'border-[#00ff88]/40' : 'border-[#1e1e2e]'
+              type="button"
+              onMouseEnter={() => setActive(i)}
+              onFocus={() => setActive(i)}
+              onClick={() => setActive(i)}
+              className={`p-4 bg-[#13131c] border rounded-lg text-center transition-all duration-200 hover:-translate-y-0.5 ${
+                i === active
+                  ? (p.accent ? 'border-[#00ff88]/70' : 'border-gray-500')
+                  : (p.accent ? 'border-[#00ff88]/40' : 'border-[#1e1e2e]')
               }`}
             >
               <div className={`text-sm font-bold mb-1 font-['Instrument_Sans',sans-serif] ${
@@ -85,42 +150,39 @@ export default function BFPArchitecture() {
                 {p.name}
               </div>
               <div className="text-xs text-gray-500">{p.what}</div>
-            </div>
+            </button>
           ))}
         </div>
-      </div>
 
-      {/* Trust + Threat models */}
-      <div className="grid md:grid-cols-2 gap-6">
-        <div className="p-6 bg-[#13131c] border border-[#1e1e2e] rounded-lg">
-          <div className="text-xs font-mono text-gray-500 uppercase tracking-wider mb-2">Trust model</div>
-          <h3 className="text-base font-bold text-white mb-4 font-['Instrument_Sans',sans-serif]">
-            Certificate Transparency-like
-          </h3>
-          <ul className="space-y-2 text-sm text-gray-400">
-            {TRUST_PROPERTIES.map((p, i) => (
-              <li key={i} className="flex items-start gap-2">
-                <span className="text-gray-600 mt-1 shrink-0">·</span>
-                <span>{p}</span>
-              </li>
-            ))}
-          </ul>
-        </div>
-
-        <div className="p-6 bg-[#13131c] border border-[#1e1e2e] rounded-lg">
-          <div className="text-xs font-mono text-gray-500 uppercase tracking-wider mb-2">Threat model</div>
-          <h3 className="text-base font-bold text-white mb-4 font-['Instrument_Sans',sans-serif]">
-            Conservative-by-design
-          </h3>
-          <ul className="space-y-2 text-sm text-gray-400">
-            {THREAT_PROPERTIES.map((p, i) => (
-              <li key={i} className="flex items-start gap-2">
-                <span className="text-gray-600 mt-1 shrink-0">·</span>
-                <span>{p}</span>
-              </li>
-            ))}
-          </ul>
-        </div>
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={active}
+            initial={{ opacity: 0, y: 6 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -6 }}
+            transition={{ duration: 0.18 }}
+            className="grid md:grid-cols-2 gap-6"
+          >
+            <div className="p-6 bg-[#13131c] border border-[#1e1e2e] rounded-lg">
+              <div className="text-xs font-mono text-gray-500 uppercase tracking-wider mb-2">Trust model</div>
+              <h3 className="text-base font-bold text-white mb-4 font-['Instrument_Sans',sans-serif]">{ap.trustTitle}</h3>
+              <ul className="space-y-2 text-sm text-gray-400">
+                {ap.trust.map((p, i) => (
+                  <li key={i} className="flex items-start gap-2"><span className="text-gray-600 mt-1 shrink-0">·</span><span>{p}</span></li>
+                ))}
+              </ul>
+            </div>
+            <div className="p-6 bg-[#13131c] border border-[#1e1e2e] rounded-lg">
+              <div className="text-xs font-mono text-gray-500 uppercase tracking-wider mb-2">Threat model</div>
+              <h3 className="text-base font-bold text-white mb-4 font-['Instrument_Sans',sans-serif]">{ap.threatTitle}</h3>
+              <ul className="space-y-2 text-sm text-gray-400">
+                {ap.threat.map((p, i) => (
+                  <li key={i} className="flex items-start gap-2"><span className="text-gray-600 mt-1 shrink-0">·</span><span>{p}</span></li>
+                ))}
+              </ul>
+            </div>
+          </motion.div>
+        </AnimatePresence>
       </div>
     </div>
   )

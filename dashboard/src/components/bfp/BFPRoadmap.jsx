@@ -4,11 +4,12 @@ const BUCKETS = [
     label: 'Shipped',
     accent: '#00ff88',
     items: [
-      { id: 'S144', title: 'AXIS_MAX data-driven recalibration', date: 'May 2026' },
-      { id: 'S145', title: 'Axis: formal_records (10th)', date: 'May 2026' },
-      { id: 'S146', title: 'Name-aware similarity engine', date: 'May 2026' },
-      { id: 'S147', title: 'Axis: network_signature (11th) — 11-axis fingerprint live', date: 'May 2026' },
-      { id: 'Stability', title: 'Reference implementation hardening (S148–S159)', date: 'May 2026' },
+      { id: 'S147', title: 'network_signature — 11-axis fingerprint complete', date: 'May 2026' },
+      { id: 'S166', title: 'Canonical behavioral hash — K=3 locality-sensitive clustering', date: 'May 2026' },
+      { id: 'S167–S169', title: 'Append-only claim log + cross-verification + Merkle tamper-evidence', date: 'May 2026' },
+      { id: 'S170', title: 'BFP_SPEC v0.2.0 committed', date: 'May 2026' },
+      { id: 'S177', title: 'Spec Session 2 complete — trust layer + axis flags + §13 PQC stack', date: 'May 2026' },
+      { id: 'S232', title: 'Subject attestation — consent-verified SSO', date: 'Jun 2026' },
     ],
   },
   {
@@ -16,9 +17,9 @@ const BUCKETS = [
     label: 'Active',
     accent: '#ffaa00',
     items: [
-      { id: 'SPEC', title: 'BFP_SPEC_v0 — protocol-first rewrite' },
-      { id: 'VALIDATION', title: 'Validation framework prototype (ground truth corpus + cross-source convergence metrics)' },
-      { id: 'PAGE', title: 'BFP public page (this artifact, iterative buildout)' },
+      { id: 'SPEC', title: 'BFP_SPEC — Session 3' },
+      { id: 'VALIDATION', title: 'Validation framework (ground-truth corpus + cross-source convergence metrics)' },
+      { id: 'PAGE', title: 'BFP public page — iterative buildout (this artifact)' },
     ],
   },
   {
