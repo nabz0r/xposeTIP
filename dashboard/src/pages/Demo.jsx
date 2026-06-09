@@ -5,6 +5,7 @@ import demoProfile from '../data/demoProfile.json'
 import { ACTS, PACE, buildTimeline } from '../lib/demoScript'
 import DemoFlow from '../components/DemoFlow'
 import PixelCat, { phaseFromScan } from '../components/PixelCat'
+import DemoAvatar from '../components/DemoAvatar'
 import FingerprintRadar from '../components/FingerprintRadar'
 import CryptoIdentityBlock from '../components/CryptoIdentityBlock'
 
@@ -129,14 +130,22 @@ export default function Demo() {
           <div className="relative bg-[#0d0d14] border border-[#1e1e2e] rounded-xl p-4 min-h-[480px] overflow-hidden">
             <DemoFlow activeLayer={activeLayer} sources={176} scanners={28} />
 
-            {/* PixelCat overlay — sits over the OSINT row, scales with viewport */}
+            {/* PixelCat overlay — Matrix-scramble avatar driven by act phase.
+                Scramble during acts 1-3 → zone-resolve during act 4 (Profiling,
+                the hash-injection moment) → clean by act 5. */}
             <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-10">
-              <PixelCat
+              <DemoAvatar
                 seed={target.fingerprint_avatar_seed}
                 behavioralHash={target.bfp_behavioral_hash_v1}
                 pose={pose}
                 size={140}
-                animated
+                phase={
+                  revealed ? 'resolved'
+                  : actIdx < 3 ? 'scramble'
+                  : actIdx === 3 ? 'resolving'
+                  : 'resolved'
+                }
+                resolveMs={ACTS[3].durationMs * pace}
               />
             </div>
 
