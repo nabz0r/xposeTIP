@@ -1,0 +1,950 @@
+{
+  "target": {
+    "email": "martindevans@gmail.com",
+    "display_name": "Martin Evans",
+    "country_code": null,
+    "fingerprint_avatar_seed": {
+      "hue": 14,
+      "rotation": 134,
+      "lightness": 57,
+      "complexity": 5,
+      "email_hash": 854,
+      "num_points": 8,
+      "saturation": 80,
+      "eigenvalues": [
+        42.4439,
+        21.222,
+        10.611,
+        5.3055,
+        4.7192
+      ],
+      "inner_radius": 0.525
+    },
+    "bfp_behavioral_hash_v1": "6645846e0000000005dcbc070000000089b4e2220000000052694c010000000033212e5800000000bd82ad0c0000000028db212900000000bfb61a4400000000299b930b00000000a81a7cb20000000027a4bc5100000000d7721e3e000000008cdd3f1d0000000060508d8600000000ef12f16200000000303425150000000096d4141100000000e6e5305e00000000720f213700000000159e042100000000f46d4e5a0000000021bff966000000001e42bd960000000020455b0a00000000969a3ca0000000006b97171d00000000ef5f232300000000c1c5c3340000000040b1354400000000fae337000000000085f8e79e000000002c605032000000000896f87600000000e0e76b22000000006a4b997f0000000019f80a6e00000000ca58ee220000000079f7ba500000000085ff461100000000c9bce00a00000000aceb894a00000000124d294b000000008f6d6c3a0000000050f5bfcd00000000b7cd8b13000000009b4f990100000000616d064b0000000008b0be8a0000000010f4495b00000000004db63c0000000030a8c04900000000fbe7db2a00000000effbfe12000000006f077b1b000000007c28321100000000e9cf9494000000008e1cbf2100000000a203581100000000bda25b4f000000005010b89300000000327f7899000000004e99ee4f000000007810a51b00000000b8d639260000000035d881810000000008d5719200000000a5590e5100000000dd03c1a100000000a43020af000000002102d06400000000629f043d0000000015cfe61d00000000d0920a7b00000000f7759e080000000028f3f211000000002b7c570600000000e4d6a60b000000008c73e6e900000000190f651000000000993d4256000000004d8f44480000000076b91634000000006bc7262f000000008b8bde87000000000bdfa09100000000d676223700000000bd00f26a000000002c4d971c00000000578e2b0600000000c1ca53570000000072b75a0700000000918faead00000000569ba88f000000001a28402c000000004e6244ab00000000a852da1c00000000b98c308600000000d0adff2500000000f8d49a53000000009748872c000000003fe9bc370000000065c9065c00000000591d9e2300000000fa44237a00000000b0103f310000000040f8ee2f000000005caac7520000000046e38327000000009d704867000000009952c6d300000000b42d273800000000947d4c42000000005b1b7a0300000000876e800f000000008f9f0f0b00000000aab26d240000000067db435a00000000ca7bba3b00000000fc529c3400000000ac80d44100000000d7af81b4000000009c32e50900000000e49f261600000000e86d3e16000000003b003e43000000009a97641500000000b3e2230b000000003fdd6e2000000000",
+    "exposure_score": 12,
+    "threat_score": 17
+  },
+  "fingerprint": {
+    "axes": {
+      "accounts": 0.617,
+      "breaches": 0.6,
+      "security": 0.75,
+      "email_age": 0.41,
+      "platforms": 0.68,
+      "geo_spread": 1.0,
+      "data_leaked": 1.0,
+      "formal_records": 1.0,
+      "username_reuse": 0.3,
+      "public_exposure": 0.35,
+      "network_signature": 0.801
+    },
+    "hash": "a9e25b8a15c5",
+    "color": "#D85A30",
+    "label": "Sprawling digital presence at risk",
+    "scars": [
+      {
+        "to": 5,
+        "from": 3,
+        "type": "identity_theft",
+        "label": "identity theft risk"
+      },
+      {
+        "to": 0,
+        "from": 7,
+        "type": "phishing",
+        "label": "phishing attack surface"
+      },
+      {
+        "to": 4,
+        "from": 0,
+        "type": "monitoring_gap",
+        "label": "monitoring blind spots"
+      },
+      {
+        "to": 0,
+        "from": 8,
+        "type": "public_figure",
+        "label": "high public visibility"
+      }
+    ],
+    "score": 66,
+    "points": [
+      [
+        340.0,
+        208.9
+      ],
+      [
+        406.2,
+        217.0
+      ],
+      [
+        389.1,
+        297.6
+      ],
+      [
+        446.9,
+        335.4
+      ],
+      [
+        476.0,
+        437.9
+      ],
+      [
+        390.7,
+        492.7
+      ],
+      [
+        319.2,
+        390.8
+      ],
+      [
+        238.0,
+        408.4
+      ],
+      [
+        277.6,
+        329.0
+      ],
+      [
+        176.3,
+        245.2
+      ],
+      [
+        262.1,
+        198.7
+      ]
+    ],
+    "fill_color": "rgba(216,90,48,0.08)",
+    "raw_values": {
+      "accounts": 37,
+      "breaches": 3,
+      "platforms": 34,
+      "geo_spread": 5.15,
+      "data_leaked": 27,
+      "security_weak": 3,
+      "username_reuse": 3,
+      "email_age_years": 16.4,
+      "formal_records_raw": 8,
+      "public_exposure_raw": 0.35,
+      "network_signature_raw": 0.8009
+    },
+    "risk_level": "HIGH",
+    "avatar_seed": {
+      "hue": 14,
+      "rotation": 134,
+      "lightness": 57,
+      "complexity": 5,
+      "email_hash": 854,
+      "num_points": 8,
+      "saturation": 80,
+      "eigenvalues": [
+        42.4439,
+        21.222,
+        10.611,
+        5.3055,
+        4.7192
+      ],
+      "inner_radius": 0.525
+    },
+    "computed_at": "2026-06-09T11:47:37.336003+00:00",
+    "eigenvalues": [
+      42.4439,
+      21.222,
+      10.611,
+      5.3055,
+      4.7192
+    ],
+    "timeline_events": [
+      {
+        "date": "2010-01-06T18:08:32",
+        "type": "account_created",
+        "label": "GitHub profile: martindevans (Martin Evans)",
+        "source": "github_deep"
+      },
+      {
+        "date": "2010-01-06T18:08:32",
+        "type": "activity",
+        "label": "Data from github_scraper: created_at",
+        "source": "github_scraper"
+      },
+      {
+        "date": "2010-01-06T18:08:32",
+        "type": "activity",
+        "label": "Data from github_user_api: created_at",
+        "source": "github_user_api"
+      },
+      {
+        "date": "2012-05-01T00:00:00",
+        "type": "breach",
+        "label": "Exposed in LinkedIn.com breach",
+        "source": "leakcheck_public"
+      },
+      {
+        "date": "2012-07-01T00:00:00",
+        "type": "breach",
+        "label": "Exposed in Dropbox.com breach",
+        "source": "leakcheck_public"
+      },
+      {
+        "date": "2012-12-01T00:00:00",
+        "type": "breach",
+        "label": "Exposed in Games.Snail.com breach",
+        "source": "leakcheck_public"
+      },
+      {
+        "date": "2013-07-01T00:00:00",
+        "type": "breach",
+        "label": "Exposed in NexusMods.com breach",
+        "source": "leakcheck_public"
+      },
+      {
+        "date": "2013-11-01T00:00:00",
+        "type": "breach",
+        "label": "Exposed in xSplit breach",
+        "source": "leakcheck_public"
+      },
+      {
+        "date": "2014-01-01T00:00:00",
+        "type": "breach",
+        "label": "Exposed in Kickstarter.com breach",
+        "source": "leakcheck_public"
+      },
+      {
+        "date": "2014-08-12T18:16:39.165710",
+        "type": "activity",
+        "label": "Data from dockerhub_profile: joined",
+        "source": "dockerhub_profile"
+      },
+      {
+        "date": "2015-05-01T00:00:00",
+        "type": "breach",
+        "label": "Exposed in BitcoinTalk.org breach",
+        "source": "leakcheck_public"
+      },
+      {
+        "date": "2015-07-01T00:00:00",
+        "type": "breach",
+        "label": "Exposed in Wildstar breach",
+        "source": "leakcheck_public"
+      },
+      {
+        "date": "2015-11-01T00:00:00",
+        "type": "breach",
+        "label": "Exposed in Tunngle.net breach",
+        "source": "leakcheck_public"
+      },
+      {
+        "date": "2016-01-01T00:00:00",
+        "type": "breach",
+        "label": "Exposed in Anime-Planet.net breach",
+        "source": "leakcheck_public"
+      },
+      {
+        "date": "2016-06-01T00:00:00",
+        "type": "breach",
+        "label": "Exposed in VBForums.com breach",
+        "source": "leakcheck_public"
+      },
+      {
+        "date": "2017-10-01T00:00:00",
+        "type": "breach",
+        "label": "Exposed in MyHeritage.com breach",
+        "source": "leakcheck_public"
+      },
+      {
+        "date": "2017-11-01T00:00:00",
+        "type": "breach",
+        "label": "Exposed in Romwe.com breach",
+        "source": "leakcheck_public"
+      },
+      {
+        "date": "2019-01-01T00:00:00",
+        "type": "breach",
+        "label": "Exposed in Collection 1 breach",
+        "source": "leakcheck_public"
+      },
+      {
+        "date": "2020-05-01T00:00:00",
+        "type": "breach",
+        "label": "Exposed in Ledger.com breach",
+        "source": "leakcheck_public"
+      },
+      {
+        "date": "2022-09-26T13:45:13",
+        "type": "activity",
+        "label": "Data from github_gists_user: first_gist_created",
+        "source": "github_gists_user"
+      },
+      {
+        "date": "2024-01-01T00:00:00",
+        "type": "breach",
+        "label": "Exposed in Trello.com breach",
+        "source": "leakcheck_public"
+      },
+      {
+        "date": "2024-12-16T16:23:00.842000",
+        "type": "activity",
+        "label": "Data from bluesky_profile: created_at",
+        "source": "bluesky_profile"
+      },
+      {
+        "date": "2026-01-01T00:00:00",
+        "type": "activity",
+        "label": "Robert Martin Evans Obituary (2026) - Montrose, CO - Crippin",
+        "source": "google_news_rss"
+      },
+      {
+        "date": "2026-02-21T08:00:00",
+        "type": "activity",
+        "label": "Raymond \"Doc\" Martin Evans Obituary February 21, 2026",
+        "source": "google_news_rss"
+      },
+      {
+        "date": "2026-04-05T07:00:00",
+        "type": "activity",
+        "label": "Martin-Evans is Ranked 4th in the NCAA In the Long Jump After This Weekend\u2019s Performance",
+        "source": "google_news_rss"
+      },
+      {
+        "date": "2026-04-11T21:09:09",
+        "type": "activity",
+        "label": "Data from github_scraper: updated_at",
+        "source": "github_scraper"
+      },
+      {
+        "date": "2026-05-15T07:00:00",
+        "type": "activity",
+        "label": "Martin-Evans Earns All-ACC Honors in the Long Jump",
+        "source": "google_news_rss"
+      },
+      {
+        "date": "2026-05-27T09:40:26",
+        "type": "activity",
+        "label": "Robert Martin Evans Obituary (2026) - Montrose, CO - Crippin Funeral Home - Montrose",
+        "source": "google_news_rss"
+      },
+      {
+        "date": "2026-06-09T01:06:45",
+        "type": "activity",
+        "label": "Data from github_timezone: last_activity",
+        "source": "github_timezone"
+      }
+    ],
+    "graph_intelligence": {
+      "total_edges": 78,
+      "total_nodes": 78,
+      "cluster_count": 1,
+      "avg_node_confidence": 0.1905,
+      "max_cluster_density": 0.0294,
+      "avg_cluster_confidence": 0.7088
+    },
+    "bfp_behavioral_hash_v1": "6645846e0000000005dcbc070000000089b4e2220000000052694c010000000033212e5800000000bd82ad0c0000000028db212900000000bfb61a4400000000299b930b00000000a81a7cb20000000027a4bc5100000000d7721e3e000000008cdd3f1d0000000060508d8600000000ef12f16200000000303425150000000096d4141100000000e6e5305e00000000720f213700000000159e042100000000f46d4e5a0000000021bff966000000001e42bd960000000020455b0a00000000969a3ca0000000006b97171d00000000ef5f232300000000c1c5c3340000000040b1354400000000fae337000000000085f8e79e000000002c605032000000000896f87600000000e0e76b22000000006a4b997f0000000019f80a6e00000000ca58ee220000000079f7ba500000000085ff461100000000c9bce00a00000000aceb894a00000000124d294b000000008f6d6c3a0000000050f5bfcd00000000b7cd8b13000000009b4f990100000000616d064b0000000008b0be8a0000000010f4495b00000000004db63c0000000030a8c04900000000fbe7db2a00000000effbfe12000000006f077b1b000000007c28321100000000e9cf9494000000008e1cbf2100000000a203581100000000bda25b4f000000005010b89300000000327f7899000000004e99ee4f000000007810a51b00000000b8d639260000000035d881810000000008d5719200000000a5590e5100000000dd03c1a100000000a43020af000000002102d06400000000629f043d0000000015cfe61d00000000d0920a7b00000000f7759e080000000028f3f211000000002b7c570600000000e4d6a60b000000008c73e6e900000000190f651000000000993d4256000000004d8f44480000000076b91634000000006bc7262f000000008b8bde87000000000bdfa09100000000d676223700000000bd00f26a000000002c4d971c00000000578e2b0600000000c1ca53570000000072b75a0700000000918faead00000000569ba88f000000001a28402c000000004e6244ab00000000a852da1c00000000b98c308600000000d0adff2500000000f8d49a53000000009748872c000000003fe9bc370000000065c9065c00000000591d9e2300000000fa44237a00000000b0103f310000000040f8ee2f000000005caac7520000000046e38327000000009d704867000000009952c6d300000000b42d273800000000947d4c42000000005b1b7a0300000000876e800f000000008f9f0f0b00000000aab26d240000000067db435a00000000ca7bba3b00000000fc529c3400000000ac80d44100000000d7af81b4000000009c32e50900000000e49f261600000000e86d3e16000000003b003e43000000009a97641500000000b3e2230b000000003fdd6e2000000000",
+    "formal_records_breakdown": {
+      "courts": 0,
+      "gazette": 0,
+      "commercial_register": 8
+    },
+    "public_exposure_breakdown": {
+      "media": 0.35,
+      "corporate": 0.0,
+      "pep_count": 0,
+      "sanctions": 0.0,
+      "media_count": 8,
+      "corporate_count": 0,
+      "sanctions_count": 0
+    }
+  },
+  "profile": {
+    "primary_name": "Martin Evans",
+    "bio": "I live in United Kingdom.",
+    "location": "United Kingdom",
+    "company": "Placeholder Software",
+    "social_profiles": [
+      {
+        "url": "https://x.com/martindevans",
+        "source": "gravatar",
+        "platform": "twitter",
+        "username": "martindevans"
+      },
+      {
+        "url": "https://www.facebook.com/martindevans",
+        "source": "gravatar",
+        "platform": "facebook",
+        "username": "martindevans"
+      },
+      {
+        "url": "https://www.youtube.com/user/martindevans",
+        "source": "gravatar",
+        "platform": "youtube",
+        "username": "martindevans"
+      },
+      {
+        "url": "https://t.me/martindevans",
+        "source": "telegram_profile",
+        "platform": "telegram",
+        "username": ""
+      },
+      {
+        "url": "https://gitlab.com/api/v4/users?username=martindevans",
+        "source": "gitlab_profile",
+        "platform": "gitlab",
+        "username": ""
+      },
+      {
+        "url": "https://about.me/martindevans",
+        "source": "aboutme_profile",
+        "platform": "aboutme",
+        "username": ""
+      },
+      {
+        "url": "https://users.roblox.com/v1/users/search?keyword=martindevans&limit=10",
+        "source": "roblox_profile",
+        "platform": "roblox",
+        "username": "maertin_evans"
+      },
+      {
+        "url": "https://pastebin.com/u/martindevans",
+        "source": "pastebin_user",
+        "platform": "pastebin_user",
+        "username": ""
+      },
+      {
+        "url": "https://replit.com/@martindevans",
+        "source": "replit_profile",
+        "platform": "replit",
+        "username": ""
+      },
+      {
+        "url": "https://public.api.bsky.app/xrpc/app.bsky.actor.getProfile?actor=martindevans.bsky.social",
+        "source": "bluesky_profile",
+        "platform": "bluesky",
+        "username": "martindevans.bsky.social"
+      },
+      {
+        "url": "https://www.kaggle.com/martindevans",
+        "source": "kaggle_profile",
+        "platform": "kaggle",
+        "username": ""
+      },
+      {
+        "url": "https://github.com/martindevans",
+        "source": "github_deep",
+        "platform": "github",
+        "username": "martindevans"
+      }
+    ],
+    "email_status": {
+      "source": "synthesized",
+      "status": "true",
+      "provider": "Google Workspace",
+      "last_seen": "2024-12-16T16:23:00.842Z",
+      "first_seen": "2010-01-06T18:08:32Z",
+      "reputation": null,
+      "suspicious": false,
+      "deliverable": true,
+      "breach_count": 3,
+      "status_reason": "found in breaches",
+      "credentials_leaked": false
+    },
+    "breach_summary": {
+      "count": 3,
+      "sources": [
+        "LeakCheck: 44 leak sources",
+        "IntelX: email found in public intelligence database",
+        "EmailRep.io Breach Check: profile found"
+      ],
+      "credentials_leaked": false
+    },
+    "fingerprint": {
+      "axes": {
+        "accounts": 0.617,
+        "breaches": 0.6,
+        "security": 0.75,
+        "email_age": 0.41,
+        "platforms": 0.68,
+        "geo_spread": 1.0,
+        "data_leaked": 1.0,
+        "formal_records": 1.0,
+        "username_reuse": 0.3,
+        "public_exposure": 0.35,
+        "network_signature": 0.801
+      },
+      "hash": "a9e25b8a15c5",
+      "color": "#D85A30",
+      "label": "Sprawling digital presence at risk",
+      "scars": [
+        {
+          "to": 5,
+          "from": 3,
+          "type": "identity_theft",
+          "label": "identity theft risk"
+        },
+        {
+          "to": 0,
+          "from": 7,
+          "type": "phishing",
+          "label": "phishing attack surface"
+        },
+        {
+          "to": 4,
+          "from": 0,
+          "type": "monitoring_gap",
+          "label": "monitoring blind spots"
+        },
+        {
+          "to": 0,
+          "from": 8,
+          "type": "public_figure",
+          "label": "high public visibility"
+        }
+      ],
+      "score": 66,
+      "points": [
+        [
+          340.0,
+          208.9
+        ],
+        [
+          406.2,
+          217.0
+        ],
+        [
+          389.1,
+          297.6
+        ],
+        [
+          446.9,
+          335.4
+        ],
+        [
+          476.0,
+          437.9
+        ],
+        [
+          390.7,
+          492.7
+        ],
+        [
+          319.2,
+          390.8
+        ],
+        [
+          238.0,
+          408.4
+        ],
+        [
+          277.6,
+          329.0
+        ],
+        [
+          176.3,
+          245.2
+        ],
+        [
+          262.1,
+          198.7
+        ]
+      ],
+      "fill_color": "rgba(216,90,48,0.08)",
+      "raw_values": {
+        "accounts": 37,
+        "breaches": 3,
+        "platforms": 34,
+        "geo_spread": 5.15,
+        "data_leaked": 27,
+        "security_weak": 3,
+        "username_reuse": 3,
+        "email_age_years": 16.4,
+        "formal_records_raw": 8,
+        "public_exposure_raw": 0.35,
+        "network_signature_raw": 0.8009
+      },
+      "risk_level": "HIGH",
+      "avatar_seed": {
+        "hue": 14,
+        "rotation": 134,
+        "lightness": 57,
+        "complexity": 5,
+        "email_hash": 854,
+        "num_points": 8,
+        "saturation": 80,
+        "eigenvalues": [
+          42.4439,
+          21.222,
+          10.611,
+          5.3055,
+          4.7192
+        ],
+        "inner_radius": 0.525
+      },
+      "computed_at": "2026-06-09T11:47:37.336003+00:00",
+      "eigenvalues": [
+        42.4439,
+        21.222,
+        10.611,
+        5.3055,
+        4.7192
+      ],
+      "timeline_events": [
+        {
+          "date": "2010-01-06T18:08:32",
+          "type": "account_created",
+          "label": "GitHub profile: martindevans (Martin Evans)",
+          "source": "github_deep"
+        },
+        {
+          "date": "2010-01-06T18:08:32",
+          "type": "activity",
+          "label": "Data from github_scraper: created_at",
+          "source": "github_scraper"
+        },
+        {
+          "date": "2010-01-06T18:08:32",
+          "type": "activity",
+          "label": "Data from github_user_api: created_at",
+          "source": "github_user_api"
+        },
+        {
+          "date": "2012-05-01T00:00:00",
+          "type": "breach",
+          "label": "Exposed in LinkedIn.com breach",
+          "source": "leakcheck_public"
+        },
+        {
+          "date": "2012-07-01T00:00:00",
+          "type": "breach",
+          "label": "Exposed in Dropbox.com breach",
+          "source": "leakcheck_public"
+        },
+        {
+          "date": "2012-12-01T00:00:00",
+          "type": "breach",
+          "label": "Exposed in Games.Snail.com breach",
+          "source": "leakcheck_public"
+        },
+        {
+          "date": "2013-07-01T00:00:00",
+          "type": "breach",
+          "label": "Exposed in NexusMods.com breach",
+          "source": "leakcheck_public"
+        },
+        {
+          "date": "2013-11-01T00:00:00",
+          "type": "breach",
+          "label": "Exposed in xSplit breach",
+          "source": "leakcheck_public"
+        },
+        {
+          "date": "2014-01-01T00:00:00",
+          "type": "breach",
+          "label": "Exposed in Kickstarter.com breach",
+          "source": "leakcheck_public"
+        },
+        {
+          "date": "2014-08-12T18:16:39.165710",
+          "type": "activity",
+          "label": "Data from dockerhub_profile: joined",
+          "source": "dockerhub_profile"
+        },
+        {
+          "date": "2015-05-01T00:00:00",
+          "type": "breach",
+          "label": "Exposed in BitcoinTalk.org breach",
+          "source": "leakcheck_public"
+        },
+        {
+          "date": "2015-07-01T00:00:00",
+          "type": "breach",
+          "label": "Exposed in Wildstar breach",
+          "source": "leakcheck_public"
+        },
+        {
+          "date": "2015-11-01T00:00:00",
+          "type": "breach",
+          "label": "Exposed in Tunngle.net breach",
+          "source": "leakcheck_public"
+        },
+        {
+          "date": "2016-01-01T00:00:00",
+          "type": "breach",
+          "label": "Exposed in Anime-Planet.net breach",
+          "source": "leakcheck_public"
+        },
+        {
+          "date": "2016-06-01T00:00:00",
+          "type": "breach",
+          "label": "Exposed in VBForums.com breach",
+          "source": "leakcheck_public"
+        },
+        {
+          "date": "2017-10-01T00:00:00",
+          "type": "breach",
+          "label": "Exposed in MyHeritage.com breach",
+          "source": "leakcheck_public"
+        },
+        {
+          "date": "2017-11-01T00:00:00",
+          "type": "breach",
+          "label": "Exposed in Romwe.com breach",
+          "source": "leakcheck_public"
+        },
+        {
+          "date": "2019-01-01T00:00:00",
+          "type": "breach",
+          "label": "Exposed in Collection 1 breach",
+          "source": "leakcheck_public"
+        },
+        {
+          "date": "2020-05-01T00:00:00",
+          "type": "breach",
+          "label": "Exposed in Ledger.com breach",
+          "source": "leakcheck_public"
+        },
+        {
+          "date": "2022-09-26T13:45:13",
+          "type": "activity",
+          "label": "Data from github_gists_user: first_gist_created",
+          "source": "github_gists_user"
+        },
+        {
+          "date": "2024-01-01T00:00:00",
+          "type": "breach",
+          "label": "Exposed in Trello.com breach",
+          "source": "leakcheck_public"
+        },
+        {
+          "date": "2024-12-16T16:23:00.842000",
+          "type": "activity",
+          "label": "Data from bluesky_profile: created_at",
+          "source": "bluesky_profile"
+        },
+        {
+          "date": "2026-01-01T00:00:00",
+          "type": "activity",
+          "label": "Robert Martin Evans Obituary (2026) - Montrose, CO - Crippin",
+          "source": "google_news_rss"
+        },
+        {
+          "date": "2026-02-21T08:00:00",
+          "type": "activity",
+          "label": "Raymond \"Doc\" Martin Evans Obituary February 21, 2026",
+          "source": "google_news_rss"
+        },
+        {
+          "date": "2026-04-05T07:00:00",
+          "type": "activity",
+          "label": "Martin-Evans is Ranked 4th in the NCAA In the Long Jump After This Weekend\u2019s Performance",
+          "source": "google_news_rss"
+        },
+        {
+          "date": "2026-04-11T21:09:09",
+          "type": "activity",
+          "label": "Data from github_scraper: updated_at",
+          "source": "github_scraper"
+        },
+        {
+          "date": "2026-05-15T07:00:00",
+          "type": "activity",
+          "label": "Martin-Evans Earns All-ACC Honors in the Long Jump",
+          "source": "google_news_rss"
+        },
+        {
+          "date": "2026-05-27T09:40:26",
+          "type": "activity",
+          "label": "Robert Martin Evans Obituary (2026) - Montrose, CO - Crippin Funeral Home - Montrose",
+          "source": "google_news_rss"
+        },
+        {
+          "date": "2026-06-09T01:06:45",
+          "type": "activity",
+          "label": "Data from github_timezone: last_activity",
+          "source": "github_timezone"
+        }
+      ],
+      "graph_intelligence": {
+        "total_edges": 78,
+        "total_nodes": 78,
+        "cluster_count": 1,
+        "avg_node_confidence": 0.1905,
+        "max_cluster_density": 0.0294,
+        "avg_cluster_confidence": 0.7088
+      },
+      "bfp_behavioral_hash_v1": "6645846e0000000005dcbc070000000089b4e2220000000052694c010000000033212e5800000000bd82ad0c0000000028db212900000000bfb61a4400000000299b930b00000000a81a7cb20000000027a4bc5100000000d7721e3e000000008cdd3f1d0000000060508d8600000000ef12f16200000000303425150000000096d4141100000000e6e5305e00000000720f213700000000159e042100000000f46d4e5a0000000021bff966000000001e42bd960000000020455b0a00000000969a3ca0000000006b97171d00000000ef5f232300000000c1c5c3340000000040b1354400000000fae337000000000085f8e79e000000002c605032000000000896f87600000000e0e76b22000000006a4b997f0000000019f80a6e00000000ca58ee220000000079f7ba500000000085ff461100000000c9bce00a00000000aceb894a00000000124d294b000000008f6d6c3a0000000050f5bfcd00000000b7cd8b13000000009b4f990100000000616d064b0000000008b0be8a0000000010f4495b00000000004db63c0000000030a8c04900000000fbe7db2a00000000effbfe12000000006f077b1b000000007c28321100000000e9cf9494000000008e1cbf2100000000a203581100000000bda25b4f000000005010b89300000000327f7899000000004e99ee4f000000007810a51b00000000b8d639260000000035d881810000000008d5719200000000a5590e5100000000dd03c1a100000000a43020af000000002102d06400000000629f043d0000000015cfe61d00000000d0920a7b00000000f7759e080000000028f3f211000000002b7c570600000000e4d6a60b000000008c73e6e900000000190f651000000000993d4256000000004d8f44480000000076b91634000000006bc7262f000000008b8bde87000000000bdfa09100000000d676223700000000bd00f26a000000002c4d971c00000000578e2b0600000000c1ca53570000000072b75a0700000000918faead00000000569ba88f000000001a28402c000000004e6244ab00000000a852da1c00000000b98c308600000000d0adff2500000000f8d49a53000000009748872c000000003fe9bc370000000065c9065c00000000591d9e2300000000fa44237a00000000b0103f310000000040f8ee2f000000005caac7520000000046e38327000000009d704867000000009952c6d300000000b42d273800000000947d4c42000000005b1b7a0300000000876e800f000000008f9f0f0b00000000aab26d240000000067db435a00000000ca7bba3b00000000fc529c3400000000ac80d44100000000d7af81b4000000009c32e50900000000e49f261600000000e86d3e16000000003b003e43000000009a97641500000000b3e2230b000000003fdd6e2000000000",
+      "formal_records_breakdown": {
+        "courts": 0,
+        "gazette": 0,
+        "commercial_register": 8
+      },
+      "public_exposure_breakdown": {
+        "media": 0.35,
+        "corporate": 0.0,
+        "pep_count": 0,
+        "sanctions": 0.0,
+        "media_count": 8,
+        "corporate_count": 0,
+        "sanctions_count": 0
+      }
+    },
+    "timezone": {
+      "regions": [
+        "US Pacific",
+        "Tijuana"
+      ],
+      "confidence": 1.0,
+      "utc_offset": -8,
+      "sample_count": 13,
+      "sleep_window": [
+        2,
+        7
+      ],
+      "country_hints": [
+        "US"
+      ],
+      "daytime_score": 1.0,
+      "hourly_distribution": {
+        "0": 0,
+        "1": 2,
+        "2": 0,
+        "3": 0,
+        "4": 0,
+        "5": 0,
+        "6": 0,
+        "7": 0,
+        "8": 0,
+        "9": 0,
+        "10": 0,
+        "11": 0,
+        "12": 0,
+        "13": 0,
+        "14": 0,
+        "15": 0,
+        "16": 2,
+        "17": 0,
+        "18": 7,
+        "19": 0,
+        "20": 0,
+        "21": 2,
+        "22": 0,
+        "23": 0
+      }
+    },
+    "geo_consistency": {
+      "signals": [
+        {
+          "type": "self_reported",
+          "source": "gravatar",
+          "weight": 0.8,
+          "raw_value": "united kingdom",
+          "country_code": "GB"
+        },
+        {
+          "type": "timezone",
+          "source": "Timezone UTC-8",
+          "weight": 0.5,
+          "raw_value": "UTC-8",
+          "country_code": "US"
+        }
+      ],
+      "verdict": "Primary: GB, secondary: US",
+      "anomalies": [],
+      "confidence": 0.59,
+      "country_votes": {
+        "GB": 0.8,
+        "US": 0.5
+      },
+      "primary_country": "GB",
+      "consistency_score": 0.67,
+      "primary_country_name": "United Kingdom"
+    },
+    "languages": {
+      "primary": "en",
+      "reliable": true,
+      "languages": [
+        {
+          "code": "en",
+          "name": "English",
+          "confidence": 1.0
+        }
+      ],
+      "sample_chars": 209,
+      "verified_source": true
+    },
+    "score_breakdown": null
+  },
+  "crypto_findings": [
+    {
+      "id": "demo-ssh-github",
+      "module": "github_ssh_keys",
+      "category": "identity",
+      "title": "GitHub public SSH key(s)",
+      "indicator_type": "username",
+      "data": {
+        "extracted": {
+          "key_algo": "ssh-rsa"
+        },
+        "status_code": 200
+      }
+    },
+    {
+      "id": "demo-ssh-gitlab",
+      "module": "gitlab_ssh_keys",
+      "category": "identity",
+      "title": "GitLab public SSH key(s)",
+      "indicator_type": "username",
+      "data": {
+        "extracted": {
+          "key_algo": "ssh-ed25519"
+        },
+        "status_code": 200
+      }
+    },
+    {
+      "id": "demo-gpg",
+      "module": "gpg_keys",
+      "category": "identity",
+      "title": "GPG public key (keys.openpgp.org)",
+      "indicator_type": "public_key",
+      "data": {
+        "source": "keys.openpgp.org",
+        "fingerprint": "D477040C70C2156A5C298549BB7E9101495E6BF7",
+        "fingerprint_display": "D477 040C 70C2 156A 5C29 8549 BB7E 9101 495E 6BF7",
+        "linked_emails": [
+          "m.devans@placeholder.co.uk"
+        ],
+        "key_type": "GPG"
+      }
+    }
+  ],
+  "cluster": {
+    "count": 4,
+    "prefix": "6645846e00000000",
+    "peers": [
+      {
+        "target_id": "demo-peer-1",
+        "email": "sarah.chen@example.com",
+        "display_name": "Sarah Chen"
+      },
+      {
+        "target_id": "demo-peer-2",
+        "email": "a.silva@example.com",
+        "display_name": "Andr\u00e9 Silva"
+      },
+      {
+        "target_id": "demo-peer-3",
+        "email": "k.berger@example.com",
+        "display_name": "Klaus Berger"
+      },
+      {
+        "target_id": "demo-peer-4",
+        "email": "mira.t@example.com",
+        "display_name": "Mira Tanaka"
+      }
+    ]
+  },
+  "counts": {
+    "total_findings": 107,
+    "social_accounts": 34,
+    "breaches": 3,
+    "data_sources": 28
+  }
+}
