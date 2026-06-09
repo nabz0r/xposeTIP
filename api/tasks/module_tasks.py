@@ -27,6 +27,7 @@ SCANNER_REGISTRY = {
     "epieos": "api.services.layer1.epieos_scanner:EpieosScanner",
     "fullcontact": "api.services.layer1.fullcontact_scanner:FullContactScanner",
     "github_deep": "api.services.layer1.github_scanner:GitHubDeepScanner",
+    "gpg_keys": "api.services.layer1.gpg_scanner:GpgKeysScanner",
     "username_hunter": "api.services.layer1.username_scanner:UsernameScannerPlugin",
     "leaked_domains": "api.services.layer2.leaked_scanner:LeakedScanner",
     "dns_deep": "api.services.layer2.dns_scanner:DNSDeepScanner",

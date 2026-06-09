@@ -24,6 +24,7 @@ logger = logging.getLogger(__name__)
 
 DEFAULT_QUICK_MODULES = [
     "email_validator", "holehe", "emailrep", "gravatar", "epieos", "github_deep", "dns_deep",
+    "gpg_keys",             # S246 — keys.openpgp.org lookup → public_key + linked-email cascade
     "name_scraper_engine",  # S122e — silent no-op if no name input available yet
     "scraper_engine",       # S199 — dispatches all enabled data-driven scrapers (145 active post-S198)
 ]

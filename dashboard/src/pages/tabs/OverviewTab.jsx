@@ -9,6 +9,7 @@ import LifeTimeline from '../../components/LifeTimeline'
 import RiskSignalsBlock from '../../components/RiskSignalsBlock'
 import SimilarityBlock from '../../components/SimilarityBlock'
 import BFPSubstrateBlock from '../../components/bfp/BFPSubstrateBlock'
+import CryptoIdentityBlock from '../../components/CryptoIdentityBlock'
 import ActivityRhythm from '../../components/ActivityRhythm'
 
 const severityColors = {
@@ -328,6 +329,9 @@ export default function OverviewTab({ target, findings, profile, fingerprint, fp
 
       {/* BFP Substrate — trust layer dossier (S180-L) */}
       <BFPSubstrateBlock targetId={target?.id} />
+
+      {/* S246 — Cryptographic identity (GPG + SSH; silent if none) */}
+      <CryptoIdentityBlock findings={findings} />
 
       {/* Fingerprint Evolution */}
       {fpHistory.length > 1 && (

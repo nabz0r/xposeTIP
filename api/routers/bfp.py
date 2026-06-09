@@ -41,10 +41,10 @@ _PLATFORM_INVENTORY = {
     "scrapers_count": 176,
     "scrapers_active": 151,
     "scrapers_disabled": 25,
-    "scanners_count": 27,
+    "scanners_count": 28,
     "analyzers_count": 9,
     "axes_count": 11,
-    "version": "v1.6.43",
+    "version": "v1.6.44",
 }
 
 # /recent_anchors cache (S173) — single cache slot always holding the top 100,
