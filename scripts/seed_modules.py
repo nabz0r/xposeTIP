@@ -171,6 +171,18 @@ MODULES = [
         "version": "1.0.0",
     },
     {
+        "id": "gpg_keys",
+        "display_name": "GPG Public Keys",
+        "description": "Looks up the email on keys.openpgp.org; emits the V4 fingerprint + linked-UID emails (cascade) when a key is published",
+        "layer": 1,
+        "category": "identity",
+        "enabled": True,
+        "requires_auth": False,
+        "rate_limit": {"rpm": 30, "cooldown_sec": 2},
+        "supported_regions": ["*"],
+        "version": "1.0.0",
+    },
+    {
         "id": "username_hunter",
         "display_name": "Username Hunter",
         "description": "Discovers accounts on gaming and social platforms using username patterns",
