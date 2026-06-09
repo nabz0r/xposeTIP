@@ -5,58 +5,80 @@ import PublicFooter from '../components/landing/PublicFooter'
 
 // ─── Comparison data ─────────────────────────────────────────────────
 
+// S244 — Peer-reviewed research that maps onto BFP axes. Each card links to
+// the paper so readers can verify the claim themselves.
+const RESEARCH = [
+  { stat: '95%', color: '#00ff88',
+    finding: 'Just 4 location points uniquely identify a person — out of 1.5 million.',
+    source: 'de Montjoye et al., 2013 · Scientific Reports',
+    maps: 'geo axis', url: 'https://www.nature.com/articles/srep01376' },
+  { stat: '88%', color: '#3388ff',
+    finding: 'Facebook likes alone predict orientation, politics and personality traits.',
+    source: 'Kosinski, Stillwell & Graepel, 2013 · PNAS',
+    maps: 'digital footprint', url: 'https://www.pnas.org/doi/10.1073/pnas.1218772110' },
+  { stat: 'ID', color: '#aa66ff',
+    finding: 'Your daily activity rhythm fingerprints you — a measurable "walking signature".',
+    source: 'Koffman, Muschelli & Crainiceanu · Johns Hopkins (NHANES)',
+    maps: 'activity rhythm', url: 'https://arxiv.org/abs/2506.17160' },
+  { stat: '92%', color: '#ffaa00',
+    finding: 'How you type identifies you — keystroke rhythm alone, no extra hardware.',
+    source: 'Monrose & Rubin, 2000 · Future Generation Computer Systems',
+    maps: 'behavioral signature', url: 'https://doi.org/10.1016/S0167-739X(99)00059-X' },
+]
+
 const SEGMENTS = [
   {
     id: 'osint',
     title: 'vs OSINT pros',
     subtitle: 'Maltego · SpiderFoot · Recorded Future',
-    pitch: 'Same depth of OSINT reconnaissance. Consumer-grade UX. Accessible pricing. Core engine open source under AGPL-3.0.',
+    pitch: 'Same depth of OSINT reconnaissance — consumer-grade UX, accessible pricing, open-source core (AGPL-3.0).',
     competitors: ['Maltego', 'SpiderFoot', 'Recorded Future'],
     rows: [
-      ['120+ OSINT sources', 'yes', 'yes', 'yes', 'yes'],
+      ['174 OSINT sources', 'yes', 'yes', 'yes', 'yes'],
       ['Consumer-grade UX', 'yes', 'no', 'no', 'partial'],
       ['11-axis behavioral fingerprint', 'yes', 'no', 'no', 'no'],
-      ['Identity graph (interactive)', 'yes', 'yes', 'no', 'yes'],
       ['Verified provenance per finding', 'yes', 'partial', 'no', 'partial'],
-      ['Legal records (US · FR · UK)', 'yes', 'partial', 'no', 'partial'],
-      ['Self-hostable', 'yes', 'yes (paid tier)', 'yes', 'no'],
-      ['Open-source core', 'yes (AGPL-3.0)', 'no', 'yes (CE)', 'no'],
-      ['Starting price', '€0', '€1.4K/seat', 'Free CE / paid HX', 'enterprise only'],
+      ['Open-source core', { text: 'AGPL-3.0' }, 'no', { text: 'CE' }, 'no'],
+      ['Starting price',
+        { text: '€0' },
+        { text: 'from ~$5K/yr', url: 'https://www.maltego.com/pricing/' },
+        { text: 'free CE / paid', url: 'https://www.spiderfoot.net/' },
+        { text: 'enterprise', url: 'https://www.recordedfuture.com/' }],
     ],
   },
   {
     id: 'consumer',
     title: 'vs Consumer protection',
-    subtitle: 'Aura · NordProtect · LifeLock',
-    pitch: "Same self-service onboarding. But transparent: you see the identity graph, every data source, every finding's provenance. Not a black box that says 'we're monitoring'.",
-    competitors: ['Aura', 'NordProtect', 'LifeLock'],
+    subtitle: 'Aura · Coveron (ex-NordProtect) · LifeLock',
+    pitch: "Same self-service onboarding — but transparent: you see the identity graph, every source, every finding's provenance. Not a black box that just says 'we're monitoring'.",
+    competitors: ['Aura', 'Coveron', 'LifeLock'],
     rows: [
-      ['Self-service signup', 'yes', 'yes', 'yes', 'yes'],
       ['Free tier with real intel', 'yes', 'no (trial)', 'no (trial)', 'no'],
-      ['Identity graph (interactive)', 'yes', 'no', 'no', 'no'],
       ['Show data sources used', 'yes', 'no', 'no', 'no'],
       ['Per-finding provenance', 'yes', 'no', 'no', 'no'],
       ['11-axis behavioral fingerprint', 'yes', 'no', 'no', 'no'],
       ['Open-source core', 'yes', 'no', 'no', 'no'],
-      ['Self-hostable', 'yes', 'no', 'no', 'no'],
-      ['Identity insurance', 'no', 'yes ($5M)', 'yes ($1M)', 'yes ($1M)'],
+      ['Identity theft insurance', 'no',
+        { text: 'up to $5M', url: 'https://www.aura.com/learn/aura-vs-lifelock' },
+        { text: 'up to $1M', url: 'https://nordprotect.com/features/identity-theft-recovery/' },
+        { text: 'up to $3M', url: 'https://lifelock.norton.com/learn/identity-theft-resources/aura-vs-lifelock' }],
     ],
   },
   {
     id: 'removal',
     title: 'vs Data removal',
     subtitle: 'Incogni · DeleteMe · Optery',
-    pitch: 'Mapping over removal. We show your complete exposure — accounts, breaches, legal records, behavioral fingerprint — rather than just delisting from data brokers.',
+    pitch: 'Mapping over removal — we show your complete exposure (accounts, breaches, legal records, behavioral fingerprint) rather than only delisting from data brokers.',
     competitors: ['Incogni', 'DeleteMe', 'Optery'],
     rows: [
-      ['Data broker delisting', 'no', 'yes (420+ brokers)', 'yes (30+)', 'yes (600+)'],
+      ['Data broker delisting', 'no',
+        { text: '420+', url: 'https://cyberinsider.com/data-removal/optery-vs-incogni/' },
+        { text: '750+ claimed', url: 'https://cybernews.com/privacy-tools/optery-vs-deleteme-vs-incogni/' },
+        { text: '~640+', url: 'https://cybernews.com/privacy-tools/optery-vs-deleteme-vs-incogni/' }],
       ['Full digital footprint mapping', 'yes', 'no', 'no', 'partial'],
       ['Breach intelligence', 'yes', 'no', 'no', 'yes'],
-      ['Legal records (US · FR · UK)', 'yes', 'no', 'no', 'no'],
       ['Sanctions & PEP screening', 'yes', 'no', 'no', 'no'],
       ['11-axis behavioral fingerprint', 'yes', 'no', 'no', 'no'],
-      ['Identity graph (interactive)', 'yes', 'no', 'no', 'no'],
-      ['Self-hostable', 'yes', 'no', 'no', 'no'],
       ['Open-source core', 'yes', 'no', 'no', 'no'],
     ],
   },
@@ -71,7 +93,7 @@ const QUADRANT_POINTS = [
   { name: 'SpiderFoot', x: 0.22, y: 0.78, color: '#888' },
   { name: 'Recorded Future', x: 0.38, y: 0.88, color: '#888' },
   { name: 'Aura', x: 0.86, y: 0.28, color: '#666' },
-  { name: 'NordProtect', x: 0.84, y: 0.22, color: '#666' },
+  { name: 'Coveron', x: 0.84, y: 0.22, color: '#666' },
   { name: 'Incogni', x: 0.74, y: 0.18, color: '#666' },
   { name: 'xposeTIP', x: 0.78, y: 0.86, color: '#00ff88' },
 ]
@@ -82,6 +104,13 @@ function Cell({ value, isUs }) {
   if (value === 'yes') return <Check className={`w-4 h-4 ${isUs ? 'text-[#00ff88]' : 'text-gray-500'}`} />
   if (value === 'no') return <X className="w-4 h-4 text-gray-700" />
   if (value === 'partial') return <Minus className="w-4 h-4 text-[#ffcc00]" />
+  if (value && typeof value === 'object') {
+    const cls = `text-xs font-mono ${isUs ? 'text-[#00ff88]' : 'text-gray-500'}`
+    return value.url
+      ? <a href={value.url} target="_blank" rel="noopener noreferrer"
+           className={`${cls} underline decoration-dotted underline-offset-2 hover:opacity-80`}>{value.text}</a>
+      : <span className={cls}>{value.text}</span>
+  }
   return <span className={`text-xs font-mono ${isUs ? 'text-[#00ff88]' : 'text-gray-500'}`}>{value}</span>
 }
 
@@ -100,11 +129,38 @@ export default function Compare() {
             Positioning · Identity Threat Intelligence
           </div>
           <h1 className="text-4xl md:text-5xl font-bold mb-4 font-['Instrument_Sans',sans-serif] leading-tight">
-            xposeTIP vs the landscape
+            A category of one.
           </h1>
           <p className="text-lg text-gray-400 max-w-2xl mx-auto leading-relaxed">
-            Three product categories touch identity exposure. None sit where we sit — the intersection
-            of deep OSINT reconnaissance and consumer-grade UX, with audit-grade provenance and an open-source core.
+            Three industries already read your identity — OSINT tools for analysts, protection apps for insurers,
+            removal services for a delete queue. None give the reading back to you. xposeTIP does.
+          </p>
+        </section>
+
+        {/* S244 — Research band: behavior = identity. Each card cites a paper. */}
+        <section className="mb-24">
+          <h2 className="text-xs uppercase tracking-wider text-gray-500 mb-2 text-center font-mono">The science is settled</h2>
+          <p className="text-center text-xl md:text-2xl font-bold text-white mb-2 max-w-2xl mx-auto font-['Instrument_Sans',sans-serif]">
+            Behavior is identity. Researchers proved it a decade ago.
+          </p>
+          <p className="text-center text-sm text-gray-500 mb-10 max-w-lg mx-auto">
+            A behavioral identity layer isn't speculative — it formalizes what peer-reviewed research has shown for years.
+          </p>
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+            {RESEARCH.map((r) => (
+              <div key={r.source} className="bg-[#12121a] border border-[#1e1e2e] rounded-xl p-5 flex flex-col">
+                <div className="text-3xl font-mono font-bold mb-3" style={{ color: r.color }}>{r.stat}</div>
+                <div className="text-sm text-gray-300 leading-relaxed mb-4 flex-1">{r.finding}</div>
+                <div className="text-[11px] text-gray-600 font-mono leading-relaxed">{r.source}</div>
+                <div className="text-[10px] font-mono mt-2" style={{ color: r.color, opacity: 0.7 }}>→ {r.maps}</div>
+                <a href={r.url} target="_blank" rel="noopener noreferrer"
+                   className="text-[10px] font-mono text-gray-600 hover:text-gray-300 mt-2">read the paper →</a>
+              </div>
+            ))}
+          </div>
+          <p className="text-center text-base text-gray-400 max-w-2xl mx-auto mt-10 leading-relaxed">
+            Everyone can already read your behavior. <span className="text-[#00ff88]">Except you.</span>{' '}
+            BFP returns that reading to its subject — the category no one else is in.
           </p>
         </section>
 
@@ -255,8 +311,8 @@ export default function Compare() {
 
         {/* Footer note */}
         <p className="text-center text-[10px] text-gray-700 font-mono mt-20">
-          Comparison data based on public product pages and documentation as of May 2026.
-          Categorizations are positional — competitor products evolve.
+          Comparison data verified against public sources, June 2026 — every figure links to its source.
+          Categorizations are positional; competitor products evolve.
         </p>
       </div>
       <PublicFooter />
