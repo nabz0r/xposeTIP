@@ -38,8 +38,8 @@ _STATS_TTL_SECONDS = 300.0
 # alongside the version field is the contract that keeps the public /bfp page
 # in sync with the deployed code.
 _PLATFORM_INVENTORY = {
-    "scrapers_count": 174,
-    "scrapers_active": 149,
+    "scrapers_count": 176,
+    "scrapers_active": 151,
     "scrapers_disabled": 25,
     "scanners_count": 27,
     "analyzers_count": 9,

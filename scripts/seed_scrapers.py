@@ -3960,6 +3960,47 @@ DEFAULT_SCRAPERS = [
         "enabled": False,
         "notes": "Requires Solscan Pro API key (free tier 10k req/mo). Replace YOUR_SOLSCAN_KEY in headers before enabling. Solana addresses are base58, NOT 0x. Will return error if a non-Solana address is passed — handled by not_found_indicators.",
     },
+    # === S245 — Public SSH keys (cross-platform identity signal) ===
+    {
+        "name": "github_ssh_keys",
+        "display_name": "GitHub SSH Keys",
+        "description": "Public SSH keys published on a GitHub account",
+        "category": "identity",
+        "url_template": "https://github.com/{username}.keys",
+        "input_type": "username",
+        "method": "GET",
+        "headers": {"User-Agent": "xpose-tip/1.0"},
+        "success_indicator": "ssh-",
+        "not_found_indicators": ["Not Found", "404"],
+        "extraction_rules": [
+            {"field": "key_algo", "type": "regex", "pattern": "(ssh-[a-z0-9]+|ecdsa-[a-z0-9-]+)"},
+        ],
+        "finding_title_template": "GitHub public SSH key(s)",
+        "finding_category": "identity",
+        "finding_severity": "low",
+        "rate_limit_requests": 1,
+        "rate_limit_window": 2,
+    },
+    {
+        "name": "gitlab_ssh_keys",
+        "display_name": "GitLab SSH Keys",
+        "description": "Public SSH keys published on a GitLab account",
+        "category": "identity",
+        "url_template": "https://gitlab.com/{username}.keys",
+        "input_type": "username",
+        "method": "GET",
+        "headers": {"User-Agent": "xpose-tip/1.0"},
+        "success_indicator": "ssh-",
+        "not_found_indicators": ["Not Found", "404"],
+        "extraction_rules": [
+            {"field": "key_algo", "type": "regex", "pattern": "(ssh-[a-z0-9]+|ecdsa-[a-z0-9-]+)"},
+        ],
+        "finding_title_template": "GitLab public SSH key(s)",
+        "finding_category": "identity",
+        "finding_severity": "low",
+        "rate_limit_requests": 1,
+        "rate_limit_window": 2,
+    },
 ]
 
 
