@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { Globe, MapPin, Building2, Github, ExternalLink, Shield, AlertTriangle, Link2, Check, RefreshCw } from 'lucide-react'
+import { Globe, MapPin, Building2, Github, ExternalLink, Shield, AlertTriangle, Link2, Check, RefreshCw, Copy } from 'lucide-react'
 import { getTargetProfile, getFingerprint } from '../lib/api'
 import { fallbackSeed } from '../lib/avatar'
 import FingerprintRadar from './FingerprintRadar'
@@ -41,6 +41,12 @@ export default function ProfileHeader({ target, findings, animScore, profileData
   const [consentBusy, setConsentBusy] = useState(false)
   const [consentError, setConsentError] = useState(null)
   const consentPollRef = useRef(null)
+  // S254 — share link for live operator-to-subject handoff. portalLink holds
+  // the latest auth_url so the operator can copy it and send it to the
+  // subject (e.g. "ouvre ça sur ton téléphone"). Ephemeral; cleared on a
+  // fresh request or on verification.
+  const [portalLink, setPortalLink] = useState(null)
+  const [linkCopied, setLinkCopied] = useState(false)
 
   const fetchConsentStatus = (id) =>
     consentFetch(`/consent/${id}/status`).catch(() => null)
@@ -69,6 +75,10 @@ export default function ProfileHeader({ target, findings, animScore, profileData
       const next = await fetchConsentStatus(id)
       if (next?.verified) {
         setConsent(next)
+        // S254 — once verified, the share link is stale; clear so the
+        // copy block disappears in lock-step with the badge appearing.
+        setPortalLink(null)
+        setLinkCopied(false)
         clearInterval(consentPollRef.current)
         consentPollRef.current = null
       } else if (attempts >= 24) {
@@ -88,6 +98,10 @@ export default function ProfileHeader({ target, findings, animScore, profileData
         body: JSON.stringify({ target_id: target.id }),
       })
       if (res?.auth_url) {
+        setPortalLink(res.auth_url)
+        setLinkCopied(false)
+        // Keep the "open here" path for screen-sharing demos; the share link
+        // below is the asynchronous handoff for remote/phone-side subjects.
         window.open(res.auth_url, '_blank')
         startConsentPolling(target.id)
       } else {
@@ -371,9 +385,9 @@ export default function ProfileHeader({ target, findings, animScore, profileData
                       onClick={handleRequestConsent}
                       disabled={consentBusy}
                       className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-mono bg-[#1e1e2e] text-gray-300 hover:bg-[#2a2a3e] border border-[#1e1e2e] hover:border-[#3388ff]/40 transition-colors disabled:opacity-50"
-                      title="Open SSO consent flow in a new tab. Subject signs in with Google; we verify the email matches and record an append-only consent claim."
+                      title="Open the subject's portal handoff. The subject signs in with Google; once their email matches, their read-only portal opens."
                     >
-                      {consentBusy ? 'Opening…' : 'Request SSO consent'}
+                      {consentBusy ? 'Opening…' : 'Give subject portal access'}
                     </button>
                     {consentPollRef.current && (
                       <button
@@ -385,6 +399,40 @@ export default function ProfileHeader({ target, findings, animScore, profileData
                         <RefreshCw className="w-3 h-3" />
                         Recheck
                       </button>
+                    )}
+                    {/* S254 — shareable link for live handoff. Visible only
+                        while the subject hasn't completed sign-in. */}
+                    {portalLink && (
+                      <div className="basis-full mt-1 bg-[#0a0a0f] border border-[#1e1e2e] rounded-md p-2 flex items-center gap-2">
+                        <input
+                          type="text"
+                          value={portalLink}
+                          readOnly
+                          onFocus={(e) => e.target.select()}
+                          className="flex-1 min-w-0 bg-transparent text-[11px] font-mono text-gray-300 truncate outline-none"
+                          aria-label="Subject portal handoff link"
+                        />
+                        <button
+                          type="button"
+                          onClick={async () => {
+                            try {
+                              await navigator.clipboard.writeText(portalLink)
+                              setLinkCopied(true)
+                              setTimeout(() => setLinkCopied(false), 1500)
+                            } catch {
+                              setLinkCopied(false)
+                            }
+                          }}
+                          className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-mono bg-[#1e1e2e] text-gray-300 hover:bg-[#2a2a3e] border border-[#1e1e2e] hover:border-[#00ff88]/40 transition-colors shrink-0"
+                          title="Copy this link and send it to the subject."
+                        >
+                          {linkCopied ? <Check className="w-3 h-3 text-[#00ff88]" /> : <Copy className="w-3 h-3" />}
+                          {linkCopied ? 'Copied' : 'Copy'}
+                        </button>
+                        <p className="basis-full text-[11px] text-gray-500 mt-1">
+                          Send this to the subject — once they prove it's them, their portal opens. Link expires in 10 min.
+                        </p>
+                      </div>
                     )}
                   </>
                 )}
