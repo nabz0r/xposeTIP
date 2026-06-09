@@ -88,7 +88,7 @@ export default function Manifesto() {
             The foundation that was missing.
           </p>
           <p className="text-sm text-gray-500 max-w-xl mx-auto leading-relaxed italic">
-            We build mirrors, not weapons. We're building infrastructure, not extracting data.
+            We're building infrastructure, not extracting data — the layer returns what the internet already knows to the person it describes.
           </p>
         </section>
 
@@ -447,7 +447,7 @@ export default function Manifesto() {
           <p className="text-gray-600 text-xs mb-6">
             Open source (AGPL-3.0) so you can verify every claim on this page.
           </p>
-          <p className="text-[10px] text-gray-700 font-mono">Manifesto v3 — May 2026</p>
+          <p className="text-[10px] text-gray-700 font-mono">Manifesto v3.1 — Jun 2026</p>
         </section>
 
       </div>
