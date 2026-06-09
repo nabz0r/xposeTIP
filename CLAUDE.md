@@ -217,4 +217,4 @@ Surfaced in S185 validation: edits to `secondary_identifier_enricher.py` weren't
 
 ## Details
 
-See `docs/ARCHITECTURE.md`, `docs/API_REFERENCE.md`, `docs/SPRINT_LOG.md`.
+See `docs/ARCHITECTURE.md`, `docs/API_REFERENCE.md`.

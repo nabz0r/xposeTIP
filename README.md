@@ -11,9 +11,9 @@
 [![React 18](https://img.shields.io/badge/React-18-61DAFB?logo=react)](https://react.dev)
 [![Docker](https://img.shields.io/badge/Docker-Compose-2496ED?logo=docker)](https://docker.com)
 [![License: AGPL v3](https://img.shields.io/badge/License-AGPL_v3-blue.svg)](LICENSE)
-[![Scrapers](https://img.shields.io/badge/scrapers-174-3388ff)](#scraper-engine)
-[![Sprints](https://img.shields.io/badge/sprints-222+-00ff88)](#changelog)
-[![Version](https://img.shields.io/badge/version-1.6.39-green)](#changelog)
+[![Scrapers](https://img.shields.io/badge/scrapers-176-3388ff)](#scraper-engine)
+[![Sprints](https://img.shields.io/badge/sprints-246+-00ff88)](#changelog)
+[![Version](https://img.shields.io/badge/version-1.6.44-green)](#changelog)
 
 **Enter an email. See what the internet knows. Fix it.**
 
@@ -53,7 +53,7 @@ Dashboard: graph, timeline, accounts,
 
 | Layer | What | How |
 |:-----:|------|-----|
-| **L1** | Passive Recon | 174 scrapers: account enumeration, breach history, social profiles, username expansion, phone/crypto enrichment, legal records (US/FR/UK + SEC EDGAR + Companies House UK), academic identity (arXiv/ORCID/DBLP/Semantic Scholar) |
+| **L1** | Passive Recon | 176 scrapers: account enumeration, breach history, social profiles, username expansion, phone/crypto enrichment, public keys (SSH/GPG), legal records (US/FR/UK + SEC EDGAR + Companies House UK), academic identity (arXiv/ORCID/DBLP/Semantic Scholar) |
 | **L2** | Public Databases | DNS deep (SPF/DMARC/DKIM/subdomains), WHOIS, GeoIP, certificate transparency, SaaS detection |
 | **L3** | Self-Audit | Google/Microsoft OAuth app permissions, Drive public files, Gmail forwarding rules |
 | **L4** | Intelligence | Identity graph, PageRank confidence, dual scoring, persona clustering, behavioral profiling, risk assessment |
@@ -68,13 +68,13 @@ Dashboard: graph, timeline, accounts,
 - **11-axis digital fingerprint** — accounts, platforms, username_reuse, breaches, geo_spread, data_leaked, email_age, security, public_exposure, formal_records (S145), network_signature (S147)
 - **Generative pixel art** — deterministic 32x32 CryptoPunk-style avatar from graph eigenvalues (5.4B unique combinations, zero GPU)
 - **Deep Scan** — operator-triggered per-indicator scan across all matching scrapers, with cascade (discovered cross-type indicators are chain-scanned)
-- **Web Discovery (Phase C)** — fingerprint-driven Google dorking + 6 content extractors — explores the open web beyond the 174 fixed scrapers
+- **Web Discovery (Phase C)** — fingerprint-driven Google dorking + 6 content extractors — explores the open web beyond the 176 fixed scrapers
 - **Phone Intelligence** — automatic phone number extraction from breach data + carrier/line type enrichment
 - **Crypto Wallet Tracking** — BTC/ETH wallet identification with balance, transaction history, and scam flag detection via ChainAbuse
 
 ### Scraper Engine
 
-174 data-driven scrapers (149 active by default, 25 disabled) — all configurable via UI (URL template, extraction rules, rate limits):
+176 data-driven scrapers (151 active by default, 25 disabled) — all configurable via UI (URL template, extraction rules, rate limits):
 
 | Category | Count | Examples |
 |----------|-------|---------|
@@ -121,7 +121,7 @@ graph LR
     A --> C[Celery Workers<br/>Two-phase orchestration]
     A --> PG[(PostgreSQL 16)]
     A --> RD[(Redis 7<br/>Broker + Cache)]
-    C --> P1[Phase A — Gather<br/>174 scrapers + Pass 1.5 + Pass 2]
+    C --> P1[Phase A — Gather<br/>176 scrapers + Pass 1.5 + Pass 2]
     C --> P2[Phase B — Compute<br/>Graph → PageRank → Score<br/>→ Profile → Personas<br/>→ Intelligence → Fingerprint]
     P2 --> PG
     C --> DS[Deep Scan<br/>Per-indicator + Cascade]
@@ -147,12 +147,12 @@ First registered user = **superadmin** with **Enterprise** plan.
 
 ## Plans
 
-| Plan | Price | Scans/mo | Seats | Key Features |
-|------|-------|----------|-------|--------------|
-| Free | €0 | 25 | 1 | Basic exposure scan, single identifier, fingerprint preview |
-| Starter | €49/mo | 250 | 1 | Full 174-source pipeline, identity graph + personas, PDF reports |
-| Team | €299/mo | 2 000 | 5 | API access (SIEM/SOAR), multi-workspace, shared targets |
-| Enterprise | From €2 500/mo | Custom | Unlimited | Multi-tenant + SSO, audit log + SLA, custom scrapers, managed APIs |
+| Plan | Availability | Scans/mo | Seats | Key Features |
+|------|--------------|----------|-------|--------------|
+| Free | Free to start | 25 | 1 | Basic exposure scan, single identifier, fingerprint preview |
+| Starter | Early access | 250 | 1 | Full 176-source pipeline, identity graph + personas, PDF reports |
+| Team | Early access | 2 000 | 5 | API access (SIEM/SOAR), multi-workspace, shared targets |
+| Enterprise | On application | Custom | Unlimited | Multi-tenant + SSO, audit log + SLA, custom scrapers, managed APIs |
 
 Custom identity intelligence reports (due diligence, compliance, threat attribution) are available as a separate service. [Contact us](mailto:contact@redbird.co.com).
 
@@ -172,7 +172,7 @@ Custom identity intelligence reports (due diligence, compliance, threat attribut
 
 ## Changelog
 
-171+ sprints delivered. Key milestones:
+246+ sprints delivered. Key milestones:
 
 | Version | Highlights |
 |---------|-----------|
@@ -221,7 +221,7 @@ Custom identity intelligence reports (due diligence, compliance, threat attribut
 | v0.13.0 | Persona clustering |
 | v0.1.0 | Docker, Auth, first scanner |
 
-Full sprint log: [docs/SPRINT_LOG.md](docs/SPRINT_LOG.md)
+Full sprint history is auto-generated from git log on the **/changelog** page (rebuilt at each deploy).
 
 ## Tech Stack
 

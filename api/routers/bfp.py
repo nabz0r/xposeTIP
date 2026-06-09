@@ -8,7 +8,7 @@ marketing page:
 
 Both endpoints have independent in-memory TTL caches (per worker process).
 No PII, no per-workspace identifiers, no claim contents. Numbers exposed
-are already public via SPRINT_LOG.md and BFP_SPEC_v0 non-normative notes.
+are already public via the /changelog page and BFP_SPEC_v0 non-normative notes.
 
 DESIGN — public endpoint isolation:
 - No `Depends(get_current_user)` / `require_role` / `get_current_workspace`.
