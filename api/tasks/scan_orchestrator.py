@@ -5,7 +5,7 @@ from collections import defaultdict
 from datetime import datetime, timezone
 
 from celery import chord
-from sqlalchemy import select, text
+from sqlalchemy import select, text, update
 
 from api.tasks import celery_app
 from api.tasks.utils import get_sync_session
@@ -229,9 +229,28 @@ def launch_scan(self, scan_id: str):
         if not scan:
             return {"error": "Scan not found"}
 
-        scan.status = "running"
-        scan.started_at = datetime.now(timezone.utc)
+        # S241 — atomic claim. Only transition queued → running if the row is
+        # still queued; bail otherwise. Guards against duplicate dispatch
+        # (watchdog re-dispatch racing a still-queued broker task, or
+        # acks_late redelivery firing twice) spawning a second module chord.
+        # Trade-off: a worker dying after the claim but before chord dispatch
+        # leaves status=running with no progress; the existing
+        # running_no_progress watchdog branch (20min) backstops that.
+        now = datetime.now(timezone.utc)
+        claimed = session.execute(
+            update(Scan)
+            .where(Scan.id == scan.id, Scan.status == "queued")
+            .values(status="running", started_at=now)
+        ).rowcount
         session.commit()
+        if not claimed:
+            session.refresh(scan)
+            logger.info(
+                "launch_scan: scan %s not claimable (status=%s) — skipping duplicate dispatch",
+                scan_id, scan.status,
+            )
+            return {"status": "already_claimed", "scan_status": scan.status}
+        session.refresh(scan)
 
         try:
             from api.services.event_bus import publish_event
