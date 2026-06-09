@@ -48,38 +48,6 @@ export const EXPOSURES = [
   { icon: ShieldCheck, title: 'Compliance Ready', desc: 'Sanctions screening (OFAC, EU, UN, Interpol). PEP detection. Corporate officer identification. Built for KYC/AML workflows.' },
 ]
 
-export const AUDIENCES = [
-  {
-    label: 'Free',
-    desc: 'Check your own exposure.',
-    price: '€0 forever',
-    href: '/setup',
-    cta: 'Start free',
-    features: ['25 quick scans / month', 'Basic exposure check', '11-axis fingerprint preview', 'Single identifier'],
-  },
-  {
-    label: 'Starter',
-    desc: 'For individual professionals.',
-    href: '/setup?plan=starter',
-    cta: 'Join waitlist',
-    features: ['250 full scans / month', 'Full 174-source pipeline', 'Identity graph + personas', 'PDF identity reports'],
-  },
-  {
-    label: 'Team',
-    desc: 'For security teams.',
-    href: '/setup?plan=team',
-    cta: 'Join waitlist',
-    features: ['2 000 scans / month', '5 seats included', 'API access (SIEM/SOAR)', 'Multi-workspace + shared targets'],
-  },
-  {
-    label: 'Enterprise',
-    desc: 'For organizations.',
-    href: 'mailto:contact@redbird.co.com?subject=xposeTIP%20Enterprise%20inquiry',
-    cta: 'Contact sales',
-    features: ['Multi-tenant + SSO', 'Audit log + SLA', 'Custom scrapers on demand', 'Managed third-party API integrations'],
-  },
-]
-
 export function hashEmail(email) {
   let hash = 0
   for (let i = 0; i < (email || '').length; i++) {

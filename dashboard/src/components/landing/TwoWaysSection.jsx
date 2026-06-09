@@ -29,20 +29,22 @@ export default function TwoWaysSection() {
               For due diligence firms, law firms, family offices, cyber insurance underwriters, and VC diligence teams. Turnaround in days, not weeks. Capped engagements — depth over volume.
             </p>
 
-            <div className="space-y-2.5 mb-6 text-sm">
+            <div className="space-y-2.5 mb-4 text-sm">
               {[
-                ['Quick Profile', '€2 500', '48h · 1 identity'],
-                ['Identity Assessment', '€6 500', '5d · full PDF report'],
-                ['Deep Investigation', '€15 000', '10d · up to 5 connected identities'],
-                ['Strategic Briefing', '€25–40K', '3-4w · custom, board-ready'],
-              ].map(([tier, price, scope]) => (
+                ['Quick Profile', '48h · 1 identity'],
+                ['Identity Assessment', '5d · full PDF report'],
+                ['Deep Investigation', '10d · up to 5 connected identities'],
+                ['Strategic Briefing', '3-4w · custom, board-ready'],
+              ].map(([tier, scope]) => (
                 <div key={tier} className="flex items-baseline justify-between gap-3 py-1.5 border-b border-[#1e1e2e] last:border-0">
-                  <span className="text-gray-300 font-medium">{tier}</span>
-                  <span className="text-[#aa66ff] font-mono font-bold shrink-0">{price}</span>
-                  <span className="text-[10px] text-gray-600 font-mono truncate hidden sm:inline">{scope}</span>
+                  <span className="text-[#aa66ff] font-semibold">{tier}</span>
+                  <span className="text-[11px] text-gray-500 font-mono text-right">{scope}</span>
                 </div>
               ))}
             </div>
+            <p className="text-[11px] text-gray-600 font-mono mb-6">
+              Pricing on application · capped at 4 engagements / month
+            </p>
 
             <a
               href="mailto:contact@redbird.co.com?subject=xposeTIP%20Identity%20Intelligence%20Report%20inquiry"
@@ -68,20 +70,22 @@ export default function TwoWaysSection() {
               Run scans yourself. Build your own workspace. API access for SIEM/SOAR integration on Team plan and above. Core engine open source — AGPL-3.0.
             </p>
 
-            <div className="space-y-2.5 mb-6 text-sm">
+            <div className="space-y-2.5 mb-4 text-sm">
               {[
-                ['Free', '€0', '25 scans / month'],
-                ['Starter', '€49/mo', '250 full scans · 174 sources'],
-                ['Team', '€299/mo', '2 000 scans · 5 seats · API'],
-                ['Enterprise', 'From €2 500/mo', 'Multi-tenant · SSO · SLA'],
-              ].map(([tier, price, scope]) => (
+                ['Free', '25 scans / month'],
+                ['Starter', '250 full scans · 174 sources'],
+                ['Team', '2 000 scans · 5 seats · API'],
+                ['Enterprise', 'Multi-tenant · SSO · SLA'],
+              ].map(([tier, scope]) => (
                 <div key={tier} className="flex items-baseline justify-between gap-3 py-1.5 border-b border-[#1e1e2e] last:border-0">
-                  <span className="text-gray-300 font-medium">{tier}</span>
-                  <span className="text-[#00ff88] font-mono font-bold shrink-0">{price}</span>
-                  <span className="text-[10px] text-gray-600 font-mono truncate hidden sm:inline">{scope}</span>
+                  <span className="text-[#00ff88] font-semibold">{tier}</span>
+                  <span className="text-[11px] text-gray-500 font-mono text-right">{scope}</span>
                 </div>
               ))}
             </div>
+            <p className="text-[11px] text-gray-600 font-mono mb-6">
+              Free to start · paid tiers in early access
+            </p>
 
             <a
               href="/setup"

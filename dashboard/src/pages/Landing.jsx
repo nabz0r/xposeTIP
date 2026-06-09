@@ -7,7 +7,6 @@ import InversionSection from '../components/landing/InversionSection'
 import ProblemSection from '../components/landing/ProblemSection'
 import FeaturesSection from '../components/landing/FeaturesSection'
 import PipelineSection from '../components/landing/PipelineSection'
-import PricingSection from '../components/landing/PricingSection'
 import TwoWaysSection from '../components/landing/TwoWaysSection'
 import PublicNav from '../components/landing/PublicNav'
 import PublicFooter from '../components/landing/PublicFooter'
@@ -130,7 +129,6 @@ export default function Landing() {
       <FeaturesSection />
       <PipelineSection />
       <TwoWaysSection />
-      <PricingSection />
       <PublicFooter />
     </div>
   )
