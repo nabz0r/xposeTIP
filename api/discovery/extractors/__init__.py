@@ -155,10 +155,25 @@ def _apply_source_penalties(leads: list, source_url: str,
     return result
 
 
+def _company_token_from_email(seed_email: str) -> str | None:
+    """Company anchor token from the SEED email's domain label. None for free-mail.
+    S264-0g — must be the SEED email, not any email in known_identifiers: that set
+    is polluted with discovered alt-emails (blog@feedspot.com) that sort ahead of
+    the seed and yielded token 'feedspot' instead of 'plutontechnologies'."""
+    e = (seed_email or "").strip().lower()
+    if not _EMAIL_RE.match(e):
+        return None
+    domain = e.split("@", 1)[1]
+    if domain in _GENERIC_EMAIL_DOMAINS:
+        return None
+    return _norm_company(domain.split(".")[0])
+
+
 def extract_all(url: str, text: str, html: str,
                 known_identifiers: set = None,
                 resolved_name: str = None,
-                target_geo: str = None) -> list:
+                target_geo: str = None,
+                seed_email: str = None) -> list:
     """Run all extractors, apply relevance + geo scoring, deduplicate, filter."""
     known = {k.lower() for k in (known_identifiers or set())}
     seen_values = {}
@@ -186,7 +201,9 @@ def extract_all(url: str, text: str, html: str,
     # those whose caption company matches the seed email's company token; their
     # relevance IS that match, so they bypass score_relevance. No corporate email
     # (free-mail / none) → token is None → all corporate_person dropped (AR-0 off).
-    company_token = _company_token_from_identifiers(known)
+    # Prefer the explicit SEED email (the employer anchor); fall back to scanning
+    # known_identifiers only when the caller didn't pass it.
+    company_token = _company_token_from_email(seed_email) if seed_email else _company_token_from_identifiers(known)
     person_leads = []
     other_leads = []
     for lead in deduped:

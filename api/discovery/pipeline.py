@@ -76,6 +76,8 @@ class DiscoveryPipeline:
         self.search_client = get_search_client()
         self.page_fetcher = PageFetcher()
         self.query_generator = QueryGenerator()
+        from .press_native import PressNativeSearch
+        self.press_native = PressNativeSearch()  # S264-0g — deterministic press index
         self.quality_gate = QualityGate(target_id, db_session)  # always pass DB for reads
         self.all_leads = []
         self.filtered_count = 0
@@ -257,6 +259,28 @@ class DiscoveryPipeline:
             return []
 
         if _is_press:
+            # S264-0g — query the press's OWN index (deterministic, hors DDG ranking)
+            # and merge it AHEAD of DDG's variable top-N. company = first quoted
+            # phrase in the query; press = the site: domain. Native hits lead so the
+            # naming article is reached every run. Fail-soft → native=[] → DDG-only.
+            import re as _re
+            _m_co = _re.search(r'"([^"]+)"', query)
+            _m_site = _re.search(r'site:(\S+)', query)
+            _company = self._profile.get("company") or (_m_co.group(1) if _m_co else "")
+            _press = _m_site.group(1).rstrip("/").lower() if _m_site else ""
+            native = self.press_native.search(_press, _company) if _press else []
+
+            seen = set()
+            merged = []
+            for r in native + results:            # native first → deterministic hits lead
+                u = (r.get("url") or "").split("#")[0].rstrip("/")
+                if not u or u in seen:
+                    continue
+                seen.add(u)
+                merged.append(r)
+            results = merged
+
+            # surface ARTICLE urls first within the merged set
             results = sorted(results, key=lambda r: 0 if "/article/" in (r.get("url") or "") else 1)
 
         leads = []
@@ -288,7 +312,7 @@ class DiscoveryPipeline:
         raw_leads = extract_all(
             page["url"], page.get("text", ""), page.get("html", ""),
             known_identifiers=known, resolved_name=resolved_name,
-            target_geo=target_geo,
+            target_geo=target_geo, seed_email=self._email,  # S264-0g — employer anchor
         )
 
         # Quality gate filter

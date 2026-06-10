@@ -1,0 +1,10 @@
+{
+  "paperjam.lu": {
+    "type": "algolia",
+    "app_id": "P8SYXF5YME",
+    "search_api_key": "f03d021eaefad80df7ea19e368438630",
+    "index": "articles",
+    "article_url_template": "https://paperjam.lu/article/{slug}",
+    "hits_per_page": 8
+  }
+}
