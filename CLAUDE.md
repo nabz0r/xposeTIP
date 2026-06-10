@@ -162,7 +162,7 @@ pkill -f vite
 cd dashboard && npm install --legacy-peer-deps && npm run dev &
 ```
 
-After deploy: System → Recalculate Fingerprints → Recalculate Profiles
+After deploy: System → Recalculate Fingerprints → Recalculate Profiles → Recalculate Scores
 
 **Worker code edits** (anything under `api/tasks/`, `api/services/secondary_identifier_enricher.py`, `api/services/secondary_identifiers.py`, or any module imported by Celery tasks): the `docker compose up -d --build` line rebuilds images but `docker compose restart api` alone does NOT reload the worker's Python interpreter — Celery caches module imports at process boot. After any worker-code change without a full `--build`, also run:
 

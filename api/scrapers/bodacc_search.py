@@ -59,39 +59,24 @@ def _set_disabled():
         pass
 
 
+_NAME_KEYS = (
+    "commercant", "denomination", "personnes",
+    "cessions_immatriculations_etablissement", "depot",
+    "modifications_generales", "radiation_au_rcs",
+    "listepersonnes", "personne",
+)
+
+
 def _compute_name_confidence(record_fields: dict, target_name: str) -> float:
-    """Score how confidently a BODACC record matches our target name."""
-    if not target_name:
-        return 0.0
-    target_lower = target_name.lower().strip()
-    target_parts = set(target_lower.split())
-    if not target_parts:
-        return 0.0
-
-    # Combine the BODACC fields that may carry person names
-    haystack_pieces = []
-    for key in ("commercant", "denomination", "personnes",
-                "cessions_immatriculations_etablissement",
-                "depot", "modifications_generales", "radiation_au_rcs",
-                "listepersonnes", "personne"):
-        v = record_fields.get(key)
-        if v:
-            haystack_pieces.append(str(v).lower())
-    haystack = " | ".join(haystack_pieces)
-    if not haystack:
-        return 0.0
-
-    if target_lower in haystack:
-        return 0.95
-    h_parts = set(
-        haystack.replace(",", " ").replace(";", " ").replace(".", " ").split()
-    )
-    overlap = len(target_parts & h_parts)
-    if overlap >= len(target_parts):
-        return 0.85
-    if overlap >= 1:
-        return overlap / max(len(target_parts), len(h_parts)) * 0.7
-    return 0.0
+    """S256 — delegate to the entity-scoped matcher. Per-field, not
+    concatenated; scattered tokens across different fields no longer
+    score 0.85. Threshold MIN_NAME_CONFIDENCE=0.70 stays clean — the
+    helper only ever returns 0.0 or >= 0.82."""
+    from api.scrapers._name_match import name_match_confidence
+    field_values = [
+        str(record_fields.get(k)) for k in _NAME_KEYS if record_fields.get(k)
+    ]
+    return name_match_confidence(field_values, target_name)
 
 
 def search_bodacc(primary_name: str) -> list[dict]:
@@ -167,7 +152,8 @@ def search_bodacc(primary_name: str) -> list[dict]:
                 "description": f"{tribunal} — {ville}" if tribunal or ville else "",
                 "severity": severity,
                 "indicator_type": "legal_record",
-                "indicator_value": fields.get("numeroannonce", "") or record_id,
+                # S256 — surface the matched entity name; numero_annonce kept in data.
+                "indicator_value": commercant or fields.get("numeroannonce", "") or record_id,
                 "confidence": round(confidence, 3),
                 "data": {
                     "scraper": "bodacc_search",

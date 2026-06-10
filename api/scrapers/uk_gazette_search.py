@@ -55,33 +55,17 @@ def _set_disabled():
         pass
 
 
+_NAME_KEYS = ("title", "description", "content", "name")
+
+
 def _compute_name_confidence(entry: dict, target_name: str) -> float:
-    """Score how confidently a Gazette entry matches our target name."""
-    if not target_name:
-        return 0.0
-    target_lower = target_name.lower().strip()
-    target_parts = set(target_lower.split())
-    if not target_parts or len(target_parts) < 2:
-        # Single-token names are too noisy in Gazette
-        return 0.0
-
-    # Combine fields that may carry name
-    haystack_pieces = []
-    for key in ("title", "description", "content", "name"):
-        v = entry.get(key)
-        if v:
-            haystack_pieces.append(str(v).lower())
-    haystack = " | ".join(haystack_pieces)
-    if not haystack:
-        return 0.0
-
-    if target_lower in haystack:
-        return 0.95
-    h_parts = set(haystack.replace(",", " ").replace(".", " ").split())
-    overlap = len(target_parts & h_parts)
-    if overlap >= len(target_parts):
-        return 0.85
-    return 0.0  # require all name parts to match (Gazette is noisy)
+    """S256 — delegate to the shared entity-scoped matcher. Per-field,
+    not concatenated; same lineage as BODACC. Threshold
+    MIN_NAME_CONFIDENCE=0.75 stays — the helper only returns 0.0 or
+    >= 0.82."""
+    from api.scrapers._name_match import name_match_confidence
+    field_values = [str(entry.get(k)) for k in _NAME_KEYS if entry.get(k)]
+    return name_match_confidence(field_values, target_name)
 
 
 def search_uk_gazette(primary_name: str) -> list[dict]:
