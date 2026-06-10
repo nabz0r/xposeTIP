@@ -239,17 +239,25 @@ class QueryGenerator:
                     "template_id": template_id,
                 })
         else:
-            # Non-identifier templates (name-based, local news)
+            # Non-identifier templates (name-based, local news, AR-0 corporate press)
+            company = (profile.get("company") or "").strip()
             query = template_str.replace("{resolved_name}", resolved_name)
             query = query.replace("{exclusions}", exclusions)
             query = query.replace("{identifier}", resolved_name)
             query = query.replace("{email_domain}", email_domain)
+            query = query.replace("{company}", company)
 
             if "{local_domains}" in query:
                 local = self.local_domains.get(geo_country, "")
                 if not local:
                     return results
                 query = query.replace("{local_domains}", local)
+            if "{primary_press}" in query:
+                local = self.local_domains.get(geo_country, "")
+                if not local:
+                    return results
+                # site: takes a single domain reliably; OR-joined site: degrades.
+                query = query.replace("{primary_press}", local.split(" OR ")[0].strip())
 
             r = reason.replace("{geo_country}", geo_country)
 

@@ -9,6 +9,33 @@
         "reason": "broad web sweep excluding known platforms"
     },
     {
+        "id": "corp_press_site",
+        "tier": 1,
+        "template": "\"{company}\" site:{primary_press}",
+        "identifier_types": [],
+        "requires": {"company": true, "geo_country": true},
+        "priority": 1,
+        "reason": "company in local business press ({geo_country}) — names the people behind a corporate email (AR-0)"
+    },
+    {
+        "id": "corp_press_broad",
+        "tier": 1,
+        "template": "\"{company}\" {local_domains}",
+        "identifier_types": [],
+        "requires": {"company": true, "geo_country": true},
+        "priority": 2,
+        "reason": "company across regional business press (AR-0 breadth)"
+    },
+    {
+        "id": "corp_person",
+        "tier": 1,
+        "template": "\"{company}\" (founder OR CEO OR cofounder OR team OR dirigeant OR gérant)",
+        "identifier_types": [],
+        "requires": {"company": true},
+        "priority": 2,
+        "reason": "company people pages — founder/leadership naming (AR-0)"
+    },
+    {
         "id": "name_documents",
         "tier": 1,
         "template": "\"{resolved_name}\" \"{email_domain}\" filetype:pdf OR filetype:doc",

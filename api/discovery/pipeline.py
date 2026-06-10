@@ -473,7 +473,46 @@ class DiscoveryPipeline:
             "axes": axes,
             "geo_country": geo_country,
             "platforms_found": sorted(platforms_found)[:30],
+            # S264-0 — company display name from the email domain's og:site_name.
+            # Powers the press-anchored AR-0 queries ("Pluton Technologies" beats the
+            # bare domain label "plutontechnologies" for retrieval — measured).
+            "company": self._resolve_company_name(target.email),
         }
+
+    # S264-0 — free company-name resolution from the corporate email's own site.
+    _GENERIC_EMAIL_DOMAINS = {
+        "gmail.com", "yahoo.com", "yahoo.fr", "hotmail.com", "hotmail.fr", "outlook.com",
+        "protonmail.com", "icloud.com", "live.com", "aol.com", "mail.com", "gmx.com",
+        "zoho.com", "free.fr", "orange.fr", "wanadoo.fr", "sfr.fr", "laposte.net", "web.de",
+    }
+
+    def _resolve_company_name(self, email: str) -> str | None:
+        """Fetch the email domain root and read og:site_name (fallback: <title> tail,
+        then the bare domain label). None for free-mail / no corporate email."""
+        if not email or "@" not in email:
+            return None
+        domain = email.split("@", 1)[1].strip().lower()
+        if not domain or domain in self._GENERIC_EMAIL_DOMAINS:
+            return None
+        label = domain.split(".")[0]
+        try:
+            import re as _re
+            from api.discovery.page_fetcher import PageFetcher
+            pg = PageFetcher(timeout=10).fetch(f"https://{domain}/")
+            html = (pg or {}).get("html", "") if pg else ""
+            if html:
+                m = (_re.search(r'<meta[^>]+property=["\']og:site_name["\'][^>]+content=["\']([^"\']+)', html, _re.I)
+                     or _re.search(r'<meta[^>]+content=["\']([^"\']+)["\'][^>]+property=["\']og:site_name', html, _re.I))
+                if m and m.group(1).strip():
+                    return m.group(1).strip()
+                title = (pg or {}).get("title") or ""
+                if title:
+                    tail = _re.split(r"[|—\-]", title)[-1].strip()
+                    if 2 <= len(tail) <= 50:
+                        return tail
+        except Exception:
+            pass
+        return label
 
     def _emit(self, node_type: str, label: str, detail: dict, depth: int, parent_id: str = None) -> str:
         """Emit a discovery event via callback or print."""

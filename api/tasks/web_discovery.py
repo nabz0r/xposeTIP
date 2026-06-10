@@ -1,5 +1,6 @@
 """Celery task for Phase C — Web Discovery."""
 import logging
+import re
 import uuid
 from datetime import datetime, timezone
 
@@ -184,6 +185,8 @@ AUTO_INGEST_CONFIG = {
         "url":          {"min_confidence": 0.85, "trigger_rescan": False},
         "document":     {"min_confidence": 0.90, "trigger_rescan": False},
         "mention":      {"min_confidence": 0.90, "trigger_rescan": False},
+        # S264-0 AR-0 — corporate person resolved from business press, company-anchored.
+        "corporate_person": {"min_confidence": 0.60, "trigger_rescan": False},
     },
 }
 
@@ -195,12 +198,29 @@ PHASE_A5_MODULES = {
 _LEAD_TYPE_TO_CATEGORY = {
     "username": "social_account", "email": "metadata", "name": "identity",
     "organization": "identity", "url": "metadata", "document": "metadata", "mention": "metadata",
+    # S264-0 — 'corporate' ∈ finding_classifier.ENTITY_CATEGORIES → entity/corroborating tier.
+    "corporate_person": "corporate",
 }
 
 _LEAD_TYPE_TO_INDICATOR = {
     "username": "username", "email": "email", "name": "name",
     "organization": "organization", "url": "url", "document": "url", "mention": "text",
+    "corporate_person": "name",
 }
+
+
+def _localpart_binds(target_id, db, resolved_name: str) -> bool:
+    """S264-0 local-part binding: does the email local-part share a token with the
+    resolved name? eric@plutontechnologies.com → 'eric' ∈ 'Eric Lox' → True."""
+    try:
+        from api.models.target import Target
+        email = db.execute(select(Target.email).where(Target.id == target_id)).scalar_one_or_none() or ""
+        local = email.split("@", 1)[0].lower()
+        local_tokens = {t for t in re.split(r"[._\-]+", local) if len(t) >= 2}
+        name_tokens = {t.lower() for t in (resolved_name or "").split() if len(t) >= 2}
+        return bool(local_tokens & name_tokens)
+    except Exception:
+        return False
 
 
 @celery_app.task(
@@ -228,6 +248,18 @@ def auto_ingest_leads(self, target_id: str, session_id: str, workspace_id: str):
             ).order_by(DiscoveryLead.confidence.desc())
         ).scalars().all()
 
+        # S264-0 — corroboration map for corporate_person: group by normalized name,
+        # count DISTINCT source domains. 1 source → entity (moderate); 2+ independent
+        # → corroborating (high) in the typed-confidence layer.
+        from urllib.parse import urlparse
+        _person_sources = {}
+        for _l in leads:
+            if _l.lead_type == "corporate_person":
+                nm = (_l.lead_value or "").strip().lower()
+                dom = (urlparse(_l.source_url or "").netloc or "").lower().lstrip("www.")
+                if nm and dom:
+                    _person_sources.setdefault(nm, set()).add(dom)
+
         ingested = []
         rescan_targets = []
 
@@ -252,6 +284,34 @@ def auto_ingest_leads(self, target_id: str, session_id: str, workspace_id: str):
 
             # Create finding
             title = f"Discovered {lead.lead_type}: {lead.lead_value}"
+            data = {
+                "lead_value": lead.lead_value,
+                "lead_type": lead.lead_type,
+                "confidence": lead.confidence,
+                "source_url": lead.source_url,
+                "extractor_type": lead.extractor_type,
+                "discovery_chain": lead.discovery_chain,
+                "auto_ingested": True,
+                "session_id": session_id,
+            }
+            xv_count = 0
+            xv_sources = None
+            # S264-0 — corporate_person lands in the entity/corroborating tier.
+            if lead.lead_type == "corporate_person":
+                domains = sorted(_person_sources.get((lead.lead_value or "").strip().lower(), set()))
+                xv_count = len(domains)
+                xv_sources = [{"source": d, "kind": "press"} for d in domains]
+                company = (lead.source_snippet or "").strip()  # extractor stored company in context
+                data.update({
+                    "company": company,
+                    "match_confidence": lead.confidence,
+                    "pattern": "press_caption",
+                    "source_kind": "press",
+                    "source_domains": domains,
+                    # local-part first-name binding (e.g. eric@ → "Eric Lox")
+                    "email_pattern_match": _localpart_binds(tid, db, lead.lead_value),
+                })
+                title = f"Corporate identity: {lead.lead_value}" + (f" ({company})" if company else "")
             finding = Finding(
                 workspace_id=wid,
                 target_id=tid,
@@ -264,18 +324,11 @@ def auto_ingest_leads(self, target_id: str, session_id: str, workspace_id: str):
                     f"Auto-ingested from web discovery (confidence: {lead.confidence:.0%}). "
                     f"Source: {lead.source_url or 'unknown'}"
                 ),
-                data={
-                    "lead_value": lead.lead_value,
-                    "lead_type": lead.lead_type,
-                    "confidence": lead.confidence,
-                    "source_url": lead.source_url,
-                    "extractor_type": lead.extractor_type,
-                    "discovery_chain": lead.discovery_chain,
-                    "auto_ingested": True,
-                    "session_id": session_id,
-                },
+                data=data,
                 indicator_value=lead.lead_value[:500],
                 indicator_type=_LEAD_TYPE_TO_INDICATOR.get(lead.lead_type, "text"),
+                cross_verification_count=xv_count,
+                cross_verification_sources=xv_sources,
                 verified=False,
             )
             db.add(finding)

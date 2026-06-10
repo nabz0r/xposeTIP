@@ -1,9 +1,12 @@
+import re
+
 from .rel_me_extractor import RelMeExtractor
 from .jsonld_extractor import JsonLdExtractor
 from .social_link_extractor import SocialLinkExtractor
 from .email_extractor import EmailExtractor
 from .meta_tag_extractor import MetaTagExtractor
 from .username_extractor import UsernameExtractor
+from .person_extractor import PersonExtractor
 from .base import RawLead
 
 # Ordered by reliability (highest first)
@@ -13,10 +16,48 @@ ALL_EXTRACTORS = [
     SocialLinkExtractor(),
     EmailExtractor(),
     MetaTagExtractor(),
+    PersonExtractor(),
     UsernameExtractor(),
 ]
 
 MIN_CONFIDENCE = 0.3
+
+# Free-mail / generic domains carry no employer signal → no company anchor (AR-0).
+_GENERIC_EMAIL_DOMAINS = {
+    "gmail.com", "yahoo.com", "hotmail.com", "outlook.com", "protonmail.com",
+    "icloud.com", "live.com", "aol.com", "mail.com", "ymail.com", "gmx.com",
+    "zoho.com", "fastmail.com", "tutanota.com", "hey.com", "pm.me", "posteo.de",
+    "free.fr", "orange.fr", "wanadoo.fr", "sfr.fr", "laposte.net",
+    "web.de", "t-online.de", "yahoo.fr", "hotmail.fr",
+}
+
+
+def _norm_company(s: str) -> str:
+    """Lowercase + strip non-alphanumeric. 'Pluton Technologies' →
+    'plutontechnologies' (== email domain label). 'Genii' → 'genii' (no match)."""
+    return re.sub(r"[^a-z0-9]", "", (s or "").lower())
+
+
+def _company_token_from_identifiers(known: set) -> str | None:
+    """Corporate anchor token from the seed email's domain label. None for
+    free-mail / no corporate email → AR-0 corporate_person leads do not fire."""
+    for ident in known or ():
+        if "@" in ident:
+            domain = ident.split("@", 1)[1].strip().lower()
+            if domain and domain not in _GENERIC_EMAIL_DOMAINS:
+                return _norm_company(domain.split(".")[0])
+    return None
+
+
+def _company_matches(caption_company: str, token: str) -> bool:
+    """Co-occurrence: caption company == target token (normalized), or contains it
+    (len-guarded). Keeps Eric Lox (Pluton) in, keeps Eric Lux (Genii) out."""
+    c = _norm_company(caption_company)
+    if not c or not token:
+        return False
+    if c == token:
+        return True
+    return len(token) >= 5 and (token in c or c in token)
 
 _COUNTRY_TLDS = {
     "US": {".com", ".edu", ".org", ".us", ".gov"},
@@ -129,9 +170,25 @@ def extract_all(url: str, text: str, html: str,
     # Source-level penalties (LinkedIn noise)
     deduped = _apply_source_penalties(deduped, url, known, resolved_name)
 
-    # Relevance scoring
-    scored = []
+    # S264-0 — corporate_person leads anchor on company CO-OCCURRENCE, not on
+    # known-identifier/name overlap (the whole point is the name is NEW). Keep only
+    # those whose caption company matches the seed email's company token; their
+    # relevance IS that match, so they bypass score_relevance. No corporate email
+    # (free-mail / none) → token is None → all corporate_person dropped (AR-0 off).
+    company_token = _company_token_from_identifiers(known)
+    person_leads = []
+    other_leads = []
     for lead in deduped:
+        if lead.lead_type == "corporate_person":
+            if company_token and _company_matches(lead.context, company_token):
+                person_leads.append(lead)
+            # else: dropped (wrong company → e.g. Eric Lux / Genii — or no anchor)
+        else:
+            other_leads.append(lead)
+
+    # Relevance scoring (non-person leads)
+    scored = []
+    for lead in other_leads:
         relevance = score_relevance(lead, known, resolved_name)
         if relevance == 0.0:
             continue
@@ -139,6 +196,8 @@ def extract_all(url: str, text: str, html: str,
         # Geo penalty for emails from wrong country
         lead.confidence = round(lead.confidence * _geo_penalty(lead, target_geo), 3)
         scored.append(lead)
+
+    scored.extend(person_leads)  # already company-anchored at extractor confidence
 
     # Minimum confidence cutoff
     return [l for l in scored if l.confidence >= MIN_CONFIDENCE]
