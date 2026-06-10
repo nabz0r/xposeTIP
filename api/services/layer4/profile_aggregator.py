@@ -1278,6 +1278,22 @@ def aggregate_profile(target_id, workspace_id, session: Session, graph_context=N
             target_id, cap_local_part, bare_hits, capped,
         )
 
+    # --- S262 typed confidence (SHADOW compute — does NOT touch overall) ---
+    # Honest confidence from finding TYPE (echo/account/corroborating/entity/noise)
+    # rather than volume of accounts. Written alongside the live value; read by
+    # nothing in prod yet. The flip (overall → typed_overall) is S-B.2, post-audit.
+    try:
+        from api.services.layer4.finding_classifier import compute_typed_confidence
+        typed_overall, type_breakdown = compute_typed_confidence(
+            findings, profile["names"], _cap_email, cap_email_domain
+        )
+        profile["confidence"]["legacy_overall"] = profile["confidence"]["overall"]  # untouched copy
+        profile["confidence"]["typed_overall"] = typed_overall                       # SHADOW — not displayed
+        profile["confidence"]["type_breakdown"] = type_breakdown
+        # profile["confidence"]["overall"] is NOT modified in S262.
+    except Exception as e:
+        logger.debug("S262 typed confidence compute failed: %s", e)
+
     # Load identity nodes with propagated confidence (from PageRank)
     # Use graph_context if available, else load from DB (existing behavior)
     if graph_context:
