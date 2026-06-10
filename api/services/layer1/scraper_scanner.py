@@ -134,14 +134,29 @@ class ScraperScanner(BaseScanner):
                 except (KeyError, IndexError):
                     title = f"{scraper.display_name or scraper.name}: profile found"
 
-                # S159: writer guard — skip materializing "tried, found nothing" as a finding.
-                # These polluted UsernameTab + fingerprint axes with low-confidence empty rows.
-                # Real telemetry of attempts lives in scan.module_progress (S122-obs).
-                resolved_indicator = (
-                    extracted.get("display_name") or
-                    extracted.get("username") or
-                    input_value
-                )
+                # S159: safer fallback — when scraper.identity_type is unspecified,
+                # default to input_type. A DNS scraper given a domain should write
+                # 'domain' findings, not pretend it produced a 'username'.
+                indicator_type = scraper.identity_type or scraper.input_type
+
+                # S260 (Bug 2): when the scraper's input IS the handle
+                # (input_type="username"), the URL was already built from
+                # input_value — the slug IS the canonical username. The scraped
+                # display_name (og:title) is page-title noise ("william | Linktree",
+                # "Telegram: Contact @aevyrie", "Arthur DeWaal - Croonwolter…").
+                # Keep the scraped text in `data.extracted` + the title template,
+                # never as the username indicator.
+                if indicator_type == "username" and scraper.input_type == "username":
+                    resolved_indicator = input_value
+                else:
+                    resolved_indicator = (
+                        extracted.get("display_name") or
+                        extracted.get("username") or
+                        input_value
+                    )
+
+                # S159: writer guard — skip materializing "tried, found nothing" as
+                # a finding. Real telemetry of attempts lives in scan.module_progress.
                 if not resolved_indicator or not str(resolved_indicator).strip():
                     continue  # don't materialize empty findings
 
@@ -160,10 +175,7 @@ class ScraperScanner(BaseScanner):
                         "status_code": result.get("status_code"),
                     },
                     indicator_value=resolved_indicator,
-                    # S159: safer fallback — when scraper.identity_type is unspecified,
-                    # default to input_type. A DNS scraper given a domain should write
-                    # 'domain' findings, not pretend it produced a 'username'.
-                    indicator_type=scraper.identity_type or scraper.input_type,
+                    indicator_type=indicator_type,
                 ))
 
                 # Wait between scrapers to respect rate limits

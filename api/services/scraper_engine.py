@@ -1,5 +1,6 @@
 import asyncio
 import hashlib
+import html
 import json
 import logging
 import os
@@ -292,6 +293,12 @@ class ScraperEngine:
         return rule.get("default")
 
     def _apply_transform(self, value: str, transform: str) -> str | int:
+        # S260 (Bug 2): unescape + strip every string value at the single
+        # exit point of extraction (regex / jsonpath / json_key all route
+        # through here). Cleans &#39; / &amp; etc. once for the whole
+        # pipeline -- display_name, titles, bios.
+        if isinstance(value, str):
+            value = html.unescape(value).strip()
         if not transform or not value:
             return value
         if transform == "lowercase":
