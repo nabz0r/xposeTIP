@@ -929,6 +929,14 @@ def _target_dict(t: Target) -> dict:
                 "type": "server",
             }
 
+    # S259 — surface the inferred country into the list serializer ONLY when
+    # the operator hasn't set country_code (mirrors ProfileHeader's
+    # operator-wins / never-confused-with-confirmed convention from S233).
+    # Slim 3 fields only — never ship the full geo_consistency blob into a
+    # list of up to 500 rows.
+    _geo = (profile.get("geo_consistency") or {}) if not t.country_code else {}
+    _inferred_cc = _geo.get("primary_country")
+
     return {
         "id": str(t.id),
         "email": t.email,
@@ -936,6 +944,9 @@ def _target_dict(t: Target) -> dict:
         "avatar_url": t.avatar_url,
         "primary_name": display or (profile.get("primary_name") if display else None),
         "country_code": t.country_code,
+        "inferred_country_code": _inferred_cc,
+        "inferred_country_name": _geo.get("primary_country_name") if _inferred_cc else None,
+        "inferred_country_consistency": _geo.get("consistency_score") if _inferred_cc else None,
         "user_first_name": t.user_first_name,
         "user_last_name": t.user_last_name,
         "primary_name_source": "operator" if (t.user_first_name or t.user_last_name) else profile.get("primary_name_source", "auto"),

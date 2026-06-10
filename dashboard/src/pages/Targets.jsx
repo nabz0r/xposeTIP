@@ -7,7 +7,9 @@ import TargetQuickView from '../components/TargetQuickView'
 import GenerativeAvatar from '../components/GenerativeAvatar'
 
 const FLAG = (code) => {
-  if (!code) return ''
+  // S259 — length guard matches ProfileHeader's flagEmoji (S233);
+  // protects against malformed `country_code` rendering garbage glyphs.
+  if (!code || code.length !== 2) return ''
   return String.fromCodePoint(...[...code.toUpperCase()].map(c => 0x1F1E6 + c.charCodeAt(0) - 65))
 }
 
@@ -288,7 +290,22 @@ export default function Targets() {
                     </td>
                   )}
                   <td className="px-3 py-3 text-xs">
-                    {t.country_code ? `${FLAG(t.country_code)} ${t.country_code}` : <span className="text-gray-600">-</span>}
+                    {/* S259 — confirmed -> dimmed inferred -> dash. Inferred
+                        is muted + italic + `~` so it's never confused with
+                        an operator-confirmed country (S233 convention). */}
+                    {t.country_code ? (
+                      <span>{FLAG(t.country_code)} {t.country_code}</span>
+                    ) : t.inferred_country_code ? (
+                      <span
+                        className="text-gray-500 italic"
+                        title={`Inferred from geo signals — ${Math.round((t.inferred_country_consistency || 0) * 100)}% consistent`}
+                      >
+                        {FLAG(t.inferred_country_code)} {t.inferred_country_code}
+                        <span className="opacity-60 text-[10px] ml-0.5">~</span>
+                      </span>
+                    ) : (
+                      <span className="text-gray-600">-</span>
+                    )}
                   </td>
                   <td className="px-3 py-3">
                     {t.exposure_score != null ? (
