@@ -38,14 +38,25 @@ def _norm_company(s: str) -> str:
     return re.sub(r"[^a-z0-9]", "", (s or "").lower())
 
 
+# A WELL-FORMED email — guards against collision junk that contains "@" but is not
+# an email (e.g. "telegram: contact @eric", "eric@s twitter") poisoning the token.
+_EMAIL_RE = re.compile(r"^[^@\s]+@[a-z0-9.-]+\.[a-z]{2,}$", re.I)
+
+
 def _company_token_from_identifiers(known: set) -> str | None:
     """Corporate anchor token from the seed email's domain label. None for
-    free-mail / no corporate email → AR-0 corporate_person leads do not fire."""
-    for ident in known or ():
-        if "@" in ident:
-            domain = ident.split("@", 1)[1].strip().lower()
-            if domain and domain not in _GENERIC_EMAIL_DOMAINS:
-                return _norm_company(domain.split(".")[0])
+    free-mail / no corporate email → AR-0 corporate_person leads do not fire.
+
+    Only WELL-FORMED emails count — known_identifiers is polluted with collision
+    handles like 'telegram: contact @eric', and picking the first '@'-containing
+    string yielded token 'eric' instead of 'plutontechnologies' (the co-occurrence
+    then failed and Eric Lox was dropped). Sorted for determinism across the set."""
+    for ident in sorted(known or ()):
+        if not _EMAIL_RE.match(ident.strip()):
+            continue
+        domain = ident.split("@", 1)[1].strip().lower()
+        if domain and domain not in _GENERIC_EMAIL_DOMAINS:
+            return _norm_company(domain.split(".")[0])
     return None
 
 

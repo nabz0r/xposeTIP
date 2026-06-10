@@ -9,10 +9,58 @@ import os
 import time
 
 from .variant_generator import generate_username_variants, generate_name_variants
+from api.services.layer4.collision_guard import is_collision_prone_localpart
 
 logger = logging.getLogger(__name__)
 
 _DIR = os.path.dirname(os.path.abspath(__file__))
+
+# S264-0f — reliable press-country resolution (tiered). The geo_consistency guess
+# must NEVER target press as if it were fact (eric's null→US→nytimes→Pluton
+# Biosciences cascade). Email ccTLD and company-site country are reliable; the
+# guess is not → skip the targeted press query rather than hit the wrong country.
+_CCTLD_TO_ISO = {
+    "lu": "LU", "fr": "FR", "de": "DE", "be": "BE", "nl": "NL", "ch": "CH",
+    "it": "IT", "es": "ES", "at": "AT", "se": "SE", "no": "NO", "dk": "DK",
+    "ie": "IE", "pt": "PT", "uk": "GB", "jp": "JP", "au": "AU", "ca": "CA",
+    "in": "IN", "br": "BR",
+}
+# Country name → ISO, matched against the company site text (title/meta/about).
+_COUNTRY_NAMES = {
+    "luxembourg": "LU", "france": "FR", "germany": "DE", "deutschland": "DE",
+    "belgium": "BE", "belgique": "BE", "netherlands": "NL", "switzerland": "CH",
+    "suisse": "CH", "italy": "IT", "italia": "IT", "spain": "ES", "españa": "ES",
+    "austria": "AT", "sweden": "SE", "norway": "NO", "denmark": "DK",
+    "ireland": "IE", "portugal": "PT", "united kingdom": "GB", "japan": "JP",
+    "australia": "AU", "canada": "CA", "india": "IN", "brazil": "BR",
+}
+
+
+def _first_country_name(text: str) -> str | None:
+    """Return the ISO code of the first known country name in the text, or None."""
+    if not text:
+        return None
+    low = text.lower()
+    best = None
+    best_pos = len(low) + 1
+    for name, iso in _COUNTRY_NAMES.items():
+        pos = low.find(name)
+        if pos != -1 and pos < best_pos:
+            best, best_pos = iso, pos
+    return best
+
+
+def _press_country(email_full_domain: str, company_site_text: str) -> tuple:
+    """Tiered, reliability-ordered press country. Returns (iso|None, source)."""
+    dom = (email_full_domain or "").strip().lower()
+    if "." in dom:
+        tld = dom.rsplit(".", 1)[-1]
+        if tld in _CCTLD_TO_ISO:
+            return _CCTLD_TO_ISO[tld], "email_tld"          # tier 1 — reliable, instant
+    hit = _first_country_name(company_site_text)
+    if hit:
+        return hit, "company_site"                          # tier 2 — site title/meta/about
+    return None, "unresolved"                               # tier 3 — guess → skip press
 
 
 def _load_json(filename):
@@ -168,6 +216,21 @@ class QueryGenerator:
         exclusions = self._build_exclusions(platforms)
         email_domain = self._get_email_domain_context(profile) or ""
 
+        # S264-0f — full email + reliable press country (NOT the geo_consistency guess).
+        _full_email = next((i.get("value", "") for i in identifiers
+                            if i.get("type") == "email" and "@" in i.get("value", "")), "")
+        _full_domain = _full_email.split("@", 1)[1].lower() if "@" in _full_email else ""
+        _local_part = _full_email.split("@", 1)[0].lower() if "@" in _full_email else ""
+        press_country, press_country_src = _press_country(
+            _full_domain, profile.get("company_site_text") or "")
+
+        # S264-0f — skip broad_sweep on collision-prone local-parts (eric/andre/…):
+        # the bare-handle farm floods the page budget before the naming article is
+        # reached. Free the budget for the press + targeted queries that need it.
+        if template_id == "broad_sweep" and _local_part and is_collision_prone_localpart(_local_part):
+            logger.info("S264-0f: skip broad_sweep for collision-prone local-part %r", _local_part)
+            return results
+
         # Variant-type templates
         if "variant" in id_types:
             usernames = [i["value"] for i in identifiers if i.get("type") == "username"]
@@ -247,19 +310,28 @@ class QueryGenerator:
             query = query.replace("{email_domain}", email_domain)
             query = query.replace("{company}", company)
 
+            # S264-0f — press queries resolve their country from the RELIABLE tiered
+            # source (email ccTLD / company-site), never the geo_consistency guess.
+            # No reliable country → skip the targeted press query entirely (a
+            # wrong-country press query actively retrieves the wrong company —
+            # nytimes→Pluton Biosciences — which is worse than not running it).
+            _is_press_tmpl = "{primary_press}" in query or "{local_domains}" in query
+            _press_iso = press_country if _is_press_tmpl else geo_country
+            if _is_press_tmpl and not _press_iso:
+                return results
             if "{local_domains}" in query:
-                local = self.local_domains.get(geo_country, "")
+                local = self.local_domains.get(_press_iso, "")
                 if not local:
                     return results
                 query = query.replace("{local_domains}", local)
             if "{primary_press}" in query:
-                local = self.local_domains.get(geo_country, "")
+                local = self.local_domains.get(_press_iso, "")
                 if not local:
                     return results
                 # site: takes a single domain reliably; OR-joined site: degrades.
                 query = query.replace("{primary_press}", local.split(" OR ")[0].strip())
 
-            r = reason.replace("{geo_country}", geo_country)
+            r = reason.replace("{geo_country}", _press_iso or geo_country)
 
             results.append({
                 "query": query.strip(),

@@ -3,7 +3,10 @@
         "id": "broad_sweep",
         "tier": 1,
         "template": "\"{identifier}\" {exclusions}",
-        "identifier_types": ["username", "email"],
+        "identifier_types": [
+            "username",
+            "email"
+        ],
         "requires": {},
         "priority": 1,
         "reason": "broad web sweep excluding known platforms"
@@ -13,8 +16,10 @@
         "tier": 1,
         "template": "\"{company}\" site:{primary_press}",
         "identifier_types": [],
-        "requires": {"company": true, "geo_country": true},
-        "priority": 1,
+        "requires": {
+            "company": true
+        },
+        "priority": 0,
         "reason": "company in local business press ({geo_country}) — names the people behind a corporate email (AR-0)"
     },
     {
@@ -22,7 +27,9 @@
         "tier": 1,
         "template": "\"{company}\" {local_domains}",
         "identifier_types": [],
-        "requires": {"company": true, "geo_country": true},
+        "requires": {
+            "company": true
+        },
         "priority": 2,
         "reason": "company across regional business press (AR-0 breadth)"
     },
@@ -31,7 +38,9 @@
         "tier": 1,
         "template": "\"{company}\" (founder OR CEO OR cofounder OR team OR dirigeant OR gérant)",
         "identifier_types": [],
-        "requires": {"company": true},
+        "requires": {
+            "company": true
+        },
         "priority": 2,
         "reason": "company people pages — founder/leadership naming (AR-0)"
     },
@@ -40,7 +49,10 @@
         "tier": 1,
         "template": "\"{resolved_name}\" \"{email_domain}\" filetype:pdf OR filetype:doc",
         "identifier_types": [],
-        "requires": {"resolved_name": true, "email_domain": true},
+        "requires": {
+            "resolved_name": true,
+            "email_domain": true
+        },
         "priority": 2,
         "reason": "documents containing resolved name + employer context"
     },
@@ -49,7 +61,10 @@
         "tier": 1,
         "template": "\"{resolved_name}\" \"{email_domain}\" -linkedin.com",
         "identifier_types": [],
-        "requires": {"resolved_name": true, "email_domain": true},
+        "requires": {
+            "resolved_name": true,
+            "email_domain": true
+        },
         "priority": 2,
         "reason": "name web presence with employer context"
     },
@@ -58,7 +73,9 @@
         "tier": 1,
         "template": "\"{resolved_name}\" filetype:pdf OR filetype:doc",
         "identifier_types": [],
-        "requires": {"resolved_name": true},
+        "requires": {
+            "resolved_name": true
+        },
         "priority": 3,
         "reason": "documents containing resolved name (no employer context)"
     },
@@ -67,7 +84,9 @@
         "tier": 1,
         "template": "\"{resolved_name}\" -linkedin.com",
         "identifier_types": [],
-        "requires": {"resolved_name": true},
+        "requires": {
+            "resolved_name": true
+        },
         "priority": 3,
         "reason": "name web presence (no employer context)"
     },
@@ -75,8 +94,12 @@
         "id": "developer_platforms",
         "tier": 2,
         "template": "\"{identifier}\" site:stackoverflow.com OR site:dev.to OR site:news.ycombinator.com OR site:hashnode.com",
-        "identifier_types": ["username"],
-        "requires": {"axes.developer_activity": ">0.5"},
+        "identifier_types": [
+            "username"
+        ],
+        "requires": {
+            "axes.developer_activity": ">0.5"
+        },
         "priority": 4,
         "reason": "developer axis {axis_value}"
     },
@@ -84,8 +107,12 @@
         "id": "gaming_platforms",
         "tier": 2,
         "template": "\"{identifier}\" site:reddit.com OR site:discord.com OR site:steamcommunity.com",
-        "identifier_types": ["username"],
-        "requires": {"axes.gaming_presence": ">0.4"},
+        "identifier_types": [
+            "username"
+        ],
+        "requires": {
+            "axes.gaming_presence": ">0.4"
+        },
         "priority": 5,
         "reason": "gaming axis {axis_value}"
     },
@@ -93,8 +120,12 @@
         "id": "content_platforms",
         "tier": 2,
         "template": "\"{identifier}\" site:medium.com OR site:substack.com OR site:wordpress.com OR site:blogspot.com",
-        "identifier_types": ["username"],
-        "requires": {"axes.content_creation": ">0.3"},
+        "identifier_types": [
+            "username"
+        ],
+        "requires": {
+            "axes.content_creation": ">0.3"
+        },
         "priority": 5,
         "reason": "content creation axis {axis_value}"
     },
@@ -102,8 +133,12 @@
         "id": "social_platforms",
         "tier": 2,
         "template": "\"{identifier}\" site:facebook.com OR site:tiktok.com OR site:threads.net",
-        "identifier_types": ["username"],
-        "requires": {"axes.social_activity": ">0.4"},
+        "identifier_types": [
+            "username"
+        ],
+        "requires": {
+            "axes.social_activity": ">0.4"
+        },
         "priority": 5,
         "reason": "social activity axis {axis_value}"
     },
@@ -112,7 +147,10 @@
         "tier": 2,
         "template": "\"{resolved_name}\" site:{local_domains}",
         "identifier_types": [],
-        "requires": {"resolved_name": true, "geo_country": true},
+        "requires": {
+            "resolved_name": true,
+            "geo_country": true
+        },
         "priority": 6,
         "reason": "local media for {geo_country}"
     },
@@ -120,7 +158,9 @@
         "id": "username_variants",
         "tier": 3,
         "template": "\"{variant}\"",
-        "identifier_types": ["variant"],
+        "identifier_types": [
+            "variant"
+        ],
         "requires": {},
         "priority": 7,
         "reason": "username variant: {variant}"
@@ -129,8 +169,12 @@
         "id": "name_username_variants",
         "tier": 3,
         "template": "\"{name_variant}\"",
-        "identifier_types": ["name_variant"],
-        "requires": {"resolved_name": true},
+        "identifier_types": [
+            "name_variant"
+        ],
+        "requires": {
+            "resolved_name": true
+        },
         "priority": 7,
         "reason": "name-based username variant: {name_variant}"
     },
@@ -138,8 +182,12 @@
         "id": "cross_reference",
         "tier": 4,
         "template": "\"{identifier}\" \"{resolved_name}\"",
-        "identifier_types": ["username"],
-        "requires": {"resolved_name": true},
+        "identifier_types": [
+            "username"
+        ],
+        "requires": {
+            "resolved_name": true
+        },
         "priority": 8,
         "reason": "cross-reference username + resolved name"
     }

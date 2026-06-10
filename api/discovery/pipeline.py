@@ -13,7 +13,7 @@ import os
 import time
 import uuid
 
-from .query_generator import QueryGenerator, DiscoveryBudget
+from .query_generator import QueryGenerator, DiscoveryBudget, _first_country_name as _country_signal
 from .search_client import get_search_client
 from .page_fetcher import PageFetcher
 from .quality_gate import QualityGate
@@ -244,11 +244,20 @@ class DiscoveryPipeline:
         query_id = self._emit("query", query[:80], {"reason": reason}, depth)
         self.budget.use_query()
 
+        # S264-0f — the press query is the one that reaches the naming article. Widen
+        # its result set (DDG ranking varies run-to-run) and fetch ARTICLE URLs first,
+        # so the breakfast-style article lands before budget is spent on lower-value
+        # hits (org-guide / listing pages).
+        _is_press = query_data.get("template_id") == "corp_press_site"
+        _num = 20 if _is_press else 10
         try:
-            results = self.search_client.search(query, num_results=10)
+            results = self.search_client.search(query, num_results=_num)
         except Exception as e:
             logger.debug("Search failed for '%s': %s", query[:80], e)
             return []
+
+        if _is_press:
+            results = sorted(results, key=lambda r: 0 if "/article/" in (r.get("url") or "") else 1)
 
         leads = []
         for result in results:
@@ -476,7 +485,8 @@ class DiscoveryPipeline:
             # S264-0 — company display name from the email domain's og:site_name.
             # Powers the press-anchored AR-0 queries ("Pluton Technologies" beats the
             # bare domain label "plutontechnologies" for retrieval — measured).
-            "company": self._resolve_company_name(target.email),
+            # S264-0f — also the site text (title+meta+/about) → reliable press country.
+            **dict(zip(("company", "company_site_text"), self._resolve_company(target.email))),
         }
 
     # S264-0 — free company-name resolution from the corporate email's own site.
@@ -486,33 +496,56 @@ class DiscoveryPipeline:
         "zoho.com", "free.fr", "orange.fr", "wanadoo.fr", "sfr.fr", "laposte.net", "web.de",
     }
 
-    def _resolve_company_name(self, email: str) -> str | None:
-        """Fetch the email domain root and read og:site_name (fallback: <title> tail,
-        then the bare domain label). None for free-mail / no corporate email."""
+    def _resolve_company(self, email: str) -> tuple:
+        """Resolve (company_name, site_text) from the email domain's own site.
+
+        company_name: og:site_name (fallback <title> tail, then bare label).
+        site_text: title + meta-description + visible text of `/` and `/about`, for
+        S264-0f reliable press-country detection (e.g. "…Luxembourg AI Automation").
+        Returns (None, "") for free-mail / no corporate email.
+        """
         if not email or "@" not in email:
-            return None
+            return None, ""
         domain = email.split("@", 1)[1].strip().lower()
         if not domain or domain in self._GENERIC_EMAIL_DOMAINS:
-            return None
+            return None, ""
         label = domain.split(".")[0]
+        name = label
+        chunks = []
         try:
             import re as _re
             from api.discovery.page_fetcher import PageFetcher
-            pg = PageFetcher(timeout=10).fetch(f"https://{domain}/")
-            html = (pg or {}).get("html", "") if pg else ""
-            if html:
-                m = (_re.search(r'<meta[^>]+property=["\']og:site_name["\'][^>]+content=["\']([^"\']+)', html, _re.I)
-                     or _re.search(r'<meta[^>]+content=["\']([^"\']+)["\'][^>]+property=["\']og:site_name', html, _re.I))
-                if m and m.group(1).strip():
-                    return m.group(1).strip()
-                title = (pg or {}).get("title") or ""
+            pf = PageFetcher(timeout=10)
+            got_name = False
+            for path in ("/", "/en/about", "/about"):
+                pg = pf.fetch(f"https://{domain}{path}")
+                if not pg:
+                    continue
+                html = pg.get("html", "") or ""
+                title = pg.get("title") or ""
+                # site text for country detection
                 if title:
-                    tail = _re.split(r"[|—\-]", title)[-1].strip()
-                    if 2 <= len(tail) <= 50:
-                        return tail
+                    chunks.append(title)
+                md = _re.search(r'<meta[^>]+name=["\']description["\'][^>]+content=["\']([^"\']+)', html, _re.I)
+                if md:
+                    chunks.append(md.group(1))
+                chunks.append((pg.get("text") or "")[:1500])
+                # company name from the home page only
+                if path == "/" and not got_name:
+                    m = (_re.search(r'<meta[^>]+property=["\']og:site_name["\'][^>]+content=["\']([^"\']+)', html, _re.I)
+                         or _re.search(r'<meta[^>]+content=["\']([^"\']+)["\'][^>]+property=["\']og:site_name', html, _re.I))
+                    if m and m.group(1).strip():
+                        name = m.group(1).strip(); got_name = True
+                    elif title:
+                        tail = _re.split(r"[|—\-]", title)[-1].strip()
+                        if 2 <= len(tail) <= 50:
+                            name = tail; got_name = True
+                # stop once we have a name AND a country signal
+                if got_name and _country_signal(" ".join(chunks)):
+                    break
         except Exception:
             pass
-        return label
+        return name, " ".join(chunks)[:6000]
 
     def _emit(self, node_type: str, label: str, detail: dict, depth: int, parent_id: str = None) -> str:
         """Emit a discovery event via callback or print."""
