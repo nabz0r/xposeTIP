@@ -10,6 +10,10 @@ from sqlalchemy.orm import Session
 
 from api.models.finding import Finding
 from api.models.identity import Identity
+from api.services.layer4.collision_guard import (
+    is_collision_prone_localpart,
+    is_junk_name_token,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -59,6 +63,9 @@ def _is_valid_persona_name(name):
     """Reject platform names and single-letter initials."""
     if not name or len(name) < 3:
         return False
+    # S261 — reject digit/possessive/age-slang tokens (13y/o, eric's, user42)
+    if is_junk_name_token(name):
+        return False
     parts = name.strip().split()
     # Reject single-letter last initial: "Steffen H.", "John D."
     if len(parts) >= 2 and len(parts[-1].rstrip(".")) <= 1:
@@ -100,7 +107,8 @@ def _is_valid_extracted_username(username: str) -> bool:
     return True
 
 
-def _cluster_from_graph(identities, graph_context, db_blacklist):
+def _cluster_from_graph(identities, graph_context, db_blacklist,
+                        collision_local=None, email_domain=""):
     """Build personas from graph clusters. Each cluster = one persona."""
     try:
         personas = []
@@ -196,6 +204,22 @@ def _cluster_from_graph(identities, graph_context, db_blacklist):
                 display_name = best_label
                 aliases = []
 
+            # S261 — collision-seed persona guard (lean mirror of the
+            # aggregator coherence cap). If the only label is the bare
+            # collision-prone handle AND nothing in the cluster references the
+            # seed domain, keep the persona but flag it and cap its confidence
+            # so it can't claim a high-confidence display_name. Full per-persona
+            # corroboration is S-B.
+            persona_confidence = cluster["confidence"]
+            if collision_local and best_label.strip().lower() == collision_local:
+                anchor_ref = bool(email_domain) and any(
+                    email_domain in (i.value or "").lower()
+                    for i in identities if i.id in cluster_nodes
+                )
+                if not anchor_ref:
+                    risk_indicators.append("collision-seed, unverified")
+                    persona_confidence = min(persona_confidence, 0.35)
+
             personas.append({
                 "id": f"persona_{idx}",
                 "label": best_label,
@@ -204,7 +228,7 @@ def _cluster_from_graph(identities, graph_context, db_blacklist):
                 "usernames": sorted(cluster_usernames) if cluster_usernames else sorted(cluster_names),
                 "platforms": sorted(cluster_platforms),
                 "accounts_count": len(cluster_platforms),
-                "confidence": cluster["confidence"],
+                "confidence": persona_confidence,
                 "density": cluster["density"],
                 "is_primary": idx == 0,
                 "risk_indicators": risk_indicators,
@@ -230,6 +254,16 @@ def cluster_personas(target_id, workspace_id, session: Session, graph_context=No
     """
     db_blacklist = _load_username_blacklist(session)
 
+    # S261 — seed email for the collision-seed persona guard (mirror of the
+    # aggregator coherence cap). collision_local is set only when the bare
+    # local-part is low-entropy enough to seed cross-stranger enumeration.
+    from api.models.target import Target
+    _p_email = session.execute(
+        select(Target.email).where(Target.id == target_id, Target.workspace_id == workspace_id)
+    ).scalar_one_or_none() or ""
+    _p_local, _, _p_domain = str(_p_email).strip().lower().partition("@")
+    collision_local = _p_local if is_collision_prone_localpart(_p_local) else None
+
     # Load identities (from graph_context or DB)
     if graph_context and graph_context.get("identities"):
         identities = graph_context["identities"]
@@ -247,7 +281,10 @@ def cluster_personas(target_id, workspace_id, session: Session, graph_context=No
             "PERSONA: graph path starting with %d clusters, %d identities",
             len(graph_context["clusters"]), len(identities),
         )
-        personas = _cluster_from_graph(identities, graph_context, db_blacklist)
+        personas = _cluster_from_graph(
+            identities, graph_context, db_blacklist,
+            collision_local=collision_local, email_domain=_p_domain,
+        )
         logger.info(
             "PERSONA: graph path returned %d personas, falling back: %s",
             len(personas) if personas else 0, not personas,

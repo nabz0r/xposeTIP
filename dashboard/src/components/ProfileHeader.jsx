@@ -281,10 +281,20 @@ export default function ProfileHeader({ target, findings, animScore, profileData
                     })}
                   />
                   {p.confidence && (
-                    <span className="text-[10px] font-mono px-1.5 py-0.5 rounded-full bg-[#00ff88]/10 text-[#00ff88]">
-                      {Math.round(p.confidence.overall * 100)}% confidence
-                      {p.confidence.cross_verified && ' · cross-verified'}
-                    </span>
+                    p.confidence.coherence_flag === 'unverified_collision' ? (
+                      <span
+                        title={p.confidence.coherence_reason}
+                        className="text-[10px] font-mono px-1.5 py-0.5 rounded-full"
+                        style={{ color: '#888', border: '1px solid #888' }}
+                      >
+                        {Math.round(p.confidence.overall * 100)}% · unverified
+                      </span>
+                    ) : (
+                      <span className="text-[10px] font-mono px-1.5 py-0.5 rounded-full bg-[#00ff88]/10 text-[#00ff88]">
+                        {Math.round(p.confidence.overall * 100)}% confidence
+                        {p.confidence.cross_verified && ' · cross-verified'}
+                      </span>
+                    )
                   )}
                 </div>
                 {/* Dual view: show auto-resolved name when operator has overridden it */}

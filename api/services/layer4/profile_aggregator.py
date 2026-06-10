@@ -1,4 +1,5 @@
 """Profile Aggregator — merge findings into a unified person profile."""
+import json
 import logging
 import re
 from collections import defaultdict
@@ -11,6 +12,10 @@ from api.models.identity import Identity
 from api.models.target import Target
 from api.services.layer4.source_scoring import get_source_reliability as _get_src_rel_mod
 from api.services.layer4.username_validator import is_valid_username
+from api.services.layer4.collision_guard import (
+    is_collision_prone_localpart,
+    is_junk_name_token,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -859,6 +864,11 @@ def aggregate_profile(target_id, workspace_id, session: Session, graph_context=N
             name = _clean_name_value(raw)
             if name is None and raw and raw.strip():
                 logger.debug("Name rejected by _clean_name_value: %r (source=%s)", raw.strip(), source)
+            if name and is_junk_name_token(name):
+                # S261 — drop digit/possessive/age-slang tokens (13y/o, eric's)
+                # before they reach the header pills.
+                logger.debug("Name rejected by collision_guard (junk token): %r (source=%s)", name, source)
+                continue
             if name and name not in seen_names:
                 seen_names.add(name)
                 profile["names"].append({"value": name, "source": source, "module": f.module, "email_verified": is_email_verified})
@@ -1203,6 +1213,71 @@ def aggregate_profile(target_id, workspace_id, session: Session, graph_context=N
         "cross_verified": most_common_count > 1,
     }
 
+    # --- S261 coherence cap (Bug 12 Axe C) ---
+    # Bare common-name local-parts (eric@…) enumerate strangers across N
+    # platforms into one high-confidence persona. Cap + label such profiles
+    # unless an account links back to the seed email/domain. Quarantine only —
+    # findings stay active, handles still listed; we just stop *asserting*.
+    _cap_email = session.execute(
+        select(Target.email).where(Target.id == target_id, Target.workspace_id == workspace_id)
+    ).scalar_one_or_none() or ""
+    _cap_email = str(_cap_email).strip().lower()
+    cap_local_part, _, cap_email_domain = _cap_email.partition("@")
+
+    # bare-handle collision signature: the local-part itself surfaced as a
+    # handle on N distinct *account* platforms. NOTE: profile["usernames"] is
+    # deduped by value (50 platforms with handle "eric" collapse to ONE entry),
+    # so it cannot express the collision count — we must count distinct sources
+    # across the raw findings. Echo-type findings (domain/email/ip) merely
+    # repeat the seed input and never represent an account, so they're excluded.
+    _ECHO_TYPES = {"domain", "email", "ip"}
+
+    def _finding_handle(f):
+        h = (f.indicator_value or "").strip().lower()
+        if h:
+            return h
+        d = f.data if isinstance(f.data, dict) else {}
+        for k in ("username", "login", "handle", "preferredUsername"):
+            v = d.get(k)
+            if v:
+                return str(v).strip().lower()
+        return ""
+
+    bare_handle_sources = set()
+    anchor_corroborated = False
+    for f in findings:
+        ftype = (getattr(f, "indicator_type", None) or "").lower()
+        if ftype in _ECHO_TYPES:
+            continue  # seed echo — neither a collision account nor a corroborator
+        if _finding_handle(f) == cap_local_part:
+            data = f.data if isinstance(f.data, dict) else {}
+            bare_handle_sources.add(data.get("source") or data.get("scraper") or f.module)
+        # anchor corroboration: an ACCOUNT finding references the seed email/domain
+        if not anchor_corroborated and cap_email_domain:
+            try:
+                blob = f"{f.url or ''} {f.indicator_value or ''} {json.dumps(f.data or {})}".lower()
+            except (TypeError, ValueError):
+                blob = f"{f.url or ''} {f.indicator_value or ''}".lower()
+            if cap_email_domain in blob or (_cap_email and _cap_email in blob):
+                anchor_corroborated = True
+
+    bare_hits = len(bare_handle_sources)
+    collision_seed = is_collision_prone_localpart(cap_local_part) and bare_hits >= 3  # 3 = tunable
+
+    if collision_seed and not anchor_corroborated:
+        capped = min(profile["confidence"]["overall"], 0.35)
+        profile["confidence"]["overall"] = capped
+        profile["confidence"]["coherence_flag"] = "unverified_collision"
+        profile["confidence"]["coherence_reason"] = (
+            f"identity assembled from bare-handle '{cap_local_part}' matches across {bare_hits} platforms; "
+            f"no account links back to {cap_email_domain}"
+        )
+        profile["confidence"]["cross_verified"] = False  # collision repetition is not verification
+        logger.info(
+            "S261 coherence cap: target=%s local=%r bare_hits=%d → overall capped at %.2f",
+            target_id, cap_local_part, bare_hits, capped,
+        )
+
     # Load identity nodes with propagated confidence (from PageRank)
     # Use graph_context if available, else load from DB (existing behavior)
     if graph_context:
@@ -1248,7 +1323,7 @@ def aggregate_profile(target_id, workspace_id, session: Session, graph_context=N
         parts = n["value"].strip().split()
         if parts:
             candidate = parts[0]
-            if len(candidate) >= 2 and _is_valid_name_db(candidate, db_blacklist):
+            if len(candidate) >= 2 and not is_junk_name_token(candidate) and _is_valid_name_db(candidate, db_blacklist):
                 first_names.append({"value": candidate, "source": n["source"]})
 
     if first_names:
@@ -1287,7 +1362,7 @@ def aggregate_profile(target_id, workspace_id, session: Session, graph_context=N
         parts = n["value"].strip().split()
         if len(parts) >= 2:
             candidate = parts[-1]
-            if len(candidate) >= 2 and _is_valid_name_db(candidate, db_blacklist):
+            if len(candidate) >= 2 and not is_junk_name_token(candidate) and _is_valid_name_db(candidate, db_blacklist):
                 last_names.append({"value": candidate, "source": n["source"]})
 
     if last_names:
@@ -1635,6 +1710,14 @@ def aggregate_profile(target_id, workspace_id, session: Session, graph_context=N
                         asserted_name, profile.get("_auto_resolved_name"))
         else:
             profile["primary_name_source"] = "auto"
+
+    # S261 — name non-promotion under the coherence cap. Operator assertion
+    # always wins (explicitly trusted); otherwise an auto-resolved name on a
+    # collision-seed profile may still DISPLAY (quarantine = shown, not
+    # asserted) but never at high confidence and never as cross-verified.
+    if (profile.get("confidence", {}).get("coherence_flag") == "unverified_collision"
+            and profile.get("primary_name_source") != "operator"):
+        profile["primary_name_confidence"] = profile["confidence"]["overall"]
 
     # Pick primary avatar: quality score first, then source priority as tiebreaker
     AVATAR_SOURCE_PRIORITY = {
