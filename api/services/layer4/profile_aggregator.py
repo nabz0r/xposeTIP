@@ -1278,21 +1278,28 @@ def aggregate_profile(target_id, workspace_id, session: Session, graph_context=N
             target_id, cap_local_part, bare_hits, capped,
         )
 
-    # --- S262 typed confidence (SHADOW compute — does NOT touch overall) ---
+    # --- S263 typed confidence is now LIVE (flipped from S262 shadow) ---
     # Honest confidence from finding TYPE (echo/account/corroborating/entity/noise)
-    # rather than volume of accounts. Written alongside the live value; read by
-    # nothing in prod yet. The flip (overall → typed_overall) is S-B.2, post-audit.
+    # rather than volume of accounts. `legacy_overall` is preserved as the rollback
+    # handle (rollback = set overall = legacy_overall + recompute). Operator-assert
+    # floor (=1.0, L~1565) stays the only path to 100%; typed ceiling is 0.95.
     try:
         from api.services.layer4.finding_classifier import compute_typed_confidence
         typed_overall, type_breakdown = compute_typed_confidence(
             findings, profile["names"], _cap_email, cap_email_domain
         )
-        profile["confidence"]["legacy_overall"] = profile["confidence"]["overall"]  # untouched copy
-        profile["confidence"]["typed_overall"] = typed_overall                       # SHADOW — not displayed
+        profile["confidence"]["legacy_overall"] = profile["confidence"]["overall"]  # rollback handle
+        profile["confidence"]["typed_overall"] = typed_overall
         profile["confidence"]["type_breakdown"] = type_breakdown
-        # profile["confidence"]["overall"] is NOT modified in S262.
+        # The flip: typed becomes the displayed/reported value.
+        profile["confidence"]["overall"] = typed_overall
+        # S261 coherence cap composes: a flagged collision must still read "unverified"
+        # and never high. typed already lands collisions <0.35, so this is a no-op in
+        # practice — kept defensively so the flag and the number can't disagree.
+        if profile["confidence"].get("coherence_flag") == "unverified_collision":
+            profile["confidence"]["overall"] = min(typed_overall, 0.35)
     except Exception as e:
-        logger.debug("S262 typed confidence compute failed: %s", e)
+        logger.debug("S263 typed confidence compute failed: %s", e)
 
     # Load identity nodes with propagated confidence (from PageRank)
     # Use graph_context if available, else load from DB (existing behavior)
@@ -1713,6 +1720,14 @@ def aggregate_profile(target_id, workspace_id, session: Session, graph_context=N
             profile["primary_name"] = asserted_name
             profile["primary_name_source"] = "operator"
             profile["primary_name_confidence"] = 1.0
+            # S263 — operator assertion is the ONLY path to 100%. A human confirmed
+            # the identity → overall = 1.0, above the 0.95 inference ceiling. Runs
+            # after the typed flip, so it overrides it. Any collision flag is moot
+            # (operator-confirmed is, by definition, verified).
+            profile["confidence"]["overall"] = 1.0
+            profile["confidence"]["cross_verified"] = True
+            profile["confidence"].pop("coherence_flag", None)
+            profile["confidence"].pop("coherence_reason", None)
 
             # Demote auto-resolved name to alias if different
             auto_name = profile.get("_auto_resolved_name")

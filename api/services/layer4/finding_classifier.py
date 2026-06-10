@@ -174,14 +174,17 @@ def compute_typed_confidence(findings, profile_names, seed_email, seed_domain):
         else:
             buckets[t] += 1
 
+    # S263 retune — ceiling 0.95, NOT 1.0. Honesty-by-design: system inference,
+    # however strongly corroborated, is never identity certainty. 100% means a
+    # human asserted it (the operator-assert floor sits cleanly above this).
     corrob = len(buckets["corroborating"]) + len(buckets["entity"])
-    corrob_score = min(0.65, 0.22 * corrob)                       # 3 corroborated → ~0.65
+    corrob_score = min(0.55, 0.183 * corrob)                      # 3 corroborated → 0.55
     acct_weight = sum(get_source_reliability(f.module) for f in buckets["account"])
-    acct_score = min(0.30, 0.06 * acct_weight)                    # bare accounts saturate low
+    acct_score = min(0.25, 0.05 * acct_weight)                    # bare accounts saturate low
     clean = [n for n in profile_names if not is_junk_name_token(n.get("value", ""))]
-    name_score = 0.20 if (clean and corrob > 0) else (0.10 if clean else 0.0)
+    name_score = 0.15 if (clean and corrob > 0) else (0.075 if clean else 0.0)
 
-    typed_overall = round(min(1.0, corrob_score + acct_score + name_score), 2)
+    typed_overall = round(min(0.95, corrob_score + acct_score + name_score), 2)  # 0.95 inference ceiling
     breakdown = {
         "echo": buckets["echo"],
         "account": len(buckets["account"]),

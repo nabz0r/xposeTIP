@@ -14,6 +14,7 @@ from api.services.layer4.collision_guard import (
     is_collision_prone_localpart,
     is_junk_name_token,
 )
+from api.services.layer4.finding_classifier import compute_typed_confidence
 
 logger = logging.getLogger(__name__)
 
@@ -108,7 +109,8 @@ def _is_valid_extracted_username(username: str) -> bool:
 
 
 def _cluster_from_graph(identities, graph_context, db_blacklist,
-                        collision_local=None, email_domain=""):
+                        collision_local=None, email_domain="",
+                        findings=None, seed_email="", seed_domain=""):
     """Build personas from graph clusters. Each cluster = one persona."""
     try:
         personas = []
@@ -204,13 +206,33 @@ def _cluster_from_graph(identities, graph_context, db_blacklist,
                 display_name = best_label
                 aliases = []
 
-            # S261 — collision-seed persona guard (lean mirror of the
-            # aggregator coherence cap). If the only label is the bare
-            # collision-prone handle AND nothing in the cluster references the
-            # seed domain, keep the persona but flag it and cap its confidence
-            # so it can't claim a high-confidence display_name. Full per-persona
-            # corroboration is S-B.
+            # S263 — persona confidence is the TYPED model over the persona's own
+            # findings, NOT the raw PageRank cluster value. This keeps the top-line
+            # and the PersonaCard on the same scale → no "10% up top, 100% on the
+            # card" contradiction. Scope = findings whose handle is one of the
+            # persona's usernames/names (approximate is fine — both land ~same).
             persona_confidence = cluster["confidence"]
+            if findings is not None:
+                cluster_value_set = {u.strip().lower() for u in cluster_usernames} | \
+                                    {n.strip().lower() for n in cluster_names}
+                persona_findings = [
+                    f for f in findings
+                    if (f.indicator_value or "").strip().lower() in cluster_value_set
+                ]
+                if persona_findings:
+                    try:
+                        ptyped, _ = compute_typed_confidence(
+                            persona_findings,
+                            [{"value": n} for n in cluster_names],
+                            seed_email, seed_domain,
+                        )
+                        persona_confidence = ptyped
+                    except Exception:
+                        logger.debug("S263 persona typed confidence failed for cluster %d", idx)
+
+            # S261 — collision-seed persona guard (defensive floor composing with the
+            # typed value): a bare-collision-handle persona with no seed-domain
+            # back-reference stays flagged + capped, can't claim a high-confidence label.
             if collision_local and best_label.strip().lower() == collision_local:
                 anchor_ref = bool(email_domain) and any(
                     email_domain in (i.value or "").lower()
@@ -264,6 +286,17 @@ def cluster_personas(target_id, workspace_id, session: Session, graph_context=No
     _p_local, _, _p_domain = str(_p_email).strip().lower().partition("@")
     collision_local = _p_local if is_collision_prone_localpart(_p_local) else None
 
+    # S263 — active findings for per-persona typed confidence (same scale as the
+    # top-line). Loaded here so the graph path can use them (the fallback path
+    # re-loads its own copy below — kept separate to avoid reordering that logic).
+    _pf_findings = session.execute(
+        select(Finding).where(
+            Finding.target_id == target_id,
+            Finding.workspace_id == workspace_id,
+            Finding.status == "active",
+        )
+    ).scalars().all()
+
     # Load identities (from graph_context or DB)
     if graph_context and graph_context.get("identities"):
         identities = graph_context["identities"]
@@ -284,6 +317,7 @@ def cluster_personas(target_id, workspace_id, session: Session, graph_context=No
         personas = _cluster_from_graph(
             identities, graph_context, db_blacklist,
             collision_local=collision_local, email_domain=_p_domain,
+            findings=_pf_findings, seed_email=_p_email, seed_domain=_p_domain,
         )
         logger.info(
             "PERSONA: graph path returned %d personas, falling back: %s",

@@ -45,9 +45,18 @@ def main():
         legacy = conf.get("overall")
         names = pd.get("names") or []
 
-        findings = s.execute(
+        all_findings = s.execute(
             select(Finding).where(Finding.target_id == t.id, Finding.status == "active")
         ).scalars().all()
+        # Mirror aggregate_profile's (module, title) dedup so the audit predicts the
+        # LIVE value (raw all-active over-counts duplicate corroborating findings).
+        seen_f = {}
+        for f in all_findings:
+            k = (f.module, f.title)
+            ex = seen_f.get(k)
+            if ex is None or (f.created_at and (not ex.created_at or f.created_at > ex.created_at)):
+                seen_f[k] = f
+        findings = list(seen_f.values())
 
         seed_email = (t.email or "").strip().lower()
         seed_domain = seed_email.split("@")[-1] if "@" in seed_email else ""
