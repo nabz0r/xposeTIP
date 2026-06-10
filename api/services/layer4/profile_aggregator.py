@@ -1148,6 +1148,16 @@ def aggregate_profile(target_id, workspace_id, session: Session, graph_context=N
         logger.debug("Timezone analysis failed: %s", e)
         profile["timezone"] = None
 
+    # --- S237 language detection from free-text findings ---
+    # S258 #0 — moved ABOVE geo_consistency so analyze_geo_consistency can
+    # read profile["languages"] as a country-hint signal (S258 #1).
+    try:
+        from api.services.layer4.analyzers.language_analyzer import analyze_languages
+        profile["languages"] = analyze_languages(findings)
+    except Exception as e:
+        logger.debug("Language analysis failed: %s", e)
+        profile["languages"] = None
+
     # --- Geographic consistency analysis ---
     try:
         from api.services.layer4.analyzers.geo_consistency import analyze_geo_consistency
@@ -1156,14 +1166,6 @@ def aggregate_profile(target_id, workspace_id, session: Session, graph_context=N
     except Exception as e:
         logger.debug("Geo consistency analysis failed: %s", e)
         profile["geo_consistency"] = None
-
-    # --- S237 language detection from free-text findings ---
-    try:
-        from api.services.layer4.analyzers.language_analyzer import analyze_languages
-        profile["languages"] = analyze_languages(findings)
-    except Exception as e:
-        logger.debug("Language analysis failed: %s", e)
-        profile["languages"] = None
 
     # --- Email status synthesis ---
     try:

@@ -280,9 +280,25 @@ export default function OverviewTab({ target, findings, profile, fingerprint, fp
             ))}
           </div>
           {profile.geo_consistency.anomalies?.length > 0 && (
-            <p className="mt-2 text-[10px] text-[#ffcc00]/70">
-              {profile.geo_consistency.anomalies.length} anomal{profile.geo_consistency.anomalies.length === 1 ? 'y' : 'ies'} detected
-            </p>
+            <div className="mt-2 pt-2 border-t border-[#1e1e2e]">
+              <p className="text-[10px] uppercase tracking-wider text-[#ffcc00]/70 mb-1">
+                {profile.geo_consistency.anomalies.length} jurisdiction anomal
+                {profile.geo_consistency.anomalies.length === 1 ? 'y' : 'ies'}
+              </p>
+              <ul className="space-y-0.5">
+                {profile.geo_consistency.anomalies.slice(0, 3).map((a, i) => (
+                  <li key={i} className="text-[10px] text-gray-400 flex items-start gap-1">
+                    <span className="text-[#ffcc00]/60">⚠</span>
+                    <span>{a.description || `${a.signal}: ${a.actual} ≠ ${a.expected}`}</span>
+                  </li>
+                ))}
+                {profile.geo_consistency.anomalies.length > 3 && (
+                  <li className="text-[10px] text-gray-600">
+                    +{profile.geo_consistency.anomalies.length - 3} more
+                  </li>
+                )}
+              </ul>
+            </div>
           )}
         </div>
       )}

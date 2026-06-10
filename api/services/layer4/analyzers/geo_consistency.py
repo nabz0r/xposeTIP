@@ -189,6 +189,27 @@ def analyze_geo_consistency(profile: dict, findings: list, country_code: str = N
                     "raw_value": from_lang,
                 })
 
+    # Signal 5b (S258): Detected written language (S237 Lingua) — country hint.
+    # Gated on `reliable` (verified-source + sufficient sample) to avoid noise.
+    # `en` and other globally-ambiguous codes are absent from _LANG_COUNTRY_HINTS
+    # by design and naturally skip. Weight stays in the 0.3 language band, so
+    # this never overrides self-reported (0.8) or ground-truth (1.0).
+    langs = profile.get("languages") or {}
+    if langs.get("reliable") and isinstance(langs.get("languages"), list):
+        for lang in langs["languages"][:3]:
+            code = (lang.get("code") or "").lower().strip()
+            conf = float(lang.get("confidence", 0))
+            if code in _LANG_COUNTRY_HINTS and conf >= 0.3:
+                hints = _LANG_COUNTRY_HINTS[code][:3]
+                for hint_cc in hints:
+                    signals.append({
+                        "source": f"Detected language ({code})",
+                        "type": "language",
+                        "country_code": hint_cc,
+                        "weight": _SOURCE_WEIGHTS["language"] * conf / len(hints),
+                        "raw_value": code,
+                    })
+
     # Signal 6: GeoIP
     for f in findings:
         source = getattr(f, "module", "") or ""
@@ -296,6 +317,17 @@ def _resolve_country_code(value: str) -> str | None:
         return val.upper()
     if val in _COUNTRY_NAME_TO_CODE:
         return _COUNTRY_NAME_TO_CODE[val]
+
+    # S258 #3 — "Lyon, France" / "Berlin, Germany" / "Paris, FR".
+    # Exact match on a comma segment (not substring) — won't false-positive
+    # on "india" ⊂ "indiana" because we only match WHOLE segments.
+    for seg in (s.strip() for s in val.split(",")):
+        if not seg:
+            continue
+        if seg in _COUNTRY_NAME_TO_CODE:
+            return _COUNTRY_NAME_TO_CODE[seg]
+        if len(seg) == 2 and seg.isalpha():
+            return seg.upper()
 
     try:
         from api.services.layer4.profile_aggregator import CITY_COORDS
