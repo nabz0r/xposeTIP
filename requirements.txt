@@ -26,6 +26,7 @@ dnspython
 reportlab
 beautifulsoup4
 google-search-results
+ddgs
 trafilatura
 pdfplumber
 phonenumbers>=8.13
