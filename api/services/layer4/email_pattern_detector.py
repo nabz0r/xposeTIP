@@ -267,12 +267,35 @@ def boost_names_with_pattern(names: list, email_decomp: dict) -> list:
             bonus += 0.15 * conf
             match_reasons.append("first_name")
 
-        if bonus > 0:
+        # S264-0e — first-name CONTRADICTION penalty. When the email gives an
+        # explicit first name (dotted {first}.{last}) and a candidate matches the
+        # SURNAME but its first name is a DIFFERENT given name (not equal, not a
+        # prefix/initial of the derived first name), it's likely a same-surname
+        # DIFFERENT person. Penalize so it can't win primary_name on surname alone
+        # (estelle.phillips-kaiser@ → "Sarah Kaiser" must not win at high confidence).
+        # Conservative: only fires with an explicit derived first name + a full,
+        # different given name (len≥3) → nicknames-as-prefix and initials are spared,
+        # and concatenated/ambiguous local-parts (no reliable first name) don't fire.
+        if (derived_firstname and len(derived_firstname) >= 3
+                and name_firstname and len(name_firstname) >= 3
+                and "surname" in match_reasons):
+            same = name_firstname == derived_firstname
+            is_prefix = (derived_firstname.startswith(name_firstname)
+                         or name_firstname.startswith(derived_firstname))
+            if not same and not is_prefix:
+                bonus -= 0.30 * conf
+                n["firstname_contradiction"] = True
+                n["firstname_expected"] = derived_firstname
+                match_reasons.append("firstname_contradiction")
+
+        if bonus != 0 or match_reasons:
             n["composite_score"] = n.get("composite_score", 0) + bonus
-            n["email_pattern_match"] = True
+            # email_pattern_match means "consistent with the email anchor" — a
+            # contradicting candidate is NOT a clean match.
+            n["email_pattern_match"] = bool(bonus > 0 and not n.get("firstname_contradiction"))
             n["email_pattern_reasons"] = match_reasons
             logger.debug(
-                "EMAIL_PATTERN_BOOST: '%s' +%.3f (%s)",
+                "EMAIL_PATTERN_BOOST: '%s' %+.3f (%s)",
                 name_val, bonus, ", ".join(match_reasons),
             )
 

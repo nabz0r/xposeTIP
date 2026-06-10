@@ -17,6 +17,15 @@ from api.services.layer4.collision_guard import (
     is_junk_name_token,
 )
 
+# S264-0e — role/organisational mailbox local-parts: never assert an individual
+# person name at confidence for these (hello@/info@/contact@…).
+_ROLE_LOCALPARTS = frozenset({
+    "info", "admin", "support", "contact", "sales", "hello", "team", "noreply",
+    "no-reply", "postmaster", "webmaster", "abuse", "security", "help", "office",
+    "mail", "newsletter", "billing", "accounts", "hr", "jobs", "careers", "press",
+    "marketing", "service", "services", "enquiries", "inquiries", "general",
+})
+
 logger = logging.getLogger(__name__)
 
 # Avatar URL blacklist — platform logos, default images, not real profile photos
@@ -1797,6 +1806,69 @@ def aggregate_profile(target_id, workspace_id, session: Session, graph_context=N
     if (profile.get("confidence", {}).get("coherence_flag") == "unverified_collision"
             and profile.get("primary_name_source") != "operator"):
         profile["primary_name_confidence"] = profile["confidence"]["overall"]
+
+    # S264-0e — name ↔ local-part consistency guard (the confident-wrong). Operator
+    # assertion is exempt (human-confirmed). Both are CAPS + flags, not deletions —
+    # the name stays visible as a low-confidence hint, quarantine-style.
+    if profile.get("primary_name_source") != "operator":
+        _NAME_CAP = 0.40
+
+        # (b) Role mailbox: info@/hello@/contact@… is an organisational mailbox, not
+        # an individual — never assert a person at confidence.
+        if cap_local_part in _ROLE_LOCALPARTS:
+            profile["confidence"]["overall"] = min(profile["confidence"].get("overall", 0), _NAME_CAP)
+            profile["confidence"]["name_flag"] = "role_mailbox"
+            profile["confidence"]["name_reason"] = (
+                f"'{cap_local_part}@' is an organisational mailbox — not an individual; "
+                f"the resolved name is not asserted as a person"
+            )
+            profile["confidence"]["cross_verified"] = False
+            logger.info("S264-0e role_mailbox cap: target=%s local=%r", target_id, cap_local_part)
+
+        # (a) First-name contradiction: the email local-part is STRUCTURED
+        # (first.last, dotted/hyphenated → email_name_guess["full"] populated), so
+        # its first name is a reliable anchor — independent of the flaky domain-
+        # pattern detector (post.lu has no sibling pattern, so boost_names_with_pattern
+        # never runs; the directly-parsed local-part still gives "estelle"). If the
+        # resolved name's first token is a DIFFERENT given name (len≥3, not a prefix)
+        # AND its surname is one of the email's name tokens (same family), it's a
+        # same-surname different person → cap + show the email-derived hint.
+        elif primary_name and email_name_guess.get("full") and email_name_guess.get("first"):
+            _email_first = email_name_guess["first"].lower()
+            _email_tokens = {p.lower() for p in re.split(r"[._\-]+", cap_local_part) if len(p) >= 2}
+            _pn_parts = primary_name.split()
+            _pn_first = _pn_parts[0].lower() if _pn_parts else ""
+            _pn_surname = _pn_parts[-1].lower() if len(_pn_parts) >= 2 else ""
+            _diff_first = (_pn_first and len(_pn_first) >= 3 and _pn_first != _email_first
+                           and not _email_first.startswith(_pn_first)
+                           and not _pn_first.startswith(_email_first))
+            _surname_same_family = _pn_surname and _pn_surname in _email_tokens
+            if _diff_first and _surname_same_family:
+                expected = email_name_guess["first"]
+                contradicting = primary_name
+                profile["confidence"]["overall"] = min(profile["confidence"].get("overall", 0), _NAME_CAP)
+                profile["confidence"]["name_flag"] = "firstname_mismatch"
+                profile["confidence"]["cross_verified"] = False
+                # Prefer the email-derived hint (anchor-consistent) as the displayed
+                # name; demote the contradicting corroborated name to an alias.
+                if email_name_guess.get("full") and _is_valid_name(email_name_guess["full"]):
+                    primary_name = email_name_guess["full"]
+                    profile["primary_name"] = primary_name
+                    profile["_auto_resolved_name"] = primary_name
+                    aliases = profile.get("name_aliases", [])
+                    if contradicting not in aliases:
+                        aliases.append(contradicting)
+                    profile["name_aliases"] = aliases
+                profile["confidence"]["name_reason"] = (
+                    f"corroborated '{contradicting}' contradicts the email's first name "
+                    f"'{expected}' (surname matches — likely a different person); "
+                    f"showing the email-derived hint instead"
+                )
+                profile["primary_name_confidence"] = profile["confidence"]["overall"]
+                logger.info(
+                    "S264-0e firstname_mismatch cap: target=%s contradicting=%r expected_first=%r → display=%r",
+                    target_id, contradicting, expected, primary_name,
+                )
 
     # Pick primary avatar: quality score first, then source priority as tiebreaker
     AVATAR_SOURCE_PRIORITY = {
