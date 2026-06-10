@@ -248,6 +248,22 @@ def auto_ingest_leads(self, target_id: str, session_id: str, workspace_id: str):
             ).order_by(DiscoveryLead.confidence.desc())
         ).scalars().all()
 
+        # S264-0c — seed email domain (for anchor recognition in the aggregator).
+        from api.models.target import Target as _Tgt
+        _seed_email = (db.execute(select(_Tgt.email).where(_Tgt.id == tid)).scalar_one_or_none() or "").lower()
+        _seed_domain = _seed_email.split("@", 1)[1] if "@" in _seed_email else ""
+
+        # S264-0c — findings.scan_id is NOT NULL, but auto-ingest set no scan_id
+        # (latent bug — discovery findings could never insert). Anchor them to the
+        # target's latest scan. No scan → cannot persist findings; bail cleanly.
+        _scan_id = db.execute(
+            select(Scan.id).where(Scan.target_id == tid).order_by(Scan.created_at.desc()).limit(1)
+        ).scalar_one_or_none()
+        if not _scan_id:
+            logger.warning("auto_ingest: target %s has no scan — cannot persist findings", target_id)
+            db.commit()
+            return {"ingested_count": 0, "rescan_targets": 0, "reason": "no_scan"}
+
         # S264-0 — corroboration map for corporate_person: group by normalized name,
         # count DISTINCT source domains. 1 source → entity (moderate); 2+ independent
         # → corroborating (high) in the typed-confidence layer.
@@ -303,11 +319,22 @@ def auto_ingest_leads(self, target_id: str, session_id: str, workspace_id: str):
                 xv_sources = [{"source": d, "kind": "press"} for d in domains]
                 company = (lead.source_snippet or "").strip()  # extractor stored company in context
                 data.update({
+                    # S264-0c — name in data so the aggregator name-collector surfaces
+                    # it (it reads data["name"], NOT indicator_value); seed_domain so
+                    # anchor_corroborated recognises the bound resolution.
+                    "name": lead.lead_value,
                     "company": company,
                     "match_confidence": lead.confidence,
                     "pattern": "press_caption",
                     "source_kind": "press",
                     "source_domains": domains,
+                    "source_urls": [u for u in (
+                        sorted({_l.source_url for _l in leads
+                                if _l.lead_type == "corporate_person"
+                                and (_l.lead_value or "").strip().lower() == (lead.lead_value or "").strip().lower()
+                                and _l.source_url})
+                    )],
+                    "seed_domain": _seed_domain,
                     # local-part first-name binding (e.g. eric@ → "Eric Lox")
                     "email_pattern_match": _localpart_binds(tid, db, lead.lead_value),
                 })
@@ -315,6 +342,7 @@ def auto_ingest_leads(self, target_id: str, session_id: str, workspace_id: str):
             finding = Finding(
                 workspace_id=wid,
                 target_id=tid,
+                scan_id=_scan_id,
                 module="discovery",
                 layer=3,
                 category=_LEAD_TYPE_TO_CATEGORY.get(lead.lead_type, "metadata"),

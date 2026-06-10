@@ -289,6 +289,14 @@ export default function ProfileHeader({ target, findings, animScore, profileData
                       >
                         {Math.round(p.confidence.overall * 100)}% · unverified
                       </span>
+                    ) : p.confidence.resolution_flag === 'press_resolved_provisional' ? (
+                      <span
+                        title={p.confidence.resolution_reason}
+                        className="text-[10px] font-mono px-1.5 py-0.5 rounded-full"
+                        style={{ color: '#3388ff', border: '1px solid #3388ff' }}
+                      >
+                        {Math.round(p.confidence.overall * 100)}% · {(p.confidence.resolution_sources?.length || 1)} press source{(p.confidence.resolution_sources?.length || 1) !== 1 ? 's' : ''} · provisional
+                      </span>
                     ) : (
                       <span className="text-[10px] font-mono px-1.5 py-0.5 rounded-full bg-[#00ff88]/10 text-[#00ff88]">
                         {Math.round(p.confidence.overall * 100)}% confidence

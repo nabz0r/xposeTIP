@@ -1245,8 +1245,21 @@ def aggregate_profile(target_id, workspace_id, session: Session, graph_context=N
 
     bare_handle_sources = set()
     anchor_corroborated = False
+    resolved_person = None          # S264-0c — bound corporate_person resolution
+    resolved_domains = []
+    resolved_xverif = 0
     for f in findings:
         ftype = (getattr(f, "indicator_type", None) or "").lower()
+        # S264-0c — a bound corporate_person (AR-0) is a real anchor: a named person,
+        # local-part-bound, from business press. Semantic recognition, not a string
+        # match (the finding carries "Pluton Technologies" + paperjam URLs, never the
+        # literal .com domain — which is why the old blob check missed it).
+        if (f.category or "") == "corporate" and isinstance(f.data, dict) and f.data.get("email_pattern_match"):
+            anchor_corroborated = True
+            resolved_person = f.indicator_value or f.data.get("name")
+            resolved_domains = f.data.get("source_domains") or []
+            resolved_xverif = max(resolved_xverif, getattr(f, "cross_verification_count", 0) or 0)
+            continue
         if ftype in _ECHO_TYPES:
             continue  # seed echo — neither a collision account nor a corroborator
         if _finding_handle(f) == cap_local_part:
@@ -1263,6 +1276,22 @@ def aggregate_profile(target_id, workspace_id, session: Session, graph_context=N
 
     bare_hits = len(bare_handle_sources)
     collision_seed = is_collision_prone_localpart(cap_local_part) and bare_hits >= 3  # 3 = tunable
+
+    # S264-0c — a bound press resolution always promotes the real name (below),
+    # regardless of source count. The PROVISIONAL FLAG, though, is gated: <2
+    # independent sources is the honest middle (neither collision nor verified);
+    # ≥2 sources → no flag, the corroborating tier carries it via confidence math.
+    if resolved_person:
+        profile["confidence"]["resolution_person"] = resolved_person
+        profile["confidence"]["resolution_sources"] = resolved_domains
+        if resolved_xverif < 2:
+            n = max(1, len(resolved_domains))
+            profile["confidence"]["resolution_flag"] = "press_resolved_provisional"
+            profile["confidence"]["resolution_reason"] = (
+                f"{resolved_person} — resolved from {n} press source(s)"
+                + (f" ({', '.join(resolved_domains)})" if resolved_domains else "")
+                + "; provisional until a 2nd independent source"
+            )
 
     if collision_seed and not anchor_corroborated:
         capped = min(profile["confidence"]["overall"], 0.35)
@@ -1666,6 +1695,24 @@ def aggregate_profile(target_id, workspace_id, session: Session, graph_context=N
     # Save auto-resolved name BEFORE potential operator override
     profile["_auto_resolved_name"] = primary_name
 
+    # S264-0c — a bound press resolution (company-anchored, local-part-bound) is the
+    # trustworthy name: promote it over any collision-farm "Eric X" candidate, whether
+    # provisional (<2 sources) or corroborated (≥2). Not operator-asserted — operator
+    # override below still wins. Demote the collision auto-name to alias so the header
+    # shows "Eric Lox", not "Eric Lindvall".
+    rp = profile["confidence"].get("resolution_person")
+    if rp:
+        if primary_name and primary_name.lower() != rp.lower():
+            aliases = profile.get("name_aliases", [])
+            if primary_name not in aliases:
+                aliases.append(primary_name)
+            profile["name_aliases"] = aliases
+        primary_name = rp
+        profile["primary_name"] = rp
+        profile["_auto_resolved_name"] = rp
+        profile["primary_name_source"] = "press_provisional"
+        profile["primary_name_confidence"] = profile["confidence"].get("overall", 0.33)
+
     # === NAME RESOLUTION DIAGNOSTICS (S122c) ===
     name_diag = {
         "result": primary_name or None,
@@ -1739,7 +1786,8 @@ def aggregate_profile(target_id, workspace_id, session: Session, graph_context=N
 
             logger.info("Using operator-asserted name: '%s' (auto-resolved was: '%s')",
                         asserted_name, profile.get("_auto_resolved_name"))
-        else:
+        elif profile.get("primary_name_source") != "press_provisional":
+            # S264-0c — don't clobber a bound press resolution back to "auto".
             profile["primary_name_source"] = "auto"
 
     # S261 — name non-promotion under the coherence cap. Operator assertion
