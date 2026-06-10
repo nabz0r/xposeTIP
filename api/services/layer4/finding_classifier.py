@@ -151,6 +151,28 @@ def classify_finding(f, seed_email: str, seed_domain: str, collision_local: str 
     return "noise"
 
 
+def _is_unbound_colleague(f) -> bool:
+    """S264-0d — a corporate_person entity that does NOT bind to the email
+    local-part: ORG CONTEXT (the company is real, named people exist), NOT
+    corroboration of THIS individual. Explicit False only — a missing flag
+    (legacy / non-corporate entity like a gazette record) stays in corrob."""
+    if (getattr(f, "category", "") or "") != "corporate":
+        return False
+    data = f.data if isinstance(f.data, dict) else {}
+    return data.get("email_pattern_match") is False
+
+
+def _corrob_weight(f) -> float:
+    """S264-0d — diminishing weight from independent corroboration. Each ADDITIONAL
+    independent source buys less, capped at 2x. The cap is the entropy-floor guard
+    (BFP K=3 lesson): cross_verification_count is historically polluted on the
+    platform path, so a single finding can at most DOUBLE its weight — never run
+    away on an inflated count. Press-domain counts (corporate_person) are
+    high-entropy and ride this safely; polluted platform counts stay bounded."""
+    xv = getattr(f, "cross_verification_count", 0) or 0
+    return 1.0 + min(1.0, 0.5 * max(0, xv - 1))   # xv≤1→1.0, xv2→1.5, xv≥3→2.0
+
+
 def compute_typed_confidence(findings, profile_names, seed_email, seed_domain):
     """SINGLE source of truth for typed confidence — used by BOTH the aggregator
     (writes the shadow field) AND the audit (read-only). Pure function, no DB writes,
@@ -177,8 +199,19 @@ def compute_typed_confidence(findings, profile_names, seed_email, seed_domain):
     # S263 retune — ceiling 0.95, NOT 1.0. Honesty-by-design: system inference,
     # however strongly corroborated, is never identity certainty. 100% means a
     # human asserted it (the operator-assert floor sits cleanly above this).
-    corrob = len(buckets["corroborating"]) + len(buckets["entity"])
-    corrob_score = min(0.55, 0.183 * corrob)                      # 3 corroborated → 0.55
+    #
+    # S264-0d — (a) weighted corroboration: weight each corrob finding by independent
+    # cross-verification (cap 2x) so real multi-source corroboration climbs while an
+    # isolated finding stays low; (b) colleague routing: an unbound corporate_person
+    # (email_pattern_match is False) is ORG CONTEXT, not corroboration of the subject
+    # → out of corrob (fixes the 0f wrinkle where a colleague inflated the subject).
+    entity_bound = [f for f in buckets["entity"] if not _is_unbound_colleague(f)]
+    org_context = [f for f in buckets["entity"] if _is_unbound_colleague(f)]
+    corrob_findings = buckets["corroborating"] + entity_bound
+
+    corrob_weight = sum(_corrob_weight(f) for f in corrob_findings)
+    corrob = len(corrob_findings)
+    corrob_score = min(0.55, 0.183 * corrob_weight)               # weight replaces flat count
     acct_weight = sum(get_source_reliability(f.module) for f in buckets["account"])
     acct_score = min(0.25, 0.05 * acct_weight)                    # bare accounts saturate low
     clean = [n for n in profile_names if not is_junk_name_token(n.get("value", ""))]
@@ -189,7 +222,9 @@ def compute_typed_confidence(findings, profile_names, seed_email, seed_domain):
         "echo": buckets["echo"],
         "account": len(buckets["account"]),
         "corroborating": len(buckets["corroborating"]),
-        "entity": len(buckets["entity"]),
+        "entity": len(entity_bound),          # bound only — the wrinkle fix
+        "org_context": len(org_context),      # NEW: real company, named colleagues, not self
+        "corrob_weight": round(corrob_weight, 2),  # NEW: visibility on the climb
         "noise": buckets["noise"],
     }
     return typed_overall, breakdown
