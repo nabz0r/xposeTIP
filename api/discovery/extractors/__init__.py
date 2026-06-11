@@ -183,7 +183,12 @@ def extract_all(url: str, text: str, html: str,
             found = extractor.extract(url, text, html)
             for lead in found:
                 key = lead.value.lower()
-                if key in known:
+                # S264-0h — corporate_person leads bypass the known-identifier dedup:
+                # their name is SUPPOSED to be new, and their real gate is company
+                # co-occurrence + local-part binding (below), not name-presence. A
+                # coincidental homonym already in findings (e.g. an academic "Eric Lox"
+                # on DBLP/arXiv) must NOT suppress the press-anchored corporate person.
+                if lead.lead_type != "corporate_person" and key in known:
                     continue
                 existing = seen_values.get(key)
                 if existing is None or lead.confidence > existing.confidence:

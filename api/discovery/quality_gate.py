@@ -114,6 +114,13 @@ class QualityGate:
 
     def _is_known(self, lead) -> bool:
         """Check if a lead matches existing data."""
+        # S264-0h — corporate_person leads are exempt from the known-identifier
+        # check: by the time they reach here they already passed company
+        # co-occurrence + local-part binding in extract_all. The name-presence
+        # check would re-drop a press-anchored corporate person on a coincidental
+        # homonym already in findings (e.g. an academic "Eric Lox" on DBLP/arXiv).
+        if lead.lead_type == "corporate_person":
+            return False
         val = lead.value.lower().strip()
 
         # 1. Exact identifier match
