@@ -737,6 +737,21 @@ def enrich_public_exposure(target_id, session: Session, scan_id=None) -> dict:
         logger.warning("PASS2: GLEIF failed: %s", e)
         results["errors"].append(f"gleif_search: {str(e)[:100]}")
 
+    # 9. HudsonRock — infostealer exposure (S269, free key-less). EXPOSURE METADATA
+    # ONLY — the scraper hard-drops cleartext credentials/PII; we never store them.
+    try:
+        from api.scrapers.hudsonrock_search import search_hudsonrock
+        _hr_domain = email_domain
+        hr_results = search_hudsonrock(email=email, domain=_hr_domain)
+        if hr_results:
+            results["media"].extend(hr_results)   # accumulation bucket; category set in store
+            logger.info("PASS2: HudsonRock — infostealer exposure for %s (%d log[s])",
+                        email[:40], hr_results[0]["data"].get("log_count"))
+        results["scrapers_run"] += 1
+    except Exception as e:
+        logger.warning("PASS2: HudsonRock failed: %s", e)
+        results["errors"].append(f"hudsonrock_search: {str(e)[:100]}")
+
     # Cap corporate at 8, prioritize active roles
     results["corporate"].sort(key=lambda f: (
         -int(f.get("data", {}).get("is_active", False)),
@@ -755,6 +770,8 @@ def enrich_public_exposure(target_id, session: Session, scan_id=None) -> dict:
                 category = "public_exposure"
                 if ind_type in ("sanctions_match", "pep_match"):
                     category = "compliance"
+                elif ind_type == "infostealer_exposure":
+                    category = "breach"   # S269 HudsonRock — exposure (echo tier)
                 elif ind_type == "corporate_officer":
                     category = "corporate"
                 elif ind_type == "company":
