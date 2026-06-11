@@ -23,6 +23,9 @@ logger = logging.getLogger(__name__)
 QUEUED_ORPHAN_MIN = 30        # status='queued' more than 30min = lost
 RUNNING_NO_PROGRESS_MIN = 20  # status='running' but no module_progress activity for 20min = lost
 RUNNING_HARD_TIMEOUT_MIN = 240  # status='running' for 4h = hard cap (beyond visibility_timeout x2)
+# S264-0j — DiscoverySession has no progress heartbeat (started_at/completed_at only),
+# so hard-timeout only. run_discovery time_limit is 660s (11min) → no legit run survives 30min.
+DISCOVERY_HARD_TIMEOUT_MIN = 30
 
 # S241 — sentinel left on Scan.error_log when the watchdog re-dispatches a
 # queued orphan. Presence of this marker means we already burned our one
@@ -54,6 +57,7 @@ def sweep_orphan_scans() -> dict:
         "queued_orphan": 0,
         "running_no_progress": 0,
         "running_hard_timeout": 0,
+        "discovery_orphan": 0,
     }
     try:
         now = datetime.now(timezone.utc)
@@ -124,6 +128,29 @@ def sweep_orphan_scans() -> dict:
                 scan.error_log = reason
                 logger.warning("watchdog: marked scan %s failed — %s", scan.id, reason)
 
+        session.commit()
+
+        # S264-0j — DiscoverySession orphan sweep. The Scan sweep above never
+        # touches discovery sessions; a session whose run_discovery died before
+        # writing a terminal status (worker kill, or a pre-0j aborted-txn commit
+        # failure) is stranded at 'running'. Hard-timeout only. MUST write 'error',
+        # never 'failed' — valid_session_status forbids the Scan vocabulary.
+        from api.models.discovery import DiscoverySession
+        disc_cutoff = now - timedelta(minutes=DISCOVERY_HARD_TIMEOUT_MIN)
+        orphan_sessions = session.execute(
+            select(DiscoverySession).where(
+                and_(DiscoverySession.status == "running",
+                     DiscoverySession.started_at < disc_cutoff)
+            )
+        ).scalars().all()
+        for ds in orphan_sessions:
+            ds.status = "error"          # valid_session_status: NOT 'failed'
+            ds.completed_at = now
+            ds.error_message = (
+                f"orphan: stuck running >{DISCOVERY_HARD_TIMEOUT_MIN}min, swept by watchdog"
+            )
+            swept["discovery_orphan"] += 1
+            logger.warning("watchdog: swept orphan discovery session %s", ds.id)
         session.commit()
 
         if any(swept.values()):

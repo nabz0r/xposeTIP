@@ -127,6 +127,10 @@ def run_discovery(self, target_id: str, session_id: str, workspace_id: str,
     except SoftTimeLimitExceeded:
         logger.warning("Discovery soft timeout for %s — saving progress", target_id)
         try:
+            db.rollback()  # S264-0j — belt-and-braces: clean session before status write
+        except Exception:
+            pass
+        try:
             session_obj = db.execute(
                 select(DiscoverySession).where(DiscoverySession.id == sid)
             ).scalar_one_or_none()
@@ -149,6 +153,14 @@ def run_discovery(self, target_id: str, session_id: str, workspace_id: str,
 
     except Exception as e:
         logger.exception("Discovery failed for %s: %s", target_id, e)
+        # S264-0j — a DB error (e.g. CheckViolation) aborts the txn; the status
+        # write below MUST run on a clean session or it silently fails ("current
+        # transaction is aborted") and the session is stranded at 'running' forever.
+        # Rollback first, and never swallow a failure here again (log it).
+        try:
+            db.rollback()
+        except Exception:
+            pass
         try:
             session_obj = db.execute(
                 select(DiscoverySession).where(DiscoverySession.id == uuid.UUID(session_id))
@@ -159,7 +171,7 @@ def run_discovery(self, target_id: str, session_id: str, workspace_id: str,
                 session_obj.completed_at = datetime.now(timezone.utc)
                 db.commit()
         except Exception:
-            pass
+            logger.exception("S264-0j: failed to mark discovery session %s as error", session_id)
 
         publish_event("discovery.error", {
             "workspace_id": workspace_id,
