@@ -712,6 +712,31 @@ def enrich_public_exposure(target_id, session: Session, scan_id=None) -> dict:
         logger.warning("PASS2: LBR failed: %s", e)
         results["errors"].append(f"lbr_luxembourg: {str(e)[:100]}")
 
+    # 8. GLEIF (S268 — global legal-entity registry, keyed on the resolved company,
+    # not the person name). CC0 / key-less. The entity backbone; a null result is the
+    # honest false-negative for an unregistered company (→ national register Round 1).
+    try:
+        _pd = target.profile_data or {}
+        # Prefer AR-0's resolved spaced company name; else the email domain label.
+        gleif_company = _pd.get("company") or search_context
+        if gleif_company and email_domain and "." in email_domain:
+            from api.scrapers.gleif_search import search_gleif
+            _tld = email_domain.rsplit(".", 1)[-1].lower()
+            _juris = target.country_code or (_tld.upper() if len(_tld) == 2 and _tld != "com" else None)
+            gleif_results = search_gleif(gleif_company, jurisdiction_hint=_juris)
+            if gleif_results:
+                results["corporate"].extend(gleif_results)
+                logger.info("PASS2: GLEIF found %d legal-entity records for '%s'",
+                            len(gleif_results), gleif_company)
+            else:
+                logger.info("PASS2: GLEIF no LEI for '%s' (unregistered → national register next)",
+                            gleif_company)
+            results["scrapers_run"] += 1
+            time.sleep(1.0)
+    except Exception as e:
+        logger.warning("PASS2: GLEIF failed: %s", e)
+        results["errors"].append(f"gleif_search: {str(e)[:100]}")
+
     # Cap corporate at 8, prioritize active roles
     results["corporate"].sort(key=lambda f: (
         -int(f.get("data", {}).get("is_active", False)),
@@ -732,6 +757,8 @@ def enrich_public_exposure(target_id, session: Session, scan_id=None) -> dict:
                     category = "compliance"
                 elif ind_type == "corporate_officer":
                     category = "corporate"
+                elif ind_type == "company":
+                    category = "corporate"   # S268 GLEIF — ∈ ENTITY_CATEGORIES → entity tier
                 elif ind_type == "legal_record":
                     category = "formal_records"   # S145: dedicated category. Pre-S145 findings keep public_exposure category but are still recognized via indicator_type in compute_formal_records_raw.
 
