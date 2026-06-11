@@ -27,7 +27,20 @@ _COMMON = {
 
 # host-name device words to strip before recovering a name from computer_name
 _HOST_STRIP = re.compile(r"^(desktop|laptop|pc|win|user|admin|home)[-_]?|[-_]?(pc|laptop|desktop)$", re.I)
-_DEVICE_WORDS = {"macbook", "imac", "windows", "linux", "pc", "laptop", "desktop"}
+_DEVICE_WORDS = {
+    "macbook", "imac", "windows", "linux", "pc", "laptop", "desktop",
+    # S273b — manufacturer brands + model lines that leak as fake names from
+    # hostnames (DELL-7420 → "Dell"). Non-exhaustive by design: the hostname path
+    # stays a coarse/gated signal; this just kills the obvious "calling someone Dell".
+    "dell", "hp", "lenovo", "asus", "acer", "msi", "samsung", "lg", "sony",
+    "toshiba", "fujitsu", "huawei", "microsoft", "apple", "gigabyte", "razer",
+    "compaq", "medion", "packard", "bell",
+    "latitude", "inspiron", "vostro", "precision", "optiplex", "alienware", "xps",
+    "thinkpad", "ideapad", "thinkcentre", "legion", "yoga",
+    "pavilion", "elitebook", "probook", "spectre", "envy", "omen",
+    "zenbook", "vivobook", "rog", "tuf",
+    "surface", "workstation", "server",
+}
 
 
 def extract_composition(password: str, salt: str) -> dict:
