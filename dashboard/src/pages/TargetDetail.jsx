@@ -14,6 +14,7 @@ import ScansTab from './tabs/ScansTab'
 import FindingsHubTab from './tabs/FindingsHubTab'
 import GraphHubTab from './tabs/GraphHubTab'
 import SourcesHubTab from './tabs/SourcesHubTab'
+import EntropyTab from './tabs/EntropyTab'
 import SanctionsAlert from '../components/target/SanctionsAlert'
 
 // S149: shared predicate for "scan is still working" — covers both the active
@@ -478,6 +479,7 @@ export default function TargetDetail() {
           { key: 'findings', label: 'Findings', count: findings.length },
           { key: 'graph',    label: 'Graph' },
           { key: 'sources',  label: 'Sources' },
+          { key: 'entropy',  label: 'Entropy' },
           { key: 'scans',    label: 'Scans', count: scans.length },
         ].map(tab => (
           <button key={tab.key} onClick={() => setActiveTab(tab.key)}
@@ -536,6 +538,10 @@ export default function TargetDetail() {
           load={load} startOAuth={startOAuth} auditAccount={auditAccount}
           disconnectAccount={disconnectAccount}
         />
+      )}
+
+      {activeTab === 'entropy' && (
+        <EntropyTab profile={profile} />
       )}
 
       {activeTab === 'scans' && (
