@@ -113,6 +113,26 @@ def search_hudsonrock(email: str | None = None, domain: str | None = None) -> li
     corp_services = sum(int(s.get("total_corporate_services") or 0) for s in safe)
     user_services = sum(int(s.get("total_user_services") or 0) for s in safe)
 
+    # S270 — L1 composition extraction. Runs on the RAW stealers (top_passwords +
+    # computer_name still present here, BEFORE _safe_stealer strips them from stored
+    # data). The extractor returns coarse candidates + a salted reuse-hash and NEVER
+    # the cleartext; the raw password/host-name leave scope here and are never stored.
+    comp_candidates, reuse_hashes = [], []
+    try:
+        from api.services.layer4.password_composition import extract_composition, extract_hostname_name
+        from api.config import settings
+        _salt = settings.COMPOSITION_SALT or settings.SECRET_KEY
+        for s in stealers:                       # RAW stealers
+            for pw in (s.get("top_passwords") or []):
+                comp = extract_composition(pw, _salt)
+                comp_candidates.extend(comp["candidates"])
+                if comp["reuse_hash"]:
+                    reuse_hashes.append(comp["reuse_hash"])
+            comp_candidates.extend(extract_hostname_name(s.get("computer_name")))
+            # pw / computer_name out of scope after this; never persisted
+    except Exception as e:
+        logger.warning("hudsonrock: composition extraction failed: %s", e)
+
     data = {
         "compromised": True,
         "log_count": len(stealers),                       # number of infected machines/logs
@@ -123,6 +143,10 @@ def search_hudsonrock(email: str | None = None, domain: str | None = None) -> li
         "last_compromised": max(dates) if dates else None,
         "source": "hudsonrock_cavalier",
         "summary": str(body.get("message") or "")[:300],
+        # S270 — coarse, gated candidates from password/host-name SHAPE (never the
+        # cleartext) + salted reuse-hashes for cross-account linking (never the pw).
+        "composition_candidates": comp_candidates,
+        "reuse_hashes": sorted(set(reuse_hashes)),
         # NO cleartext credentials, NO ip, NO malware_path — ever.
     }
 

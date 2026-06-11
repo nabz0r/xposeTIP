@@ -11,6 +11,10 @@ class Settings(BaseSettings):
     JWT_REFRESH_EXPIRE_DAYS: int = 7
     HIBP_API_KEY: str = ""
     MAXMIND_LICENSE: str = ""
+    # S270 — stable app-wide salt for password reuse-hashing (same for all targets so
+    # cross-target reuse links; set via env, never a committed literal). Empty →
+    # falls back to SECRET_KEY at use-site.
+    COMPOSITION_SALT: str = ""
     CORS_ORIGINS: str = "http://localhost:3000,http://localhost:5173"
     SYSLOG_HOST: str = ""
     SYSLOG_PORT: int = 514
