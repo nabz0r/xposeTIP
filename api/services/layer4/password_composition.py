@@ -31,7 +31,8 @@ _DEVICE_WORDS = {"macbook", "imac", "windows", "linux", "pc", "laptop", "desktop
 
 
 def extract_composition(password: str, salt: str) -> dict:
-    """Return {candidates: [...], reuse_hash: str}. NEVER returns the raw password."""
+    """Return {candidates: [...], reuse_hash: str}. The cleartext is NEVER emitted —
+    only derived shape candidates + a salted hash leave this function."""
     out = {"candidates": [], "reuse_hash": None}
     if not password or len(password) < 4:
         return out
