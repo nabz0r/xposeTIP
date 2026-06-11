@@ -32,7 +32,9 @@ REDIS_DISABLE_TTL = 3600
 # Allow-list — the ONLY per-stealer fields permitted into `data` (everything else,
 # incl. top_passwords/top_logins/ip/malware_path, is dropped by omission).
 _SAFE_STEALER_FIELDS = {
-    "date_compromised", "operating_system", "computer_name", "antiviruses",
+    # S269b — computer_name + antiviruses removed: computer_name embeds the real
+    # person/host name (DESKTOP-NABIL, Johns-MacBook) = raw PII; antiviruses is noise.
+    "date_compromised", "operating_system",
     "total_corporate_services", "total_user_services",
 }
 # Defensive denylist — fields we explicitly refuse even if upstream renames/nests them.
