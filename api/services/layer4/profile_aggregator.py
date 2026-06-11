@@ -1870,6 +1870,18 @@ def aggregate_profile(target_id, workspace_id, session: Session, graph_context=N
                     target_id, contradicting, expected, primary_name,
                 )
 
+    # S265 — entropy shadow (placed AFTER name resolution so the name axis sees the
+    # resolved primary_name). Information-theoretic identifying power, governed
+    # (independence + conservative priors + global-unique cap). SHADOW only — does NOT
+    # touch confidence["overall"]; validate on corpus before any flip (S262→S263 path).
+    try:
+        from api.services.layer4.entropy_engine import compute_identifying_bits, load_priors
+        ent_bits, ent_breakdown = compute_identifying_bits(profile, findings, load_priors())
+        profile["confidence"]["identifying_bits"] = ent_bits
+        profile["confidence"]["entropy_breakdown"] = ent_breakdown
+    except Exception as e:
+        logger.debug("S265 entropy shadow compute failed: %s", e)
+
     # Pick primary avatar: quality score first, then source priority as tiebreaker
     AVATAR_SOURCE_PRIORITY = {
         "gravatar": 10, "google_audit": 9, "github_deep": 8, "fullcontact": 7,

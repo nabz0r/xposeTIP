@@ -1,0 +1,34 @@
+{
+  "_sources": "country_population: UN World Population Prospects 2024, rounded (public). email_provider_share: approximate public figures (provider user counts / Statista email-client share), rounded DOWN-to-common (conservative, governor 3). name: coarse common/rare only — full name-frequency census tables are v1. All priors are deliberately conservative: when uncertain, p is rounded toward COMMON (fewer identifying bits) so the engine UNDER-claims resolution power, never over-claims.",
+  "_governors": "1) bits=-log2(p). 2) sum across DISTINCT axes only, one value per axis, correlated axes discounted/pick-one. 3) uncertain p → round toward common (fewer bits); unknown axis → 0 bits. 4) total capped < global_unique_bits; OSINT-only cap=cap_bits. 5) shadow only, descriptive.",
+  "world_population": 8100000000,
+  "global_unique_bits": 33,
+  "cap_bits": 20,
+  "country_population": {
+    "LU": 670000, "MT": 540000, "IS": 390000, "CY": 1300000, "EE": 1370000,
+    "IE": 5100000, "NO": 5500000, "FI": 5550000, "DK": 5900000, "SK": 5400000,
+    "CH": 8800000, "AT": 9100000, "SE": 10500000, "PT": 10300000, "BE": 11700000,
+    "CZ": 10700000, "GR": 10300000, "HU": 9600000, "NL": 17800000, "RO": 19000000,
+    "AU": 26600000, "CA": 39000000, "PL": 37000000, "ES": 48000000, "IT": 59000000,
+    "GB": 67000000, "FR": 68000000, "DE": 84000000, "JP": 124000000, "BR": 216000000,
+    "US": 335000000, "ID": 277000000, "IN": 1430000000, "CN": 1410000000,
+    "_default": 100000000
+  },
+  "email_provider_share": {
+    "gmail.com": 0.42, "googlemail.com": 0.42,
+    "yahoo.com": 0.05, "yahoo.fr": 0.05, "ymail.com": 0.05,
+    "outlook.com": 0.09, "hotmail.com": 0.09, "hotmail.fr": 0.09, "live.com": 0.06, "msn.com": 0.04,
+    "icloud.com": 0.08, "me.com": 0.08, "mac.com": 0.08,
+    "aol.com": 0.02, "proton.me": 0.01, "protonmail.com": 0.01, "gmx.com": 0.02, "gmx.de": 0.02,
+    "web.de": 0.02, "mail.com": 0.01, "zoho.com": 0.01, "orange.fr": 0.02, "free.fr": 0.02,
+    "wanadoo.fr": 0.01, "laposte.net": 0.01, "sfr.fr": 0.01, "t-online.de": 0.02,
+    "_freemail_default": 0.05,
+    "_corporate": 0.03,
+    "_unknown": 0.05
+  },
+  "name": {
+    "_note": "coarse v0 — binary common/rare via collision_guard.COMMON_GIVEN_NAMES on the first token. p rounded toward common (conservative). full per-name census frequency is v1.",
+    "common_p": 0.10,
+    "rare_p_floor": 0.04
+  }
+}
