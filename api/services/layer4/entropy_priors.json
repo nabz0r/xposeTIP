@@ -30,5 +30,8 @@
     "_note": "coarse v0 — binary common/rare via collision_guard.COMMON_GIVEN_NAMES on the first token. p rounded toward common (conservative). full per-name census frequency is v1.",
     "common_p": 0.10,
     "rare_p_floor": 0.04
-  }
+  },
+  "_birth_year_note": "S272 — coarse prior for a candidate_year extracted from a password (password_composition). default 0.013 ≈ 1/77 (uniform over ~77 active years, round-toward-common, governor 3). birth_year_prevalence can hold real per-year shares; empty = use default. A coarse year ~6.3 bits but flagged coarse so the UI never over-sells it.",
+  "birth_year_default_p": 0.013,
+  "birth_year_prevalence": {}
 }

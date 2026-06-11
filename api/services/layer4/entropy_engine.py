@@ -100,6 +100,17 @@ def _name_first_token(profile: dict) -> str | None:
     return parts[0].lower() if parts else None
 
 
+def _name_prevalence(name_token: str, priors: dict) -> tuple:
+    """Coarse name prevalence p + label (common/rare). Single source for the resolved
+    name axis AND the S272 password-derived candidate_name fallback."""
+    from api.services.layer4.collision_guard import COMMON_GIVEN_NAMES
+    ncfg = (priors or {}).get("name", {})
+    tok = (name_token or "").strip().lower().split()[0] if (name_token or "").strip() else ""
+    if tok in COMMON_GIVEN_NAMES:
+        return ncfg.get("common_p", 0.10), "common"
+    return ncfg.get("rare_p_floor", 0.04), "rare"
+
+
 def compute_identifying_bits(profile: dict, findings, priors: dict):
     """Return (total_bits, breakdown). Pure, governed, shadow-only."""
     priors = priors or {}
@@ -164,6 +175,35 @@ def compute_identifying_bits(profile: dict, findings, priors: dict):
             lo = min(("country", "email_provider"), key=lambda k: by_axis[k]["bits"])
             by_axis[lo]["bits"] = 0.0
             by_axis[lo]["correlated_with"] = "country" if lo == "email_provider" else "email_provider"
+
+    # --- L1: breach-derived composition candidates (S272), COARSE, GOVERNED ---
+    # Read the password/host-name shape candidates S270 attached to hudsonrock findings
+    # (findings already passed in). The cleartext never reached here — only candidates.
+    cand = []
+    for f in (findings or []):
+        if getattr(f, "module", "") == "hudsonrock_search":
+            d = getattr(f, "data", None)
+            if isinstance(d, dict):
+                cand.extend(d.get("composition_candidates") or [])
+
+    # candidate_year → birth_year axis (new, coarse). One value, most-specific per axis.
+    yr = next((c.get("value") for c in cand if c.get("attribute") == "candidate_year"), None)
+    if yr is not None and "birth_year" not in by_axis:
+        yp = (priors.get("birth_year_prevalence") or {}).get(str(yr)) or priors.get("birth_year_default_p", 0.013)
+        by_axis["birth_year"] = {"value": yr, "p": round(yp, 6), "bits": round(_bits(yp), 2),
+                                 "coarse": True, "source": "password_composition"}
+
+    # candidate_name → name axis ONLY as a coarse fallback (governor 2: most-specific
+    # wins). A resolved primary_name already owns the name axis → the password-name
+    # does NOT add (no double-count).
+    if "name" not in by_axis and not (profile.get("primary_name") or "").strip():
+        nm = next((c.get("value") for c in cand if c.get("attribute") == "candidate_name"), None)
+        if nm:
+            np_, _lbl = _name_prevalence(nm, priors)
+            by_axis["name"] = {"value": nm, "p": round(np_, 6), "bits": round(_bits(np_), 2),
+                               "coarse": True, "source": "password_composition"}
+            if "name" in axes_unknown:
+                axes_unknown.remove("name")
 
     raw_bits = sum(a["bits"] for a in by_axis.values())
 
