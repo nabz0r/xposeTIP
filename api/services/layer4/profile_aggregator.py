@@ -4,7 +4,7 @@ import logging
 import re
 from collections import defaultdict
 
-from sqlalchemy import select
+from sqlalchemy import select, func
 from sqlalchemy.orm import Session
 
 from api.models.finding import Finding
@@ -1877,10 +1877,38 @@ def aggregate_profile(target_id, workspace_id, session: Session, graph_context=N
     try:
         from api.services.layer4.entropy_engine import compute_identifying_bits, load_priors
         ent_bits, ent_breakdown = compute_identifying_bits(profile, findings, load_priors())
+
+        # S271 — cluster-entropy term: H(cluster) = -log2(p_bucket), the BFP
+        # 'belonging' half of the chain rule (the 'individuation' half is ent_bits).
+        bfp_hash = session.execute(
+            select(Target.bfp_behavioral_hash_v1).where(Target.id == target_id)
+        ).scalar_one_or_none()
+        if bfp_hash:
+            from api.services.layer4.entropy_engine import compute_cluster_bits
+            bucket_count = session.execute(
+                select(func.count()).select_from(Target).where(
+                    Target.workspace_id == workspace_id,
+                    Target.bfp_behavioral_hash_v1 == bfp_hash,
+                )
+            ).scalar() or 0
+            corpus_total = session.execute(
+                select(func.count()).select_from(Target).where(Target.workspace_id == workspace_id)
+            ).scalar() or 0
+            cluster = compute_cluster_bits(bfp_hash, bucket_count, corpus_total)
+            ent_breakdown["cluster"] = cluster
+            # decomposition framing — total is an UPPER BOUND until Markov conditioning
+            # removes the BFP↔attribute overlap. The "≤" lives here, honestly flagged.
+            ent_breakdown["decomposition"] = {
+                "cluster_bits": cluster["cluster_bits"],
+                "individuation_bits": ent_bits,            # the S265 half, reused
+                "total_upper_bound": round(cluster["cluster_bits"] + ent_bits, 2),
+                "conditioning": "pending_markov",          # overlap not yet removed
+            }
+
         profile["confidence"]["identifying_bits"] = ent_bits
         profile["confidence"]["entropy_breakdown"] = ent_breakdown
     except Exception as e:
-        logger.debug("S265 entropy shadow compute failed: %s", e)
+        logger.debug("S265/S271 entropy shadow compute failed: %s", e)
 
     # Pick primary avatar: quality score first, then source priority as tiebreaker
     AVATAR_SOURCE_PRIORITY = {

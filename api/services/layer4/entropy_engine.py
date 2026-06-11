@@ -64,6 +64,24 @@ def _bits(p: float) -> float:
     return max(0.0, -math.log2(p))
 
 
+def compute_cluster_bits(bfp_hash: str, bucket_count: int, corpus_total: int) -> dict:
+    """S271 — H(cluster) = -log2(p_bucket): the BFP 'belonging' half of the chain rule.
+    p_bucket = how common this behavioral bucket is in the corpus. Small by design in
+    cold-start (a dominant mono-bucket → p high → few bits) — that is clustering-not-
+    uniqueness made arithmetic, not a defect. Never a uniqueness claim."""
+    if not bfp_hash or corpus_total <= 0 or bucket_count <= 0:
+        return {"cluster_bits": 0.0, "cluster_bucket": bfp_hash,
+                "cluster_corpus_fraction": None, "cluster_note": "no corpus signal"}
+    p = min(1.0, bucket_count / corpus_total)
+    return {
+        "cluster_bits": round(_bits(p), 2),
+        "cluster_bucket": bfp_hash,
+        "cluster_corpus_fraction": f"{bucket_count}/{corpus_total}",
+        "cluster_p": round(p, 4),
+        "cluster_note": "cold-start" if p > 0.5 else "differentiated",
+    }
+
+
 def _extract_country(profile: dict) -> str | None:
     geo = profile.get("geo_consistency") or {}
     if isinstance(geo, dict) and geo.get("primary_country"):
