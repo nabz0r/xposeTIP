@@ -210,15 +210,34 @@ _LEAD_TYPE_TO_INDICATOR = {
 
 
 def _localpart_binds(target_id, db, resolved_name: str) -> bool:
-    """S264-0 local-part binding: does the email local-part share a token with the
-    resolved name? eric@plutontechnologies.com → 'eric' ∈ 'Eric Lox' → True."""
+    """S264-0 local-part binding + S264-0i typo-tolerant fallback.
+
+    eric@ → 'eric' ∈ 'Eric Lox' (exact). ekatarina@ → 'ekatarina' ~ 'Ekaterina'
+    (typo, len≥6 only). Short names stay EXACT-only: ratio cannot tell a real typo
+    from a different name on short tokens (ekatarina/ekaterina = eric/erica = 0.889),
+    so the LENGTH FLOOR — not the ratio — is the guard against the confident-wrong
+    direction. Same first char + ratio≥0.85 on top. Thresholds are hard-coded on
+    purpose (an ENV knob would invite loosening the guard)."""
     try:
         from api.models.target import Target
+        from difflib import SequenceMatcher
         email = db.execute(select(Target.email).where(Target.id == target_id)).scalar_one_or_none() or ""
         local = email.split("@", 1)[0].lower()
         local_tokens = {t for t in re.split(r"[._\-]+", local) if len(t) >= 2}
         name_tokens = {t.lower() for t in (resolved_name or "").split() if len(t) >= 2}
-        return bool(local_tokens & name_tokens)
+
+        if local_tokens & name_tokens:                 # exact — unchanged, wins first
+            return True
+
+        for lt in local_tokens:                        # typo fallback — long tokens only
+            if len(lt) < 6:
+                continue
+            for nt in name_tokens:
+                if len(nt) < 6 or lt[0] != nt[0]:
+                    continue
+                if SequenceMatcher(None, lt, nt).ratio() >= 0.85:
+                    return True
+        return False
     except Exception:
         return False
 
