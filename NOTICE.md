@@ -31,3 +31,12 @@ By contributing to this project, you agree to the terms of the [Contributor Lice
 ## Third-party software
 
 xposeTIP depends on third-party open-source software, each under its own license. See `requirements.txt` (Python dependencies) and `dashboard/package.json` / `dashboard/package-lock.json` (Node.js dependencies) for the full list.
+
+### Bundled data
+
+`api/services/layer4/name_priors.json` is derived from:
+- **US SSA Baby Names** — public domain (US Government).
+- **INSEE Fichier des prénoms** — Licence Ouverte v2.0 (Etalab). Source: INSEE.
+- **World Gender Name Dictionary (WGND 2.0)** — CC0. Raffo, Julio, 2021, "WGND 2.0", https://doi.org/10.7910/DVN/MSEGSJ, Harvard Dataverse.
+
+Regenerate via `scripts/build_name_priors.py`.

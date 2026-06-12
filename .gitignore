@@ -30,3 +30,6 @@ celerybeat-schedule
 toto.txt
 *.tmp
 docs/qa/
+
+# S284a — raw name-data sources (regenerate via scripts/build_name_priors.py)
+scripts/_name_data_cache/
