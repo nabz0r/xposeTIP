@@ -2000,6 +2000,23 @@ def aggregate_profile(target_id, workspace_id, session: Session, graph_context=N
     profile["primary_avatar"] = primary_avatar
     profile["primary_avatar_quality"] = avatar_quality  # expose for frontend badge
 
+    # S286 — perceptual avatar hashing (pHash) for cross-platform reuse. Stores
+    # hashes + counters ONLY, never the image (CNPD framing). Hashes only real-photo
+    # avatars (score >= 2, decision 0). Graceful: never crashes aggregation. Short-
+    # circuits instantly when there are no real-photo avatars (common case → no I/O).
+    try:
+        from api.services.layer4.avatar_hasher import compute_avatar_reuse_sync
+        if any(_score_avatar((a.get("url") or "")) >= 2 for a in profile["avatars"]):
+            profile["avatar_reuse"] = compute_avatar_reuse_sync(profile["avatars"], _score_avatar)
+        else:
+            profile["avatar_reuse"] = {"computed": True, "hashed_count": 0,
+                                       "skipped_default": len(profile["avatars"]),
+                                       "skipped_fetch_fail": 0, "clusters": [],
+                                       "max_reuse": 0, "distinct_images": 0}
+    except Exception as e:
+        logger.debug("avatar_reuse skipped for target %s: %s", target_id, e)
+        profile["avatar_reuse"] = {"computed": False}
+
     # Store on target
     target = session.execute(
         select(Target).where(Target.id == target_id, Target.workspace_id == workspace_id)
