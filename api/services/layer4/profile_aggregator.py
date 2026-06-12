@@ -792,6 +792,78 @@ def _find_finding_for_name(findings, name_value, source_name):
     return None
 
 
+def _compute_cluster_decomposition(bfp_hash, ent_bits, workspace_id, session):
+    """S271 shared core — given a behavioral bucket hash + the individuation bits,
+    return (cluster_term, decomposition). Counts the bucket vs the workspace corpus so
+    H(cluster) = -log2(p_bucket). Used both by the in-aggregate entropy hook AND by
+    patch_cluster_entropy (post-fingerprint ordering fix). SHADOW only."""
+    from api.services.layer4.entropy_engine import compute_cluster_bits
+    bucket_count = session.execute(
+        select(func.count()).select_from(Target).where(
+            Target.workspace_id == workspace_id,
+            Target.bfp_behavioral_hash_v1 == bfp_hash,
+        )
+    ).scalar() or 0
+    corpus_total = session.execute(
+        select(func.count()).select_from(Target).where(Target.workspace_id == workspace_id)
+    ).scalar() or 0
+    cluster = compute_cluster_bits(bfp_hash, bucket_count, corpus_total)
+    decomposition = {
+        "cluster_bits": cluster["cluster_bits"],
+        "individuation_bits": ent_bits,            # the S265 half, reused
+        # total is an UPPER BOUND until Markov conditioning removes the BFP↔attribute
+        # overlap — the "≤" lives here, honestly flagged.
+        "total_upper_bound": round(cluster["cluster_bits"] + ent_bits, 2),
+        "conditioning": "pending_markov",          # overlap not yet removed
+    }
+    return cluster, decomposition
+
+
+def patch_cluster_entropy(target_id, workspace_id, session: Session) -> bool:
+    """Cluster-ordering fix — fold the H(cluster) belonging term into an
+    already-aggregated profile AFTER bfp_behavioral_hash_v1 exists.
+
+    During a fresh scan the entropy hook inside aggregate_profile runs in Phase B
+    BEFORE the fingerprint engine computes the behavioral hash, so the cluster term is
+    absent until a later recompute. The orchestrator calls this right after the
+    fingerprint step to close that ordering gap. Idempotent (re-running with the same
+    bucket counts produces the same term); SHADOW only — never touches confidence
+    ["overall"]. Returns True iff a cluster term was written. Caller commits."""
+    import copy
+    from sqlalchemy.orm.attributes import flag_modified
+    target = session.execute(
+        select(Target).where(Target.id == target_id, Target.workspace_id == workspace_id)
+    ).scalar_one_or_none()
+    if not target or not target.bfp_behavioral_hash_v1:
+        return False
+    # Deep copy — mutating the loaded value in place would also mutate SQLAlchemy's
+    # committed snapshot (shared nested dicts), making new == old at flush so the
+    # UPDATE is silently skipped (the JSONB in-place-mutation trap).
+    profile = copy.deepcopy(target.profile_data or {})
+    conf = profile.get("confidence")
+    if not isinstance(conf, dict):
+        return False
+    breakdown = conf.get("entropy_breakdown")
+    if not isinstance(breakdown, dict):
+        # aggregate didn't even emit the L0 entropy shadow → nothing to decompose.
+        return False
+    ent_bits = conf.get("identifying_bits", 0) or 0
+    try:
+        cluster, decomposition = _compute_cluster_decomposition(
+            target.bfp_behavioral_hash_v1, ent_bits, workspace_id, session
+        )
+    except Exception as e:
+        logger.debug("patch_cluster_entropy compute failed for %s: %s", target_id, e)
+        return False
+    breakdown["cluster"] = cluster
+    breakdown["decomposition"] = decomposition
+    conf["entropy_breakdown"] = breakdown
+    profile["confidence"] = conf
+    target.profile_data = profile
+    flag_modified(target, "profile_data")   # force dirty — JSONB is not a MutableDict
+    return True
+
+
 def aggregate_profile(target_id, workspace_id, session: Session, graph_context=None, country_code=None) -> dict:
     """Build a unified profile from all findings for a target. Sync for Celery.
 
@@ -1884,26 +1956,16 @@ def aggregate_profile(target_id, workspace_id, session: Session, graph_context=N
             select(Target.bfp_behavioral_hash_v1).where(Target.id == target_id)
         ).scalar_one_or_none()
         if bfp_hash:
-            from api.services.layer4.entropy_engine import compute_cluster_bits
-            bucket_count = session.execute(
-                select(func.count()).select_from(Target).where(
-                    Target.workspace_id == workspace_id,
-                    Target.bfp_behavioral_hash_v1 == bfp_hash,
-                )
-            ).scalar() or 0
-            corpus_total = session.execute(
-                select(func.count()).select_from(Target).where(Target.workspace_id == workspace_id)
-            ).scalar() or 0
-            cluster = compute_cluster_bits(bfp_hash, bucket_count, corpus_total)
+            # During a fresh scan this branch is usually skipped — the fingerprint
+            # engine computes bfp_behavioral_hash_v1 in Phase B AFTER this aggregate,
+            # so the hash isn't there yet. patch_cluster_entropy() (called post-
+            # fingerprint by the orchestrator) folds the cluster term in then. On a
+            # recompute the hash already exists, so the term is set here directly.
+            cluster, decomposition = _compute_cluster_decomposition(
+                bfp_hash, ent_bits, workspace_id, session
+            )
             ent_breakdown["cluster"] = cluster
-            # decomposition framing — total is an UPPER BOUND until Markov conditioning
-            # removes the BFP↔attribute overlap. The "≤" lives here, honestly flagged.
-            ent_breakdown["decomposition"] = {
-                "cluster_bits": cluster["cluster_bits"],
-                "individuation_bits": ent_bits,            # the S265 half, reused
-                "total_upper_bound": round(cluster["cluster_bits"] + ent_bits, 2),
-                "conditioning": "pending_markov",          # overlap not yet removed
-            }
+            ent_breakdown["decomposition"] = decomposition
 
         profile["confidence"]["identifying_bits"] = ent_bits
         profile["confidence"]["entropy_breakdown"] = ent_breakdown

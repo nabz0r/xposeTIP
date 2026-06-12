@@ -812,6 +812,19 @@ def finalize_scan(scan_id: str):
             logger.exception("Fingerprint computation failed for target %s", scan.target_id)
         logger.info("PIPELINE[%s]: fingerprint done", scan.target_id)
 
+        # Cluster-ordering fix — the in-scan aggregate_profile (Phase B, above) ran
+        # BEFORE the fingerprint set bfp_behavioral_hash_v1, so its entropy shadow has
+        # no H(cluster) belonging term yet. Now that the hash is committed, fold the
+        # cluster decomposition into the persisted entropy_breakdown. SHADOW only.
+        try:
+            from api.services.layer4.profile_aggregator import patch_cluster_entropy
+            if patch_cluster_entropy(scan.target_id, scan.workspace_id, session):
+                session.commit()
+                logger.info("PIPELINE[%s]: cluster_entropy patched (post-fingerprint)", scan.target_id)
+        except Exception:
+            session.rollback()
+            logger.exception("PIPELINE[%s]: cluster_entropy patch failed", scan.target_id)
+
         # Update target.updated_at for UI refresh detection
         try:
             target = session.execute(select(Target).where(Target.id == scan.target_id)).scalar_one_or_none()
@@ -1421,6 +1434,17 @@ def _full_refinalize(target_id_str: str, workspace_id_str: str, session):
     except Exception:
         logger.exception("REFINALIZE[%s]: fingerprint failed", target_id)
     logger.info("REFINALIZE[%s]: fingerprint done", target_id)
+
+    # Cluster-ordering fix (same as the main pipeline) — aggregate ran before the
+    # fingerprint set bfp_behavioral_hash_v1, so fold the H(cluster) term in now.
+    try:
+        from api.services.layer4.profile_aggregator import patch_cluster_entropy
+        if patch_cluster_entropy(target_id, workspace_id, session):
+            session.commit()
+            logger.info("REFINALIZE[%s]: cluster_entropy patched (post-fingerprint)", target_id)
+    except Exception:
+        session.rollback()
+        logger.exception("REFINALIZE[%s]: cluster_entropy patch failed", target_id)
 
     # 15. SSE event
     try:
