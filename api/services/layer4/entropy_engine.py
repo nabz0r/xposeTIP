@@ -129,6 +129,46 @@ def _name_prevalence(name_token: str, priors: dict) -> tuple:
     return ncfg.get("rare_p_floor", 0.04), "rare"
 
 
+def _apply_correlations(by_axis: dict, dom: str | None, priors: dict) -> None:
+    """Generalized governor-2 (S281). Mutates by_axis in place.
+
+    For each declared {from,to,lambda,mode} in priors['axis_correlations']:
+      - both axes must be present in by_axis, else skip
+      - if a 'mode' gate is named, it must pass, else skip
+      - discount the DEPENDENT axis 'to': bits *= (1 - lambda)   [decision (a)]
+      - tag: to.correlated_with = from ; to.correlation_lambda = lambda (only λ<1)
+
+    Single-level only (decision b): we read the ORIGINAL bits snapshot, so a
+    discounted axis never cascades into another discount in the same pass.
+    """
+    correlations = (priors or {}).get("axis_correlations") or []
+    if not correlations:
+        return
+    # snapshot BEFORE any mutation — guarantees single-level (decision b)
+    orig = {k: v["bits"] for k, v in by_axis.items()}
+    for corr in correlations:
+        frm, to = corr.get("from"), corr.get("to")
+        if not frm or not to or frm not in by_axis or to not in by_axis:
+            continue
+        mode = corr.get("mode")
+        if mode == "ccTLD_match":
+            # reproduces the pre-S281 hard-coded gate exactly
+            if not dom:
+                continue
+            tld = dom.rsplit(".", 1)[-1].lower()
+            if _CCTLD_TO_ISO.get(tld) != by_axis[frm]["value"]:
+                continue
+        elif mode:
+            continue  # unknown named gate → fail closed (no discount applied)
+        lam = corr.get("lambda", 0.0) or 0.0
+        by_axis[to]["bits"] = round(orig[to] * (1 - lam), 2)
+        by_axis[to]["correlated_with"] = frm
+        if lam < 1:
+            # residual state (S282 plumbing) — never tagged on the λ=1 pick-one
+            # case so the existing UI render stays byte-identical
+            by_axis[to]["correlation_lambda"] = lam
+
+
 def compute_identifying_bits(profile: dict, findings, priors: dict):
     """Return (total_bits, breakdown). Pure, governed, shadow-only."""
     priors = priors or {}
@@ -181,18 +221,8 @@ def compute_identifying_bits(profile: dict, findings, priors: dict):
     else:
         axes_unknown.append("name")
 
-    # --- governor 2: correlation discount (pick-one) ---
-    # A corporate email on a ccTLD domain (helene@aca.LU) makes country and
-    # email_provider CORRELATED: the .lu TLD IS the country signal, so summing
-    # country(LU)+corporate double-counts the "LU corporate entity" information —
-    # the over-claim governor 2 forbids. When the domain ccTLD maps to the country
-    # axis, keep ONLY the higher-bits axis (pick-one) and discount the other to 0.
-    if dom and "country" in by_axis and "email_provider" in by_axis:
-        tld = dom.rsplit(".", 1)[-1].lower()
-        if _CCTLD_TO_ISO.get(tld) == by_axis["country"]["value"]:
-            lo = min(("country", "email_provider"), key=lambda k: by_axis[k]["bits"])
-            by_axis[lo]["bits"] = 0.0
-            by_axis[lo]["correlated_with"] = "country" if lo == "email_provider" else "email_provider"
+    # --- governor 2 (generalized, S281): data-driven correlation discount ---
+    _apply_correlations(by_axis, dom, priors)
 
     # --- L1: breach-derived composition candidates (S272), COARSE, GOVERNED ---
     # Read the password/host-name shape candidates S270 attached to hudsonrock findings

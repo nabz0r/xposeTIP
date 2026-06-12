@@ -31,6 +31,16 @@
     "common_p": 0.10,
     "rare_p_floor": 0.04
   },
+  "axis_correlations": [
+    {
+      "from": "country",
+      "to": "email_provider",
+      "lambda": 1.0,
+      "mode": "ccTLD_match",
+      "note": "ccTLD domain IS the country signal — see _CCTLD_TO_ISO gate"
+    }
+  ],
+  "_axis_correlations_note": "Generalized governor-2. For each declared {from,to} where BOTH axes are present, the dependent axis 'to' keeps bits*(1-lambda). lambda=1 => pick-one (to fully subsumed, bits=0). lambda=0 => independent (no-op). Single-level only: no transitive propagation (a->b and b->c does NOT cascade a->c). 'mode' optional: a named gate (e.g. ccTLD_match) that must pass for the discount to apply; absent mode => unconditional when both axes present.",
   "_birth_year_note": "S272 — coarse prior for a candidate_year extracted from a password (password_composition). default 0.013 ≈ 1/77 (uniform over ~77 active years, round-toward-common, governor 3). birth_year_prevalence can hold real per-year shares; empty = use default. A coarse year ~6.3 bits but flagged coarse so the UI never over-sells it.",
   "birth_year_default_p": 0.013,
   "birth_year_prevalence": {}

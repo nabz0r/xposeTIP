@@ -11,13 +11,16 @@ const GRID = '0.035'
 //   measured     — real prevalence from priors (country, provider) → solid blue
 //   coarse       — v0 estimate (name common/rare) → amber, hatched
 //   discounted   — governor-2 correlated, counted via another axis (bits=0) → grey
+//   residual     — governor-2 partial overlap (0<λ<1), bits reduced not zeroed → grey-blue
 const AXIS_COLORS = {
   measured: '#3388ff',
   coarse: '#ff8800',
   discounted: '#888888',
+  residual: '#5577aa',
 }
 
 function axisQuality(a) {
+  if (a?.correlation_lambda != null && a.correlation_lambda < 1 && a.correlation_lambda > 0) return 'residual'
   if (a?.correlated_with) return 'discounted'
   if (a?.coarse) return 'coarse'
   return 'measured'
@@ -131,6 +134,7 @@ export default function EntropyTab({ profile }) {
                 </div>
                 <div className="flex-1 text-[11px] text-gray-500">
                   {q === 'discounted' && <span title="Governor-2: correlated, counted once via the other axis.">counted via {a.correlated_with}</span>}
+                  {q === 'residual' && <span title="Governor-2: partial overlap — bits reduced, not zeroed.">{(a.correlation_lambda * 100).toFixed(0)}% shared with {a.correlated_with}</span>}
                   {q === 'coarse' && <span title="v0 estimate — full per-name frequency is a later refinement.">coarse estimate</span>}
                   {q === 'measured' && a.p != null && <span>prevalence {Number(a.p) < 0.001 ? Number(a.p).toExponential(1) : Number(a.p).toFixed(3)}</span>}
                 </div>
