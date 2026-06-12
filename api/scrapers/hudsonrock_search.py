@@ -142,6 +142,9 @@ def search_hudsonrock(email: str | None = None, domain: str | None = None) -> li
         "first_compromised": min(dates) if dates else None,
         "last_compromised": max(dates) if dates else None,
         "source": "hudsonrock_cavalier",
+        "scraper": "hudsonrock_search",   # S269c — store-block uses data.scraper as the
+                                          # module name; without it the finding lands as
+                                          # 'scraper_engine' (mis-attributed, breaks dedup)
         "summary": str(body.get("message") or "")[:300],
         # S270 — coarse, gated candidates from password/host-name SHAPE (never the
         # cleartext) + salted reuse-hashes for cross-account linking (never the pw).
