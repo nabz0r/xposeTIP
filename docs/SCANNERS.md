@@ -3,7 +3,7 @@
 ## Overview
 
 xposeTIP has **28 active scanner modules** across 4 layers, **176 data-driven scrapers** (155 active by default)
-across 11 categories, and **9 intelligence analyzers** that run post-scan.
+across 11 categories, and **10 intelligence analyzers** that run post-scan.
 
 ## Scanner Modules (28)
 
@@ -63,7 +63,7 @@ across 11 categories, and **9 intelligence analyzers** that run post-scan.
 > documented in their own section below — they run inside the pipeline,
 > not as registry scanners.)
 
-## Intelligence Analyzers (9)
+## Intelligence Analyzers (10)
 
 | Analyzer | File | Description |
 |----------|------|-------------|
@@ -73,6 +73,7 @@ across 11 categories, and **9 intelligence analyzers** that run post-scan.
 | Domain Analyzer | `domain_analyzer.py` | Subdomain discovery, security headers, SSL |
 | Geo Consistency | `geo_consistency.py` | 6-signal geographic consistency analysis |
 | IP Analyzer | `ip_analyzer.py` | ASN lookup, reverse DNS, geolocation cross-ref |
+| Language Analyzer | `language_analyzer.py` | Language detection from free-text finding fields (lingua, ~25 languages) |
 | Risk Assessor | `risk_assessor.py` | Overall risk level + prioritized remediation actions |
 | Timezone Analyzer | `timezone_analyzer.py` | Timezone inference from activity timestamps |
 | Username Correlator | `username_correlator.py` | Cross-platform username reuse detection |
