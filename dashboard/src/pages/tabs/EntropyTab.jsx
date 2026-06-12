@@ -142,7 +142,9 @@ export default function EntropyTab({ profile }) {
                     ? (NAME_VALUE_LABELS[a.value] || a.value)
                     : key === 'avatar_reuse'
                       ? `avatar (${(a.value || '').replace('_platforms', ' platforms')})`
-                      : a.value}
+                      : key === 'press_corroboration'
+                        ? `press (${(a.value || '').replace('_articles', ' articles')})`
+                        : a.value}
                 </div>
                 <div className="w-20 font-mono flex-shrink-0" style={{ color }}>
                   {q === 'discounted' ? <span className="line-through">{(a.bits || 0).toFixed(2)}</span> : `${Number(a.bits || 0).toFixed(2)} b`}

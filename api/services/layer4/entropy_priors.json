@@ -43,6 +43,13 @@
     "p_per_platform": 0.5,
     "max_bits": 4.0
   },
+  "press_corroboration": {
+    "_note": "S288. Named-press corroboration (article name-match >= name_match_floor). NOT article count (that's the BFP public_exposure axis) — it's nominative corroboration quality. p = p_base^min(N, saturate_at); capped at max_bits. Governed, coarse. Autonomous: the related BFP public_exposure axis is not an entropy axis, nothing to discount (cf S287). name_match_floor is the single source also read by article_context.py for strong_matches.",
+    "p_base": 0.3,
+    "saturate_at": 2,
+    "max_bits": 3.5,
+    "name_match_floor": 0.80
+  },
   "axis_correlations": [
     {
       "from": "country",

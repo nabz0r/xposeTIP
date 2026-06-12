@@ -170,6 +170,18 @@ def _extract_avatar_reuse(profile: dict) -> int:
         return 0
 
 
+def _extract_press_corroboration(profile: dict) -> int:
+    """Count of STRONG (name-match >= floor) named-press corroborations (S288).
+    Quality of nominative corroboration — NOT article count (that's BFP)."""
+    ac = profile.get("article_context") or {}
+    if not ac.get("computed"):
+        return 0
+    try:
+        return int(ac.get("strong_matches", 0) or 0)
+    except (TypeError, ValueError):
+        return 0
+
+
 def _name_first_token(profile: dict) -> str | None:
     nm = (profile.get("primary_name") or "").strip()
     if not nm:
@@ -319,6 +331,23 @@ def compute_identifying_bits(profile: dict, findings, priors: dict):
                                    "coarse": True}
     else:
         axes_unknown.append("avatar_reuse")
+
+    # --- axis: press_corroboration (S288 — named-press corroboration, governed) ---
+    # Being named in identifiable press with a strong name-match is identifying. NOT
+    # the article count (that's the BFP public_exposure axis). AUTONOMOUS like
+    # avatar_reuse (§S287): the related BFP axis is not an entropy axis → nothing to
+    # discount, no axis_correlations entry. Saturates fast (2 articles isn't 2× one).
+    n_press = _extract_press_corroboration(profile)
+    pcfg = priors.get("press_corroboration", {})
+    if n_press >= 1:
+        p_base = pcfg.get("p_base", 0.3)
+        p = p_base ** min(n_press, pcfg.get("saturate_at", 2))
+        capped = min(_bits(p), pcfg.get("max_bits", 3.5))
+        by_axis["press_corroboration"] = {"value": f"{n_press}_articles",
+                                          "p": round(p, 6), "bits": round(capped, 2),
+                                          "coarse": True}
+    else:
+        axes_unknown.append("press_corroboration")
 
     # S284b: if the name axis carries a REAL frequency, the name encodes gender →
     # name subsumes gender almost fully. Override the static λ (0.85 default) on the

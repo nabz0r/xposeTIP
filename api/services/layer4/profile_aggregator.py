@@ -2017,6 +2017,23 @@ def aggregate_profile(target_id, workspace_id, session: Session, graph_context=N
         logger.debug("avatar_reuse skipped for target %s: %s", target_id, e)
         profile["avatar_reuse"] = {"computed": False}
 
+    # S288 — named-press corroboration context. Fetches the best name-matched
+    # media_mention articles, recomputes name-match on full text, stores short
+    # snippets + context (NEVER full article, NEVER identity writes — R7 is S289).
+    # Best-effort: never crashes aggregation. No media_mention findings (e.g. the
+    # early bootstrap aggregate, pre-PASS2) → returns instantly with no network.
+    try:
+        from api.services.layer4.article_context import fetch_article_contexts
+        if any((getattr(f, "indicator_type", "") or "") == "media_mention" for f in findings):
+            profile["article_context"] = fetch_article_contexts(findings, profile.get("primary_name"))
+        else:
+            profile["article_context"] = {"computed": True, "fetched": 0,
+                                          "skipped_fetch_fail": 0, "strong_matches": 0,
+                                          "best_match_confidence": 0.0, "contexts": []}
+    except Exception as e:
+        logger.debug("article_context skipped for target %s: %s", target_id, e)
+        profile["article_context"] = {"computed": False}
+
     # Store on target
     target = session.execute(
         select(Target).where(Target.id == target_id, Target.workspace_id == workspace_id)
