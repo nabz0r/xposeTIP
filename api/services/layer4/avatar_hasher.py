@@ -28,6 +28,34 @@ MAX_AVATARS = 10                    # beyond this the reuse signal saturates
 FETCH_CONCURRENCY = 5
 FETCH_TIMEOUT = 8.0
 
+# S287b — map producer-module names to ONE canonical platform. Three gravatar
+# modules fetching the same image is NOT cross-platform reuse — the signal must
+# count distinct PLATFORMS, not distinct scraper modules (same false-positive
+# spirit as S283 free-mail GeoIP / S286 decision-0 default avatars).
+_PLATFORM_PREFIX_MAP = (
+    ("gravatar", "gravatar"),     # gravatar / gravatar_scraper / gravatar_email_lookup
+    ("github", "github"),         # github_deep / github_scraper / github_user_api / github_gists_user
+    ("twitter", "twitter"),
+    ("linkedin", "linkedin"),
+    ("instagram", "instagram"),
+    ("facebook", "facebook"),
+    ("reddit", "reddit"),
+    ("mastodon", "mastodon"),
+    ("keybase", "keybase"),
+    ("gitlab", "gitlab"),
+)
+
+
+def _canonical_platform(source: str) -> str:
+    """Collapse a producer-module name to its platform. Strict prefix-match —
+    'wayback_github' does NOT start with 'github', so it stays distinct (conservative:
+    only merge what is proven same-platform)."""
+    s = (source or "unknown").lower()
+    for prefix, platform in _PLATFORM_PREFIX_MAP:
+        if s.startswith(prefix):
+            return platform
+    return s
+
 
 async def _fetch_image_bytes(url: str, timeout: float = FETCH_TIMEOUT) -> bytes | None:
     """Download avatar bytes. Returns None on ANY failure — never raises. Caps size
@@ -137,9 +165,11 @@ async def compute_avatar_reuse(avatars: list, score_fn) -> dict:
 
     reuse = []
     for c in clusters:
-        sources = sorted({src for _, src in c})
-        if len(sources) >= 2:   # cross-platform reuse = same image, >=2 distinct sources
-            reuse.append({"phash": c[0][0], "sources": sources, "size": len(sources)})
+        raw_sources = sorted({src for _, src in c})
+        platforms = sorted({_canonical_platform(src) for _, src in c})   # S287b
+        if len(platforms) >= 2:   # cross-platform reuse = same image, >=2 distinct PLATFORMS
+            reuse.append({"phash": c[0][0], "sources": platforms,
+                          "raw_sources": raw_sources, "size": len(platforms)})
     reuse.sort(key=lambda r: -r["size"])
     report["clusters"] = reuse
     report["max_reuse"] = reuse[0]["size"] if reuse else 0
