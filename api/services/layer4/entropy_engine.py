@@ -157,6 +157,19 @@ def _extract_gender(profile: dict) -> tuple:
     return g, prob
 
 
+def _extract_avatar_reuse(profile: dict) -> int:
+    """Largest cross-platform avatar reuse cluster (S286). 0 if none / not computed.
+    A value of N means: the same real photo appears on N distinct platforms — a
+    cross-account identity-continuity signal."""
+    ar = profile.get("avatar_reuse") or {}
+    if not ar.get("computed"):
+        return 0
+    try:
+        return int(ar.get("max_reuse", 0) or 0)
+    except (TypeError, ValueError):
+        return 0
+
+
 def _name_first_token(profile: dict) -> str | None:
     nm = (profile.get("primary_name") or "").strip()
     if not nm:
@@ -288,6 +301,24 @@ def compute_identifying_bits(profile: dict, findings, priors: dict):
                              "prob": gprob}
     else:
         axes_unknown.append("gender")
+
+    # --- axis: avatar_reuse (S287 — cross-platform image continuity, governed) ---
+    # Same real photo on N distinct platforms = cross-account identity continuity.
+    # AUTONOMOUS axis: NO axis_correlations entry, NO lambda_override. The related
+    # signal (username_reuse) is a BFP/fingerprint axis, NOT an entropy axis — it is
+    # not in by_axis at all — so there is nothing to discount here (§0). Full bits;
+    # the global governor-4 cap remains the final guard.
+    n_reuse = _extract_avatar_reuse(profile)
+    acfg = priors.get("avatar_reuse", {})
+    if n_reuse >= 2:
+        p_base = acfg.get("p_per_platform", 0.5)
+        p = p_base ** (n_reuse - 1)
+        capped_bits = min(_bits(p), acfg.get("max_bits", 4.0))
+        by_axis["avatar_reuse"] = {"value": f"{n_reuse}_platforms",
+                                   "p": round(p, 6), "bits": round(capped_bits, 2),
+                                   "coarse": True}
+    else:
+        axes_unknown.append("avatar_reuse")
 
     # S284b: if the name axis carries a REAL frequency, the name encodes gender →
     # name subsumes gender almost fully. Override the static λ (0.85 default) on the

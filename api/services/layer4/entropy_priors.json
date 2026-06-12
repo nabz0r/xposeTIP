@@ -38,6 +38,11 @@
     "p_base": 0.5,
     "prob_floor": 0.70
   },
+  "avatar_reuse": {
+    "_note": "S287. Same real photo across N distinct platforms = cross-account identity continuity. p = p_per_platform^(N-1); capped at max_bits. Governed, coarse (model-based prevalence, not a measured frequency). NOT correlated in axis_correlations: username_reuse (the related signal) is a BFP axis, not an entropy axis, so there is nothing to discount here.",
+    "p_per_platform": 0.5,
+    "max_bits": 4.0
+  },
   "axis_correlations": [
     {
       "from": "country",
