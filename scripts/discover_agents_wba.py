@@ -43,12 +43,13 @@ log = logging.getLogger("agent_discovery")
 AGENT_WS_SLUG = "agent-corpus"
 AGENT_WS_NAME = "Agent Corpus"
 
-# WBA operators — led by the live Cloudflare research directory (returns real signed
-# keys). Others may 404 (the scraper handles that gracefully — no finding).
+# WBA operators — the 3 directories confirmed live (200 + signed keys) as of 2026-06.
+# The ecosystem is young; this set grows as WBA adoption does. Dead hosts removed
+# (they only created empty 0-finding targets).
 _WBA_SEED = [
-    "http-message-signatures-example.research.cloudflare.com",
-    "agent.cloudflare.com",
-    "webbotauth.cloudflareresearch.com",
+    "agent.bot.goog",                                          # Google — 4 keys
+    "http-message-signatures-example.research.cloudflare.com", # Cloudflare — purpose=rag
+    "chatgpt.com",                                             # OpenAI — purpose=ai
 ]
 # Optional live registry (best-effort merge; failure → seed stands).
 _WBA_REGISTRY_URL = (

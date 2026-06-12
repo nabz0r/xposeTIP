@@ -4015,6 +4015,8 @@ DEFAULT_SCRAPERS = [
         "method": "GET",
         "extraction_rules": [
             {"field": "keys", "type": "json_key", "pattern": "keys"},
+            {"field": "purpose", "type": "json_key", "pattern": "purpose"},
+            {"field": "signature_agent", "type": "json_key", "pattern": "signature_agent"},
         ],
         "finding_title_template": "WBA signed agent key directory",
         "finding_category": "agent_declared",
