@@ -66,6 +66,7 @@ Dashboard: graph, timeline, accounts,
 - **Dual scoring** — exposure (digital footprint size) + threat (breach severity, credential leaks) with ratio-based thresholds
 - **Persona clustering** — groups usernames by platform overlap, name similarity, and cross-verification
 - **11-axis digital fingerprint** — accounts, platforms, username_reuse, breaches, geo_spread, data_leaked, email_age, security, public_exposure, formal_records (S145), network_signature (S147)
+- **Entropy ledger (S265–S272)** — per-axis identifying-bits: -log2(p) against public priors, correlated axes discounted, hard-capped at ~20 bits (OSINT anonymity set ~1M). Includes H(cluster) — the behavioral hash bucket as a belonging term — and breach-derived composition signals (extract-and-drop, no cleartext stored)
 - **Generative pixel art** — deterministic 32x32 CryptoPunk-style avatar from graph eigenvalues (5.4B unique combinations, zero GPU)
 - **Deep Scan** — operator-triggered per-indicator scan across all matching scrapers, with cascade (discovered cross-type indicators are chain-scanned)
 - **Web Discovery (Phase C)** — fingerprint-driven Google dorking + 6 content extractors — explores the open web beyond the 176 fixed scrapers
@@ -74,7 +75,7 @@ Dashboard: graph, timeline, accounts,
 
 ### Scraper Engine
 
-176 data-driven scrapers (151 active by default, 25 disabled) — all configurable via UI (URL template, extraction rules, rate limits):
+176 data-driven scrapers (155 active by default, 21 disabled) — all configurable via UI (URL template, extraction rules, rate limits):
 
 | Category | Count | Examples |
 |----------|-------|---------|

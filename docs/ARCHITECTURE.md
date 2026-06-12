@@ -10,7 +10,7 @@ and a remediation action. No black-box scoring. No unconsented scanning.
 In 1987, demoscene coders created art with 512KB of RAM that still inspires today.
 xpose follows this philosophy: maximum intelligence with minimum resources.
 
-174 scrapers, PageRank, Markov chains, behavioral profiling, a rules engine — all on a
+176 scrapers, PageRank, Markov chains, behavioral profiling, a rules engine — all on a
 single machine. No GPU clusters. No distributed databases. No managed cloud services
 required. 5 Docker containers. ~50 watts.
 
@@ -148,6 +148,30 @@ sequenceDiagram
 12. Compute fingerprint (11-axis radar, eigenvalues, avatar_seed, timeline_events)
 13. Store life_timeline in profile_data
 
+## Entropy Layer (S265–S272)
+
+Runs post-fingerprint in the L4 pipeline. Converts findings into an
+information-theoretic ledger: identifying bits per axis, -log2(p) against
+public priors (`api/services/layer4/entropy_priors.json`).
+
+Five governors (see `api/services/layer4/entropy_engine.py` docstring for
+the full spine):
+1. bits per axis = -log2(prevalence of the observed value)
+2. distinct axes only — correlated signals are pick-one / discounted
+3. conservative priors — uncertainty rounds toward common; unknown = 0 bits
+4. hard cap — OSINT-only tops out at ~20 bits (anonymity set ~1M);
+   global uniqueness (~33 bits) is never asserted without network-layer signals
+5. descriptive — bits feed the ledger; the risk score is computed independently
+
+Inputs beyond the static axes:
+- H(cluster) (S271): the BFP behavioral hash bucket becomes a belonging
+  term — -log2(bucket_count / corpus_total), folded post-fingerprint.
+- Password composition (S270/S272): breach-derived shape candidates,
+  extract-and-drop — no cleartext is ever stored.
+
+Surfaced per-target in the Entropy tab (S267) and publicly explained on
+/architecture (EntropyLayer section) and /bfp (H(cluster) bridge).
+
 ## Code Leak Detection
 
 GitHub Code Search API (free, 5 req/min) searches ALL public repositories for email
@@ -183,7 +207,7 @@ Flow:
 ## Phase C — Web Discovery (operator-triggered)
 
 Fingerprint-driven web reconnaissance. Explores the open web for leads
-not covered by the 174 fixed scrapers.
+not covered by the 176 fixed scrapers.
 
 Flow:
 1. Operator clicks "Launch Discovery" in Discovered tab

@@ -2,7 +2,7 @@
 
 ## Overview
 
-xposeTIP has **27 active scanner modules** across 4 layers, **174 data-driven scrapers** (149 active by default)
+xposeTIP has **28 active scanner modules** across 4 layers, **176 data-driven scrapers** (155 active by default)
 across 11 categories, and **9 intelligence analyzers** that run post-scan.
 5 scanner modules are disabled placeholders (maigret, h8mail, ghunt, paste_monitor, databroker_check).
 
@@ -27,7 +27,7 @@ across 11 categories, and **9 intelligence analyzers** that run post-scan.
 | GitHub Deep | `github_deep` | Full profile, events, gists, alternate emails from commits |
 | Google Profile | `google_profile` | Gmail/Workspace detection, YouTube presence |
 | Username Hunter | `username_hunter` | Username permutations across Reddit, Steam, Keybase, GitLab |
-| Scraper Engine | `scraper_engine` | Runs all 149 active data-driven scrapers (174 defined, 25 disabled — see below) |
+| Scraper Engine | `scraper_engine` | Runs all 155 active data-driven scrapers (176 defined, 21 disabled — see below) |
 
 ### Layer 2 — Public Databases (12)
 
@@ -77,7 +77,7 @@ across 11 categories, and **9 intelligence analyzers** that run post-scan.
 | Timezone Analyzer | `timezone_analyzer.py` | Timezone inference from activity timestamps |
 | Username Correlator | `username_correlator.py` | Cross-platform username reuse detection |
 
-## Scraper Engine (174 scrapers across 11 categories)
+## Scraper Engine (176 scrapers across 11 categories)
 
 | Category | Count | Examples |
 |----------|-------|---------|
