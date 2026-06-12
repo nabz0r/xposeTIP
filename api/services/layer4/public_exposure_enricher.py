@@ -718,7 +718,15 @@ def enrich_public_exposure(target_id, session: Session, scan_id=None) -> dict:
     try:
         _pd = target.profile_data or {}
         # Prefer AR-0's resolved spaced company name; else the email domain label.
-        gleif_company = _pd.get("company") or search_context
+        # S268b — GLEIF needs a CLEAN company name. Prefer AR-0's resolved
+        # profile["company"]; else the BARE email-domain label. NOT search_context —
+        # it appends the user-location city ("maersk Frankfurt") which breaks the
+        # legalName match (surfaced by a 5-target scan: "maersk Frankfurt"→0 vs
+        # "maersk"→5). The jurisdiction guard still filters wrong-country same-names.
+        _bare_label = email_domain.split(".")[0] if (email_domain and "." in email_domain) else None
+        gleif_company = _pd.get("company") or (
+            _bare_label if (_bare_label and len(_bare_label) > 3 and _bare_label.lower() not in _FREEMAIL) else None
+        )
         if gleif_company and email_domain and "." in email_domain:
             from api.scrapers.gleif_search import search_gleif
             _tld = email_domain.rsplit(".", 1)[-1].lower()
