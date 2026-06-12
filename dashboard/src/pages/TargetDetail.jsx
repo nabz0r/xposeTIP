@@ -42,6 +42,16 @@ export default function TargetDetail() {
   const [activeTab, setActiveTab] = useState('overview')
   const [subTab, setSubTab] = useState({ findings: 'all', graph: 'graph', sources: 'sources' })
 
+  // S292 — agent targets render kind-aware: one generic Findings view (so
+  // agent_declared/agent_runtime findings are visible) + an agent-only scan picker.
+  const isAgent = target?.workspace_kind === 'agent'
+  useEffect(() => {
+    if (isAgent) { setActiveTab('findings'); setSelectedModules(['scraper_engine']) }
+  }, [isAgent])
+  // S292 — agent scan picker offers ONLY scraper_engine (the module that runs the
+  // agent scrapers), never the 26 human scanners.
+  const pickerModules = isAgent ? (modules || []).filter(m => m.id === 'scraper_engine') : modules
+
   const navigateTo = (tab, sub = null) => {
     setActiveTab(tab)
     if (sub) setSubTab(prev => ({ ...prev, [tab]: sub }))
@@ -474,14 +484,17 @@ export default function TargetDetail() {
 
       {/* Tabs (S157: 13 → 5 with sub-pill hubs) */}
       <div className="flex gap-1 border-b border-[#1e1e2e] overflow-x-auto">
-        {[
-          { key: 'overview', label: 'Overview' },
-          { key: 'findings', label: 'Findings', count: findings.length },
-          { key: 'graph',    label: 'Graph' },
-          { key: 'sources',  label: 'Sources' },
-          { key: 'entropy',  label: 'Entropy' },
-          { key: 'scans',    label: 'Scans', count: scans.length },
-        ].map(tab => (
+        {(isAgent
+          ? [{ key: 'findings', label: 'Findings', count: findings.length }]
+          : [
+              { key: 'overview', label: 'Overview' },
+              { key: 'findings', label: 'Findings', count: findings.length },
+              { key: 'graph',    label: 'Graph' },
+              { key: 'sources',  label: 'Sources' },
+              { key: 'entropy',  label: 'Entropy' },
+              { key: 'scans',    label: 'Scans', count: scans.length },
+            ]
+        ).map(tab => (
           <button key={tab.key} onClick={() => setActiveTab(tab.key)}
             className={`px-4 py-2 text-sm transition-colors whitespace-nowrap ${
               activeTab === tab.key ? 'text-[#00ff88] border-b-2 border-[#00ff88]' : 'text-gray-400 hover:text-white'
@@ -504,7 +517,39 @@ export default function TargetDetail() {
         />
       )}
 
-      {activeTab === 'findings' && (
+      {/* S292 — agent findings: raw category-agnostic list (the human FindingsHubTab
+          buckets by human category, so agent_declared/agent_runtime would be invisible). */}
+      {isAgent && activeTab === 'findings' && (
+        <div className="mt-4">
+          <div className="flex items-center justify-between mb-3">
+            <h3 className="text-sm font-mono text-gray-400">Agent findings ({findings.length})</h3>
+            <button onClick={() => setShowScanModal(true)}
+              className="px-3 py-1.5 text-xs rounded bg-[#00ff88]/10 border border-[#00ff88]/30 text-[#00ff88] hover:bg-[#00ff88]/20">
+              Rescan
+            </button>
+          </div>
+          {findings.length === 0 ? (
+            <div className="text-sm text-gray-500 py-6">No findings yet for this agent target.</div>
+          ) : (
+            <div className="space-y-2">
+              {findings.map(f => (
+                <div key={f.id} className="p-3 rounded bg-[#13131c] border border-[#1e1e2e]">
+                  <div className="flex items-center gap-2 text-sm">
+                    <span className="text-xs font-mono px-1.5 py-0.5 rounded bg-[#1e1e2e] text-[#3388ff]">{f.category || '—'}</span>
+                    <span className="text-gray-200">{f.title}</span>
+                    <span className="ml-auto text-[10px] font-mono text-gray-600">{f.module}</span>
+                  </div>
+                  {f.indicator_value && (
+                    <div className="mt-1 text-xs font-mono text-gray-500 break-all">{f.indicator_value}</div>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      {!isAgent && activeTab === 'findings' && (
         <FindingsHubTab
           activeSub={subTab.findings} setActiveSub={setSubTabFor('findings')}
           target={target} findings={findings} filteredFindings={filteredFindings}
@@ -567,7 +612,7 @@ export default function TargetDetail() {
       {/* Scan Modal (rendered by ScansTab but needs to be here for non-scans tab access) */}
       {activeTab !== 'scans' && showScanModal && (
         <ScansTab
-          scans={[]} modules={modules} load={load}
+          scans={[]} modules={pickerModules} load={load}
           showScanModal={showScanModal} setShowScanModal={setShowScanModal}
           selectedModules={selectedModules} setSelectedModules={setSelectedModules}
           scanning={scanning} handleScan={handleScan}

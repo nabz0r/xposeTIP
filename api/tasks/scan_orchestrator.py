@@ -511,319 +511,327 @@ def finalize_scan(scan_id: str):
         except Exception:
             logger.debug("Email status check failed for %s", scan.target_id)
 
-        # B1. Build identity graph (sees Pass 1 + 1.5 + 2 findings)
-        try:
-            from api.services.layer4.graph_builder import build_graph
-            build_graph(scan.target_id, scan.workspace_id, session)
-        except Exception:
-            logger.exception("Graph build failed for target %s", scan.target_id)
-        logger.info("PIPELINE[%s]: graph_builder done", scan.target_id)
+        # S292 — agent orgs skip the entire human intelligence Phase-B (graph,
+        # PageRank, score, teaser, personas, intelligence, fingerprint). Phase-A
+        # scraper findings are already persisted; the scan finalizes normally below.
+        from api.models.workspace import Workspace as _WS
+        _k = session.execute(
+            select(_WS.kind).where(_WS.id == scan.workspace_id)
+        ).scalar_one_or_none()
+        if _k != "agent":
+            # B1. Build identity graph (sees Pass 1 + 1.5 + 2 findings)
+            try:
+                from api.services.layer4.graph_builder import build_graph
+                build_graph(scan.target_id, scan.workspace_id, session)
+            except Exception:
+                logger.exception("Graph build failed for target %s", scan.target_id)
+            logger.info("PIPELINE[%s]: graph_builder done", scan.target_id)
 
-        # B2. Propagate confidence through identity graph (PageRank)
-        node_scores = None
-        try:
-            from api.services.layer4.confidence_propagator import propagate_confidence
-            node_scores = propagate_confidence(scan.target_id, scan.workspace_id, session)
-            if node_scores:
-                logger.info("Confidence propagated: %d nodes scored for target %s",
-                            len(node_scores), scan.target_id)
-        except Exception:
-            logger.exception("Confidence propagation failed for target %s", scan.target_id)
-        logger.info("PIPELINE[%s]: pagerank done — %d nodes",
-                    scan.target_id, len(node_scores) if node_scores else 0)
+            # B2. Propagate confidence through identity graph (PageRank)
+            node_scores = None
+            try:
+                from api.services.layer4.confidence_propagator import propagate_confidence
+                node_scores = propagate_confidence(scan.target_id, scan.workspace_id, session)
+                if node_scores:
+                    logger.info("Confidence propagated: %d nodes scored for target %s",
+                                len(node_scores), scan.target_id)
+            except Exception:
+                logger.exception("Confidence propagation failed for target %s", scan.target_id)
+            logger.info("PIPELINE[%s]: pagerank done — %d nodes",
+                        scan.target_id, len(node_scores) if node_scores else 0)
 
-        # B3. Build graph_context — the unified intelligence layer
-        graph_context = None
-        try:
-            graph_context = _build_graph_context(scan.target_id, scan.workspace_id, session)
-            logger.info("Graph context built: %d nodes, %d edges, %d clusters",
-                        len(graph_context.get("node_scores", {})),
-                        graph_context.get("edge_count", 0),
-                        len(graph_context.get("clusters", [])))
-        except Exception:
-            logger.exception("Graph context build failed — downstream services will use fallback")
-        if graph_context:
-            logger.info("PIPELINE[%s]: graph_context — %d nodes, %d edges, %d clusters",
-                        scan.target_id,
-                        len(graph_context.get("node_scores", {})),
-                        graph_context.get("edge_count", 0),
-                        len(graph_context.get("clusters", [])))
+            # B3. Build graph_context — the unified intelligence layer
+            graph_context = None
+            try:
+                graph_context = _build_graph_context(scan.target_id, scan.workspace_id, session)
+                logger.info("Graph context built: %d nodes, %d edges, %d clusters",
+                            len(graph_context.get("node_scores", {})),
+                            graph_context.get("edge_count", 0),
+                            len(graph_context.get("clusters", [])))
+            except Exception:
+                logger.exception("Graph context build failed — downstream services will use fallback")
+            if graph_context:
+                logger.info("PIPELINE[%s]: graph_context — %d nodes, %d edges, %d clusters",
+                            scan.target_id,
+                            len(graph_context.get("node_scores", {})),
+                            graph_context.get("edge_count", 0),
+                            len(graph_context.get("clusters", [])))
 
-        # B4. Compute exposure score (now WITH graph_context)
-        try:
-            from api.services.layer4.score_engine import compute_score
-            score, threat, breakdown = compute_score(scan.target_id, session, graph_context=graph_context)
-            logger.info("Score for target %s: exposure=%d, threat=%d", scan.target_id, score, threat)
-        except Exception:
-            logger.exception("Score computation failed for target %s", scan.target_id)
-            # Ensure score is at least 0 on failure
-            if target:
-                target.exposure_score = target.exposure_score or 0
-                target.score_breakdown = target.score_breakdown or {}
-                session.commit()
-        logger.info("PIPELINE[%s]: score — exposure=%s, threat=%s",
-                    scan.target_id,
-                    getattr(target, 'exposure_score', '?') if target else '?',
-                    getattr(target, 'threat_score', '?') if target else '?')
-
-        # B5. Aggregate profile data (FINAL — with graph_context, overwrites early profile)
-        try:
-            target = session.execute(select(Target).where(Target.id == scan.target_id)).scalar_one_or_none()
-            aggregate_profile(scan.target_id, scan.workspace_id, session, graph_context=graph_context,
-                              country_code=getattr(target, "country_code", None))
-        except Exception:
-            logger.exception("Profile aggregation failed for target %s", scan.target_id)
-        logger.info("PIPELINE[%s]: profile_aggregator done (final)", scan.target_id)
-
-        # B6. Force bio rejection for Telegram slogans and similar noise
-        try:
-            target = session.execute(select(Target).where(Target.id == scan.target_id)).scalar_one_or_none()
-            if target:
-                profile = dict(target.profile_data or {})
-                bio = profile.get("bio", "")
-                _BIO_REJECT = [
-                    "you can contact", "contact @", "right away",
-                    "fast. secure. powerful", "a new era of messaging",
-                    "telegram is a cloud", "telegram messenger",
-                    "pure instant messaging", "simple, fast, secure",
-                ]
-                if bio and any(p in bio.lower() for p in _BIO_REJECT):
-                    profile["bio"] = None
-                    target.profile_data = profile
+            # B4. Compute exposure score (now WITH graph_context)
+            try:
+                from api.services.layer4.score_engine import compute_score
+                score, threat, breakdown = compute_score(scan.target_id, session, graph_context=graph_context)
+                logger.info("Score for target %s: exposure=%d, threat=%d", scan.target_id, score, threat)
+            except Exception:
+                logger.exception("Score computation failed for target %s", scan.target_id)
+                # Ensure score is at least 0 on failure
+                if target:
+                    target.exposure_score = target.exposure_score or 0
+                    target.score_breakdown = target.score_breakdown or {}
                     session.commit()
-        except Exception:
-            logger.exception("Bio cleanup failed for target %s", scan.target_id)
+            logger.info("PIPELINE[%s]: score — exposure=%s, threat=%s",
+                        scan.target_id,
+                        getattr(target, 'exposure_score', '?') if target else '?',
+                        getattr(target, 'threat_score', '?') if target else '?')
 
-        # B7. Force blacklist check on target.display_name
-        try:
-            from api.services.layer4.profile_aggregator import _load_blacklist, _is_valid_name_db
-            target = session.execute(select(Target).where(Target.id == scan.target_id)).scalar_one_or_none()
-            if target:
-                blacklist = _load_blacklist(session)
-                profile = dict(target.profile_data or {})
-                primary = profile.get("primary_name", "")
+            # B5. Aggregate profile data (FINAL — with graph_context, overwrites early profile)
+            try:
+                target = session.execute(select(Target).where(Target.id == scan.target_id)).scalar_one_or_none()
+                aggregate_profile(scan.target_id, scan.workspace_id, session, graph_context=graph_context,
+                                  country_code=getattr(target, "country_code", None))
+            except Exception:
+                logger.exception("Profile aggregation failed for target %s", scan.target_id)
+            logger.info("PIPELINE[%s]: profile_aggregator done (final)", scan.target_id)
 
-                if primary and _is_valid_name_db(primary, blacklist):
-                    target.display_name = primary
-                elif target.display_name and not _is_valid_name_db(target.display_name, blacklist):
-                    target.display_name = None
-
-                session.commit()
-        except Exception:
-            logger.exception("Display name validation failed for %s", scan.target_id)
-
-        # B8. Store quick_teaser in profile_data (for landing page freemium flow)
-        try:
-            target = session.execute(select(Target).where(Target.id == scan.target_id)).scalar_one_or_none()
-            if target:
-                all_scan_findings = session.execute(
-                    select(Finding).where(Finding.scan_id == scan.id)
-                    .order_by(Finding.severity)
-                ).scalars().all()
-                sev_order = {"critical": 0, "high": 1, "medium": 2, "low": 3, "info": 4}
-                sorted_findings = sorted(all_scan_findings, key=lambda f: sev_order.get(f.severity, 5))
-                profile = dict(target.profile_data or {})
-                profile["quick_teaser"] = {
-                    "top_findings": [
-                        {"title": f.title, "severity": f.severity, "category": f.category}
-                        for f in sorted_findings[:3]
-                    ],
-                    "total_findings": len(all_scan_findings),
-                }
-                target.profile_data = profile
-                session.commit()
-        except Exception:
-            logger.exception("Quick teaser generation failed for target %s", scan.target_id)
-
-        # B9. Identity enrichment — re-query with discovered name
-        try:
-            from api.services.layer4.identity_enricher import enrich_identity
-            target = session.execute(select(Target).where(Target.id == scan.target_id)).scalar_one_or_none()
-            if target:
-                profile = dict(target.profile_data or {})
-                est = profile.get("identity_estimation", {})
-                # Re-query if gender/age missing OR nationalities are low-confidence garbage
-                max_nat_prob = max(
-                    (n.get("probability", 0) for n in est.get("nationalities", [{}]) if isinstance(n, dict)),
-                    default=0,
-                )
-                should_enrich = (
-                    not est.get("gender")
-                    or not est.get("age")
-                    or max_nat_prob < 0.15
-                )
-                if should_enrich:
-                    updated_est = enrich_identity(profile, target.email)
-                    if updated_est and (updated_est.get("gender") or updated_est.get("age") or updated_est.get("nationalities")):
-                        profile["identity_estimation"] = updated_est
+            # B6. Force bio rejection for Telegram slogans and similar noise
+            try:
+                target = session.execute(select(Target).where(Target.id == scan.target_id)).scalar_one_or_none()
+                if target:
+                    profile = dict(target.profile_data or {})
+                    bio = profile.get("bio", "")
+                    _BIO_REJECT = [
+                        "you can contact", "contact @", "right away",
+                        "fast. secure. powerful", "a new era of messaging",
+                        "telegram is a cloud", "telegram messenger",
+                        "pure instant messaging", "simple, fast, secure",
+                    ]
+                    if bio and any(p in bio.lower() for p in _BIO_REJECT):
+                        profile["bio"] = None
                         target.profile_data = profile
                         session.commit()
-                        logger.info("Identity enriched for %s with discovered name", target.email)
+            except Exception:
+                logger.exception("Bio cleanup failed for target %s", scan.target_id)
 
-                # Ground truth: operator-set country overrides nationality estimation
-                if target and target.country_code:
+            # B7. Force blacklist check on target.display_name
+            try:
+                from api.services.layer4.profile_aggregator import _load_blacklist, _is_valid_name_db
+                target = session.execute(select(Target).where(Target.id == scan.target_id)).scalar_one_or_none()
+                if target:
+                    blacklist = _load_blacklist(session)
+                    profile = dict(target.profile_data or {})
+                    primary = profile.get("primary_name", "")
+
+                    if primary and _is_valid_name_db(primary, blacklist):
+                        target.display_name = primary
+                    elif target.display_name and not _is_valid_name_db(target.display_name, blacklist):
+                        target.display_name = None
+
+                    session.commit()
+            except Exception:
+                logger.exception("Display name validation failed for %s", scan.target_id)
+
+            # B8. Store quick_teaser in profile_data (for landing page freemium flow)
+            try:
+                target = session.execute(select(Target).where(Target.id == scan.target_id)).scalar_one_or_none()
+                if target:
+                    all_scan_findings = session.execute(
+                        select(Finding).where(Finding.scan_id == scan.id)
+                        .order_by(Finding.severity)
+                    ).scalars().all()
+                    sev_order = {"critical": 0, "high": 1, "medium": 2, "low": 3, "info": 4}
+                    sorted_findings = sorted(all_scan_findings, key=lambda f: sev_order.get(f.severity, 5))
+                    profile = dict(target.profile_data or {})
+                    profile["quick_teaser"] = {
+                        "top_findings": [
+                            {"title": f.title, "severity": f.severity, "category": f.category}
+                            for f in sorted_findings[:3]
+                        ],
+                        "total_findings": len(all_scan_findings),
+                    }
+                    target.profile_data = profile
+                    session.commit()
+            except Exception:
+                logger.exception("Quick teaser generation failed for target %s", scan.target_id)
+
+            # B9. Identity enrichment — re-query with discovered name
+            try:
+                from api.services.layer4.identity_enricher import enrich_identity
+                target = session.execute(select(Target).where(Target.id == scan.target_id)).scalar_one_or_none()
+                if target:
                     profile = dict(target.profile_data or {})
                     est = profile.get("identity_estimation", {})
-                    if est and not est.get("nationality_override"):
-                        est["nationality_override"] = target.country_code
-                        profile["identity_estimation"] = est
+                    # Re-query if gender/age missing OR nationalities are low-confidence garbage
+                    max_nat_prob = max(
+                        (n.get("probability", 0) for n in est.get("nationalities", [{}]) if isinstance(n, dict)),
+                        default=0,
+                    )
+                    should_enrich = (
+                        not est.get("gender")
+                        or not est.get("age")
+                        or max_nat_prob < 0.15
+                    )
+                    if should_enrich:
+                        updated_est = enrich_identity(profile, target.email)
+                        if updated_est and (updated_est.get("gender") or updated_est.get("age") or updated_est.get("nationalities")):
+                            profile["identity_estimation"] = updated_est
+                            target.profile_data = profile
+                            session.commit()
+                            logger.info("Identity enriched for %s with discovered name", target.email)
+
+                    # Ground truth: operator-set country overrides nationality estimation
+                    if target and target.country_code:
+                        profile = dict(target.profile_data or {})
+                        est = profile.get("identity_estimation", {})
+                        if est and not est.get("nationality_override"):
+                            est["nationality_override"] = target.country_code
+                            profile["identity_estimation"] = est
+                            target.profile_data = profile
+                            session.commit()
+                            logger.info("Nationality override set to %s for %s", target.country_code, target.email)
+            except Exception:
+                logger.exception("Identity enrichment failed for target %s", scan.target_id)
+
+            # Load workspace plan + user role for feature gating
+            try:
+                from api.models.workspace import Workspace
+                from api.models.user import UserWorkspace
+                from api.services.plan_config import check_feature
+                ws = session.execute(select(Workspace).where(Workspace.id == scan.workspace_id)).scalar_one_or_none()
+                plan_name = ws.plan if ws else "free"
+                # Get the role of the workspace owner (or first member) for bypass check
+                uw = session.execute(
+                    select(UserWorkspace).where(UserWorkspace.workspace_id == scan.workspace_id).limit(1)
+                ).scalar_one_or_none()
+                ws_role = uw.role if uw else "user"
+            except Exception:
+                logger.exception("Failed to load workspace plan for target %s", scan.target_id)
+                plan_name = "free"
+                ws_role = "user"
+                from api.services.plan_config import check_feature
+
+            # Cluster personas (plan-gated)
+            personas = []
+            if check_feature(plan_name, "persona_clustering", ws_role):
+                try:
+                    from api.services.layer4.persona_engine import cluster_personas
+                    personas = cluster_personas(scan.target_id, scan.workspace_id, session, graph_context=graph_context, profile_data=dict(target.profile_data or {}))
+                    if personas:
+                        profile = dict(target.profile_data or {})
+                        profile["personas"] = personas
                         target.profile_data = profile
                         session.commit()
-                        logger.info("Nationality override set to %s for %s", target.country_code, target.email)
-        except Exception:
-            logger.exception("Identity enrichment failed for target %s", scan.target_id)
+                        logger.info("Personas clustered for target %s: %d personas", scan.target_id, len(personas))
+                except Exception:
+                    logger.exception("Persona clustering failed for target %s", scan.target_id)
+                logger.info("PIPELINE[%s]: personas — %d",
+                            scan.target_id, len(personas) if personas else 0)
 
-        # Load workspace plan + user role for feature gating
-        try:
-            from api.models.workspace import Workspace
-            from api.models.user import UserWorkspace
-            from api.services.plan_config import check_feature
-            ws = session.execute(select(Workspace).where(Workspace.id == scan.workspace_id)).scalar_one_or_none()
-            plan_name = ws.plan if ws else "free"
-            # Get the role of the workspace owner (or first member) for bypass check
-            uw = session.execute(
-                select(UserWorkspace).where(UserWorkspace.workspace_id == scan.workspace_id).limit(1)
-            ).scalar_one_or_none()
-            ws_role = uw.role if uw else "user"
-        except Exception:
-            logger.exception("Failed to load workspace plan for target %s", scan.target_id)
-            plan_name = "free"
-            ws_role = "user"
-            from api.services.plan_config import check_feature
+            # Run intelligence analysis pipeline (plan-gated)
+            if check_feature(plan_name, "intelligence_pipeline", ws_role):
+                try:
+                    from api.services.layer4.analysis_pipeline import AnalysisPipeline
+                    pipeline = AnalysisPipeline()
+                    intel_count = pipeline.run(scan.target_id, scan.workspace_id, scan_id, session)
+                    if intel_count:
+                        logger.info("Intelligence pipeline created %d findings for target %s", intel_count, scan.target_id)
+                        # Update scan findings count with intelligence findings
+                        scan.findings_count = (scan.findings_count or 0) + intel_count
+                        session.commit()
+                except Exception:
+                    logger.exception("Intelligence pipeline failed for target %s", scan.target_id)
 
-        # Cluster personas (plan-gated)
-        personas = []
-        if check_feature(plan_name, "persona_clustering", ws_role):
+            # Compute digital fingerprint
             try:
-                from api.services.layer4.persona_engine import cluster_personas
-                personas = cluster_personas(scan.target_id, scan.workspace_id, session, graph_context=graph_context, profile_data=dict(target.profile_data or {}))
-                if personas:
-                    profile = dict(target.profile_data or {})
-                    profile["personas"] = personas
-                    target.profile_data = profile
-                    session.commit()
-                    logger.info("Personas clustered for target %s: %d personas", scan.target_id, len(personas))
-            except Exception:
-                logger.exception("Persona clustering failed for target %s", scan.target_id)
-            logger.info("PIPELINE[%s]: personas — %d",
-                        scan.target_id, len(personas) if personas else 0)
+                from api.services.layer4.fingerprint_engine import FingerprintEngine
+                from api.models.identity import Identity, IdentityLink
 
-        # Run intelligence analysis pipeline (plan-gated)
-        if check_feature(plan_name, "intelligence_pipeline", ws_role):
-            try:
-                from api.services.layer4.analysis_pipeline import AnalysisPipeline
-                pipeline = AnalysisPipeline()
-                intel_count = pipeline.run(scan.target_id, scan.workspace_id, scan_id, session)
-                if intel_count:
-                    logger.info("Intelligence pipeline created %d findings for target %s", intel_count, scan.target_id)
-                    # Update scan findings count with intelligence findings
-                    scan.findings_count = (scan.findings_count or 0) + intel_count
-                    session.commit()
-            except Exception:
-                logger.exception("Intelligence pipeline failed for target %s", scan.target_id)
-
-        # Compute digital fingerprint
-        try:
-            from api.services.layer4.fingerprint_engine import FingerprintEngine
-            from api.models.identity import Identity, IdentityLink
-
-            # Deduplicate findings: latest per (module, title) — Python-side
-            raw_findings = session.execute(
-                select(Finding).where(Finding.target_id == scan.target_id)
-            ).scalars().all()
-            seen_fp = {}
-            for f in raw_findings:
-                key = (f.module, f.title)
-                existing = seen_fp.get(key)
-                if existing is None or (f.created_at and (not existing.created_at or f.created_at > existing.created_at)):
-                    seen_fp[key] = f
-            all_findings = list(seen_fp.values())
-            all_identities = session.execute(
-                select(Identity).where(Identity.target_id == scan.target_id)
-            ).scalars().all()
-
-            # Load identity links for eigenvalue computation
-            identity_ids = [i.id for i in all_identities]
-            all_links = []
-            if identity_ids:
-                all_links = session.execute(
-                    select(IdentityLink).where(
-                        IdentityLink.workspace_id == scan.workspace_id,
-                    )
+                # Deduplicate findings: latest per (module, title) — Python-side
+                raw_findings = session.execute(
+                    select(Finding).where(Finding.target_id == scan.target_id)
                 ).scalars().all()
-                id_set = set(identity_ids)
-                all_links = [l for l in all_links if l.source_id in id_set or l.dest_id in id_set]
+                seen_fp = {}
+                for f in raw_findings:
+                    key = (f.module, f.title)
+                    existing = seen_fp.get(key)
+                    if existing is None or (f.created_at and (not existing.created_at or f.created_at > existing.created_at)):
+                        seen_fp[key] = f
+                all_findings = list(seen_fp.values())
+                all_identities = session.execute(
+                    select(Identity).where(Identity.target_id == scan.target_id)
+                ).scalars().all()
 
-            fp_engine = FingerprintEngine()
-            fingerprint = fp_engine.compute(
-                all_findings, all_identities, target.profile_data, target.email,
-                links=all_links, graph_context=graph_context,
-                country_code=target.country_code,
-            )
+                # Load identity links for eigenvalue computation
+                identity_ids = [i.id for i in all_identities]
+                all_links = []
+                if identity_ids:
+                    all_links = session.execute(
+                        select(IdentityLink).where(
+                            IdentityLink.workspace_id == scan.workspace_id,
+                        )
+                    ).scalars().all()
+                    id_set = set(identity_ids)
+                    all_links = [l for l in all_links if l.source_id in id_set or l.dest_id in id_set]
 
-            # Save snapshot to history
-            snapshot = {
-                "hash": fingerprint["hash"],
-                "score": fingerprint["score"],
-                "risk_level": fingerprint["risk_level"],
-                "axes": fingerprint["axes"],
-                "raw_values": fingerprint["raw_values"],
-                "label": fingerprint.get("label", ""),
-                "scan_id": str(scan_id),
-                "computed_at": fingerprint["computed_at"],
-                "findings_count": len(all_findings),
-            }
-            history = list(target.fingerprint_history or [])
-            history.append(snapshot)
-            target.fingerprint_history = history[-50:]
-            # S166 — persist BFP behavioral hash v1 to dedicated indexed column for fast lookup
-            target.bfp_behavioral_hash_v1 = fingerprint.get("bfp_behavioral_hash_v1") or None
+                fp_engine = FingerprintEngine()
+                fingerprint = fp_engine.compute(
+                    all_findings, all_identities, target.profile_data, target.email,
+                    links=all_links, graph_context=graph_context,
+                    country_code=target.country_code,
+                )
 
-            # Save current fingerprint in profile_data
-            profile = dict(target.profile_data or {})
-            profile["fingerprint"] = fingerprint
-
-            # Store life timeline from fingerprint timestamp harvesting
-            timeline = fingerprint.get("timeline_events", [])
-            if timeline:
-                profile["life_timeline"] = timeline
-
-            # Store graph_context summary for frontend
-            if graph_context:
-                ns = graph_context.get("node_scores", {})
-                gc = graph_context.get("clusters", [])
-                profile["graph_context_summary"] = {
-                    "cluster_count": len(gc),
-                    "total_nodes": len(ns),
-                    "total_edges": graph_context.get("edge_count", 0),
-                    "top_cluster_confidence": gc[0]["confidence"] if gc else 0,
-                    "avg_node_confidence": round(sum(ns.values()) / len(ns), 4) if ns else 0,
+                # Save snapshot to history
+                snapshot = {
+                    "hash": fingerprint["hash"],
+                    "score": fingerprint["score"],
+                    "risk_level": fingerprint["risk_level"],
+                    "axes": fingerprint["axes"],
+                    "raw_values": fingerprint["raw_values"],
+                    "label": fingerprint.get("label", ""),
+                    "scan_id": str(scan_id),
+                    "computed_at": fingerprint["computed_at"],
+                    "findings_count": len(all_findings),
                 }
+                history = list(target.fingerprint_history or [])
+                history.append(snapshot)
+                target.fingerprint_history = history[-50:]
+                # S166 — persist BFP behavioral hash v1 to dedicated indexed column for fast lookup
+                target.bfp_behavioral_hash_v1 = fingerprint.get("bfp_behavioral_hash_v1") or None
 
-            target.profile_data = profile
+                # Save current fingerprint in profile_data
+                profile = dict(target.profile_data or {})
+                profile["fingerprint"] = fingerprint
 
-            session.commit()
-            logger.info(
-                "Fingerprint %s (score=%d, %s) for target %s",
-                fingerprint["hash"], fingerprint["score"],
-                fingerprint["risk_level"], scan.target_id,
-            )
-        except Exception:
-            logger.exception("Fingerprint computation failed for target %s", scan.target_id)
-        logger.info("PIPELINE[%s]: fingerprint done", scan.target_id)
+                # Store life timeline from fingerprint timestamp harvesting
+                timeline = fingerprint.get("timeline_events", [])
+                if timeline:
+                    profile["life_timeline"] = timeline
 
-        # Cluster-ordering fix — the in-scan aggregate_profile (Phase B, above) ran
-        # BEFORE the fingerprint set bfp_behavioral_hash_v1, so its entropy shadow has
-        # no H(cluster) belonging term yet. Now that the hash is committed, fold the
-        # cluster decomposition into the persisted entropy_breakdown. SHADOW only.
-        try:
-            from api.services.layer4.profile_aggregator import patch_cluster_entropy
-            if patch_cluster_entropy(scan.target_id, scan.workspace_id, session):
+                # Store graph_context summary for frontend
+                if graph_context:
+                    ns = graph_context.get("node_scores", {})
+                    gc = graph_context.get("clusters", [])
+                    profile["graph_context_summary"] = {
+                        "cluster_count": len(gc),
+                        "total_nodes": len(ns),
+                        "total_edges": graph_context.get("edge_count", 0),
+                        "top_cluster_confidence": gc[0]["confidence"] if gc else 0,
+                        "avg_node_confidence": round(sum(ns.values()) / len(ns), 4) if ns else 0,
+                    }
+
+                target.profile_data = profile
+
                 session.commit()
-                logger.info("PIPELINE[%s]: cluster_entropy patched (post-fingerprint)", scan.target_id)
-        except Exception:
-            session.rollback()
-            logger.exception("PIPELINE[%s]: cluster_entropy patch failed", scan.target_id)
+                logger.info(
+                    "Fingerprint %s (score=%d, %s) for target %s",
+                    fingerprint["hash"], fingerprint["score"],
+                    fingerprint["risk_level"], scan.target_id,
+                )
+            except Exception:
+                logger.exception("Fingerprint computation failed for target %s", scan.target_id)
+            logger.info("PIPELINE[%s]: fingerprint done", scan.target_id)
+
+            # Cluster-ordering fix — the in-scan aggregate_profile (Phase B, above) ran
+            # BEFORE the fingerprint set bfp_behavioral_hash_v1, so its entropy shadow has
+            # no H(cluster) belonging term yet. Now that the hash is committed, fold the
+            # cluster decomposition into the persisted entropy_breakdown. SHADOW only.
+            try:
+                from api.services.layer4.profile_aggregator import patch_cluster_entropy
+                if patch_cluster_entropy(scan.target_id, scan.workspace_id, session):
+                    session.commit()
+                    logger.info("PIPELINE[%s]: cluster_entropy patched (post-fingerprint)", scan.target_id)
+            except Exception:
+                session.rollback()
+                logger.exception("PIPELINE[%s]: cluster_entropy patch failed", scan.target_id)
 
         # Update target.updated_at for UI refresh detection
         try:

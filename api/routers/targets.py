@@ -272,6 +272,11 @@ async def get_target(
 
     data = _target_dict(target)
     data["findings_by_severity"] = severity_counts
+    # S292 — expose the workspace kind so the frontend can render agent targets
+    # kind-aware (generic Findings view + agent-only scan picker).
+    data["workspace_kind"] = (
+        await db.scalar(select(Workspace.kind).where(Workspace.id == workspace_id))
+    ) or "human"
     return data
 
 
