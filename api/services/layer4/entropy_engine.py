@@ -110,6 +110,21 @@ def _extract_email_domain(profile: dict, findings) -> str | None:
     return None
 
 
+def _extract_gender(profile: dict) -> tuple:
+    """(label, probability) or (None, None). Reads the already-computed
+    genderize result — no new scraper. probability gates the bits."""
+    g = (profile.get("gender") or "").strip().lower()
+    if g not in ("male", "female"):
+        return None, None
+    est = profile.get("identity_estimation") or {}
+    prob = est.get("gender_probability")
+    try:
+        prob = float(prob) if prob is not None else None
+    except (TypeError, ValueError):
+        prob = None
+    return g, prob
+
+
 def _name_first_token(profile: dict) -> str | None:
     nm = (profile.get("primary_name") or "").strip()
     if not nm:
@@ -221,7 +236,20 @@ def compute_identifying_bits(profile: dict, findings, priors: dict):
     else:
         axes_unknown.append("name")
 
+    # --- axis: gender (S282 — reads pre-computed genderize, ~1 bit, gated) ---
+    gval, gprob = _extract_gender(profile)
+    gcfg = priors.get("gender", {})
+    floor = gcfg.get("prob_floor", 0.70)
+    if gval and (gprob is None or gprob >= floor):
+        p = gcfg.get("p_base", 0.5)
+        by_axis["gender"] = {"value": gval, "p": round(p, 6),
+                             "bits": round(_bits(p), 2), "coarse": True,
+                             "prob": gprob}
+    else:
+        axes_unknown.append("gender")
+
     # --- governor 2 (generalized, S281): data-driven correlation discount ---
+    # gender is set above so the name→gender correlation (S282) applies here.
     _apply_correlations(by_axis, dom, priors)
 
     # --- L1: breach-derived composition candidates (S272), COARSE, GOVERNED ---

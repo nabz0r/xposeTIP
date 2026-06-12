@@ -31,6 +31,11 @@
     "common_p": 0.10,
     "rare_p_floor": 0.04
   },
+  "gender": {
+    "_note": "Binary axis from pre-computed genderize. p_base ~0.5 => ~1 bit. prob_floor gates: below it, genderize is too uncertain (coin-flip) => unknown, 0 bits (governor 3).",
+    "p_base": 0.5,
+    "prob_floor": 0.70
+  },
   "axis_correlations": [
     {
       "from": "country",
@@ -38,6 +43,12 @@
       "lambda": 1.0,
       "mode": "ccTLD_match",
       "note": "ccTLD domain IS the country signal — see _CCTLD_TO_ISO gate"
+    },
+    {
+      "from": "name",
+      "to": "gender",
+      "lambda": 0.85,
+      "note": "A resolved first name carries most of the gender signal. lambda=0.85 (not 0.97) because the v0 name axis is coarse common/rare and does NOT itself encode which name — it cannot fully determine gender yet. Re-tune toward 0.97 when S283 makes name frequency-based (frequency encodes gender)."
     }
   ],
   "_axis_correlations_note": "Generalized governor-2. For each declared {from,to} where BOTH axes are present, the dependent axis 'to' keeps bits*(1-lambda). lambda=1 => pick-one (to fully subsumed, bits=0). lambda=0 => independent (no-op). Single-level only: no transitive propagation (a->b and b->c does NOT cascade a->c). 'mode' optional: a named gate (e.g. ccTLD_match) that must pass for the discount to apply; absent mode => unconditional when both axes present.",
