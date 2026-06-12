@@ -12,8 +12,8 @@
 [![Docker](https://img.shields.io/badge/Docker-Compose-2496ED?logo=docker)](https://docker.com)
 [![License: AGPL v3](https://img.shields.io/badge/License-AGPL_v3-blue.svg)](LICENSE)
 [![Scrapers](https://img.shields.io/badge/scrapers-176-3388ff)](#scraper-engine)
-[![Sprints](https://img.shields.io/badge/sprints-246+-00ff88)](#changelog)
-[![Version](https://img.shields.io/badge/version-1.6.44-green)](#changelog)
+[![Sprints](https://img.shields.io/badge/sprints-273+-00ff88)](#changelog)
+[![Version](https://img.shields.io/badge/version-1.6.45-green)](#changelog)
 
 **Enter an email. See what the internet knows. Fix it.**
 

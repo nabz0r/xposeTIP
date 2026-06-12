@@ -44,7 +44,7 @@ _PLATFORM_INVENTORY = {
     "scanners_count": 28,
     "analyzers_count": 9,
     "axes_count": 11,
-    "version": "v1.6.44",
+    "version": "v1.6.45",
 }
 
 # /recent_anchors cache (S173) — single cache slot always holding the top 100,
