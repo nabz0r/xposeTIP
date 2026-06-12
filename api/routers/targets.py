@@ -187,7 +187,9 @@ async def list_all_targets(
     workspace_id and workspace_name. Used by the admin "All workspaces"
     selector option.
     """
-    q = select(Target, Workspace.name.label("workspace_name")).join(
+    q = select(
+        Target, Workspace.name.label("workspace_name"), Workspace.kind.label("workspace_kind")
+    ).join(
         Workspace, Target.workspace_id == Workspace.id
     )
     if search:
@@ -206,10 +208,11 @@ async def list_all_targets(
     rows = result.all()
 
     items = []
-    for target, ws_name in rows:
+    for target, ws_name, ws_kind in rows:
         d = _target_dict(target)
         d["workspace_id"] = str(target.workspace_id)
         d["workspace_name"] = ws_name
+        d["workspace_kind"] = ws_kind or "human"   # S293b
         items.append(d)
 
     return {"items": items, "total": total, "page": page, "per_page": per_page}
@@ -242,7 +245,11 @@ async def list_targets(
     result = await db.execute(q)
     targets = result.scalars().all()
 
-    return {"items": [_target_dict(t) for t in targets], "total": total, "page": page, "per_page": per_page}
+    # S293b — single workspace: resolve kind ONCE, stamp every item (the frontend
+    # renders a cheap static glyph for agent rows instead of a per-row GenerativeAvatar).
+    ws_kind = (await db.scalar(select(Workspace.kind).where(Workspace.id == workspace_id))) or "human"
+    items = [{**_target_dict(t), "workspace_kind": ws_kind} for t in targets]
+    return {"items": items, "total": total, "page": page, "per_page": per_page}
 
 
 @router.get("/{target_id}")

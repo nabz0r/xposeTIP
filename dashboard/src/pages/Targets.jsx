@@ -6,6 +6,19 @@ import { fallbackSeed } from '../lib/avatar'
 import TargetQuickView from '../components/TargetQuickView'
 import GenerativeAvatar from '../components/GenerativeAvatar'
 
+// S293b — agent rows get a cheap static bot glyph (NO per-pixel GenerativeAvatar).
+// An agent has no human face anyway; this kills the ~500-avatars-per-render jank on
+// the agent corpus list (1501 targets, polled every 30s).
+function AgentGlyph() {
+  return (
+    <div className="w-9 h-9 rounded-full bg-[#0f1420] border border-[#1e2a3a] flex items-center justify-center shrink-0">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#00ff88" strokeWidth="1.5">
+        <rect x="4" y="8" width="16" height="11" rx="2" /><path d="M12 8V4M9 13h.01M15 13h.01" />
+      </svg>
+    </div>
+  )
+}
+
 const FLAG = (code) => {
   // S259 — length guard matches ProfileHeader's flagEmoji (S233);
   // protects against malformed `country_code` rendering garbage glyphs.
@@ -270,7 +283,9 @@ export default function Targets() {
                 >
                   <td className="px-5 py-3">
                     <div className="flex items-center gap-3">
-                      {t.avatar_url ? (
+                      {t.workspace_kind === 'agent' ? (
+                        <AgentGlyph />
+                      ) : t.avatar_url ? (
                         <img src={t.avatar_url} alt="" className="w-8 h-8 rounded-full border border-[#1e1e2e] shrink-0" />
                       ) : (
                         <GenerativeAvatar seed={t.fingerprint_avatar_seed || fallbackSeed(t.email)} size={36} score={t.exposure_score || 0} className="shrink-0" />
