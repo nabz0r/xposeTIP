@@ -10,6 +10,8 @@ const BUCKETS = [
       { id: 'S170', title: 'BFP_SPEC v0.2.0 committed', date: 'May 2026' },
       { id: 'S177', title: 'Spec Session 2 complete — trust layer + axis flags + §13 PQC stack', date: 'May 2026' },
       { id: 'S232', title: 'Subject attestation — consent-verified SSO', date: 'Jun 2026' },
+      { id: 'S265–S267', title: 'Entropy engine — per-axis identifying-bits ledger + Entropy tab', date: 'Jun 2026' },
+      { id: 'S271–S272', title: 'H(cluster) belonging term + breach-composition signal (extract-and-drop)', date: 'Jun 2026' },
     ],
   },
   {

@@ -2,6 +2,7 @@ import Section from '../components/shared/Section'
 import BFPHero from '../components/bfp/BFPHero'
 import BFPFoundation from '../components/bfp/BFPFoundation'
 import BFPArchitecture from '../components/bfp/BFPArchitecture'
+import BFPEntropyBridge from '../components/bfp/BFPEntropyBridge'
 import BFPCryptography from '../components/bfp/BFPCryptography'
 import BFPSubjectLayer from '../components/bfp/BFPSubjectLayer'
 import BFPEthics from '../components/bfp/BFPEthics'
@@ -22,6 +23,9 @@ export default function BFP() {
         </Section>
         <Section className="py-20 bg-[#0d0d14]">
           <BFPArchitecture />
+        </Section>
+        <Section className="py-20 bg-[#0d0d14]">
+          <BFPEntropyBridge />
         </Section>
         <Section className="py-20">
           <BFPCryptography />
