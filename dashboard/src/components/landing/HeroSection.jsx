@@ -1,7 +1,7 @@
 import { Radar } from 'lucide-react'
 import GenerativeAvatar from '../GenerativeAvatar'
 import ScanForm from './ScanForm'
-import { scoreColor, sevColor, hashEmail } from './constants'
+import { scoreColor, sevColor, hashEmail, SOURCE_COUNT } from './constants'
 
 export default function HeroSection({ email, setEmail, loading, error, onSubmit, quickResult, pollCount, phaseMsg }) {
   return (
@@ -35,7 +35,7 @@ export default function HeroSection({ email, setEmail, loading, error, onSubmit,
             </p>
 
             <div className="flex flex-wrap gap-3 text-[11px] font-mono text-gray-500 mb-8">
-              <span className="bg-[#1e1e2e] px-2.5 py-1 rounded-full">174 OSINT sources</span>
+              <span className="bg-[#1e1e2e] px-2.5 py-1 rounded-full">{SOURCE_COUNT} OSINT sources</span>
               <span className="bg-[#1e1e2e] px-2.5 py-1 rounded-full">11-axis behavioral fingerprint</span>
               <span className="bg-[#1e1e2e] px-2.5 py-1 rounded-full">🇱🇺 Made in Luxembourg</span>
             </div>

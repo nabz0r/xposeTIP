@@ -1,5 +1,6 @@
 import Section from '../shared/Section'
 import { Briefcase, Layers } from 'lucide-react'
+import { SOURCE_COUNT } from './constants'
 
 export default function TwoWaysSection() {
   return (
@@ -73,7 +74,7 @@ export default function TwoWaysSection() {
             <div className="space-y-2.5 mb-4 text-sm">
               {[
                 ['Free', '25 scans / month'],
-                ['Starter', '250 full scans · 174 sources'],
+                ['Starter', `250 full scans · ${SOURCE_COUNT} sources`],
                 ['Team', '2 000 scans · 5 seats · API'],
                 ['Enterprise', 'Multi-tenant · SSO · SLA'],
               ].map(([tier, scope]) => (

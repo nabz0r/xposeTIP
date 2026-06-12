@@ -56,3 +56,7 @@ export function hashEmail(email) {
   }
   return Math.abs(hash)
 }
+
+// Canonical source count — measured from scripts/seed_scrapers.py at S274.
+// Update HERE only; all landing/public sections import this.
+export const SOURCE_COUNT = 176
