@@ -42,15 +42,18 @@ def _name_match_floor() -> float:
 
 def _domain(url: str) -> str:
     try:
-        return urlparse(url).netloc.lower().lstrip("www.")
+        # remove the "www." PREFIX only (lstrip strips a char-set: 'wired'→'ired')
+        d = urlparse(url).netloc.lower()
+        return d[4:] if d.startswith("www.") else d
     except Exception:
         return ""
 
 
 def _select_articles(findings, primary_name, max_n: int = MAX_ARTICLES) -> list:
-    """Pick up to N best name-matched media_mention article URLs, pre-ranked on the
-    title+snippet we ALREADY have (no fetch yet) so network is spent on the most
-    promising. Hard cap = max_n."""
+    """Pick up to N best name-matched media_mention articles, pre-ranked on the
+    title+description RSS text we ALREADY have (no fetch). Returns dicts CARRYING that
+    clean RSS text, so the gate can fall back to it when the fetch is walled (S289a —
+    e.g. Google News redirect URLs that return Google's consent wall). Hard cap=max_n."""
     from api.services.layer4.public_exposure_enricher import compute_name_match_confidence
     scored = []
     for f in (findings or []):
@@ -62,14 +65,14 @@ def _select_articles(findings, primary_name, max_n: int = MAX_ARTICLES) -> list:
         title = getattr(f, "title", "") or ""
         desc = getattr(f, "description", "") or ""
         pre = compute_name_match_confidence(f"{title} {desc}", primary_name)
-        scored.append((pre, url))
+        scored.append((pre, {"url": url, "title": title, "description": desc}))
     scored.sort(key=lambda x: -x[0])
     seen, out = set(), []
-    for _, url in scored:
-        if url in seen:
+    for _, art in scored:
+        if art["url"] in seen:
             continue
-        seen.add(url)
-        out.append(url)
+        seen.add(art["url"])
+        out.append(art)
         if len(out) >= max_n:
             break
     return out
@@ -129,7 +132,8 @@ def fetch_article_contexts(findings, primary_name) -> dict:
     context. Best-effort: any failure is skipped, never raised. Returns hashes/counts
     + short snippets only — never a full article."""
     report = {"computed": True, "fetched": 0, "skipped_fetch_fail": 0,
-              "strong_matches": 0, "best_match_confidence": 0.0, "contexts": []}
+              "strong_matches": 0, "strong_via_rss": 0,
+              "best_match_confidence": 0.0, "contexts": []}
     if not (primary_name or "").strip():
         return report                      # no name → nothing to corroborate
     selected = _select_articles(findings, primary_name)
@@ -141,11 +145,11 @@ def fetch_article_contexts(findings, primary_name) -> dict:
     from api.services.layer4.public_exposure_enricher import compute_name_match_confidence
     fetcher = PageFetcher()
 
-    def _one(url):
+    def _one(art):
         try:
-            return url, fetcher.fetch(url)
+            return art, fetcher.fetch(art["url"])
         except Exception:
-            return url, None
+            return art, None
 
     try:
         with ThreadPoolExecutor(max_workers=FETCH_WORKERS) as ex:
@@ -155,25 +159,44 @@ def fetch_article_contexts(findings, primary_name) -> dict:
         return {"computed": False}
 
     best = 0.0
-    for url, page in results:
+    for art, page in results:
+        url = art["url"]
+        # S289a — match on the BEST of two signals. The fetched full text is a bonus
+        # (alt/author/snippet) but the gate no longer depends on it: when Google News
+        # redirect URLs return the consent wall, we fall back to the clean RSS
+        # title+description we already pre-scored on. No fragile GN URL decoder.
+        rss_text = f"{art['title']} {art['description']}".strip()
+        rss_conf = compute_name_match_confidence(rss_text, primary_name)
         text = (page or {}).get("text") if page else None
-        if not text:
+        if text:
+            report["fetched"] += 1
+            fetched_conf = compute_name_match_confidence(text, primary_name)
+        else:
             report["skipped_fetch_fail"] += 1
-            continue
-        report["fetched"] += 1
-        conf = compute_name_match_confidence(text, primary_name)   # FULL-text match
+            fetched_conf = 0.0
+        conf = max(rss_conf, fetched_conf)
+        if conf <= 0:
+            continue                       # name appears in neither → not a corroboration
         best = max(best, conf)
+        use_fetched = fetched_conf >= rss_conf and fetched_conf > 0
+        match_source = "fetched" if use_fetched else "rss"
         if conf >= floor:
             report["strong_matches"] += 1
-        ctx = _extract_og_context((page or {}).get("html"))
+            if match_source == "rss":
+                report["strong_via_rss"] += 1
+        # og:image / alt / author are a fetch-only bonus (the RSS has none).
+        ctx = (_extract_og_context((page or {}).get("html")) if text
+               else {"author": None, "og_image": None, "image_alt": None})
+        snippet_src = text if use_fetched else rss_text   # both transient; window <=200
         report["contexts"].append({
             "url": url,
             "source_domain": _domain(url),
             "match_confidence": round(conf, 2),
+            "match_source": match_source,
             "author": ctx["author"],
             "og_image": ctx["og_image"],
             "image_alt": ctx["image_alt"],
-            "snippet": _snippet_around(text, primary_name),   # <=200 chars, transient text dropped
+            "snippet": _snippet_around(snippet_src, primary_name),
         })
     report["best_match_confidence"] = round(best, 2)
     return report

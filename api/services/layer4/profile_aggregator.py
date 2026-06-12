@@ -1942,6 +1942,43 @@ def aggregate_profile(target_id, workspace_id, session: Session, graph_context=N
                     target_id, contradicting, expected, primary_name,
                 )
 
+    # S286 — perceptual avatar hashing (pHash) for cross-platform reuse. Stores
+    # hashes + counters ONLY, never the image (CNPD framing). Hashes only real-photo
+    # avatars (score >= 2, decision 0). Graceful: never crashes aggregation. Short-
+    # circuits instantly when there are no real-photo avatars (common case → no I/O).
+    # S289a: MUST run BEFORE the entropy hook below so the avatar_reuse axis (S287)
+    # sees the field — it was previously assigned after the hook (axis stayed dark).
+    try:
+        from api.services.layer4.avatar_hasher import compute_avatar_reuse_sync
+        if any(_score_avatar((a.get("url") or "")) >= 2 for a in profile["avatars"]):
+            profile["avatar_reuse"] = compute_avatar_reuse_sync(profile["avatars"], _score_avatar)
+        else:
+            profile["avatar_reuse"] = {"computed": True, "hashed_count": 0,
+                                       "skipped_default": len(profile["avatars"]),
+                                       "skipped_fetch_fail": 0, "clusters": [],
+                                       "max_reuse": 0, "distinct_images": 0}
+    except Exception as e:
+        logger.debug("avatar_reuse skipped for target %s: %s", target_id, e)
+        profile["avatar_reuse"] = {"computed": False}
+
+    # S288 — named-press corroboration context. Fetches the best name-matched
+    # media_mention articles, recomputes name-match on full text, stores short
+    # snippets + context (NEVER full article, NEVER identity writes — R7 is S289).
+    # Best-effort: never crashes aggregation. No media_mention findings (e.g. the
+    # early bootstrap aggregate, pre-PASS2) → returns instantly with no network.
+    # S289a: MUST run BEFORE the entropy hook so the press_corroboration axis sees it.
+    try:
+        from api.services.layer4.article_context import fetch_article_contexts
+        if any((getattr(f, "indicator_type", "") or "") == "media_mention" for f in findings):
+            profile["article_context"] = fetch_article_contexts(findings, profile.get("primary_name"))
+        else:
+            profile["article_context"] = {"computed": True, "fetched": 0,
+                                          "skipped_fetch_fail": 0, "strong_matches": 0,
+                                          "best_match_confidence": 0.0, "contexts": []}
+    except Exception as e:
+        logger.debug("article_context skipped for target %s: %s", target_id, e)
+        profile["article_context"] = {"computed": False}
+
     # S265 — entropy shadow (placed AFTER name resolution so the name axis sees the
     # resolved primary_name). Information-theoretic identifying power, governed
     # (independence + conservative priors + global-unique cap). SHADOW only — does NOT
@@ -1999,40 +2036,6 @@ def aggregate_profile(target_id, workspace_id, session: Session, graph_context=N
         primary_avatar = None
     profile["primary_avatar"] = primary_avatar
     profile["primary_avatar_quality"] = avatar_quality  # expose for frontend badge
-
-    # S286 — perceptual avatar hashing (pHash) for cross-platform reuse. Stores
-    # hashes + counters ONLY, never the image (CNPD framing). Hashes only real-photo
-    # avatars (score >= 2, decision 0). Graceful: never crashes aggregation. Short-
-    # circuits instantly when there are no real-photo avatars (common case → no I/O).
-    try:
-        from api.services.layer4.avatar_hasher import compute_avatar_reuse_sync
-        if any(_score_avatar((a.get("url") or "")) >= 2 for a in profile["avatars"]):
-            profile["avatar_reuse"] = compute_avatar_reuse_sync(profile["avatars"], _score_avatar)
-        else:
-            profile["avatar_reuse"] = {"computed": True, "hashed_count": 0,
-                                       "skipped_default": len(profile["avatars"]),
-                                       "skipped_fetch_fail": 0, "clusters": [],
-                                       "max_reuse": 0, "distinct_images": 0}
-    except Exception as e:
-        logger.debug("avatar_reuse skipped for target %s: %s", target_id, e)
-        profile["avatar_reuse"] = {"computed": False}
-
-    # S288 — named-press corroboration context. Fetches the best name-matched
-    # media_mention articles, recomputes name-match on full text, stores short
-    # snippets + context (NEVER full article, NEVER identity writes — R7 is S289).
-    # Best-effort: never crashes aggregation. No media_mention findings (e.g. the
-    # early bootstrap aggregate, pre-PASS2) → returns instantly with no network.
-    try:
-        from api.services.layer4.article_context import fetch_article_contexts
-        if any((getattr(f, "indicator_type", "") or "") == "media_mention" for f in findings):
-            profile["article_context"] = fetch_article_contexts(findings, profile.get("primary_name"))
-        else:
-            profile["article_context"] = {"computed": True, "fetched": 0,
-                                          "skipped_fetch_fail": 0, "strong_matches": 0,
-                                          "best_match_confidence": 0.0, "contexts": []}
-    except Exception as e:
-        logger.debug("article_context skipped for target %s: %s", target_id, e)
-        profile["article_context"] = {"computed": False}
 
     # Store on target
     target = session.execute(
