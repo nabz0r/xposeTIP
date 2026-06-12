@@ -108,9 +108,23 @@ _SOURCE_WEIGHTS = {
 }
 
 
+def _free_mail_domains() -> set:
+    """Free-mail provider domains — canonical source is the entropy priors'
+    email_provider_share keys (the known free providers). GeoIP on these
+    resolves the provider's datacenter, NOT the person — so it must not vote
+    on the person's country."""
+    try:
+        from api.services.layer4.entropy_engine import load_priors
+        shares = (load_priors() or {}).get("email_provider_share", {})
+        return {k.lower() for k in shares if not k.startswith("_")}
+    except Exception:
+        return set()
+
+
 def analyze_geo_consistency(profile: dict, findings: list, country_code: str = None) -> dict:
     """Cross-correlate all geographic signals and score consistency."""
     signals = []
+    freemail = _free_mail_domains()   # S283 C: loaded once, gate GeoIP below
 
     # Signal 1: Operator ground truth
     if country_code and isinstance(country_code, str) and len(country_code.strip()) == 2:
@@ -216,6 +230,11 @@ def analyze_geo_consistency(profile: dict, findings: list, country_code: str = N
         if source not in ("geoip", "maxmind_geo"):
             continue
         data = f.data if isinstance(f.data, dict) else {}
+        # C: free-mail GeoIP = provider datacenter, not the person → don't vote.
+        # Missing domain → keep the signal (conservative: no exclusion on absent data).
+        geo_domain = (data.get("domain") or "").strip().lower()
+        if geo_domain and geo_domain in freemail:
+            continue
         country = (data.get("country") or data.get("countryCode") or "").strip()
         if country and len(country) >= 2:
             cc = _resolve_country_code(country.lower())
@@ -247,6 +266,21 @@ def analyze_geo_consistency(profile: dict, findings: list, country_code: str = N
     primary_cc = ranked[0][0]
     primary_score = ranked[0][1]
     total_weight = sum(v for _, v in ranked)
+
+    # A: election floor — don't assign a country on a single weak signal.
+    # 0.4 means nationalize-alone (0.3) is NOT enough; needs self_reported (0.8),
+    # timezone (0.5), ground_truth (1.0), or ≥2 concordant weak signals.
+    ELECTION_FLOOR = 0.4
+    if primary_score < ELECTION_FLOOR:
+        return {
+            "primary_country": None, "primary_country_name": None,
+            "confidence": round(min(0.3, primary_score), 2),
+            "consistency_score": 0.0,
+            "signals": signals, "country_votes": dict(country_votes),
+            "anomalies": [],
+            "verdict": f"Insufficient signal to assign a country "
+                       f"(strongest: {primary_cc} at {primary_score:.2f} < {ELECTION_FLOOR})",
+        }
 
     # Consistency score
     concentration = primary_score / total_weight if total_weight > 0 else 0.0
