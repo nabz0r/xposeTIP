@@ -27,9 +27,11 @@
     "_unknown": 0.05
   },
   "name": {
-    "_note": "coarse v0 — binary common/rare via collision_guard.COMMON_GIVEN_NAMES on the first token. p rounded toward common (conservative). full per-name census frequency is v1.",
+    "_note": "S284: frequency-based via name_priors.json when known ('freq'); else floors. covered_unquantified = in WGND (global coverage) but no populational frequency. common_p/rare_p_floor preserved for the unknown-name fallback (collision_guard.COMMON_GIVEN_NAMES).",
     "common_p": 0.10,
-    "rare_p_floor": 0.04
+    "rare_p_floor": 0.04,
+    "covered_unquantified_p": 0.06,
+    "name_freq_gender_lambda": 0.97
   },
   "gender": {
     "_note": "Binary axis from pre-computed genderize. p_base ~0.5 => ~1 bit. prob_floor gates: below it, genderize is too uncertain (coin-flip) => unknown, 0 bits (governor 3).",

@@ -56,6 +56,38 @@ def load_priors() -> dict:
     return _PRIORS
 
 
+_NAME_PRIORS = None
+
+
+def load_name_priors() -> dict:
+    """S284b — frequency/gender name dictionary (built by scripts/build_name_priors.py)."""
+    global _NAME_PRIORS
+    if _NAME_PRIORS is None:
+        p = os.path.join(os.path.dirname(os.path.abspath(__file__)), "name_priors.json")
+        try:
+            _NAME_PRIORS = json.loads(open(p).read())
+        except Exception as e:
+            logger.warning("name_priors.json unreadable: %s", e)
+            _NAME_PRIORS = {"names": {}, "ascii_index": {}}
+    return _NAME_PRIORS
+
+
+def _name_lookup(token: str) -> dict | None:
+    """Two-level lookup (S284a decision 2): exact raw key, then ASCII fallback."""
+    if not token:
+        return None
+    np_ = load_name_priors()
+    names = np_.get("names", {})
+    tok = token.strip().lower()
+    if tok in names:
+        return names[tok]
+    import unicodedata
+    ascii_tok = "".join(c for c in unicodedata.normalize("NFKD", tok)
+                        if not unicodedata.combining(c))
+    raw_key = (np_.get("ascii_index") or {}).get(ascii_tok)
+    return names.get(raw_key) if raw_key else None
+
+
 def _bits(p: float) -> float:
     """Governor 1 — bits = -log2(p), clamped to [0, ∞). p≥1 → 0 bits (no info)."""
     if not p or p <= 0:
@@ -134,11 +166,21 @@ def _name_first_token(profile: dict) -> str | None:
 
 
 def _name_prevalence(name_token: str, priors: dict) -> tuple:
-    """Coarse name prevalence p + label (common/rare). Single source for the resolved
-    name axis AND the S272 password-derived candidate_name fallback."""
-    from api.services.layer4.collision_guard import COMMON_GIVEN_NAMES
+    """p + label for the name axis. Frequency-based via name_priors when known
+    (S284), else conservative floor (governor 3). Single source for the resolved
+    name axis AND the S272 password-derived candidate_name fallback.
+    Labels: 'freq' (real SSA frequency) > 'covered' (WGND, no freq) > 'common'/'rare'."""
     ncfg = (priors or {}).get("name", {})
     tok = (name_token or "").strip().lower().split()[0] if (name_token or "").strip() else ""
+    if not tok:
+        return ncfg.get("rare_p_floor", 0.04), "rare"
+    entry = _name_lookup(tok)
+    if entry and entry.get("p_freq"):
+        return float(entry["p_freq"]), "freq"            # real frequency (SSA)
+    if entry:                                            # covered (WGND) but no freq
+        return ncfg.get("covered_unquantified_p", 0.06), "covered"
+    # unknown everywhere → existing conservative floor (unchanged behavior)
+    from api.services.layer4.collision_guard import COMMON_GIVEN_NAMES
     if tok in COMMON_GIVEN_NAMES:
         return ncfg.get("common_p", 0.10), "common"
     return ncfg.get("rare_p_floor", 0.04), "rare"
@@ -175,12 +217,16 @@ def _apply_correlations(by_axis: dict, dom: str | None, priors: dict) -> None:
                 continue
         elif mode:
             continue  # unknown named gate → fail closed (no discount applied)
-        lam = corr.get("lambda", 0.0) or 0.0
+        # effective λ — an axis may carry its own context-dependent override
+        # (S284b: name=freq bumps name→gender to 0.97). Engine stays general:
+        # no name/gender knowledge here, just read the override off the axis.
+        lam = by_axis[to].get("lambda_override", corr.get("lambda", 0.0)) or 0.0
         by_axis[to]["bits"] = round(orig[to] * (1 - lam), 2)
         by_axis[to]["correlated_with"] = frm
         if lam < 1:
-            # residual state (S282 plumbing) — never tagged on the λ=1 pick-one
-            # case so the existing UI render stays byte-identical
+            # residual state (S282 plumbing) — reflects the EFFECTIVE λ (override
+            # included) so the UI shows the real shared-fraction. Never tagged on
+            # the λ=1 pick-one case so that render stays byte-identical.
             by_axis[to]["correlation_lambda"] = lam
 
 
@@ -221,18 +267,13 @@ def compute_identifying_bits(profile: dict, findings, priors: dict):
     else:
         axes_unknown.append("email_provider")
 
-    # --- axis: name (coarse v0 — common/rare via collision_guard list) ---
+    # --- axis: name (S284 — real frequency via name_priors, else floors) ---
     first = _name_first_token(profile)
     if first:
-        from api.services.layer4.collision_guard import COMMON_GIVEN_NAMES
-        ncfg = priors.get("name", {})
-        if first in COMMON_GIVEN_NAMES:
-            p = ncfg.get("common_p", 0.10)
-            val = "common"
-        else:
-            p = ncfg.get("rare_p_floor", 0.04)   # conservative floor — not a true freq
-            val = "rare"
-        by_axis["name"] = {"value": val, "p": round(p, 8), "bits": round(_bits(p), 2), "coarse": True}
+        p, label = _name_prevalence(first, priors)
+        by_axis["name"] = {"value": label, "p": round(p, 8),
+                           "bits": round(_bits(p), 2),
+                           "coarse": label != "freq"}   # freq is calibrated, not coarse
     else:
         axes_unknown.append("name")
 
@@ -247,6 +288,14 @@ def compute_identifying_bits(profile: dict, findings, priors: dict):
                              "prob": gprob}
     else:
         axes_unknown.append("gender")
+
+    # S284b: if the name axis carries a REAL frequency, the name encodes gender →
+    # name subsumes gender almost fully. Override the static λ (0.85 default) on the
+    # dependent gender axis. The correlation engine stays general (§0) — it just
+    # reads lambda_override off the axis, with no name/gender special-casing.
+    if "gender" in by_axis and by_axis.get("name", {}).get("value") == "freq":
+        _ncfg = priors.get("name", {})
+        by_axis["gender"]["lambda_override"] = _ncfg.get("name_freq_gender_lambda", 0.97)
 
     # --- governor 2 (generalized, S281): data-driven correlation discount ---
     # gender is set above so the name→gender correlation (S282) applies here.
