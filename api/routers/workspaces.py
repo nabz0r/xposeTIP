@@ -30,6 +30,7 @@ def _slugify(name: str) -> str:
 
 class CreateWorkspaceRequest(BaseModel):
     name: str
+    kind: str = "human"   # S290 — 'human' | 'agent'; absent → human (back-compat)
 
 
 class UpdateWorkspaceRequest(BaseModel):
@@ -92,13 +93,15 @@ async def create_workspace(
     role: str = Depends(require_role("superadmin", "admin", "consultant")),
     db: AsyncSession = Depends(get_db),
 ):
+    if body.kind not in ("human", "agent"):
+        raise HTTPException(status_code=422, detail="kind must be 'human' or 'agent'")
     slug = _slugify(body.name)
     # Ensure unique slug
     existing = await db.execute(select(Workspace).where(Workspace.slug == slug))
     if existing.scalar_one_or_none():
         slug = f"{slug}-{uuid.uuid4().hex[:6]}"
 
-    workspace = Workspace(name=body.name, slug=slug, owner_id=current_user.id)
+    workspace = Workspace(name=body.name, slug=slug, owner_id=current_user.id, kind=body.kind)
     db.add(workspace)
     await db.flush()
 
@@ -112,6 +115,7 @@ async def create_workspace(
         "name": workspace.name,
         "slug": workspace.slug,
         "plan": workspace.plan,
+        "kind": workspace.kind,
     }
 
 

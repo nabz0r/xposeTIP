@@ -16,6 +16,8 @@ class Scraper(UUIDMixin, TimestampMixin, Base):
     description: Mapped[str | None] = mapped_column(Text)
     category: Mapped[str | None] = mapped_column(String(50))
     enabled: Mapped[bool] = mapped_column(Boolean, default=True)
+    # S290 — type discriminator (human|agent). Engine selects scrapers by target kind.
+    kind: Mapped[str] = mapped_column(String(10), default="human", server_default="human")
 
     # Request config
     url_template: Mapped[str] = mapped_column(String(500))

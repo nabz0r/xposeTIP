@@ -29,9 +29,24 @@ class ScraperScanner(BaseScanner):
 
         session = get_sync_session()
         try:
+            # S290 — resolve the target's workspace kind ONCE, before scraper selection.
+            # Default 'human' if unresolved (governor-3: never over-restrict by default).
+            # This is the SINGLE type-aware point — everything below stays type-pure.
+            from api.models.target import Target
+            from api.models.workspace import Workspace
+            _tgt_row = session.execute(
+                select(Target.workspace_id).where(Target.email == email)
+            ).first()
+            _ws_kind = "human"
+            if _tgt_row:
+                _ws_kind = session.execute(
+                    select(Workspace.kind).where(Workspace.id == _tgt_row[0])
+                ).scalar_one_or_none() or "human"
+
             scrapers = session.execute(
                 select(Scraper).where(
                     Scraper.enabled == True,
+                    Scraper.kind == _ws_kind,                    # S290: type-aware dispatch
                     Scraper.input_type.in_(["email", "username", "domain", "first_name", "phone", "crypto_wallet"]),
                 )
             ).scalars().all()

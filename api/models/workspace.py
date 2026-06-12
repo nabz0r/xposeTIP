@@ -15,6 +15,8 @@ class Workspace(UUIDMixin, TimestampMixin, Base):
     slug: Mapped[str] = mapped_column(String(100), unique=True)
     owner_id: Mapped[uuid.UUID | None] = mapped_column(ForeignKey("users.id"))
     plan: Mapped[str] = mapped_column(String(20), default="free")
+    # S290 — type discriminator (human|agent). Default 'human' until agent orgs exist.
+    kind: Mapped[str] = mapped_column(String(10), default="human", server_default="human")
     settings: Mapped[dict | None] = mapped_column(JSONB, default={})
 
     owner = relationship("User", back_populates="owned_workspaces", foreign_keys=[owner_id])
