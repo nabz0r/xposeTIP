@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react'
 import { Link } from 'react-router-dom'
+import { SOURCE_COUNT } from '../components/landing/constants'
 import { Shield, Zap, BookOpen, Lock, ArrowRight, ChevronRight, X, Layers } from 'lucide-react'
 import PublicNav from '../components/landing/PublicNav'
 import PublicFooter from '../components/landing/PublicFooter'
@@ -301,7 +302,7 @@ export default function Manifesto() {
               <div className="reveal opacity-0 translate-y-8 transition-all duration-700">
                 <p className="text-gray-400 leading-relaxed mb-6">
                   The cybersecurity industry runs 256GB RAM clusters to grep logs.
-                  We run 174 OSINT scrapers, PageRank, Markov chains, and a rules engine
+                  We run {SOURCE_COUNT} OSINT scrapers, PageRank, Markov chains, and a rules engine
                   on a 7-year-old MacBook. 50 watts.
                 </p>
               </div>

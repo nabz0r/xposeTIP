@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom'
 import { Shield, Check, X, Minus, ArrowRight } from 'lucide-react'
+import { SOURCE_COUNT } from '../components/landing/constants'
 import PublicNav from '../components/landing/PublicNav'
 import PublicFooter from '../components/landing/PublicFooter'
 
@@ -34,7 +35,7 @@ const SEGMENTS = [
     pitch: 'Same depth of OSINT reconnaissance — consumer-grade UX, accessible pricing, open-source core (AGPL-3.0).',
     competitors: ['Maltego', 'SpiderFoot', 'Recorded Future'],
     rows: [
-      ['174 OSINT sources', 'yes', 'yes', 'yes', 'yes'],
+      [`${SOURCE_COUNT} OSINT sources`, 'yes', 'yes', 'yes', 'yes'],
       ['Consumer-grade UX', 'yes', 'no', 'no', 'partial'],
       ['11-axis behavioral fingerprint', 'yes', 'no', 'no', 'no'],
       ['Verified provenance per finding', 'yes', 'partial', 'no', 'partial'],
