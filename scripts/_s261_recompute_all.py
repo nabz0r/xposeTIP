@@ -31,8 +31,16 @@ from api.models.finding import Finding  # noqa: E402
 from api.models.target import Target  # noqa: E402
 
 s = get_sync_session()
+from api.models.workspace import Workspace  # noqa: E402
 target_ids = [
-    (t.id, t.workspace_id) for t in s.execute(select(Target.id, Target.workspace_id)).all()
+    # S291 — agent targets NEVER enter the human recompute (enrich_identity /
+    # source-scoring run before aggregate_profile's agent early-return).
+    (t.id, t.workspace_id)
+    for t in s.execute(
+        select(Target.id, Target.workspace_id)
+        .join(Workspace, Workspace.id == Target.workspace_id)
+        .where(Workspace.kind == "human")
+    ).all()
 ]
 total = len(target_ids)
 print(f"START total={total}", flush=True)

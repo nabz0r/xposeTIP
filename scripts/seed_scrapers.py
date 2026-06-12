@@ -4001,6 +4001,46 @@ DEFAULT_SCRAPERS = [
         "rate_limit_requests": 1,
         "rate_limit_window": 2,
     },
+    # === S291 — AGENT SCRAPERS (kind='agent', dispatched only on agent workspaces) ===
+    {
+        "name": "wba_directory",
+        "kind": "agent",
+        "display_name": "Web Bot Auth — key directory",
+        "description": "Fetches an operator's signed agent key directory (Web Bot Auth).",
+        "category": "agent_declared",
+        "input_type": "agent_operator",
+        # {input} = the generic input placeholder the engine always provides
+        # (= the operator host); {operator} is not in the engine's fmt_kwargs.
+        "url_template": "https://{input}/.well-known/http-message-signatures-directory",
+        "method": "GET",
+        "extraction_rules": [
+            {"field": "keys", "type": "json_key", "pattern": "keys"},
+        ],
+        "finding_title_template": "WBA signed agent key directory",
+        "finding_category": "agent_declared",
+        "finding_severity": "info",
+        "identity_type": "agent_key",
+        "enabled": True,
+    },
+    {
+        "name": "ja4_lookup",
+        "kind": "agent",
+        "display_name": "JA4 runtime signature lookup",
+        "description": "Resolves a JA4 TLS fingerprint to its software/library (FoxIO ja4db).",
+        "category": "agent_runtime",
+        "input_type": "ja4",
+        "url_template": "https://ja4db.com/api/read/{input}/",
+        "method": "GET",
+        "extraction_rules": [
+            {"field": "application", "type": "json_key", "pattern": "application"},
+            {"field": "library", "type": "json_key", "pattern": "library"},
+        ],
+        "finding_title_template": "JA4 runtime: {application}",
+        "finding_category": "agent_runtime",
+        "finding_severity": "info",
+        "identity_type": "ja4",
+        "enabled": True,
+    },
 ]
 
 

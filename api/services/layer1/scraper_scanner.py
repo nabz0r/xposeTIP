@@ -8,6 +8,11 @@ from api.services.layer4.username_validator import is_valid_username
 
 logger = logging.getLogger(__name__)
 
+# S291 — accepted input types per workspace kind. Human path unchanged; agent
+# scrapers consume the agent seed (operator domain + runtime signatures).
+_HUMAN_INPUTS = ["email", "username", "domain", "first_name", "phone", "crypto_wallet"]
+_AGENT_INPUTS = ["agent_operator", "ja4"]
+
 
 class ScraperScanner(BaseScanner):
     """
@@ -43,11 +48,12 @@ class ScraperScanner(BaseScanner):
                     select(Workspace.kind).where(Workspace.id == _tgt_row[0])
                 ).scalar_one_or_none() or "human"
 
+            _accepted = _AGENT_INPUTS if _ws_kind == "agent" else _HUMAN_INPUTS
             scrapers = session.execute(
                 select(Scraper).where(
                     Scraper.enabled == True,
                     Scraper.kind == _ws_kind,                    # S290: type-aware dispatch
-                    Scraper.input_type.in_(["email", "username", "domain", "first_name", "phone", "crypto_wallet"]),
+                    Scraper.input_type.in_(_accepted),           # S291: type-aware input acceptance
                 )
             ).scalars().all()
 
@@ -55,35 +61,49 @@ class ScraperScanner(BaseScanner):
                 return results
 
             engine = ScraperEngine()
-            _email_lhs = email.split("@")[0]
-            # S129: gate username dispatch with is_valid_username to match Pass 1.5's
-            # validation — don't waste requests on strict-schema platforms (HN, Reddit,
-            # GitHub, etc.) for email LHSs that aren't plausibly a single handle.
-            username = _email_lhs if is_valid_username(_email_lhs) else None
-            domain = email.split("@")[-1] if "@" in email else email
-            cleaned_prefix = re.sub(r"\d+", "", _email_lhs)
-            name_parts = re.split(r"[._]", cleaned_prefix)
-            first_name = name_parts[0].lower() if name_parts else _email_lhs
-            # Get secondary identifiers from profile_data (populated by A1.5)
-            _phones = []
-            _wallets = []
-            try:
-                from api.models.target import Target
-                _tgt = session.execute(select(Target).where(Target.email == email)).scalars().first()
-                if _tgt and _tgt.profile_data:
-                    _phones = _tgt.profile_data.get("phones", [])
-                    _wallets = _tgt.profile_data.get("crypto_wallets", [])
-            except Exception:
-                pass
 
-            inputs = {
-                "email": email,
-                "username": username,
-                "domain": domain,
-                "first_name": first_name,
-                "phone": _phones[0] if _phones else None,
-                "crypto_wallet": _wallets[0]["address"] if _wallets else None,
-            }
+            if _ws_kind == "agent":
+                # S291 — agent seed: operator domain lives in target.email; runtime
+                # signatures live in profile_data. Type-pure below — no human logic.
+                _pd = {}
+                try:
+                    _at = session.execute(select(Target).where(Target.email == email)).scalars().first()
+                    _pd = (_at.profile_data if _at else None) or {}
+                except Exception:
+                    pass
+                inputs = {
+                    "agent_operator": email,        # email field = operator domain
+                    "ja4": _pd.get("ja4"),
+                }
+            else:
+                _email_lhs = email.split("@")[0]
+                # S129: gate username dispatch with is_valid_username to match Pass 1.5's
+                # validation — don't waste requests on strict-schema platforms (HN, Reddit,
+                # GitHub, etc.) for email LHSs that aren't plausibly a single handle.
+                username = _email_lhs if is_valid_username(_email_lhs) else None
+                domain = email.split("@")[-1] if "@" in email else email
+                cleaned_prefix = re.sub(r"\d+", "", _email_lhs)
+                name_parts = re.split(r"[._]", cleaned_prefix)
+                first_name = name_parts[0].lower() if name_parts else _email_lhs
+                # Get secondary identifiers from profile_data (populated by A1.5)
+                _phones = []
+                _wallets = []
+                try:
+                    _tgt = session.execute(select(Target).where(Target.email == email)).scalars().first()
+                    if _tgt and _tgt.profile_data:
+                        _phones = _tgt.profile_data.get("phones", [])
+                        _wallets = _tgt.profile_data.get("crypto_wallets", [])
+                except Exception:
+                    pass
+
+                inputs = {
+                    "email": email,
+                    "username": username,
+                    "domain": domain,
+                    "first_name": first_name,
+                    "phone": _phones[0] if _phones else None,
+                    "crypto_wallet": _wallets[0]["address"] if _wallets else None,
+                }
 
             # Write scraper progress to Redis
             scan_id = kwargs.get("scan_id")

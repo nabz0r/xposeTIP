@@ -870,6 +870,16 @@ def aggregate_profile(target_id, workspace_id, session: Session, graph_context=N
     If graph_context is provided, uses pre-computed node confidence map
     instead of querying identity nodes from DB.
     """
+    # S291 — agent orgs never run the human aggregator (no human profile, no
+    # entropy). Agent findings are already persisted by the agent scrapers. ONE
+    # early-return covers all 3 scan call-sites AND the recalc harness.
+    from api.models.workspace import Workspace
+    _k = session.execute(
+        select(Workspace.kind).where(Workspace.id == workspace_id)
+    ).scalar_one_or_none()
+    if _k == "agent":
+        return {}
+
     # Deduplicate: keep latest finding per (module, title) — Python-side
     all_findings = session.execute(
         select(Finding).where(
