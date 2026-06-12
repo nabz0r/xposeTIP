@@ -19,6 +19,15 @@ const AXIS_COLORS = {
   residual: '#5577aa',
 }
 
+// S285 — human labels for the name-axis technical values (S284b: freq/covered/common/rare).
+// Other axes (country=LU, email_provider=gmail.com, gender=male) keep their raw value.
+const NAME_VALUE_LABELS = {
+  freq: 'name (frequency)',
+  covered: 'name (global)',
+  common: 'name (common)',
+  rare: 'name (rare)',
+}
+
 function axisQuality(a) {
   if (a?.correlation_lambda != null && a.correlation_lambda < 1 && a.correlation_lambda > 0) return 'residual'
   if (a?.correlated_with) return 'discounted'
@@ -128,7 +137,9 @@ export default function EntropyTab({ profile }) {
               <div key={key} className="flex items-center gap-3 text-sm">
                 <div className="w-2 h-2 rounded-sm flex-shrink-0" style={{ background: color }} />
                 <div className="w-32 text-gray-300 capitalize flex-shrink-0">{key.replace(/_/g, ' ')}</div>
-                <div className="w-24 font-mono text-gray-400 flex-shrink-0">{a.value}</div>
+                <div className="w-24 font-mono text-gray-400 flex-shrink-0">
+                  {key === 'name' ? (NAME_VALUE_LABELS[a.value] || a.value) : a.value}
+                </div>
                 <div className="w-20 font-mono flex-shrink-0" style={{ color }}>
                   {q === 'discounted' ? <span className="line-through">{(a.bits || 0).toFixed(2)}</span> : `${Number(a.bits || 0).toFixed(2)} b`}
                 </div>
@@ -136,7 +147,13 @@ export default function EntropyTab({ profile }) {
                   {q === 'discounted' && <span title="Governor-2: correlated, counted once via the other axis.">counted via {a.correlated_with}</span>}
                   {q === 'residual' && <span title="Governor-2: partial overlap — bits reduced, not zeroed.">{(a.correlation_lambda * 100).toFixed(0)}% shared with {a.correlated_with}</span>}
                   {q === 'coarse' && <span title="v0 estimate — full per-name frequency is a later refinement.">coarse estimate</span>}
-                  {q === 'measured' && a.p != null && <span>prevalence {Number(a.p) < 0.001 ? Number(a.p).toExponential(1) : Number(a.p).toFixed(3)}</span>}
+                  {q === 'measured' && a.p != null && (
+                    <span title={key === 'name' && a.value === 'covered'
+                      ? 'Name known globally (WGND) but no populational frequency — conservative floor.'
+                      : 'Real prevalence from priors.'}>
+                      prevalence {Number(a.p) < 0.001 ? Number(a.p).toExponential(1) : Number(a.p).toFixed(3)}
+                    </span>
+                  )}
                 </div>
               </div>
             )
