@@ -4,11 +4,10 @@
 
 xposeTIP has **28 active scanner modules** across 4 layers, **176 data-driven scrapers** (155 active by default)
 across 11 categories, and **9 intelligence analyzers** that run post-scan.
-5 scanner modules are disabled placeholders (maigret, h8mail, ghunt, paste_monitor, databroker_check).
 
-## Scanner Modules (35)
+## Scanner Modules (28)
 
-### Layer 1 — Passive Recon (16)
+### Layer 1 — Passive Recon (15)
 
 | Scanner | ID | Description |
 |---------|----|-------------|
@@ -16,20 +15,19 @@ across 11 categories, and **9 intelligence analyzers** that run post-scan.
 | Holehe | `holehe` | Email-to-account enumeration across 120+ services (vendored library) |
 | Have I Been Pwned | `hibp` | Breach history lookup — names, dates, data types exposed |
 | Sherlock | `sherlock` | Username search across 400+ social networks |
-| Maigret | `maigret` | Username enumeration across 2500+ sites |
-| GHunt | `ghunt` | Google account metadata (requires DroidGuard patch) |
-| h8mail | `h8mail` | Email breach and credential leak search |
 | Gravatar | `gravatar` | Profile, avatar, linked social accounts via email hash |
 | Social Enricher | `social_enricher` | GitHub profile — name, bio, location, repos, followers |
 | Email Reputation | `emailrep` | Reputation score, breach status, domain security |
 | Epieos Google | `epieos` | Google account discovery — ID, name, photo |
 | FullContact | `fullcontact` | Person enrichment — name, age, social profiles, company |
 | GitHub Deep | `github_deep` | Full profile, events, gists, alternate emails from commits |
+| GPG Keys | `gpg_keys` | GPG public-key lookup via keys.openpgp.org — V4 fingerprint + UID emails (feeds cascade) |
 | Google Profile | `google_profile` | Gmail/Workspace detection, YouTube presence |
 | Username Hunter | `username_hunter` | Username permutations across Reddit, Steam, Keybase, GitLab |
 | Scraper Engine | `scraper_engine` | Runs all 155 active data-driven scrapers (176 defined, 21 disabled — see below) |
+| Name Scraper Engine | `name_scraper_engine` | Meta-scanner — runs all enabled name-input scrapers against the resolved person name |
 
-### Layer 2 — Public Databases (12)
+### Layer 2 — Public Databases (10)
 
 | Scanner | ID | Description |
 |---------|----|-------------|
@@ -38,30 +36,32 @@ across 11 categories, and **9 intelligence analyzers** that run post-scan.
 | Free GeoIP | `geoip` | IP geolocation via ip-api.com |
 | MaxMind GeoIP | `maxmind_geo` | IP geolocation via local GeoLite2 database |
 | Leaked Domains | `leaked_domains` | Breach check via XposedOrNot |
-| Data Broker Check | `databroker_check` | Spokeo, WhitePages, BeenVerified presence |
-| Paste Monitor | `paste_monitor` | Email/username search in public paste sites |
 | VirusTotal | `virustotal` | Domain reputation, malware, SSL certs, subdomains |
 | Shodan | `shodan` | Ports, services, OS, vulnerabilities |
 | Intelligence X | `intelx` | Darkweb, paste, breach, document search |
 | Hunter.io | `hunter` | Email discovery, domain search, verification |
 | Dehashed | `dehashed` | Credential search — hashed passwords, IPs, phones |
 
-### Layer 3 — Self-Audit / OAuth (4)
+### Layer 3 — Self-Audit / OAuth (2)
 
 | Scanner | ID | Description |
 |---------|----|-------------|
 | Google Audit | `google_audit` | Drive public files, Gmail forwarding, connected apps |
 | Microsoft Audit | `microsoft_audit` | OAuth app grants, profile, device list |
-| Exodus Tracker | `exodus_tracker` | App tracker detection via Exodus Privacy DB |
-| Browser Audit | `browser_auditor` | Extensions, cookies, tracking exposure |
 
-### Layer 4 — Intelligence (3)
+### Layer 4 — Intelligence (1)
 
 | Scanner | ID | Description |
 |---------|----|-------------|
-| Intelligence Pipeline | `intelligence` | Runs all 9 analyzers (see below) |
 | Reverse Image | `reverse_image` | Face matching via PimEyes + TinEye reverse search |
-| Scraper Scanner | `scraper_scanner` | Meta-scanner that dispatches all enabled scraper definitions |
+
+> **Formerly listed, not in the dispatch registry:** maigret, ghunt, h8mail,
+> databroker_check, paste_monitor, exodus_tracker, browser_auditor,
+> intelligence, scraper_scanner. These rows documented planned or removed
+> modules; they are not dispatchable via SCANNER_REGISTRY and were dropped
+> from the nominal tables in S280. (The L4 intelligence analyzers are
+> documented in their own section below — they run inside the pipeline,
+> not as registry scanners.)
 
 ## Intelligence Analyzers (9)
 
