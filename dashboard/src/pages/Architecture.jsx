@@ -1,4 +1,5 @@
 import Section from '../components/shared/Section'
+import { SOURCE_COUNT } from '../components/landing/constants'
 import Stages from '../components/architecture/Stages'
 import ScraperBreakdown from '../components/architecture/ScraperBreakdown'
 import HeroDiagram from '../components/architecture/HeroDiagram'
@@ -41,7 +42,7 @@ export default function Architecture() {
 
             <div className="flex flex-wrap items-center justify-center gap-x-8 gap-y-3 pt-8 border-t border-[#1e1e2e] mt-4">
               <div className="flex items-baseline gap-1.5">
-                <span className="text-[#00ff88] font-mono font-bold text-xl">174</span>
+                <span className="text-[#00ff88] font-mono font-bold text-xl">{SOURCE_COUNT}</span>
                 <span className="text-xs text-gray-500 font-mono">sources</span>
               </div>
               <span className="text-gray-700">·</span>

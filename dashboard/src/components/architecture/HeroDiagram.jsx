@@ -1,4 +1,5 @@
 import { motion } from 'framer-motion'
+import { SOURCE_COUNT } from '../landing/constants'
 
 // S207 — Hero system diagram (Y3/3 closes /architecture refonte trilogy).
 // 5-layer animated reveal of full xposeTIP system at a glance :
@@ -65,7 +66,7 @@ export default function HeroDiagram() {
         >
           <rect x={120} y={134} width={560} height={92} rx={6} fill="#1e1e2e" stroke="#3388ff" strokeWidth="2" />
           <text x={400} y={163} textAnchor="middle" fill="#3388ff" fontSize="15" fontFamily="monospace" fontWeight="bold">OSINT pipeline</text>
-          <text x={400} y={183} textAnchor="middle" fill="#aaa" fontSize="11" fontFamily="monospace">174 sources · 11 stages · 9 L4 analyzers</text>
+          <text x={400} y={183} textAnchor="middle" fill="#aaa" fontSize="11" fontFamily="monospace">{`${SOURCE_COUNT} sources · 11 stages · 10 L4 analyzers`}</text>
           <text x={400} y={201} textAnchor="middle" fill="#888" fontSize="11" fontFamily="monospace">discover · connect · propagate · score · identify</text>
           <text x={400} y={217} textAnchor="middle" fill="#666" fontSize="11" fontFamily="monospace">enrich · fingerprint · locate · cascade · similarity · discovery</text>
         </motion.g>

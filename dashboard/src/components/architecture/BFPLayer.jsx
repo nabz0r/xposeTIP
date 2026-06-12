@@ -1,5 +1,6 @@
 import { motion } from 'framer-motion'
 import { ExternalLink } from 'lucide-react'
+import { SOURCE_COUNT } from '../landing/constants'
 import Section from '../shared/Section'
 
 // S205 — BFPLayer section on /architecture (Y1/3 progressive refonte).
@@ -126,7 +127,7 @@ function BFPLayerDiagram() {
       >
         <rect x={70} y={120} width={460} height={84} rx={6} fill="#1e1e2e" stroke="#3388ff" strokeWidth="1.5" />
         <text x={300} y={148} textAnchor="middle" fill="#3388ff" fontSize="14" fontFamily="monospace" fontWeight="bold">OSINT pipeline</text>
-        <text x={300} y={168} textAnchor="middle" fill="#888" fontSize="11" fontFamily="monospace">174 sources · 11 stages · identity graph</text>
+        <text x={300} y={168} textAnchor="middle" fill="#888" fontSize="11" fontFamily="monospace">{`${SOURCE_COUNT} sources · 11 stages · identity graph`}</text>
         <text x={300} y={186} textAnchor="middle" fill="#666" fontSize="11" fontFamily="monospace">discover · connect · identify · score</text>
       </motion.g>
 

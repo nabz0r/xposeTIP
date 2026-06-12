@@ -1,4 +1,5 @@
 import Section from '../shared/Section'
+import { SOURCE_COUNT, SOURCE_ACTIVE_COUNT } from '../landing/constants'
 
 export default function RoadmapSection() {
   return (
@@ -15,7 +16,7 @@ export default function RoadmapSection() {
               version: 'v1', date: 'Now — Investigation & Awareness', color: '#00ff88',
               items: [
                 { done: true, text: 'Email → complete identity report with behavioral fingerprint' },
-                { done: true, text: '174 OSINT sources across 11 categories (149 active / 25 pending validation)' },
+                { done: true, text: `${SOURCE_COUNT} OSINT sources across 11 categories (${SOURCE_ACTIVE_COUNT} active / 21 disabled)` },
                 { done: true, text: 'Personalized PageRank confidence propagation (damping=0.85, 20 iter)' },
                 { done: true, text: '11-axis behavioral radar — the identity\'s digital DNA' },
                 { done: true, text: 'Digital persona clustering with name resolution' },

@@ -6,6 +6,7 @@
 // outer JSX structure changed. Per-stage color preserved (not re-painted).
 
 import Section from '../shared/Section'
+import { SOURCE_COUNT } from '../landing/constants'
 import GenerativeAvatar from '../GenerativeAvatar'
 import { CollectDiagram, GraphDiagram, PropagateDiagram, ScoreDiagram, GeoMapDiagram, CascadeDiagram, SimilarityDiagram, DiscoveryDiagram } from './Diagrams'
 
@@ -18,7 +19,7 @@ const STAGES_DATA = [
     side: 'right',
     bg: false,
     paragraphs: [
-      { tone: 'lead',   html: `Every identity investigation starts with a single anchor: an email address. xposeTIP scans <span class="text-white font-semibold">174 sources</span> in parallel — social networks, breach databases, archives, gaming platforms, developer registries, professional networks.` },
+      { tone: 'lead',   html: `Every identity investigation starts with a single anchor: an email address. xposeTIP scans <span class="text-white font-semibold">${SOURCE_COUNT} sources</span> in parallel — social networks, breach databases, archives, gaming platforms, developer registries, professional networks.` },
       { tone: 'detail', html: `Each source carries a reliability weight. A GitHub profile (<span class="text-[#00ff88] font-mono">0.85</span>) contributes more to the identity graph than an anonymous scraper (<span class="text-gray-400 font-mono">0.60</span>). The goal isn't to collect more data — it's to collect <span class="text-white">the right data</span> about a person.` },
       { tone: 'detail', html: `After the initial email scan, the pipeline branches: <span class="text-white">Pass 1.5</span> takes every discovered username and expands the search, <span class="text-white">A1.5/A1.6</span> extract phone numbers and crypto wallets from breach payloads, <span class="text-white">A3.5</span> dispatches name-based scrapers once a primary name is resolved, and <span class="text-white">Pass 2</span> uses the resolved name to search news, sanctions, corporate registries, and legal records.` },
     ],
@@ -158,7 +159,7 @@ const STAGES_DATA = [
     side: 'right',
     bg: false,
     paragraphs: [
-      { tone: 'lead',     html: `The 174 scrapers are predictable. The open web isn't. Phase C — <span class="text-white font-semibold">adaptive web crawling</span> — fires when the operator triggers it.` },
+      { tone: 'lead',     html: `The ${SOURCE_COUNT} scrapers are predictable. The open web isn't. Phase C — <span class="text-white font-semibold">adaptive web crawling</span> — fires when the operator triggers it.` },
       { tone: 'detail',   html: `The identity's fingerprint generates Google dork queries, fetches pages via trafilatura, and runs <span class="text-white">6 extractors</span> (<span class="font-mono text-[#ffaa55]">rel-me · JSON-LD · social link · email · meta tag · username</span>).` },
       { tone: 'detail',   html: `A quality gate dedupes against existing findings. Survivors land in <span class="text-white font-mono">discovery_leads</span> for operator review — separate workflow, never auto-promoted to the identity graph.` },
       { tone: 'footnote', html: `Budget: 20 queries · 50 pages · 60 seconds — green intelligence applies to crawls too.` },
