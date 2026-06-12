@@ -4041,7 +4041,9 @@ DEFAULT_SCRAPERS = [
         "finding_category": "agent_runtime",
         "finding_severity": "info",
         "identity_type": "ja4",
-        "enabled": True,
+        # S293a — disabled: ja4db.com is unreachable (fires 0). Real JA4 comes from
+        # the capture path (.har/.pcap), matched against the crawler-UA corpus.
+        "enabled": False,
     },
 ]
 

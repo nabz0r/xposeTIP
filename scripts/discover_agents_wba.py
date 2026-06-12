@@ -36,6 +36,7 @@ from api.models.workspace import Workspace
 from api.models.user import UserWorkspace
 from api.models.target import Target
 from api.models.scan import Scan
+from api.models.finding import Finding
 
 logging.basicConfig(level=logging.INFO, format="%(message)s")
 log = logging.getLogger("agent_discovery")
@@ -56,14 +57,12 @@ _WBA_REGISTRY_URL = (
     "https://raw.githubusercontent.com/cloudflareresearch/web-bot-auth/main/registry.json"
 )
 
-# Curated JA4 slice — well-known public TLS fingerprints + their software.
-_JA4_SEED = [
-    ("t13d1516h2_8daaf6152771_b186095e22b6", "curl"),
-    ("t13d3112h2_e8f1e7e78f70_6bb7065d1c1a", "python-requests"),
-    ("t13d2014h1_a09f3c656075_14788d8d241b", "go-http-client"),
-    ("t13d1715h2_5b57614c22b0_3d5424432f57", "chrome"),
-    ("q13d0312h3_55b375c5d22e_06cda9e17597", "firefox"),
-]
+# crawler-user-agents — 1498 known bots loaded as REFERENCE data (agent_known).
+# Unlike WBA (discovered live via the signed directory), this is a known list: the
+# discovery writes one finding per entry directly — nothing to scrape per-target.
+_CRAWLER_UA_URL = (
+    "https://raw.githubusercontent.com/monperrus/crawler-user-agents/master/crawler-user-agents.json"
+)
 
 
 def _get_or_create_agent_ws(s):
@@ -127,10 +126,36 @@ def _enqueue_scan(s, ws, target):
     s.commit()
 
 
+def _ref_scan(s, ws, target_id):
+    """One completed reference-load scan per crawler-UA target (findings need a
+    scan_id). Nothing is dispatched — the data is loaded, not scraped."""
+    sc = Scan(workspace_id=ws.id, target_id=target_id,
+              scan_type="reference_load", status="completed", modules=[])
+    s.add(sc)
+    s.flush()
+    return sc.id
+
+
+def _write_ua_finding(s, ws, target, scan_id, entry):
+    f = Finding(
+        workspace_id=ws.id, scan_id=scan_id, target_id=target.id,
+        module="crawler_ua_corpus", layer=1,
+        category="agent_known", severity="info",
+        title=(entry.get("description") or f"Known agent: {entry['pattern']}")[:255],
+        indicator_value=entry["pattern"][:500], indicator_type="ua_pattern",
+        data={"pattern": entry["pattern"], "url": entry.get("url"),
+              "instances": entry.get("instances", []),
+              "description": entry.get("description"),
+              "tags": entry.get("tags", []), "source": "crawler-ua"},
+    )
+    s.add(f)
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--reset", action="store_true", help="delete this agent workspace's targets first")
-    ap.add_argument("--no-scan", action="store_true", help="do not enqueue scans")
+    ap.add_argument("--no-scan", action="store_true", help="do not enqueue scans (WBA only)")
+    ap.add_argument("--no-crawler-ua", action="store_true", help="skip the 1498-bot reference corpus")
     args = ap.parse_args()
 
     s = get_sync_session()
@@ -149,9 +174,9 @@ def main():
                 log.info("--reset: no agent targets to delete (no-op)")
 
         counts = {"wba_ops": 0, "wba_new": 0, "wba_skip": 0,
-                  "ja4_sigs": 0, "ja4_new": 0, "ja4_skip": 0,
+                  "ua_total": 0, "ua_new": 0, "ua_skip": 0,
                   "scans": 0, "source_fail": 0}
-        new_targets = []
+        new_targets = []   # WBA only — these get a live scraper scan
 
         # --- source 1: WBA ---
         try:
@@ -170,24 +195,45 @@ def main():
             log.warning("  wba source failed: %s", e)
             s.rollback()
 
-        # --- source 2: JA4 ---
-        try:
-            counts["ja4_sigs"] = len(_JA4_SEED)
-            for ja4, soft in _JA4_SEED:
-                email = f"ja4:{ja4}"
-                t, created = _upsert_target(s, ws, email, {"ja4": ja4, "software_hint": soft, "source": "ja4db"})
-                if created:
-                    counts["ja4_new"] += 1
-                    new_targets.append(t.id)
-                else:
-                    counts["ja4_skip"] += 1
-            s.commit()
-        except Exception as e:
-            counts["source_fail"] += 1
-            log.warning("  ja4 source failed: %s", e)
-            s.rollback()
+        # --- source 2: crawler-UA known-bot reference corpus (reference-load) ---
+        if not args.no_crawler_ua:
+            try:
+                import urllib.request
+                import json as _json
+                with urllib.request.urlopen(_CRAWLER_UA_URL, timeout=30) as r:
+                    corpus = _json.loads(r.read())
+                counts["ua_total"] = len(corpus)
+                # preload existing emails ONCE — idempotence at 1.5k scale
+                existing = {e for (e,) in s.execute(
+                    select(Target.email).where(Target.workspace_id == ws.id)
+                ).all()}
+                for i, entry in enumerate(corpus):
+                    pat = entry.get("pattern")
+                    if not pat:
+                        continue
+                    email = f"ua:{pat}"[:255]
+                    if email in existing:
+                        counts["ua_skip"] += 1
+                        continue
+                    t = Target(workspace_id=ws.id, email=email, status="harvested",
+                               profile_data={"pattern": pat, "operator_url": entry.get("url"),
+                                             "tags": entry.get("tags", []), "source": "crawler-ua"})
+                    s.add(t)
+                    s.flush()
+                    _write_ua_finding(s, ws, t, _ref_scan(s, ws, t.id), entry)
+                    existing.add(email)
+                    counts["ua_new"] += 1
+                    if (i + 1) % 200 == 0:
+                        s.commit()
+                        log.info("  crawler-UA %d/%d", i + 1, len(corpus))
+                s.commit()
+            except Exception as e:
+                counts["source_fail"] += 1
+                log.warning("  crawler-UA source failed (seed stands): %s", e)
+                s.rollback()
 
-        # --- enqueue scans (agent module-set = scraper_engine only) ---
+        # --- enqueue scraper scans for WBA targets ONLY (crawler-UA = reference,
+        #     already has its finding + reference_load scan; nothing to scrape) ---
         if not args.no_scan and new_targets:
             for tid in new_targets:
                 try:
@@ -199,11 +245,11 @@ def main():
 
         log.info("")
         log.info("DISCOVERY workspace=%s kind=%s", ws.id, ws.kind)
-        log.info("  wba:  operators=%d targets_new=%d skipped=%d",
+        log.info("  wba:        operators=%d targets_new=%d skipped=%d",
                  counts["wba_ops"], counts["wba_new"], counts["wba_skip"])
-        log.info("  ja4:  signatures=%d targets_new=%d skipped=%d",
-                 counts["ja4_sigs"], counts["ja4_new"], counts["ja4_skip"])
-        log.info("  scans_enqueued=%d  source_fail=%d", counts["scans"], counts["source_fail"])
+        log.info("  crawler-ua: total=%d targets_new=%d skipped=%d",
+                 counts["ua_total"], counts["ua_new"], counts["ua_skip"])
+        log.info("  scans_enqueued=%d (WBA only)  source_fail=%d", counts["scans"], counts["source_fail"])
         log.info("ASSERT all writes scoped to kind='agent': OK")
     finally:
         s.close()
