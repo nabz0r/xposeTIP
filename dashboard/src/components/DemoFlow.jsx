@@ -19,7 +19,7 @@ function isOn(layer, active) {
 const dim = { opacity: 0.18 }
 const lit = { opacity: 1 }
 
-export default function DemoFlow({ activeLayer = null, sources = 176, scanners = 28 }) {
+export default function DemoFlow({ activeLayer = null, sources = 179, scanners = 28 }) {
   const inputsOn = isOn('inputs', activeLayer)
   const osintOn = isOn('osint', activeLayer)
   const graphOn = isOn('graph', activeLayer)

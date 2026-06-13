@@ -8,6 +8,7 @@ import PixelCat, { phaseFromScan } from '../components/PixelCat'
 import DemoAvatar from '../components/DemoAvatar'
 import FingerprintRadar from '../components/FingerprintRadar'
 import CryptoIdentityBlock from '../components/CryptoIdentityBlock'
+import { SOURCE_COUNT } from '../components/landing/constants'
 
 // S249 — Live Demo page. Public route, zero network during pitch.
 // Scripted replay over a frozen profile snapshot. The fakeScan state moves
@@ -128,7 +129,7 @@ export default function Demo() {
         <div className="grid md:grid-cols-[1fr_360px] gap-6 px-6 py-6">
           {/* Left — DemoFlow backdrop + PixelCat overlay */}
           <div className="relative bg-[#0d0d14] border border-[#1e1e2e] rounded-xl p-4 min-h-[480px] overflow-hidden">
-            <DemoFlow activeLayer={activeLayer} sources={176} scanners={28} />
+            <DemoFlow activeLayer={activeLayer} sources={SOURCE_COUNT} scanners={28} />
 
             {/* PixelCat overlay — Matrix-scramble avatar driven by act phase.
                 Scramble during acts 1-3 → zone-resolve during act 4 (Profiling,

@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom'
 import Section from '../shared/Section'
 
 export default function ScraperBreakdown() {
@@ -40,8 +41,15 @@ export default function ScraperBreakdown() {
           <div className="flex items-center gap-4 px-5 py-2 bg-[#1e1e2e]/10 border-t border-[#1e1e2e]">
             <span className="w-2 h-2 rounded-full shrink-0 bg-[#00ff88]" />
             <span className="text-xs font-mono w-28 shrink-0 text-gray-400">Active / Disabled</span>
-            <span className="text-xs font-mono w-16 text-center"><span className="text-[#00ff88]">151</span><span className="text-gray-600"> / </span><span className="text-gray-500">25</span></span>
-            <span className="text-[10px] text-gray-600">85% activation rate · disabled = pending API key or pending validation</span>
+            <span className="text-xs font-mono w-16 text-center"><span className="text-[#00ff88]">155</span><span className="text-gray-600"> / </span><span className="text-gray-500">21</span></span>
+            <span className="text-[10px] text-gray-600">88% activation rate · disabled = pending API key or pending validation</span>
+          </div>
+          <div className="flex items-center gap-4 px-5 py-2 border-t border-[#1e1e2e]">
+            <span className="w-2 h-2 rounded-full shrink-0 bg-[#185FA5]" />
+            <span className="text-[10px] text-gray-500">
+              +3 agent-layer scrapers (WBA · JA4 · network) —{' '}
+              <Link to="/doc/agent" className="text-[#185FA5] hover:text-[#185FA5]/80 font-mono">AI Agents →</Link>
+            </span>
           </div>
         </div>
       </div>

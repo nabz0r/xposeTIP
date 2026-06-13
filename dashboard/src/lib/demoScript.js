@@ -1,6 +1,7 @@
 // S249 — Deterministic scan-replay script. No network. The Demo page consumes
 // `buildTimeline()` to drive: fakeScan (-> PixelCat pose via phaseFromScan),
 // the DemoFlow backdrop layer that lights up, and the status-stream ticker.
+import { SOURCE_COUNT } from '../components/landing/constants'
 
 export const PACE = 1.0 // ×1.0 ≈ 4 min, ×1.6 ≈ 7 min
 
@@ -32,13 +33,13 @@ export const ACTS = [
       module_progress: { email_validator: 'completed', scraper_engine: 'running' },
       cascade_state: null,
     },
-    pitch: '176 OSINT sources. 28 scanners. The full surface.',
+    pitch: `${SOURCE_COUNT} OSINT sources. 28 scanners. The full surface.`,
     realStatuses: [
       'Querying 28 scanners in parallel…',
       'Holehe across 56 platforms…',
       'GitHub / GitLab discovery…',
       'Cross-checking breach databases…',
-      'Sweeping 176 data-driven scrapers…',
+      `Sweeping ${SOURCE_COUNT} data-driven scrapers…`,
       'Found {social_accounts} accounts…',
       'Found {breaches} breach references…',
     ],
