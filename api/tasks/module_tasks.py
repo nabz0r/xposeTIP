@@ -82,7 +82,20 @@ def persist_scanner_results(scan, results, session) -> int:
     """
     from api.models.finding import Finding
     from api.models.identity import Identity
+    from api.models.scraper import Scraper
     from api.services.layer4.source_scoring import compute_finding_confidence
+    from api.services.freshness import resolve_ttl
+    from datetime import timedelta
+
+    # S304a — preload per-scraper TTL overrides once; stamp valid_until on every write.
+    now = datetime.now(timezone.utc)
+    ttl_overrides = {
+        name: ttl for name, ttl in session.execute(
+            select(Scraper.name, Scraper.ttl_seconds).where(Scraper.ttl_seconds.is_not(None))
+        ).all()
+    }
+    def _valid_until(category, module):
+        return now + timedelta(seconds=resolve_ttl(category, ttl_overrides.get(module)))
 
     created = 0
     for result in results:
@@ -108,7 +121,8 @@ def persist_scanner_results(scan, results, session) -> int:
         ).scalar_one_or_none()
 
         if existing:
-            existing.last_seen = datetime.now(timezone.utc)
+            existing.last_seen = now
+            existing.valid_until = _valid_until(existing.category, existing.module)
         else:
             finding = Finding(
                 workspace_id=scan.workspace_id,
@@ -129,6 +143,8 @@ def persist_scanner_results(scan, results, session) -> int:
 
             # Compute confidence based on source reliability
             finding.confidence = compute_finding_confidence(finding)
+            # S304a — stamp freshness window (descriptive; does not affect confidence)
+            finding.valid_until = _valid_until(result.category, result.module)
             session.add(finding)
             session.flush()
             created += 1

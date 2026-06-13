@@ -18,6 +18,8 @@ class Scraper(UUIDMixin, TimestampMixin, Base):
     enabled: Mapped[bool] = mapped_column(Boolean, default=True)
     # S290 — type discriminator (human|agent). Engine selects scrapers by target kind.
     kind: Mapped[str] = mapped_column(String(10), default="human", server_default="human")
+    # S304a — per-scraper freshness override (seconds); NULL → category default (freshness.py)
+    ttl_seconds: Mapped[int | None] = mapped_column(Integer)
 
     # Request config
     url_template: Mapped[str] = mapped_column(String(500))

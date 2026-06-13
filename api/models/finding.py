@@ -34,6 +34,8 @@ class Finding(UUIDMixin, Base):
     status: Mapped[str] = mapped_column(String(20), default="active")
     first_seen: Mapped[datetime] = mapped_column(TIMESTAMP(timezone=True), default=func.now())
     last_seen: Mapped[datetime] = mapped_column(TIMESTAMP(timezone=True), default=func.now())
+    # S304a — last_seen + resolved TTL (freshness.py); NULL = unstamped (pre-S304a / backfill pending)
+    valid_until: Mapped[datetime | None] = mapped_column(TIMESTAMP(timezone=True))
     created_at: Mapped[datetime] = mapped_column(TIMESTAMP(timezone=True), default=func.now())
 
     workspace = relationship("Workspace", back_populates="findings")
