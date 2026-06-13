@@ -80,6 +80,13 @@ class AnalysisPipeline:
             BehavioralProfiler(),
         ]
 
+        # S304a — stamp freshness on analyzer findings too (separate write path from
+        # persist_scanner_results). module is always "intelligence" (no scraper override),
+        # so TTL resolves via the result category. Descriptive only.
+        from datetime import timedelta
+        from api.services.freshness import resolve_ttl
+        _now = datetime.now(timezone.utc)
+
         new_count = 0
         for analyzer in analyzers:
             try:
@@ -99,6 +106,11 @@ class AnalysisPipeline:
                         existing.data = result.get("data", {})
                         existing.description = result.get("description", "")
                         existing.severity = result.get("severity", "info")
+                        # S304a — re-observed now → refresh last_seen + valid_until
+                        existing.last_seen = _now
+                        existing.valid_until = _now + timedelta(
+                            seconds=resolve_ttl(existing.category)
+                        )
                         continue
 
                     finding = Finding(
@@ -116,6 +128,9 @@ class AnalysisPipeline:
                         indicator_type=result.get("indicator_type"),
                         verified=result.get("verified", True),
                         confidence=_analyzer_confidence(result),
+                        valid_until=_now + timedelta(
+                            seconds=resolve_ttl(result.get("category", "intelligence"))
+                        ),
                     )
                     session.add(finding)
                     new_count += 1
