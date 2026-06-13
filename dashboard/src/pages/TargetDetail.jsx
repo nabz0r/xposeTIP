@@ -9,6 +9,7 @@ import BehavioralCluster from '../components/BehavioralCluster'
 import IdentityGraph from '../components/IdentityGraph'
 import LocationMap from '../components/LocationMap'
 import ProfileHeader from '../components/ProfileHeader'
+import AgentHeader from '../components/AgentHeader'
 import OverviewTab from './tabs/OverviewTab'
 import ScansTab from './tabs/ScansTab'
 import FindingsHubTab from './tabs/FindingsHubTab'
@@ -319,7 +320,9 @@ export default function TargetDetail() {
       {/* Profile Header */}
       <div className="flex items-start gap-4">
         <div className="flex-1">
-          <ProfileHeader target={target} findings={findings} animScore={animScore} profileData={profile} onTargetUpdate={setTarget} />
+          {isAgent
+            ? <AgentHeader target={target} findings={findings} />
+            : <ProfileHeader target={target} findings={findings} animScore={animScore} profileData={profile} onTargetUpdate={setTarget} />}
         </div>
         <div className="shrink-0 flex items-center gap-2 mt-2">
           {workspaces.length > 1 && (
