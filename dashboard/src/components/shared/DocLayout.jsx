@@ -8,6 +8,7 @@ const DOC_TABS = [
   { to: '/doc/bfp', label: 'BFP' },
   { to: '/doc/compare', label: 'Compare' },
   { to: '/doc/engine', label: 'Engine' },
+  { to: '/doc/agent', label: 'AI Agents' },
   { to: '/doc/changelog', label: 'Changelog' },
 ]
 
