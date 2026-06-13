@@ -8,8 +8,7 @@ import { Shield } from 'lucide-react'
 
 const FOOTER_LINKS = [
   { to: '/welcome', label: 'Product' },
-  { to: '/architecture', label: 'Architecture' },
-  { to: '/compare', label: 'Compare' },
+  { to: '/doc', label: 'Doc' },
   { to: '/manifesto', label: 'Manifesto' },
   { to: '/changelog', label: 'Changelog' },
 ]

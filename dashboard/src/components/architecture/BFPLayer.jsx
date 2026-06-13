@@ -61,7 +61,7 @@ export default function BFPLayer() {
             </ul>
 
             <a
-              href="/bfp"
+              href="/doc/bfp"
               className="inline-flex items-center gap-2 text-[#00ff88] hover:text-[#00ff88]/80 text-sm font-mono transition-colors"
             >
               Read the full BFP protocol spec

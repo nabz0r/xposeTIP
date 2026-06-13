@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom'
 import Section from '../shared/Section'
 import { SOURCE_COUNT } from './constants'
 
@@ -48,6 +49,16 @@ export default function PipelineSection() {
               A human is ~33 bits of information. The ledger shows which bits are out, where they leaked, and what to do about each one.
             </p>
           </div>
+        </div>
+
+        <div className="text-center mt-12">
+          <Link
+            to="/doc/engine"
+            className="inline-flex items-center gap-2 text-[#00ff88] hover:text-[#00ff88]/80 text-sm font-mono transition-colors"
+          >
+            See the exact engine pathway
+            <span aria-hidden>→</span>
+          </Link>
         </div>
       </div>
     </Section>

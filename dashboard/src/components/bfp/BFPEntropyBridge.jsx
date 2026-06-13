@@ -43,7 +43,7 @@ export default function BFPEntropyBridge() {
 
       <div className="mt-8 text-center">
         <a
-          href="/architecture"
+          href="/doc/architecture"
           className="inline-flex items-center gap-2 text-[#3388ff] hover:text-[#3388ff]/80 text-sm font-mono transition-colors"
         >
           How the full ledger works →
