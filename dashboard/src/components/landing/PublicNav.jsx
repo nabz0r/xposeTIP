@@ -7,9 +7,8 @@ import { Shield } from 'lucide-react'
 
 const NAV_LINKS = [
   { to: '/welcome', label: 'Product', aliases: ['/'] },
-  { to: '/doc', label: 'Doc', aliases: ['/doc/architecture', '/doc/bfp', '/doc/compare', '/doc/engine'] },
+  { to: '/doc', label: 'Doc', aliases: ['/doc/architecture', '/doc/bfp', '/doc/compare', '/doc/engine', '/doc/changelog'] },
   { to: '/manifesto', label: 'Manifesto' },
-  { to: '/changelog', label: 'Changelog' },
 ]
 
 export default function PublicNav() {

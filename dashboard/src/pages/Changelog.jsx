@@ -1,8 +1,6 @@
 import { useState, useMemo } from 'react'
 import { Search } from 'lucide-react'
 import commitsRaw from '../data/changelog.json'
-import PublicNav from '../components/landing/PublicNav'
-import PublicFooter from '../components/landing/PublicFooter'
 
 const COMMITS = commitsRaw
 
@@ -97,10 +95,8 @@ export default function Changelog() {
   }, [])
 
   return (
-    <div className="min-h-screen bg-[#0a0a0f] text-white">
-      <PublicNav />
-
-      <div className="max-w-3xl mx-auto px-6 pt-32 pb-16">
+    <div className="pb-20">
+      <div className="max-w-3xl mx-auto px-6 pb-16">
         {/* Hero */}
         <div className="text-center mb-10">
           <div className="inline-flex items-center gap-2 text-xs font-mono text-[#00ff88]/70 mb-4">
@@ -222,8 +218,6 @@ export default function Changelog() {
           </a>
         </p>
       </div>
-
-      <PublicFooter />
     </div>
   )
 }

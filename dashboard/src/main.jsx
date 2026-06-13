@@ -49,14 +49,15 @@ function App() {
             <Route path="bfp" element={<BFP />} />
             <Route path="compare" element={<Compare />} />
             <Route path="engine" element={<Engine />} />
+            <Route path="changelog" element={<Changelog />} />
           </Route>
           {/* Legacy redirects — preserve SEO + existing internal links */}
           <Route path="/architecture" element={<Navigate to="/doc/architecture" replace />} />
           <Route path="/bfp" element={<Navigate to="/doc/bfp" replace />} />
           <Route path="/compare" element={<Navigate to="/doc/compare" replace />} />
+          <Route path="/changelog" element={<Navigate to="/doc/changelog" replace />} />
           <Route path="/demo" element={<Demo />} />
           <Route path="/portal" element={<Portal />} />
-          <Route path="/changelog" element={<Changelog />} />
           <Route path="/login" element={<Login />} />
           <Route path="/setup" element={<Setup />} />
           <Route path="/" element={<ProtectedRoute><Layout /></ProtectedRoute>}>

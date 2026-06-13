@@ -8,6 +8,7 @@ const DOC_TABS = [
   { to: '/doc/bfp', label: 'BFP' },
   { to: '/doc/compare', label: 'Compare' },
   { to: '/doc/engine', label: 'Engine' },
+  { to: '/doc/changelog', label: 'Changelog' },
 ]
 
 function DocTabBar() {
