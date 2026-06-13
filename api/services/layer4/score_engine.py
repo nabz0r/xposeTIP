@@ -77,6 +77,14 @@ SCORE_FACTORS = {
 # Max raw score per category before normalization
 MAX_FINDINGS_PER_CATEGORY = 20
 
+# S299b — per-category normalization denominator. Default = MAX_FINDINGS_PER_CATEGORY
+# × critical (100). Threat categories with a small natural finding-count regime
+# (breach: p90≈4) are crushed by the global denominator → calibrated lower max_raw.
+# Exposure categories untouched; exposure/threat sets are disjoint → threat-only.
+CATEGORY_MAX_RAW = {
+    "breach": 40,
+}
+
 
 def _compute_bonus_factors(findings: list) -> int:
     """Compute bonus/penalty points from special conditions."""
@@ -202,7 +210,9 @@ def compute_score(target_id, session: Session, graph_context=None) -> tuple[int,
     # Normalize each category to 0-100
     breakdown = {}
     for cat, raw in category_scores.items():
-        max_raw = MAX_FINDINGS_PER_CATEGORY * SEVERITY_MULTIPLIER["critical"]
+        max_raw = CATEGORY_MAX_RAW.get(
+            cat, MAX_FINDINGS_PER_CATEGORY * SEVERITY_MULTIPLIER["critical"]
+        )
         normalized = min(100, int((raw / max_raw) * 100))
         breakdown[cat] = normalized
 
