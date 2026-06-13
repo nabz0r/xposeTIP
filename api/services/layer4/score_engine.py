@@ -16,19 +16,9 @@ from api.services.layer4.source_scoring import get_source_reliability
 
 logger = logging.getLogger(__name__)
 
-SCORE_WEIGHTS = {
-    "breach": 0.25,
-    "social_account": 0.18,
-    "tracking": 0.12,
-    "geolocation": 0.10,
-    "data_broker": 0.08,
-    "metadata": 0.07,
-    "domain_registration": 0.04,
-    "paste": 0.04,
-    "identity": 0.05,
-    "archive": 0.04,
-    "intelligence": 0.03,
-}
+# S300 — removed legacy SCORE_WEIGHTS dict + its `total` consumer block: `total`
+# was computed but never returned or stored (compute_score returns exposure/threat
+# only). EXPOSURE_CATEGORIES + THREAT_CATEGORIES are the live weight sets.
 
 # Categories that indicate EXPOSURE (visibility, footprint)
 EXPOSURE_CATEGORIES = {
@@ -46,11 +36,12 @@ EXPOSURE_CATEGORIES = {
 # Categories that indicate THREAT (danger, risk)
 THREAT_CATEGORIES = {
     "breach": 0.35,
-    "paste": 0.15,
-    "data_broker": 0.15,
-    "tracking": 0.20,
-    "compliance": 0.25,  # Sanctions/PEP = high threat
+    "paste": 0.15,       # HIBP-gated (paid key); empty on free tier
+    "compliance": 0.25,  # Sanctions/PEP = high threat; population-gated
 }
+# S300 — removed data_broker (0.15) + tracking (0.20): no producer in the
+# codebase, dead weight. Re-add here (and they auto-rejoin the exposure ×0.02
+# guard via known_all) if/when a producer ships.
 
 SEVERITY_MULTIPLIER = {
     "critical": 5,
@@ -215,17 +206,6 @@ def compute_score(target_id, session: Session, graph_context=None) -> tuple[int,
         )
         normalized = min(100, int((raw / max_raw) * 100))
         breakdown[cat] = normalized
-
-    # Weighted total (combined, kept for backward compat)
-    total = 0.0
-    for cat, weight in SCORE_WEIGHTS.items():
-        total += breakdown.get(cat, 0) * weight
-
-    # Also add any categories not in weights at a small default weight
-    known_cats = set(SCORE_WEIGHTS.keys())
-    for cat, score in breakdown.items():
-        if cat not in known_cats:
-            total += score * 0.02
 
     # Exposure score (visibility)
     exposure_total = 0.0
