@@ -20,6 +20,7 @@ import Manifesto from './pages/Manifesto'
 import BFP from './pages/BFP'
 import Compare from './pages/Compare'
 import DocLayout from './components/shared/DocLayout'
+import Engine from './pages/Engine'
 import Demo from './pages/Demo'
 import Portal from './pages/Portal'
 import Changelog from './pages/Changelog'
@@ -47,6 +48,7 @@ function App() {
             <Route path="architecture" element={<Architecture />} />
             <Route path="bfp" element={<BFP />} />
             <Route path="compare" element={<Compare />} />
+            <Route path="engine" element={<Engine />} />
           </Route>
           {/* Legacy redirects — preserve SEO + existing internal links */}
           <Route path="/architecture" element={<Navigate to="/doc/architecture" replace />} />

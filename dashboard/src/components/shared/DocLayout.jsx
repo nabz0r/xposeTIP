@@ -7,7 +7,7 @@ const DOC_TABS = [
   { to: '/doc/architecture', label: 'Architecture' },
   { to: '/doc/bfp', label: 'BFP' },
   { to: '/doc/compare', label: 'Compare' },
-  // S301b appends: { to: '/doc/engine', label: 'Engine' }
+  { to: '/doc/engine', label: 'Engine' },
 ]
 
 function DocTabBar() {
