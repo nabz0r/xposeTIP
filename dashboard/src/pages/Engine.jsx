@@ -26,7 +26,7 @@ const REGISTRY = `Layer 1 — email / social / identity
   reverse_image    → layer1.reverse_image_scanner:ReverseImageScanner
 
 Layer 1 — scraper engines
-  scraper_engine      → layer1.scraper_scanner:ScraperScanner   (fans out 176 URL-templates)
+  scraper_engine      → layer1.scraper_scanner:ScraperScanner   (fans out 179 URL-templates)
   name_scraper_engine → layer1.name_scraper_scanner:NameScraperScanner
 
 Layer 2 — network / premium (key-gated)

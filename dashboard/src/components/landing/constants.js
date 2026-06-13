@@ -57,7 +57,7 @@ export function hashEmail(email) {
   return Math.abs(hash)
 }
 
-// Canonical source count — measured from scripts/seed_scrapers.py at S274.
+// Canonical source count — measured from scripts/seed_scrapers.py (AST) at S302c.
 // Update HERE only; all landing/public sections import this.
-export const SOURCE_COUNT = 176
-export const SOURCE_ACTIVE_COUNT = 155  // 21 disabled in seed
+export const SOURCE_COUNT = 179
+export const SOURCE_ACTIVE_COUNT = 157  // 22 disabled in seed

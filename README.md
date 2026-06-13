@@ -11,7 +11,7 @@
 [![React 18](https://img.shields.io/badge/React-18-61DAFB?logo=react)](https://react.dev)
 [![Docker](https://img.shields.io/badge/Docker-Compose-2496ED?logo=docker)](https://docker.com)
 [![License: AGPL v3](https://img.shields.io/badge/License-AGPL_v3-blue.svg)](LICENSE)
-[![Scrapers](https://img.shields.io/badge/scrapers-176-3388ff)](#scraper-engine)
+[![Scrapers](https://img.shields.io/badge/scrapers-179-3388ff)](#scraper-engine)
 [![Sprints](https://img.shields.io/badge/sprints-273+-00ff88)](#changelog)
 [![Version](https://img.shields.io/badge/version-1.6.45-green)](#changelog)
 
@@ -53,7 +53,7 @@ Dashboard: graph, timeline, accounts,
 
 | Layer | What | How |
 |:-----:|------|-----|
-| **L1** | Passive Recon | 176 scrapers: account enumeration, breach history, social profiles, username expansion, phone/crypto enrichment, public keys (SSH/GPG), legal records (US/FR/UK + SEC EDGAR + Companies House UK), academic identity (arXiv/ORCID/DBLP/Semantic Scholar) |
+| **L1** | Passive Recon | 179 scrapers: account enumeration, breach history, social profiles, username expansion, phone/crypto enrichment, public keys (SSH/GPG), legal records (US/FR/UK + SEC EDGAR + Companies House UK), academic identity (arXiv/ORCID/DBLP/Semantic Scholar) |
 | **L2** | Public Databases | DNS deep (SPF/DMARC/DKIM/subdomains), WHOIS, GeoIP, certificate transparency, SaaS detection |
 | **L3** | Self-Audit | Google/Microsoft OAuth app permissions, Drive public files, Gmail forwarding rules |
 | **L4** | Intelligence | Identity graph, PageRank confidence, dual scoring, persona clustering, behavioral profiling, risk assessment |
@@ -69,13 +69,13 @@ Dashboard: graph, timeline, accounts,
 - **Entropy ledger (S265–S272)** — per-axis identifying-bits: -log2(p) against public priors, correlated axes discounted, hard-capped at ~20 bits (OSINT anonymity set ~1M). Includes H(cluster) — the behavioral hash bucket as a belonging term — and breach-derived composition signals (extract-and-drop, no cleartext stored)
 - **Generative pixel art** — deterministic 32x32 CryptoPunk-style avatar from graph eigenvalues (5.4B unique combinations, zero GPU)
 - **Deep Scan** — operator-triggered per-indicator scan across all matching scrapers, with cascade (discovered cross-type indicators are chain-scanned)
-- **Web Discovery (Phase C)** — fingerprint-driven Google dorking + 6 content extractors — explores the open web beyond the 176 fixed scrapers
+- **Web Discovery (Phase C)** — fingerprint-driven Google dorking + 6 content extractors — explores the open web beyond the 179 fixed scrapers
 - **Phone Intelligence** — automatic phone number extraction from breach data + carrier/line type enrichment
 - **Crypto Wallet Tracking** — BTC/ETH wallet identification with balance, transaction history, and scam flag detection via ChainAbuse
 
 ### Scraper Engine
 
-176 data-driven scrapers (155 active by default, 21 disabled) — all configurable via UI (URL template, extraction rules, rate limits):
+179 data-driven scrapers (157 active by default, 22 disabled) — all configurable via UI (URL template, extraction rules, rate limits):
 
 | Category | Count | Examples |
 |----------|-------|---------|
@@ -122,7 +122,7 @@ graph LR
     A --> C[Celery Workers<br/>Two-phase orchestration]
     A --> PG[(PostgreSQL 16)]
     A --> RD[(Redis 7<br/>Broker + Cache)]
-    C --> P1[Phase A — Gather<br/>176 scrapers + Pass 1.5 + Pass 2]
+    C --> P1[Phase A — Gather<br/>179 scrapers + Pass 1.5 + Pass 2]
     C --> P2[Phase B — Compute<br/>Graph → PageRank → Score<br/>→ Profile → Personas<br/>→ Intelligence → Fingerprint]
     P2 --> PG
     C --> DS[Deep Scan<br/>Per-indicator + Cascade]
@@ -151,7 +151,7 @@ First registered user = **superadmin** with **Enterprise** plan.
 | Plan | Availability | Scans/mo | Seats | Key Features |
 |------|--------------|----------|-------|--------------|
 | Free | Free to start | 25 | 1 | Basic exposure scan, single identifier, fingerprint preview |
-| Starter | Early access | 250 | 1 | Full 176-source pipeline, identity graph + personas, PDF reports |
+| Starter | Early access | 250 | 1 | Full 179-source pipeline, identity graph + personas, PDF reports |
 | Team | Early access | 2 000 | 5 | API access (SIEM/SOAR), multi-workspace, shared targets |
 | Enterprise | On application | Custom | Unlimited | Multi-tenant + SSO, audit log + SLA, custom scrapers, managed APIs |
 
