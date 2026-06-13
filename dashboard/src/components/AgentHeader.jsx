@@ -5,6 +5,24 @@
 // Graceful: fields absent (e.g. Google has no purpose/signature_agent) are hidden.
 const GREEN = '#00ff88'
 
+// S294 — WBA findings pass through the engine extractor, which stringifies values,
+// so data.extracted.keys arrives as a JSON STRING (not an array) → "0 keys" bug.
+// crawler-UA arrays are written directly by the discovery (real arrays). Normalize both.
+function asArray(v) {
+  if (Array.isArray(v)) return v
+  if (typeof v === 'string') { try { const p = JSON.parse(v); return Array.isArray(p) ? p : [] } catch { return [] } }
+  return []
+}
+
+function Row({ k, v, accent }) {
+  return (
+    <div className="flex gap-3 text-xs font-mono">
+      <span className="text-gray-500 w-16 shrink-0">{k}</span>
+      <span className="break-all" style={accent ? { color: GREEN } : { color: '#cbd5e1' }}>{v}</span>
+    </div>
+  )
+}
+
 function Glyph() {
   return (
     <div className="w-14 h-14 rounded-2xl bg-[#0f1420] border border-[#1e2a3a] flex items-center justify-center shrink-0">
@@ -38,15 +56,19 @@ export default function AgentHeader({ target, findings }) {
   const declared = f.category === 'agent_declared' || pd.source === 'wba'
 
   // WBA
-  const keys = Array.isArray(d.keys) ? d.keys : []
+  const keys = asArray(d.keys)
   const purpose = d.purpose
   const sigAgent = d.signature_agent
   const algs = [...new Set(keys.map(k => k.crv).filter(Boolean))]
   // crawler-UA
   const pattern = d.pattern || pd.pattern
   const operatorUrl = d.url || pd.operator_url
-  const instances = Array.isArray(d.instances) ? d.instances : []
+  const instances = asArray(d.instances)
   const tags = d.tags || pd.tags || []
+
+  // S294 — network resolution (the agent's "Place" axis)
+  const fNet = (findings || []).find(x => x.category === 'agent_network')
+  const net = (fNet && (fNet.data?.extracted || fNet.data)) || null
 
   return (
     <div className="rounded-2xl border border-[#1e1e2e] bg-[#0b0e16] p-6">
@@ -86,6 +108,19 @@ export default function AgentHeader({ target, findings }) {
           {instances[0] && <div><span className="text-[11px] uppercase tracking-wide text-gray-500">Example instance</span>
             <div className="text-xs font-mono text-gray-400 break-all mt-0.5 line-clamp-2">{instances[0]}</div></div>}
           {tags.length > 0 && <div className="flex gap-1.5 flex-wrap pt-1">{tags.map((t, i) => <Chip key={i}>{t}</Chip>)}</div>}
+        </div>
+      )}
+
+      {/* S294 — network · the agent's "Place" axis (IP / ASN / hosting / geo / rDNS) */}
+      {net && (net.ip || net.asn) && (
+        <div className="space-y-1.5 mb-5 pt-4 border-t border-[#1e1e2e]">
+          <div className="text-[11px] uppercase tracking-wide text-gray-500">Network · Place</div>
+          {net.ip && <Row k="IP" v={net.ip} />}
+          {net.asn && <Row k="ASN" v={net.asn} accent />}
+          {(net.org || net.isp) && <Row k="Hosting" v={net.org || net.isp} />}
+          {(net.country || net.city) && <Row k="Located" v={[net.city, net.country].filter(Boolean).join(', ')} />}
+          {net.reverse && <Row k="rDNS" v={net.reverse} />}
+          {String(net.hosting) === 'true' && <div className="pt-1"><Chip tone="green">datacenter</Chip></div>}
         </div>
       )}
 

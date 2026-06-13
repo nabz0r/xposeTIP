@@ -285,7 +285,14 @@ class ScraperEngine:
                         return rule.get("default")
                     if data is None:
                         return rule.get("default")
-                return self._apply_transform(str(data), rule.get("transform")) if data is not None else rule.get("default")
+                if data is None:
+                    return rule.get("default")
+                # S294 — preserve list/dict structure (e.g. WBA `keys`) instead of
+                # str()-ing it into a Python-repr string that JSON.parse can't read.
+                # Scalars still route through transform (unchanged behaviour).
+                if isinstance(data, (list, dict)):
+                    return data
+                return self._apply_transform(str(data), rule.get("transform"))
 
         except Exception as e:
             logger.debug("Extraction failed for %s: %s", rule.get("field"), e)

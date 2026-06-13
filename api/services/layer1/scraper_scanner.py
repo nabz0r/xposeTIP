@@ -71,8 +71,15 @@ class ScraperScanner(BaseScanner):
                     _pd = (_at.profile_data if _at else None) or {}
                 except Exception:
                     pass
+                # S294 — agent_operator must be a resolvable DOMAIN for network_resolve.
+                # WBA: email IS the domain. crawler-UA: email='ua:<pattern>' → take the
+                # operator host from operator_url.
+                _op = email
+                if _pd.get("source") == "crawler-ua" or email.startswith("ua:"):
+                    from urllib.parse import urlparse
+                    _op = urlparse(_pd.get("operator_url") or "").netloc or None
                 inputs = {
-                    "agent_operator": email,        # email field = operator domain
+                    "agent_operator": _op,          # resolvable domain for both tiers
                     "ja4": _pd.get("ja4"),
                 }
             else:

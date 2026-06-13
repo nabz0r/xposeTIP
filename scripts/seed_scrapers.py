@@ -4045,6 +4045,35 @@ DEFAULT_SCRAPERS = [
         # the capture path (.har/.pcap), matched against the crawler-UA corpus.
         "enabled": False,
     },
+    {
+        # S294 — network resolution (IP / ASN / hosting / geo / rDNS) = the agent's
+        # "Place" axis. One ip-api call per operator. Free tier is HTTP-only (HTTPS=403).
+        "name": "network_resolve",
+        "kind": "agent",
+        "display_name": "Network · IP / ASN / geo",
+        "description": "Resolves an agent operator domain to its IP, ASN, hosting org, country and reverse DNS (ip-api).",
+        "category": "agent_network",
+        "input_type": "agent_operator",
+        "url_template": "http://ip-api.com/json/{input}?fields=status,country,city,isp,org,as,asname,query,reverse,hosting",
+        "method": "GET",
+        "extraction_rules": [
+            {"field": "ip", "type": "json_key", "pattern": "query"},
+            {"field": "asn", "type": "json_key", "pattern": "as"},
+            {"field": "asname", "type": "json_key", "pattern": "asname"},
+            {"field": "org", "type": "json_key", "pattern": "org"},
+            {"field": "isp", "type": "json_key", "pattern": "isp"},
+            {"field": "country", "type": "json_key", "pattern": "country"},
+            {"field": "city", "type": "json_key", "pattern": "city"},
+            {"field": "reverse", "type": "json_key", "pattern": "reverse"},
+            {"field": "hosting", "type": "json_key", "pattern": "hosting"},
+        ],
+        "not_found_indicators": ['"status":"fail"'],   # ip-api returns 200 + status:fail on unresolvable
+        "finding_title_template": "Network: {input}",
+        "finding_category": "agent_network",
+        "finding_severity": "info",
+        "identity_type": "ip",
+        "enabled": True,
+    },
 ]
 
 
