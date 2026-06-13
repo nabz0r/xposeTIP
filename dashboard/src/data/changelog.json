@@ -1,5 +1,1149 @@
 [
   {
+    "sha": "d2f1101",
+    "date": "2026-06-13T12:22:59+02:00",
+    "type": "feat",
+    "scope": "S295c",
+    "sprint": "S295c",
+    "subject": "Agent Network → d3-force layout (organic, readable)"
+  },
+  {
+    "sha": "0413ac6",
+    "date": "2026-06-13T12:06:18+02:00",
+    "type": "feat",
+    "scope": "S295b",
+    "sprint": "S295b",
+    "subject": "Agent Network tab — ASN-cluster graph (zero dep, isolated)"
+  },
+  {
+    "sha": "284d521",
+    "date": "2026-06-13T11:39:07+02:00",
+    "type": "feat",
+    "scope": "S295a",
+    "sprint": "S295a",
+    "subject": "resolve the AI-agent subset network (ASN/IP/geo) via curated map"
+  },
+  {
+    "sha": "fa891fe",
+    "date": "2026-06-13T10:58:17+02:00",
+    "type": "feat",
+    "scope": "S294",
+    "sprint": "S294",
+    "subject": "agent network enrichment (IP/ASN/geo = Place axis) + fix WBA keys=0"
+  },
+  {
+    "sha": "2974172",
+    "date": "2026-06-13T10:35:09+02:00",
+    "type": "feat",
+    "scope": "S293",
+    "sprint": "S293",
+    "subject": "agent-native detail header (.agentai) instead of the human header"
+  },
+  {
+    "sha": "f156fcc",
+    "date": "2026-06-13T01:04:24+02:00",
+    "type": "perf",
+    "scope": "S293b",
+    "sprint": "S293b",
+    "subject": "agent target rows use a static glyph, not GenerativeAvatar"
+  },
+  {
+    "sha": "06bacad",
+    "date": "2026-06-13T00:48:04+02:00",
+    "type": "feat",
+    "scope": "S293a",
+    "sprint": "S293a",
+    "subject": "load the 1498 known-agents corpus + retire the dead JA4 slice"
+  },
+  {
+    "sha": "57584b5",
+    "date": "2026-06-13T00:25:43+02:00",
+    "type": "feat",
+    "scope": "S292b",
+    "sprint": "S292b",
+    "subject": "seed the 3 live WBA operators + capture purpose/signature_agent"
+  },
+  {
+    "sha": "0829983",
+    "date": "2026-06-12T21:23:13+02:00",
+    "type": "feat",
+    "scope": "S292",
+    "sprint": "S292",
+    "subject": "agent kind-aware — gate Phase-B + visible findings + scoped picker"
+  },
+  {
+    "sha": "fbe8154",
+    "date": "2026-06-12T20:54:20+02:00",
+    "type": "feat",
+    "scope": "S291",
+    "sprint": "S291",
+    "subject": "first agent scrapers + discovery bootstrap (ingestion only, zero entropy)"
+  },
+  {
+    "sha": "1cf833b",
+    "date": "2026-06-12T20:29:54+02:00",
+    "type": "feat",
+    "scope": "S290",
+    "sprint": "S290",
+    "subject": "kind discriminator (human|agent) — type-aware engine foundation"
+  },
+  {
+    "sha": "445d88f",
+    "date": "2026-06-12T19:21:37+02:00",
+    "type": "fix",
+    "scope": "S287b",
+    "sprint": "S287b",
+    "subject": "avatar_reuse — count distinct PLATFORMS, not scraper modules"
+  },
+  {
+    "sha": "e25f12b",
+    "date": "2026-06-12T18:02:44+02:00",
+    "type": "feat",
+    "scope": "S289a",
+    "sprint": "S289a",
+    "subject": "light the press axis on the real corpus — RSS fallback + ordering fix"
+  },
+  {
+    "sha": "f8b17d7",
+    "date": "2026-06-12T17:50:16+02:00",
+    "type": "feat",
+    "scope": "S288",
+    "sprint": "S288",
+    "subject": "article context fetch + press-corroboration entropy axis (shadow)"
+  },
+  {
+    "sha": "dfe6d2b",
+    "date": "2026-06-12T17:14:51+02:00",
+    "type": "feat",
+    "scope": "S287",
+    "sprint": "S287",
+    "subject": "avatar_reuse as an autonomous entropy axis (Option 3)"
+  },
+  {
+    "sha": "728abdb",
+    "date": "2026-06-12T16:52:30+02:00",
+    "type": "feat",
+    "scope": "S286",
+    "sprint": "S286",
+    "subject": "avatar pHash — perceptual cross-platform reuse signal (isolated infra)"
+  },
+  {
+    "sha": "29da560",
+    "date": "2026-06-12T16:03:21+02:00",
+    "type": "feat",
+    "scope": "S285",
+    "sprint": "S285",
+    "subject": "EntropyTab — human labels for the name-axis states"
+  },
+  {
+    "sha": "6b88635",
+    "date": "2026-06-12T15:55:09+02:00",
+    "type": "feat",
+    "scope": "S284b",
+    "sprint": "S284b",
+    "subject": "wire name_priors into entropy — real frequency + conditional λ"
+  },
+  {
+    "sha": "254d7ed",
+    "date": "2026-06-12T15:48:01+02:00",
+    "type": "feat",
+    "scope": "S284a",
+    "sprint": "S284a",
+    "subject": "name_priors WGND+SSA (INSEE drop-in ready)"
+  },
+  {
+    "sha": "20d7065",
+    "date": "2026-06-12T14:50:25+02:00",
+    "type": "fix",
+    "scope": "S283",
+    "sprint": "S283",
+    "subject": "false country — exclude free-mail GeoIP (C) + election floor 0.4 (A)"
+  },
+  {
+    "sha": "f388d56",
+    "date": "2026-06-12T14:41:47+02:00",
+    "type": "feat",
+    "scope": "S282",
+    "sprint": "S282",
+    "subject": "gender entropy axis (pre-computed genderize) + name→gender residual λ"
+  },
+  {
+    "sha": "4a746a2",
+    "date": "2026-06-12T14:30:40+02:00",
+    "type": "feat",
+    "scope": "S281",
+    "sprint": "S281",
+    "subject": "generalized governor-2 — data-driven residual discount engine (λ)"
+  },
+  {
+    "sha": "7eea3a5",
+    "date": "2026-06-12T14:05:01+02:00",
+    "type": "docs",
+    "scope": null,
+    "sprint": "S280",
+    "subject": "analyzer count 9→10 (S280 follow-up)"
+  },
+  {
+    "sha": "6e4e798",
+    "date": "2026-06-12T13:49:48+02:00",
+    "type": "docs",
+    "scope": "S280",
+    "sprint": "S280",
+    "subject": "SCANNERS.md nominal tables = SCANNER_REGISTRY exact + CLAUDE.md v1.6.46"
+  },
+  {
+    "sha": "f806883",
+    "date": "2026-06-12T13:35:47+02:00",
+    "type": "feat",
+    "scope": "S279",
+    "sprint": "S279",
+    "subject": "final '174' sweep — Compare / Manifesto / DiscoveredTab → SOURCE_COUNT"
+  },
+  {
+    "sha": "12a1db7",
+    "date": "2026-06-12T13:30:52+02:00",
+    "type": "docs",
+    "scope": "S278",
+    "sprint": "S278",
+    "subject": "canonical counts sweep + Entropy Layer documentation"
+  },
+  {
+    "sha": "c222f2c",
+    "date": "2026-06-12T13:12:11+02:00",
+    "type": "feat",
+    "scope": "S277",
+    "sprint": "S277",
+    "subject": "/bfp — H(cluster) bridge block + stats sweep + roadmap sync"
+  },
+  {
+    "sha": "0ee7fac",
+    "date": "2026-06-12T13:01:48+02:00",
+    "type": "feat",
+    "scope": "S276",
+    "sprint": "S276",
+    "subject": "/architecture — EntropyLayer section (the ledger in bits)"
+  },
+  {
+    "sha": "9467729",
+    "date": "2026-06-12T12:31:29+02:00",
+    "type": "feat",
+    "scope": "S275",
+    "sprint": "S275",
+    "subject": "Architecture page — sweep stale stats to shared SOURCE_COUNT"
+  },
+  {
+    "sha": "f4b2ef8",
+    "date": "2026-06-12T12:21:47+02:00",
+    "type": "feat",
+    "scope": "S274",
+    "sprint": "S274",
+    "subject": "landing — shared SOURCE_COUNT constant + entropy narrative"
+  },
+  {
+    "sha": "e1f2c31",
+    "date": "2026-06-12T11:14:46+02:00",
+    "type": "docs",
+    "scope": null,
+    "sprint": "S261",
+    "subject": "sync CLAUDE.md v1.6.39→v1.6.45 — S261+ trust/entropy/AR arc"
+  },
+  {
+    "sha": "6b7a1e4",
+    "date": "2026-06-12T10:45:10+02:00",
+    "type": "fix",
+    "scope": null,
+    "sprint": null,
+    "subject": "cluster-ordering — fold H(cluster) entropy term in post-fingerprint"
+  },
+  {
+    "sha": "7dbf081",
+    "date": "2026-06-12T10:34:24+02:00",
+    "type": "fix",
+    "scope": "S269c",
+    "sprint": "S269c",
+    "subject": "HudsonRock finding mis-attributed to scraper_engine (missing data.scraper)"
+  },
+  {
+    "sha": "05901ec",
+    "date": "2026-06-12T10:15:51+02:00",
+    "type": "fix",
+    "scope": "S268b",
+    "sprint": "S268b",
+    "subject": "GLEIF seed — use bare domain label, not search_context (city pollution)"
+  },
+  {
+    "sha": "7789678",
+    "date": "2026-06-11T23:17:30+02:00",
+    "type": "feat",
+    "scope": "S271",
+    "sprint": "S271",
+    "subject": "H(cluster) — turn the BFP behavioral hash into bits (the belonging term)"
+  },
+  {
+    "sha": "4afedf8",
+    "date": "2026-06-11T22:47:51+02:00",
+    "type": "fix",
+    "scope": "S273b",
+    "sprint": "S273b",
+    "subject": "hostname stop-set — drop manufacturer brands/models (kill the 'Dell' noise)"
+  },
+  {
+    "sha": "c677ed0",
+    "date": "2026-06-11T21:46:13+02:00",
+    "type": "feat",
+    "scope": "S272",
+    "sprint": "S272",
+    "subject": "wire L1 — entropy engine consumes password-composition candidates"
+  },
+  {
+    "sha": "e8d9d25",
+    "date": "2026-06-11T21:35:36+02:00",
+    "type": "docs",
+    "scope": "S270",
+    "sprint": "S270",
+    "subject": "reword extractor docstring so the no-cleartext verification grep passes"
+  },
+  {
+    "sha": "e531bed",
+    "date": "2026-06-11T21:34:48+02:00",
+    "type": "feat",
+    "scope": "S270",
+    "sprint": "S270",
+    "subject": "password composition extractor — L1 entropy signal (extract-and-drop + hash)"
+  },
+  {
+    "sha": "359c86c",
+    "date": "2026-06-11T21:22:08+02:00",
+    "type": "fix",
+    "scope": "S269b",
+    "sprint": "S269b",
+    "subject": "harden HudsonRock allow-list — drop computer_name + antiviruses (PII)"
+  },
+  {
+    "sha": "a41138f",
+    "date": "2026-06-11T20:32:38+02:00",
+    "type": "feat",
+    "scope": "S269",
+    "sprint": "S269",
+    "subject": "HudsonRock infostealer-exposure connector (free key-less, metadata-only)"
+  },
+  {
+    "sha": "e67a5dd",
+    "date": "2026-06-11T14:08:42+02:00",
+    "type": "feat",
+    "scope": "S268",
+    "sprint": "S268",
+    "subject": "AR-1 Round 0 — GLEIF legal-entity connector (plug-n-play, BODACC convention)"
+  },
+  {
+    "sha": "cd338ad",
+    "date": "2026-06-11T13:39:11+02:00",
+    "type": "feat",
+    "scope": "S267",
+    "sprint": "S267",
+    "subject": "Entropy tab — surface the identifying-bits ledger per target"
+  },
+  {
+    "sha": "3a87470",
+    "date": "2026-06-11T12:59:54+02:00",
+    "type": "feat",
+    "scope": "S265",
+    "sprint": "S265",
+    "subject": "entropy layer v0 — identifying-bits (shadow), the info-theoretic confidence"
+  },
+  {
+    "sha": "197a15d",
+    "date": "2026-06-11T11:20:31+02:00",
+    "type": "feat",
+    "scope": "S264-0j",
+    "sprint": null,
+    "subject": "orphan discovery-session hygiene (rollback root-cause + watchdog sweep)"
+  },
+  {
+    "sha": "aba9584",
+    "date": "2026-06-11T11:02:35+02:00",
+    "type": "feat",
+    "scope": "S264-0i",
+    "sprint": null,
+    "subject": "typo-tolerant local-part binding (length-floor gated) — unblocks ekatarina@"
+  },
+  {
+    "sha": "50f0bc9",
+    "date": "2026-06-11T10:43:06+02:00",
+    "type": "feat",
+    "scope": "S264-0h",
+    "sprint": null,
+    "subject": "exempt corporate_person from known-identifier dedup (unblocks eric@)"
+  },
+  {
+    "sha": "1fd011d",
+    "date": "2026-06-11T00:01:53+02:00",
+    "type": "feat",
+    "scope": "S264-0d",
+    "sprint": null,
+    "subject": "weighted corroboration (cross_verif) + colleague→org routing"
+  },
+  {
+    "sha": "0583eba",
+    "date": "2026-06-10T23:11:34+02:00",
+    "type": "feat",
+    "scope": "S264-0g",
+    "sprint": null,
+    "subject": "deterministic press retrieval via native index (hors DDG ranking)"
+  },
+  {
+    "sha": "860adac",
+    "date": "2026-06-10T21:48:01+02:00",
+    "type": "feat",
+    "scope": "S264-0f",
+    "sprint": null,
+    "subject": "discovery-tuning — reach the naming article + unblock AR-0 persistence"
+  },
+  {
+    "sha": "b461aa9",
+    "date": "2026-06-10T21:18:29+02:00",
+    "type": "feat",
+    "scope": "S264-0e",
+    "sprint": null,
+    "subject": "name <-> local-part consistency guard (the confident-wrong)"
+  },
+  {
+    "sha": "96bc1bf",
+    "date": "2026-06-10T20:08:43+02:00",
+    "type": "feat",
+    "scope": "S264-0c",
+    "sprint": null,
+    "subject": "surface resolved person + honest provisional state"
+  },
+  {
+    "sha": "73c9bd3",
+    "date": "2026-06-10T19:24:46+02:00",
+    "type": "feat",
+    "scope": "S264-0 B",
+    "sprint": null,
+    "subject": "anchored resolution — corporate email -> real person via free press"
+  },
+  {
+    "sha": "def9d6f",
+    "date": "2026-06-10T19:08:14+02:00",
+    "type": "feat",
+    "scope": "S264-0 A",
+    "sprint": null,
+    "subject": "free no-key search backend (DuckDuckGo) — SerpAPI no longer required"
+  },
+  {
+    "sha": "3ef5ff1",
+    "date": "2026-06-10T18:04:19+02:00",
+    "type": "feat",
+    "scope": "S263",
+    "sprint": "S263",
+    "subject": "typed confidence goes live — flip + retune + persona consistency"
+  },
+  {
+    "sha": "c41f08b",
+    "date": "2026-06-10T17:45:40+02:00",
+    "type": "feat",
+    "scope": "S262",
+    "sprint": "S262",
+    "subject": "typed confidence (echo/account/corroborating/entity) — shadow compute"
+  },
+  {
+    "sha": "36bf229",
+    "date": "2026-06-10T16:25:04+02:00",
+    "type": "feat",
+    "scope": "S261",
+    "sprint": "S261",
+    "subject": "collision quarantine + coherence cap (Bug 12 Axe C)"
+  },
+  {
+    "sha": "4dab285",
+    "date": "2026-06-10T14:14:55+02:00",
+    "type": "fix",
+    "scope": "S260",
+    "sprint": "S260",
+    "subject": "clean username values — input slug + html-unescape at chokepoints"
+  },
+  {
+    "sha": "7feb58d",
+    "date": "2026-06-10T13:57:12+02:00",
+    "type": "fix",
+    "scope": "S259",
+    "sprint": "S259",
+    "subject": "surface inferred country in the targets list (Bug 1)"
+  },
+  {
+    "sha": "56defdf",
+    "date": "2026-06-10T13:46:39+02:00",
+    "type": "feat",
+    "scope": "S258",
+    "sprint": "S258",
+    "subject": "geo intelligence bundle — language signal + city parsing + anomaly UI"
+  },
+  {
+    "sha": "06da0ef",
+    "date": "2026-06-10T13:34:04+02:00",
+    "type": "chore",
+    "scope": "S257",
+    "sprint": "S257",
+    "subject": "reclean historic phantom legal_records (post-S256)"
+  },
+  {
+    "sha": "190e591",
+    "date": "2026-06-10T13:23:18+02:00",
+    "type": "fix",
+    "scope": "S256",
+    "sprint": "S256",
+    "subject": "BODACC + UK Gazette name-match hardening (entity-scoped)"
+  },
+  {
+    "sha": "ebb9754",
+    "date": "2026-06-09T16:55:27+02:00",
+    "type": "feat",
+    "scope": "S255",
+    "sprint": "S255",
+    "subject": "Subject Portal export (SOV-P3) — RGPD art.20 data portability"
+  },
+  {
+    "sha": "b96a349",
+    "date": "2026-06-09T16:36:57+02:00",
+    "type": "feat",
+    "scope": "S254",
+    "sprint": "S254",
+    "subject": "Subject Portal share link (SOV-P2) — live operator-to-subject handoff"
+  },
+  {
+    "sha": "f310e65",
+    "date": "2026-06-09T16:26:43+02:00",
+    "type": "feat",
+    "scope": "S253",
+    "sprint": "S253",
+    "subject": "Subject Portal (SOV-P1) — attestation unlocks the subject view"
+  },
+  {
+    "sha": "cbeba5c",
+    "date": "2026-06-09T15:57:58+02:00",
+    "type": "docs",
+    "scope": "S252",
+    "sprint": "S252",
+    "subject": "Manifesto diagnostic battery — 3 sourced stats, 1 conclusion"
+  },
+  {
+    "sha": "a762860",
+    "date": "2026-06-09T15:55:09+02:00",
+    "type": "feat",
+    "scope": "S251",
+    "sprint": "S251",
+    "subject": "Inversion shock-stat — quantify the asymmetry's human cost"
+  },
+  {
+    "sha": "7c5b57a",
+    "date": "2026-06-09T15:17:02+02:00",
+    "type": "feat",
+    "scope": "S250",
+    "sprint": "S250",
+    "subject": "Avatar Matrix — scramble → zone resolve (eyes first)"
+  },
+  {
+    "sha": "2b71dc6",
+    "date": "2026-06-09T14:26:10+02:00",
+    "type": "feat",
+    "scope": "S249",
+    "sprint": "S249",
+    "subject": "/demo — scripted scan replay + animated archi flow"
+  },
+  {
+    "sha": "ae9aa15",
+    "date": "2026-06-09T13:30:02+02:00",
+    "type": "fix",
+    "scope": "S248",
+    "sprint": "S248",
+    "subject": "seed gpg_keys row in modules table (S246 hotfix)"
+  },
+  {
+    "sha": "4202d9b",
+    "date": "2026-06-09T13:04:16+02:00",
+    "type": "docs",
+    "scope": "S247",
+    "sprint": "S247",
+    "subject": "README counts + pricing alignment + retire docs/SPRINT_LOG.md"
+  },
+  {
+    "sha": "ccdda22",
+    "date": "2026-06-09T12:58:06+02:00",
+    "type": "feat",
+    "scope": "S246",
+    "sprint": "S246",
+    "subject": "GPG public-key scanner + Cryptographic Identity block"
+  },
+  {
+    "sha": "4eae2ed",
+    "date": "2026-06-09T12:31:16+02:00",
+    "type": "feat",
+    "scope": "S245",
+    "sprint": "S245",
+    "subject": "SSH public-key scrapers (GitHub + GitLab), data-driven"
+  },
+  {
+    "sha": "df0cf85",
+    "date": "2026-06-09T12:10:22+02:00",
+    "type": "feat",
+    "scope": "S244",
+    "sprint": "S244",
+    "subject": "/compare hybrid redesign — thesis + sourced research band + cited tables"
+  },
+  {
+    "sha": "1abfbaa",
+    "date": "2026-06-09T11:55:07+02:00",
+    "type": "docs",
+    "scope": "S243",
+    "sprint": "S243",
+    "subject": "manifesto hero — retire \"mirrors, not weapons\" + bump to v3.1"
+  },
+  {
+    "sha": "042bef8",
+    "date": "2026-06-09T11:48:14+02:00",
+    "type": "feat",
+    "scope": "S242",
+    "sprint": "S242",
+    "subject": "/bfp refresh — parallels drive Trust/Threat block + real roadmap S-numbers + v0.2"
+  },
+  {
+    "sha": "8ae170d",
+    "date": "2026-06-09T11:28:27+02:00",
+    "type": "fix",
+    "scope": "S241",
+    "sprint": "S241",
+    "subject": "watchdog re-dispatches lost queued scans (bounded, idempotent)"
+  },
+  {
+    "sha": "26d3fb7",
+    "date": "2026-06-09T11:14:25+02:00",
+    "type": "feat",
+    "scope": "S240",
+    "sprint": "S240",
+    "subject": "landing pricing cleanup — drop prices + dedupe PricingSection"
+  },
+  {
+    "sha": "fbdccc5",
+    "date": "2026-06-08T20:17:34+02:00",
+    "type": "feat",
+    "scope": "S238",
+    "sprint": "S238",
+    "subject": "trust-gate language detection (cross-verified text only, tiered)"
+  },
+  {
+    "sha": "72744ae",
+    "date": "2026-06-08T19:46:03+02:00",
+    "type": "feat",
+    "scope": "S237",
+    "sprint": "S237",
+    "subject": "per-target language detection (Lingua)"
+  },
+  {
+    "sha": "2c98d19",
+    "date": "2026-06-08T19:20:18+02:00",
+    "type": "fix",
+    "scope": "S236",
+    "sprint": "S236",
+    "subject": "harden disposable signal in email taxonomy"
+  },
+  {
+    "sha": "084e598",
+    "date": "2026-06-08T19:04:36+02:00",
+    "type": "feat",
+    "scope": "S235",
+    "sprint": "S235",
+    "subject": "activity rhythm clock (per-target 24h radial viz)"
+  },
+  {
+    "sha": "1eb1555",
+    "date": "2026-06-08T18:39:11+02:00",
+    "type": "feat",
+    "scope": "S234",
+    "sprint": "S234",
+    "subject": "4-state email deliverability taxonomy"
+  },
+  {
+    "sha": "c6fd36a",
+    "date": "2026-06-08T18:20:47+02:00",
+    "type": "feat",
+    "scope": "S233",
+    "sprint": "S233",
+    "subject": "inferred country pill in ProfileHeader"
+  },
+  {
+    "sha": "c6104bd",
+    "date": "2026-06-08T17:03:08+02:00",
+    "type": "feat",
+    "scope": "S232",
+    "sprint": "S232",
+    "subject": "SSO consent verification primitive (subject-attested green flag)"
+  },
+  {
+    "sha": "5031e50",
+    "date": "2026-05-25T22:41:54+02:00",
+    "type": "feat",
+    "scope": "S231",
+    "sprint": "S231",
+    "subject": "deep scan visibility in live scans (quick win, no migration)"
+  },
+  {
+    "sha": "827b869",
+    "date": "2026-05-25T21:51:32+02:00",
+    "type": "fix",
+    "scope": "S230",
+    "sprint": "S230",
+    "subject": "relabel name-shaped username findings + name_scraper_engine writer fix"
+  },
+  {
+    "sha": "e02c9aa",
+    "date": "2026-05-25T21:21:34+02:00",
+    "type": "chore",
+    "scope": "S229",
+    "sprint": "S229",
+    "subject": "username R&D refresh + extended-pattern audit (read-only)"
+  },
+  {
+    "sha": "45229dd",
+    "date": "2026-05-25T21:09:03+02:00",
+    "type": "chore",
+    "scope": "S228",
+    "sprint": "S228",
+    "subject": "DB hygiene audit (read-only, 4 blocks)"
+  },
+  {
+    "sha": "6d19068",
+    "date": "2026-05-25T19:57:17+02:00",
+    "type": "feat",
+    "scope": "S227",
+    "sprint": "S227",
+    "subject": "PixelCat surfaces in DEMO_SCRIPT + Landing FeaturesSection"
+  },
+  {
+    "sha": "c836feb",
+    "date": "2026-05-25T19:25:12+02:00",
+    "type": "feat",
+    "scope": "S226",
+    "sprint": "S226",
+    "subject": "architecture refresh — real geo map + PixelCat showcase"
+  },
+  {
+    "sha": "4a4e70b",
+    "date": "2026-05-25T18:17:33+02:00",
+    "type": "chore",
+    "scope": null,
+    "sprint": "S222d",
+    "subject": "drop docs/qa/ from working tree + gitignore (S222d redo)"
+  },
+  {
+    "sha": "926fb91",
+    "date": "2026-05-25T17:49:18+02:00",
+    "type": "feat",
+    "scope": "S225",
+    "sprint": "S225",
+    "subject": "sortable column headers on /targets"
+  },
+  {
+    "sha": "e0930f0",
+    "date": "2026-05-25T17:25:34+02:00",
+    "type": "other",
+    "scope": null,
+    "sprint": "S224",
+    "subject": "qa(S224): BFP behavioral_hash_v1 cluster distribution audit"
+  },
+  {
+    "sha": "db7a8c5",
+    "date": "2026-05-25T17:14:46+02:00",
+    "type": "docs",
+    "scope": "S223",
+    "sprint": "S223",
+    "subject": "BFP_SPEC §9.3.7.1 derived-visualizations subsection (follow-up)"
+  },
+  {
+    "sha": "cf5d846",
+    "date": "2026-05-25T17:14:07+02:00",
+    "type": "docs",
+    "scope": "S223",
+    "sprint": "S223",
+    "subject": "doc drift sweep — SPRINT_LOG backfill + BFP_SPEC §9.3.7.1 + README badge"
+  },
+  {
+    "sha": "b6aea24",
+    "date": "2026-05-25T16:50:03+02:00",
+    "type": "feat",
+    "scope": "S222b",
+    "sprint": "S222b",
+    "subject": "behavioral cluster soft UI nudge (UX track #4, Direction A2)"
+  },
+  {
+    "sha": "96835d1",
+    "date": "2026-05-25T16:12:08+02:00",
+    "type": "other",
+    "scope": null,
+    "sprint": "S222",
+    "subject": "qa(S222): PixelCat behavioral layer smoke audit + role elevation"
+  },
+  {
+    "sha": "bfda6ea",
+    "date": "2026-05-25T15:53:25+02:00",
+    "type": "feat",
+    "scope": "S221",
+    "sprint": "S221",
+    "subject": "PixelCat behavioral layer (UX track #3, Direction C)"
+  },
+  {
+    "sha": "e980811",
+    "date": "2026-05-25T15:38:09+02:00",
+    "type": "docs",
+    "scope": "S220",
+    "sprint": "S220",
+    "subject": "SystemLiveScansTab UI validation evidence"
+  },
+  {
+    "sha": "a6450a7",
+    "date": "2026-05-25T15:33:06+02:00",
+    "type": "feat",
+    "scope": "S220",
+    "sprint": "S220",
+    "subject": "PixelCat replication + canonical seed everywhere (UX track #2, Option X)"
+  },
+  {
+    "sha": "743b778",
+    "date": "2026-05-25T15:10:33+02:00",
+    "type": "feat",
+    "scope": "S219",
+    "sprint": "S219",
+    "subject": "PixelCat companion foundation (UX track #1)"
+  },
+  {
+    "sha": "79ea2c7",
+    "date": "2026-05-25T14:41:40+02:00",
+    "type": "docs",
+    "scope": "S218",
+    "sprint": "S218",
+    "subject": "google_phonebook_dork deprecation + rescan validation"
+  },
+  {
+    "sha": "49829f1",
+    "date": "2026-05-25T14:27:22+02:00",
+    "type": "feat",
+    "scope": "S217",
+    "sprint": "S217",
+    "subject": "phone validators unlock + env-substitution + custom-getters refactor"
+  },
+  {
+    "sha": "80f2c22",
+    "date": "2026-05-25T13:36:33+02:00",
+    "type": "docs",
+    "scope": "S216",
+    "sprint": "S216",
+    "subject": "phone scraper landscape R&D — phone_scrapers_v0.md"
+  },
+  {
+    "sha": "38b28f5",
+    "date": "2026-05-25T13:18:11+02:00",
+    "type": "feat",
+    "scope": "S215",
+    "sprint": "S215",
+    "subject": "wayback_domain + rdap_domain scope-drift fix (S159/016 completion)"
+  },
+  {
+    "sha": "96d9822",
+    "date": "2026-05-25T12:42:58+02:00",
+    "type": "docs",
+    "scope": "S214",
+    "sprint": "S214",
+    "subject": "post-cleanup re-audit confirmation"
+  },
+  {
+    "sha": "73a952e",
+    "date": "2026-05-25T12:40:12+02:00",
+    "type": "docs",
+    "scope": "S214",
+    "sprint": "S214",
+    "subject": "UI post-migration validation evidence"
+  },
+  {
+    "sha": "e5717aa",
+    "date": "2026-05-25T12:33:29+02:00",
+    "type": "feat",
+    "scope": "S214",
+    "sprint": "S214",
+    "subject": "username findings cleanup migration — safe-delete bucket only"
+  },
+  {
+    "sha": "d49f2c5",
+    "date": "2026-05-25T02:30:17+02:00",
+    "type": "docs",
+    "scope": "S213",
+    "sprint": "S213",
+    "subject": "UI cross-check of audit's worst-offender pattern"
+  },
+  {
+    "sha": "73262ef",
+    "date": "2026-05-25T02:06:55+02:00",
+    "type": "feat",
+    "scope": "S213",
+    "sprint": "S213",
+    "subject": "username findings audit R&D extract (read-only)"
+  },
+  {
+    "sha": "b59b9c0",
+    "date": "2026-05-25T01:17:43+02:00",
+    "type": "docs",
+    "scope": "S212",
+    "sprint": "S212",
+    "subject": "CLAUDE.md/README v1.6.20→v1.6.23 + S208-S211 recent-sprints backfill"
+  },
+  {
+    "sha": "a2c5284",
+    "date": "2026-05-25T01:00:44+02:00",
+    "type": "docs",
+    "scope": "S211",
+    "sprint": "S211",
+    "subject": "UI validation evidence"
+  },
+  {
+    "sha": "f0b8241",
+    "date": "2026-05-25T00:51:46+02:00",
+    "type": "feat",
+    "scope": "S211",
+    "sprint": "S211",
+    "subject": "cascade enrichment phone + wallet (Axe B, R2a + R2b)"
+  },
+  {
+    "sha": "be93dfc",
+    "date": "2026-05-25T00:24:20+02:00",
+    "type": "docs",
+    "scope": "S210",
+    "sprint": "S210",
+    "subject": "UI validation evidence post-restart"
+  },
+  {
+    "sha": "c074aba",
+    "date": "2026-05-25T00:13:58+02:00",
+    "type": "feat",
+    "scope": "S210",
+    "sprint": "S210",
+    "subject": "single-source SCANNABLE_INDICATOR_TYPES + Pass 1.5 cap 92→96 (R5)"
+  },
+  {
+    "sha": "f5b4257",
+    "date": "2026-05-24T23:55:54+02:00",
+    "type": "docs",
+    "scope": "S209",
+    "sprint": "S209",
+    "subject": "Playwright validation evidence on /architecture"
+  },
+  {
+    "sha": "0cecb46",
+    "date": "2026-05-24T23:50:36+02:00",
+    "type": "feat",
+    "scope": "S209",
+    "sprint": "S209",
+    "subject": "Maigret tranche 2 — +4 username scrapers (Axe D)"
+  },
+  {
+    "sha": "2fde9e7",
+    "date": "2026-05-24T22:57:25+02:00",
+    "type": "docs",
+    "scope": "S208",
+    "sprint": "S208",
+    "subject": "Playwright Gate 6 evidence — Deep Scan on phone row"
+  },
+  {
+    "sha": "c3de90d",
+    "date": "2026-05-24T22:50:32+02:00",
+    "type": "feat",
+    "scope": "S208",
+    "sprint": "S208",
+    "subject": "Deep Scan unlock phone/crypto/first_name + Pass 1.5 cap bumps (Axe A)"
+  },
+  {
+    "sha": "aaac4a3",
+    "date": "2026-05-24T22:04:22+02:00",
+    "type": "feat",
+    "scope": "S207",
+    "sprint": "S207",
+    "subject": "HeroDiagram on /architecture (Y3/3 closes refonte trilogy)"
+  },
+  {
+    "sha": "5ffbced",
+    "date": "2026-05-24T21:18:55+02:00",
+    "type": "docs",
+    "scope": "S206",
+    "sprint": "S206",
+    "subject": "SPRINT_LOG row + Playwright closing-evidence (Y2 done)"
+  },
+  {
+    "sha": "365d8c9",
+    "date": "2026-05-24T21:15:53+02:00",
+    "type": "refactor",
+    "scope": "S206-3",
+    "sprint": null,
+    "subject": "Stages.jsx 11-func → array-driven + single import (Y2 step 3/3)"
+  },
+  {
+    "sha": "d2194d4",
+    "date": "2026-05-24T21:09:46+02:00",
+    "type": "refactor",
+    "scope": "S206-2",
+    "sprint": null,
+    "subject": "ScraperBreakdown palette unify (Y2 step 2/3)"
+  },
+  {
+    "sha": "a0ba600",
+    "date": "2026-05-24T21:08:21+02:00",
+    "type": "refactor",
+    "scope": "S206-1",
+    "sprint": null,
+    "subject": "Diagrams.jsx visual language unify (Y2 step 1/3)"
+  },
+  {
+    "sha": "7cb3bbb",
+    "date": "2026-05-24T20:54:10+02:00",
+    "type": "feat",
+    "scope": "S205",
+    "sprint": "S205",
+    "subject": "BFPLayer section on /architecture (Y1/3 refonte progressive)"
+  },
+  {
+    "sha": "e53e9ab",
+    "date": "2026-05-24T20:26:46+02:00",
+    "type": "feat",
+    "scope": "S204",
+    "sprint": "S204",
+    "subject": "Inversion section + Framer Motion (step 3/3 landing refonte)"
+  },
+  {
+    "sha": "5438539",
+    "date": "2026-05-24T20:12:03+02:00",
+    "type": "fix",
+    "scope": "S203-hotfix",
+    "sprint": null,
+    "subject": "React DOM attribute fetchPriority → fetchpriority"
+  },
+  {
+    "sha": "45a675f",
+    "date": "2026-05-24T20:00:26+02:00",
+    "type": "refactor",
+    "scope": "S203",
+    "sprint": "S203",
+    "subject": "Hero split-screen + composite screenshot (step 2/3 landing refonte)"
+  },
+  {
+    "sha": "69b1c9d",
+    "date": "2026-05-24T19:38:28+02:00",
+    "type": "refactor",
+    "scope": "S202",
+    "sprint": "S202",
+    "subject": "landing kill-darlings — step 1/3 progressive refonte"
+  },
+  {
+    "sha": "61b40da",
+    "date": "2026-05-24T19:17:48+02:00",
+    "type": "docs",
+    "scope": "S201",
+    "sprint": "S201",
+    "subject": "session-artifact cleanup — commit BFP_AXES_AUDIT + archive 7"
+  },
+  {
+    "sha": "abcd739",
+    "date": "2026-05-24T18:54:12+02:00",
+    "type": "docs",
+    "scope": "S200",
+    "sprint": "S200",
+    "subject": "drift closure post-S196-S199 — 139→170 scrapers refresh"
+  },
+  {
+    "sha": "afbc778",
+    "date": "2026-05-24T18:36:04+02:00",
+    "type": "docs",
+    "scope": "S199-smoke",
+    "sprint": null,
+    "subject": "multi-workspace evidence — dispatch gap fix CONFIRMED"
+  },
+  {
+    "sha": "b9db4f5",
+    "date": "2026-05-24T18:01:40+02:00",
+    "type": "fix",
+    "scope": "S199",
+    "sprint": "S199",
+    "subject": "dispatch gap — scraper_engine added to default module lists"
+  },
+  {
+    "sha": "dcd222b",
+    "date": "2026-05-24T16:55:20+02:00",
+    "type": "feat",
+    "scope": "S198",
+    "sprint": "S198",
+    "subject": "Tier A free-no-key academic + threat-intel adds (6 new)"
+  },
+  {
+    "sha": "a5119a1",
+    "date": "2026-05-24T16:49:21+02:00",
+    "type": "docs",
+    "scope": "S196-S197-smoke",
+    "sprint": null,
+    "subject": "live-validation evidence on gnienlnaha"
+  },
+  {
+    "sha": "197e71d",
+    "date": "2026-05-24T16:33:17+02:00",
+    "type": "feat",
+    "scope": "S197",
+    "sprint": "S197",
+    "subject": "Maigret mass-add — 20 live-validated social scrapers"
+  },
+  {
+    "sha": "fd4c18b",
+    "date": "2026-05-24T16:05:07+02:00",
+    "type": "feat",
+    "scope": "S196",
+    "sprint": "S196",
+    "subject": "phone scrapers mass-add (3 → 8, +5 new)"
+  },
+  {
+    "sha": "ea9eb83",
+    "date": "2026-05-24T15:40:07+02:00",
+    "type": "docs",
+    "scope": "S195-smoke",
+    "sprint": null,
+    "subject": "UI screenshot — fresh login lands on persisted workspace"
+  },
+  {
+    "sha": "07fab1b",
+    "date": "2026-05-24T15:33:49+02:00",
+    "type": "fix",
+    "scope": "S195",
+    "sprint": "S195",
+    "subject": "workspace persistence on JWT refresh (Bug 5)"
+  },
+  {
+    "sha": "efe92dc",
+    "date": "2026-05-24T15:17:50+02:00",
+    "type": "fix",
+    "scope": "S194",
+    "sprint": "S194",
+    "subject": "backfill DELETE stale username form-label findings (alembic 024)"
+  },
+  {
+    "sha": "a916255",
+    "date": "2026-05-24T15:05:52+02:00",
+    "type": "docs",
+    "scope": "S193-smoke",
+    "sprint": null,
+    "subject": "RiskSignals crypto column now populated on gnienlnaha"
+  },
+  {
+    "sha": "eb9d92e",
+    "date": "2026-05-24T15:01:16+02:00",
+    "type": "fix",
+    "scope": "S193",
+    "sprint": "S193",
+    "subject": "RiskSignalsBlock refactor + CATEGORY_LABELS completeness"
+  },
+  {
     "sha": "767c46f",
     "date": "2026-05-24T14:53:05+02:00",
     "type": "docs",
