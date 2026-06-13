@@ -1,8 +1,6 @@
 import { Link } from 'react-router-dom'
 import { Shield, Check, X, Minus, ArrowRight } from 'lucide-react'
 import { SOURCE_COUNT } from '../components/landing/constants'
-import PublicNav from '../components/landing/PublicNav'
-import PublicFooter from '../components/landing/PublicFooter'
 
 // ─── Comparison data ─────────────────────────────────────────────────
 
@@ -119,10 +117,7 @@ function Cell({ value, isUs }) {
 
 export default function Compare() {
   return (
-    <div className="min-h-screen bg-[#0a0a0f] text-white">
-      <PublicNav />
-
-      <div className="max-w-5xl mx-auto px-6 pt-28 pb-20">
+    <div className="max-w-5xl mx-auto px-6 pb-20">
         {/* Hero */}
         <section className="mb-20 text-center">
           <div className="inline-flex items-center gap-2 text-xs font-mono text-[#00ff88]/70 mb-6">
@@ -315,8 +310,6 @@ export default function Compare() {
           Comparison data verified against public sources, June 2026 — every figure links to its source.
           Categorizations are positional; competitor products evolve.
         </p>
-      </div>
-      <PublicFooter />
     </div>
   )
 }

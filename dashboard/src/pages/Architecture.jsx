@@ -10,8 +10,6 @@ import DesignPrinciples from '../components/architecture/DesignPrinciples'
 import RoadmapSection from '../components/architecture/RoadmapSection'
 import ArchCTA from '../components/architecture/ArchCTA'
 import TechStackSection from '../components/architecture/TechStackSection'
-import PublicNav from '../components/landing/PublicNav'
-import PublicFooter from '../components/landing/PublicFooter'
 
 export default function Architecture() {
   const demoSeed = {
@@ -21,10 +19,7 @@ export default function Architecture() {
   }
 
   return (
-    <div className="min-h-screen bg-[#0a0a0f] text-white">
-      <PublicNav />
-
-      <div className="pt-24 pb-20">
+    <div className="pb-20">
         {/* Hero */}
         <Section className="py-20">
           <div className="max-w-5xl mx-auto px-6">
@@ -94,9 +89,6 @@ export default function Architecture() {
 
         <RoadmapSection />
         <ArchCTA />
-      </div>
-
-      <PublicFooter />
     </div>
   )
 }

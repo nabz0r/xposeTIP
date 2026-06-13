@@ -19,6 +19,7 @@ import UserPreview from './pages/UserPreview'
 import Manifesto from './pages/Manifesto'
 import BFP from './pages/BFP'
 import Compare from './pages/Compare'
+import DocLayout from './components/shared/DocLayout'
 import Demo from './pages/Demo'
 import Portal from './pages/Portal'
 import Changelog from './pages/Changelog'
@@ -39,10 +40,18 @@ function App() {
       <BrowserRouter>
         <Routes>
           <Route path="/welcome" element={<Landing />} />
-          <Route path="/architecture" element={<Architecture />} />
           <Route path="/manifesto" element={<Manifesto />} />
-          <Route path="/bfp" element={<BFP />} />
-          <Route path="/compare" element={<Compare />} />
+          {/* S301a — Doc hub (nested) */}
+          <Route path="/doc" element={<DocLayout />}>
+            <Route index element={<Navigate to="/doc/architecture" replace />} />
+            <Route path="architecture" element={<Architecture />} />
+            <Route path="bfp" element={<BFP />} />
+            <Route path="compare" element={<Compare />} />
+          </Route>
+          {/* Legacy redirects — preserve SEO + existing internal links */}
+          <Route path="/architecture" element={<Navigate to="/doc/architecture" replace />} />
+          <Route path="/bfp" element={<Navigate to="/doc/bfp" replace />} />
+          <Route path="/compare" element={<Navigate to="/doc/compare" replace />} />
           <Route path="/demo" element={<Demo />} />
           <Route path="/portal" element={<Portal />} />
           <Route path="/changelog" element={<Changelog />} />
