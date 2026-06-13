@@ -1187,6 +1187,12 @@ def aggregate_profile(target_id, workspace_id, session: Session, graph_context=N
         if source in ("geoip", "maxmind_geo"):
             continue
 
+        # S296a — IP-type findings carry infrastructure geo (ASN/datacenter/CDN
+        # registration country), never a person's self-reported location.
+        # S283 bug class (datacenter ≠ person), ASN-analyzer path.
+        if (f.indicator_type or "") == "ip":
+            continue
+
         # Check all possible location fields
         loc = None
         for key in ("location", "city", "country"):
