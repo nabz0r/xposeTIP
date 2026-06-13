@@ -64,7 +64,7 @@ export default function EngineFlowDiagram() {
           <rect x={160} y={104} width={480} height={108} rx={6} fill="#1e1e2e" stroke="#3388ff" strokeWidth="2" />
           <text x={400} y={130} textAnchor="middle" fill="#3388ff" fontSize="15" fontFamily="monospace" fontWeight="bold">DISPATCH</text>
           <text x={400} y={150} textAnchor="middle" fill="#aaa" fontSize="11" fontFamily="monospace">Celery chord — parallel fan-out</text>
-          <text x={400} y={170} textAnchor="middle" fill="#888" fontSize="11" fontFamily="monospace">27 scanners · scraper_engine ▶ 174 URL-templates</text>
+          <text x={400} y={170} textAnchor="middle" fill="#888" fontSize="11" fontFamily="monospace">28 scanners · scraper_engine ▶ 176 URL-templates</text>
           <text x={400} y={189} textAnchor="middle" fill="#666" fontSize="11" fontFamily="monospace">12 api-modules → Pass 2</text>
         </motion.g>
 

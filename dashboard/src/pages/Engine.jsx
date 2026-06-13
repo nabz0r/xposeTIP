@@ -8,7 +8,7 @@ import EngineFlowDiagram from '../components/engine/EngineFlowDiagram'
 // scored identity. Full-raw: literal SCANNER_REGISTRY + env-var key inventory.
 // Everything below is verified from the real code (tip 06cc749) — nothing invented.
 
-// ── §1 producer dispatch — literal SCANNER_REGISTRY (27) ──
+// ── §1 producer dispatch — literal SCANNER_REGISTRY (28) ──
 const REGISTRY = `Layer 1 — email / social / identity
   email_validator  → layer1.email_validator:EmailValidatorScanner
   holehe           → layer1.holehe_scanner:HoleheScanner
@@ -26,7 +26,7 @@ const REGISTRY = `Layer 1 — email / social / identity
   reverse_image    → layer1.reverse_image_scanner:ReverseImageScanner
 
 Layer 1 — scraper engines
-  scraper_engine      → layer1.scraper_scanner:ScraperScanner   (fans out 174 URL-templates)
+  scraper_engine      → layer1.scraper_scanner:ScraperScanner   (fans out 176 URL-templates)
   name_scraper_engine → layer1.name_scraper_scanner:NameScraperScanner
 
 Layer 2 — network / premium (key-gated)
@@ -135,7 +135,7 @@ export default function Engine() {
             every module completes. Each pass widens the surface the next pass searches.
           </p>
           <div className="grid md:grid-cols-3 gap-4 mb-10">
-            <ProducerCard count="27" unit="scanners" accent="#00ff88"
+            <ProducerCard count="28" unit="scanners" accent="#00ff88"
               title="SCANNER_REGISTRY" body="Python scanner classes dispatched in the chord — Layer-1 email/social/identity, Layer-2 network/premium (key-gated), Layer-3 SaaS OAuth." />
             <ProducerCard count={SOURCE_COUNT} unit="sources" accent="#3388ff"
               title="URL-template scrapers" body="Fanned out internally by scraper_engine → ScraperScanner. DB-defined templates (seed_scrapers.py), not code-per-source." />
@@ -145,7 +145,7 @@ export default function Engine() {
 
           <h3 className="text-sm font-mono text-gray-500 uppercase tracking-wider mb-2">Multi-pass model</h3>
           <p className="text-gray-400 max-w-3xl mb-6 leading-relaxed">
-            <span className="font-mono text-white">Pass 1</span> = the chord (27 scanners parallel, raw findings) →
+            <span className="font-mono text-white">Pass 1</span> = the chord (28 scanners parallel, raw findings) →
             {' '}<span className="font-mono text-white">Pass 1.5</span> = derive secondary identifiers + re-scan
             discovered usernames →
             {' '}<span className="font-mono text-white">Pass 2</span> = name-based scrapers, dispatched only after
