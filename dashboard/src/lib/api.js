@@ -66,6 +66,7 @@ export const getTargets = (params = '') => request(`/targets${params ? '?' + par
 export const getAllTargets = (params = '') => request(`/targets/all${params ? '?' + params : ''}`)
 export const createTarget = (data) => request('/targets', { method: 'POST', body: JSON.stringify(data) })
 export const getTarget = (id) => request(`/targets/${id}`)
+export const getAgentNetwork = () => request('/targets/agent-network')
 export const deleteTarget = (id) => request(`/targets/${id}?confirm=true`, { method: 'DELETE' })
 export const getTargetProfile = (id) => request(`/targets/${id}/profile`)
 export const getTargetSources = (id) => request(`/targets/${id}/sources`)

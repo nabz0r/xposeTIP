@@ -252,6 +252,42 @@ async def list_targets(
     return {"items": items, "total": total, "page": page, "per_page": per_page}
 
 
+@router.get("/agent-network")
+async def agent_network(
+    workspace_id: uuid.UUID = Depends(get_current_workspace),
+    user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """S295b — corpus-level agent network (ASN clusters), the Place axis. Agent-only:
+    a human workspace gets {nodes: []} (double-gate with the frontend). Reads the
+    agent_network findings; tags signed (WBA) agents from agent_declared. Declared
+    BEFORE /{target_id} so the literal route wins."""
+    ws_kind = await db.scalar(select(Workspace.kind).where(Workspace.id == workspace_id))
+    if ws_kind != "agent":
+        return {"nodes": []}
+    net = (await db.execute(
+        select(Finding.target_id, Finding.data, Target.email)
+        .join(Target, Target.id == Finding.target_id)
+        .where(Finding.workspace_id == workspace_id, Finding.category == "agent_network")
+    )).all()
+    declared = {r[0] for r in (await db.execute(
+        select(Finding.target_id)
+        .where(Finding.workspace_id == workspace_id, Finding.category == "agent_declared")
+    )).all()}
+    nodes = []
+    for tid, data, email in net:
+        ext = (data or {}).get("extracted", {}) or {}
+        nodes.append({
+            "email": email,
+            "operator": ext.get("operator") or email.removeprefix("ua:"),
+            "asn": ext.get("asn"), "asname": ext.get("asname"),
+            "ip": ext.get("ip"), "country": ext.get("country"),
+            "tier": "declared" if tid in declared else "known",
+            "signed": tid in declared,
+        })
+    return {"nodes": nodes}
+
+
 @router.get("/{target_id}")
 async def get_target(
     target_id: uuid.UUID,

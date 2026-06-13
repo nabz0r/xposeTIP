@@ -7,6 +7,7 @@ import Login from './pages/Login'
 import Setup from './pages/Setup'
 import Dashboard from './pages/Dashboard'
 import Targets from './pages/Targets'
+import AgentNetwork from './pages/AgentNetwork'
 import TargetDetail from './pages/TargetDetail'
 import Settings from './pages/Settings'
 import Scrapers from './pages/Scrapers'
@@ -51,6 +52,7 @@ function App() {
             <Route index element={<Dashboard />} />
             <Route path="targets" element={<Targets />} />
             <Route path="targets/:id" element={<TargetDetail />} />
+            <Route path="agent-network" element={<AgentNetwork />} />
             <Route path="organization" element={<Organization />} />
             <Route path="scrapers" element={<Scrapers />} />
             <Route path="system" element={<System />} />

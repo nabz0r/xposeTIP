@@ -1,5 +1,5 @@
 import { useEffect, useState, useMemo } from 'react'
-import { useNavigate, useSearchParams } from 'react-router-dom'
+import { useNavigate, useSearchParams, Link } from 'react-router-dom'
 import { Plus, Trash2, Search, Eye, Upload, Play, FileDown, Layers, ChevronUp, ChevronDown, ChevronsUpDown } from 'lucide-react'
 import { getTargets, getAllTargets, createTarget, deleteTarget, bulkImportTargets, createScan } from '../lib/api'
 import { fallbackSeed } from '../lib/avatar'
@@ -221,7 +221,13 @@ export default function Targets() {
             </span>
           )}
         </div>
-        <div className="flex gap-2">
+        <div className="flex gap-2 items-center">
+          {/* S295b — agent-only: link to the ASN cluster graph (gated, invisible for humans) */}
+          {targets[0]?.workspace_kind === 'agent' && (
+            <Link to="/agent-network" className="text-xs font-mono text-[#00ff88] border border-[#1e3a2a] bg-[#0c1a12] rounded-lg px-3 py-2 hover:bg-[#0c1a12]/70">
+              Network view →
+            </Link>
+          )}
           <button onClick={() => setShowBulk(true)} className="flex items-center gap-2 bg-[#12121a] border border-[#1e1e2e] text-gray-300 font-medium rounded-lg px-4 py-2 text-sm hover:border-[#00ff88]/50">
             <Upload className="w-4 h-4" /> Bulk Import
           </button>
