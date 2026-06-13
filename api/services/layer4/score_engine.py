@@ -4,6 +4,7 @@ Computes a 0-100 exposure score for a target based on findings,
 weighted by confidence and source reliability.
 """
 import logging
+import math
 from collections import defaultdict
 
 from sqlalchemy import select
@@ -65,7 +66,8 @@ SCORE_FACTORS = {
     "credentials_leaked": 10,        # High: creds confirmed leaked
     "email_security_weak": 5,        # Medium: SPF/DMARC issues
     "multiple_username_matches": 3,  # Low: username reuse across platforms
-    "account_proliferation": 2,      # Per account beyond 5
+    "account_proliferation_k": 2.2,    # S298 — log multiplier (de-saturate cluster)
+    "account_proliferation_cap": 10,   # S298 — bounded ceiling (unchanged from prior +10)
     "cross_verified": -2,            # Bonus: verified data is more actionable (lower is better managed)
     "sanctions_match": 25,           # Critical: on sanctions/watchlist
     "pep_match": 10,                 # High: politically exposed person
@@ -111,10 +113,16 @@ def _compute_bonus_factors(findings: list) -> int:
     if len(username_findings) > 3:
         bonus += SCORE_FACTORS["multiple_username_matches"]
 
-    # Account proliferation (more than 5 social accounts)
+    # Account proliferation (>5 social accounts).
+    # S298 — log curve (was linear extra*2 capped at +10). 292/411 targets
+    # saturated the old cap, flattening threat. Log de-saturates: the 11–30-
+    # account range now spreads below the same bounded ceiling instead of pinning.
     if len(social_findings) > 5:
         extra = len(social_findings) - 5
-        bonus += min(extra * SCORE_FACTORS["account_proliferation"], 10)
+        bonus += min(
+            round(SCORE_FACTORS["account_proliferation_k"] * math.log2(1 + extra)),
+            SCORE_FACTORS["account_proliferation_cap"],
+        )
 
     # Sanctions/PEP/Interpol — applied to THREAT only (max +25 for sanctions, +10 PEP)
     for f in findings:
